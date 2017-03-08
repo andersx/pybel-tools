@@ -159,4 +159,4 @@ def summarize_filter(graph, *filters):
     :type filters: list
     """
     passed = sum(1 for _ in filter_nodes(graph, *filters))
-    print('{}/{} nodes passed'.format(passed, graph.number_of_nodes()))
+    print('{}/{} nodes passed {}'.format(passed, graph.number_of_nodes(), ', '.join(f.__name__ for f in filters)))
