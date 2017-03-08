@@ -15,11 +15,22 @@ def count_defaultdict(dict_of_lists):
     """Takes a dictionary and applies a counter to each list
 
     :param dict_of_lists: A dictionary of lists
-    :type dict_of_lists: dict
+    :type dict_of_lists: dict or defaultdict
     :return: A dictionary of {key: Counter(values)}
     :rtype: dict
     """
     return {k: Counter(v) for k, v in dict_of_lists.items()}
+
+
+def get_value_sets(dict_of_iterables):
+    """Takes a dictionary of lists/iterables/counters and gets the sets of the values
+
+    :param dict_of_lists: A dictionary of lists
+    :type dict_of_lists: dict or defaultdict
+    :return: A dictionary of {key: set of values}
+    :rtype: dict
+    """
+    return {k: set(v) for k, v in dict_of_iterables.items()}
 
 
 def count_dict_values(dict_of_counters):

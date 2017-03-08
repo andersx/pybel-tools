@@ -11,7 +11,7 @@ from flask import Flask
 
 from pybel.io import to_json_dict
 from .dict_service_utils import DictionaryService
-from ..summary import get_unique_annotations
+from ..summary import get_annotation_values_by_annotation
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def build_dictionary_service_app(dsa):
     def get_filter(network_id):
         graph = api.get_network_by_id(network_id)
 
-        unique_annotation_dict = get_unique_annotations(graph)
+        unique_annotation_dict = get_annotation_values_by_annotation(graph)
 
         json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in
                      unique_annotation_dict.items()]

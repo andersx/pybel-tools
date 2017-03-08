@@ -17,7 +17,7 @@ from pybel.constants import *
 from pybel.parser.parse_exceptions import MissingNamespaceNameWarning, NakedNameWarning
 from pybel_tools.utils import calculate_tanimoto_set_distances
 from .selection import group_subgraphs_filtered, get_subgraph_by_annotation
-from .utils import check_has_annotation, keep_node_permissive, count_dict_values
+from .utils import check_has_annotation, keep_node_permissive, count_dict_values, get_value_sets
 
 
 # NODE HISTOGRAMS
@@ -33,6 +33,17 @@ def count_functions(graph):
     return Counter(data[FUNCTION] for _, data in graph.nodes_iter(data=True))
 
 
+def get_functions(graph):
+    """Gets the set of all functions used in this graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: A set of functions
+    :rtype: set
+    """
+    return set(count_functions(graph))
+
+
 def count_namespaces(graph):
     """Counts the frequency of each namespace across all nodes (that have namespaces)
 
@@ -42,6 +53,30 @@ def count_namespaces(graph):
     :rtype: Counter
     """
     return Counter(data[NAMESPACE] for _, data in graph.nodes_iter(data=True) if NAMESPACE in data)
+
+
+def get_namespaces(graph):
+    """Gets the set of all namespaces used in this graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: A set of namespaces
+    :rtype: set
+    """
+    return set(count_namespaces(graph))
+
+
+def count_names(graph):
+    """Counts all names through the graph by the NAME tag in the nodes' data dictionaries.
+
+    This is useful to identify which nodes appear with the same name in multiple namespaces, or to identify variants
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: A Counter from {names: frequency}
+    :rtype: Counter
+    """
+    return Counter(data[NAME] for _, data in graph.nodes_iter(data=True) if NAME in data)
 
 
 def get_names(graph, namespace):
@@ -58,8 +93,12 @@ def get_names(graph, namespace):
     return {data[NAME] for _, data in graph.nodes_iter(data=True) if NAMESPACE in data and data[NAMESPACE] == namespace}
 
 
-def get_unique_names(graph):
-    """Get a dictionary of {namespace: set of names} present in the graph
+def get_names_by_namespace(graph):
+    """Get a dictionary of {namespace: set of names} present in the graph.
+
+    Equivalent to:
+
+    >>> {namespace: get_names(graph, namespace) for namespace in get_namespaces(graph)}
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
@@ -74,6 +113,8 @@ def get_unique_names(graph):
 
     return result
 
+
+# Properties of nodes
 
 def has_causal_out_edges(graph, node):
     """Gets if the node has causal out edges
@@ -231,7 +272,52 @@ def count_annotations(graph):
     return Counter(key for _, _, d in graph.edges_iter(data=True) if ANNOTATIONS in d for key in d[ANNOTATIONS])
 
 
-def count_annotation_instances(graph, annotation):
+def get_annotations(graph):
+    """Gets the set of annotations used in the graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: A set of annotation keys
+    :rtype: set
+    """
+    return set(count_annotations(graph))
+
+
+def get_annotation_values_by_annotation(graph):
+    """Gets the set of values for each annotation used in a BEL Graph
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :return: A dictionary of {annotation key: set of annotation values}
+    :rtype: dict
+    """
+    result = defaultdict(list)
+
+    for _, _, data in graph.edges_iter(data=True):
+        if ANNOTATIONS not in data:
+            continue
+
+        for key, value in data[ANNOTATIONS].items():
+            result[key].append(value)
+
+    return get_value_sets(result)
+
+
+def count_annotation_values(graph, annotation):
+    """Counts in how many edges each annotation appears in a graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param annotation: The annotation to count
+    :type annotation: str
+    :return: A Counter from {annotation value: frequency}
+    :rtype: Counter
+    """
+    return Counter(
+        d[ANNOTATIONS][annotation] for _, _, d in graph.edges_iter(data=True) if check_has_annotation(d, annotation))
+
+
+def get_annotation_values(graph, annotation):
     """Counts in how many edges each annotation appears in a graph
 
     :param graph: A BEL graph
@@ -241,11 +327,10 @@ def count_annotation_instances(graph, annotation):
     :return: A Counter from {annotation value: frequency}
     :rtype: Counter
     """
-    return Counter(
-        d[ANNOTATIONS][annotation] for _, _, d in graph.edges_iter(data=True) if check_has_annotation(d, annotation))
+    return set(count_annotation_values(graph, annotation))
 
 
-def count_annotation_instances_filtered(graph, annotation, source_filter=None, target_filter=None):
+def count_annotation_values_filtered(graph, annotation, source_filter=None, target_filter=None):
     """Counts in how many edges each annotation appears in a graph, but filter out source nodes and target nodes
 
     See :func:`pybel_tools.utils.keep_node` for a basic filter.
@@ -266,26 +351,6 @@ def count_annotation_instances_filtered(graph, annotation, source_filter=None, t
 
     return Counter(d[ANNOTATIONS][annotation] for u, v, d in graph.edges_iter(data=True) if
                    check_has_annotation(d, annotation) and source_filter(graph, u) and target_filter(graph, v))
-
-
-def get_unique_annotations(graph):
-    """Gets the annotations used in a BEL Graph
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :return: Dictionary of {annotation key: set of annotation values}
-    :rtype: dict
-    """
-    result = defaultdict(set)
-
-    for _, _, data in graph.edges_iter(data=True):
-        if ANNOTATIONS not in data:
-            continue
-
-        for key, value in data[ANNOTATIONS].items():
-            result[key].add(value)
-
-    return result
 
 
 # ERROR HISTOGRAMS
@@ -571,7 +636,7 @@ def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
     :param annotation: An annotation to split by. Suggestion: 'Subgraph'
     :type annotation: str
     """
-    c = count_annotation_instances(graph, annotation)
+    c = count_annotation_values(graph, annotation)
 
     for value in c:
         sg = get_subgraph_by_annotation(graph, annotation, value)

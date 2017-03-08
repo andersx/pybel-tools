@@ -1,7 +1,7 @@
 from collections import Counter, defaultdict
 
 from pybel.constants import ANNOTATIONS
-from .summary import count_annotation_instances
+from .summary import count_annotation_values
 from .utils import check_has_annotation
 
 
@@ -98,7 +98,7 @@ def infer_subgraph_expansion(graph, subgraph_key='Subgraph'):
     """
 
     inferred_subgraphs = defaultdict(set)
-    subgraph_counts = count_annotation_instances(graph, subgraph_key)
+    subgraph_counts = count_annotation_values(graph, subgraph_key)
     raise NotImplementedError
 
 
