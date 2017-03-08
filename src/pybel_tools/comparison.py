@@ -1,8 +1,7 @@
 import itertools as itt
 import logging
 
-from pybel import BELGraph
-from pybel_tools.summary import get_edge_relations
+from .summary import get_edge_relations
 
 log = logging.getLogger(__name__)
 
