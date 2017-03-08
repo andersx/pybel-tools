@@ -19,6 +19,7 @@ __all__ = [
     'get_annotations',
     'get_annotation_values_by_annotation',
     'count_annotation_values',
+    'get_annotation_values',
     'count_annotation_values_filtered'
 ]
 
