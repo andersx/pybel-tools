@@ -83,13 +83,14 @@ function render_frame() {
 // Initialize d3.js force to plot the networks from neo4j json
 function init_d3_force(graph) {
 
-
-    $(".disabled").attr('class', 'nav-link ');
-
+    console.log(graph);
 
     //////////////////////////////
     // Main graph visualization //
     //////////////////////////////
+
+    // Enable nodes and edges tabs
+    $(".disabled").attr('class', 'nav-link ');
 
     // Force div
     var graph_div = $('#graph-chart');
@@ -478,27 +479,27 @@ function init_d3_force(graph) {
         });
     }
 
-    function selected_edge_highlight(edge) {
+    function selected_edge_highlight(edge_array) {
 
         // Array with names of the nodes in the selected edge
         var mapped_nodes_names = [];
 
         // Filtered not selected links
-        var links_not_mapped = g.selectAll(".link").filter(function (el) {
+        var links_not_mapped = g.selectAll(".link").filter(function (edge_object) {
 
-            if (el.label == edge) {
-                mapped_nodes_names.push(el.source.id);
-                mapped_nodes_names.push(el.target.id);
+            if (edge_array.indexOf(edge_object.source.cname + " " + edge_object.relation + " " + edge_object.target.cname) >= 0) {
+                mapped_nodes_names.push(edge_object.source.cname);
+                mapped_nodes_names.push(edge_object.target.cname);
             }
-
-            // Source and target should be present in the edge
-            return el.label != edge;
+            else return edge_object;
         });
 
         hide_select_nodes_text(mapped_nodes_names, false);
 
-        var not_mapped_nodes_objects = node.filter(function (el) {
-            return mapped_nodes_names.indexOf(el.id) < 0;
+        console.log(mapped_nodes_names);
+
+        var not_mapped_nodes_objects = node.filter(function (node_object) {
+            return mapped_nodes_names.indexOf(node_object.cname) < 0;
         });
 
         not_mapped_nodes_objects.style("opacity", "0.1");
@@ -508,8 +509,6 @@ function init_d3_force(graph) {
 
     // Highlight nodes from array of ids and change the opacity of the rest of nodes
     function selected_nodes_highlight(node_list) {
-
-        console.log(node_list);
 
         hide_select_nodes_text(node_list, false);
 
@@ -684,15 +683,16 @@ function init_d3_force(graph) {
     $.each(graph.links, function (key, value_array) {
 
         $("#edge-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><span class>" +
-            value_array.source.name + ' ' + value_array.relation + ' ' + value_array.target.name + "</span></li>");
+            value_array.source.cname + ' ' + value_array.relation + ' ' + value_array.target.cname + "</span></li>");
 
     });
 
     $('#get-checked-edges').on('click', function (event) {
         event.preventDefault();
+
         var checkedItems = [];
         $(".node-checkbox:checked").each(function (idx, li) {
-            checkedItems.push(li.parentElement.childNodes[2].innerHTML);
+            checkedItems.push(li.parentElement.childNodes[1].innerHTML);
         });
 
         reset_attributes();
