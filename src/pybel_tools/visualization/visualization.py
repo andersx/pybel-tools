@@ -34,7 +34,7 @@ def render_graph_template(context):
     :type context: dict
     :rtype: str
     """
-    return render_template('graph_template.html', **context)
+    return render_template('graph_template.html', context)
 
 
 def build_graph_context(graph):
@@ -42,13 +42,13 @@ def build_graph_context(graph):
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
+    :return: JSON context for rendering
+    :rtype: dict
     """
-    graph_json_str = to_jsons(graph)
-
     return {
-        'json': graph_json_str,
-        'number_nodes': '10',
-        'number_edges': '32434'
+        'json': to_jsons(graph),
+        'number_nodes': graph.number_of_nodes(),
+        'number_edges': graph.number_of_edges()
     }
 
 
@@ -57,6 +57,7 @@ def to_html(graph):
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
+    :return: HTML string representing the graph
     :rtype: str
     """
     return render_graph_template(build_graph_context(graph))
