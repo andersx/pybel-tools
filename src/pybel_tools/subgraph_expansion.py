@@ -51,7 +51,7 @@ def get_subgraph_edges(graph, subgraph_name, subgraph_key='Subgraph', source_fil
             yield u, v, k, d
 
 
-def get_subgraph_fill_edges(graph, subgraph, node_filter=None):
+def get_subgraph_fill_edges(graph, subgraph, node_filter=None, threshold=2):
     """
 
     :param graph: A BEL Graph
@@ -59,6 +59,7 @@ def get_subgraph_fill_edges(graph, subgraph, node_filter=None):
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filter: Optional filter function (graph, node) -> bool
+    :param threshold: Minimum frequency of betweenness occurrence to add a gap node
     :return:
     """
 
@@ -71,7 +72,7 @@ def get_subgraph_fill_edges(graph, subgraph, node_filter=None):
     possible_pred = get_possible_predecessor_edges(graph, subgraph)
     pred_counter = Counter(v for u, v in possible_pred)
 
-    gaps = {node for node, freq in (succ_counter + pred_counter).items() if 2 <= freq and node_filter(graph, node)}
+    gaps = {n for n, freq in (succ_counter + pred_counter).items() if threshold <= freq and node_filter(graph, n)}
 
     for already_in_graph, new_node in possible_succ:
         if new_node in gaps:
