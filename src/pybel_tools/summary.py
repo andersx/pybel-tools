@@ -5,10 +5,13 @@ and provide some suggestions for fixes.
 
 """
 
+from __future__ import print_function
+
 import itertools as itt
 from collections import Counter, defaultdict
 from operator import itemgetter
 
+import networkx as nx
 import pandas as pd
 from fuzzywuzzy import process, fuzz
 
@@ -645,3 +648,14 @@ def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
         file_name = '{}_{}.gpickle'.format(annotation, value.replace(' ', '_'))
         path = os.path.join(directory, file_name)
         to_pickle(sg, path)
+
+
+def print_summary(graph, file=None):
+    """Prints useful information about the graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    """
+    print('Number of nodes: {}'.format(graph.number_of_nodes()), file=file)
+    print('Number of edges: {}'.format(graph.number_of_edges()), file=file)
+    print('Number of weakly connected components: {}'.format(nx.number_weakly_connected_components(graph)), file=file)
