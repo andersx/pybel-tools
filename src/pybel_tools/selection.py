@@ -8,7 +8,7 @@ from collections import defaultdict
 from itertools import combinations
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS
+from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS
 from .node_filters import filter_nodes
 from .utils import check_has_annotation
 
@@ -90,6 +90,26 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
                 bg.add_node(v, graph.node[v])
 
             bg.add_edge(u, v, key=key, attr_dict=attr_dict)
+
+    return bg
+
+
+def get_causal_subgraph(graph):
+    """Builds a new subgraph induced over all edges that are causal
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: A subgraph of the original BEL graph
+    :rtype: pybel.BELGraph
+    """
+    bg = BELGraph()
+
+    for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
+        if attr_dict[RELATION] in CAUSAL_RELATIONS:
+            bg.add_edge(u, v, key=key, attr_dict=attr_dict)
+
+    for node in bg.nodes_iter():
+        bg.node[node].update(graph.node[node])
 
     return bg
 
