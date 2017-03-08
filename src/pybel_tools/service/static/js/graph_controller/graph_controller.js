@@ -47,14 +47,18 @@ $(document).ready(function () {
 
     // Saves visualized network as image
     $("#save-svg-graph").click(function () {
+        var html = d3.select("#force-svg")
+            .attr("title", "force-svg")
+            .attr("version", 1.1)
+            .attr("xmlns", "http://www.w3.org/2000/svg")
+            .node().parentNode.innerHTML;
 
-        console.log('asdfasdf');
-        var graphName = "graph_image";
-        var svgContainer = $("#graph-chart").svg(),
-            svgGet = svgContainer.svg("get");
-        svgGet = svgGet.toSVG();
-        var blob = new Blob([svgGet], {type: "data:image/svg+xml;charset="});
-        saveAs(blob, graphName + ".svg");
+        var blob = new Blob([html], {type: "image/svg+xml"});
+        saveAs(blob, "graph.svg");
+    });
+
+    $("#bel-logo").click(function () {
+
     });
 
 });

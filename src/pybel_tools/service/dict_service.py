@@ -17,7 +17,7 @@ from ..summary import get_annotation_values_by_annotation
 try:
     from StringIO import StringIO
 except ImportError:
-    from io import StringIO
+    from io import StringIO, BytesIO
 
 log = logging.getLogger(__name__)
 
@@ -97,12 +97,15 @@ def build_dictionary_service_app(dsa):
             return flask.Response(sio, mimetype='text/plain')
 
         if format == 'graphml':
-            to_graphml(graph, sio)
-            return flask.Response(sio, mimetype=' text/xml')
+            bio = BytesIO()
+
+            to_graphml(graph, bio)
+            return flask.Response(StringIO(bio), mimetype=' text/xml')
 
         if format == 'csv':
             to_csv(graph, sio)
-            return flask.Response(sio, mimetype=' text/comma-separated-values')
+            sio.seek(0)
+            return flask.send_file(sio, attachment_filename="testing.txt", as_attachment=True)
 
         return flask.abort(404)
 
