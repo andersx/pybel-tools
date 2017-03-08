@@ -342,3 +342,45 @@ def add_canonical_names(graph):
             continue
 
         graph.node[node][CNAME] = calculate_canonical_name(graph, node)
+
+
+def parse_authors(graph):
+    """Parses all of the citation author strings to lists by splitting on the pipe character "|"
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    """
+    for u, v, k in graph.edges_iter(keys=True):
+        if CITATION not in graph.edge[u][v][k]:
+            continue
+
+        if CITATION_AUTHORS not in graph.edge[u][v][k][CITATION]:
+            continue
+
+        authors = graph.edge[u][v][k][CITATION][CITATION_AUTHORS]
+
+        if not isinstance(authors, str):
+            continue
+
+        graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = list(authors.split('|'))
+
+
+def serialize_authors(graph):
+    """Recombines all authors with the pipe character "|"
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    """
+    for u, v, k in graph.edges_iter(keys=True):
+        if CITATION not in graph.edge[u][v][k]:
+            continue
+
+        if CITATION_AUTHORS not in graph.edge[u][v][k][CITATION]:
+            continue
+
+        authors = graph.edge[u][v][k][CITATION][CITATION_AUTHORS]
+
+        if not isinstance(authors, list):
+            continue
+
+        graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = '|'.join(authors)
