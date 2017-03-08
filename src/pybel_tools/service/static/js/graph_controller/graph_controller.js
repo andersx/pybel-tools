@@ -431,7 +431,7 @@ function init_d3_force(graph) {
         // Filter the text to those not belonging to the list of node names
 
         var not_selected_names = g.selectAll(".node-name").filter(function (d) {
-            return node_list.indexOf(d.name) < 0;
+            return node_list.indexOf(d.cname) < 0;
         });
 
         if (visualization != true) {
@@ -515,14 +515,14 @@ function init_d3_force(graph) {
 
         // Filter not mapped nodes to change opacity
         var not_mapped_nodes_objects = svg.selectAll(".node").filter(function (el) {
-            return searchForArray(node_list, el.id) < 0;
+            return searchForArray(node_list, el.cname) < 0;
         });
 
         // Not mapped links
         var links_not_mapped = g.selectAll(".link").filter(function (el) {
             // Source and target should be present in the edge
 
-            return !((searchForArray(node_list, el.source.id) >= 0 || searchForArray(node_list, el.target.id) >= 0));
+            return !((searchForArray(node_list, el.source.cname) >= 0 || searchForArray(node_list, el.target.cname) >= 0));
         });
 
         not_mapped_nodes_objects.style("opacity", "0.1");
