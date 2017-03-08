@@ -2,11 +2,7 @@ from collections import Counter, defaultdict
 
 from pybel.constants import ANNOTATIONS
 from .summary import count_annotation_values
-from .utils import check_has_annotation
-
-
-def _permissive_node_filter(graph, node):
-    return True
+from .utils import check_has_annotation, keep_node_permissive
 
 
 def get_possible_successor_edges(graph, subgraph):
@@ -43,10 +39,10 @@ def count_possible_predecessors(graph, subgraph):
 
 def get_subgraph_edges(graph, subgraph_name, subgraph_key='Subgraph', source_filter=None, target_filter=None):
     if source_filter is None:
-        source_filter = _permissive_node_filter
+        source_filter = keep_node_permissive
 
     if target_filter is None:
-        target_filter = _permissive_node_filter
+        target_filter = keep_node_permissive
 
     for u, v, k, d in graph.edges_iter(keys=True, data=True):
         if not check_has_annotation(d, subgraph_key):
@@ -67,7 +63,7 @@ def get_subgraph_fill_edges(graph, subgraph, node_filter=None):
     """
 
     if node_filter is None:
-        node_filter = _permissive_node_filter
+        node_filter = keep_node_permissive
 
     possible_succ = get_possible_successor_edges(graph, subgraph)
     succ_counter = Counter(v for u, v in possible_succ)
