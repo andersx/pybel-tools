@@ -22,6 +22,7 @@ def group_subgraphs(graph, annotation='Subgraph'):
     :param annotation: An annotation to use to group edges
     :type annotation: str
     :return: dict of sets of BELGraph nodes
+    :rtype: dict
     """
 
     result = defaultdict(set)

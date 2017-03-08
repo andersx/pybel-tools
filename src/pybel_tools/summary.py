@@ -27,6 +27,7 @@ def count_functions(graph):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: A Counter from {function: frequency}
     :rtype: Counter
     """
     return Counter(data[FUNCTION] for _, data in graph.nodes_iter(data=True))
@@ -37,6 +38,7 @@ def count_namespaces(graph):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: A Counter from {namespace: frequency}
     :rtype: Counter
     """
     return Counter(data[NAMESPACE] for _, data in graph.nodes_iter(data=True) if NAMESPACE in data)
@@ -106,7 +108,7 @@ def get_causal_out_edges(graph, node):
     :type graph: pybel.BELGraph
     :param node: A node
     :type node: tuple
-    :return:
+    :return: A set of (source, target) pairs where the source is the given node
     :rtype: set
     """
 
@@ -120,14 +122,13 @@ def get_causal_in_edges(graph, node):
     :type graph: pybel.BELGraph
     :param node: A node
     :type node: tuple
-    :return:
+    :return: A set of (source, target) pairs where the target is the given node
     :rtype: set
     """
     return {(u, v) for u, v, d in graph.in_edges_iter(node, data=True) if d[RELATION] in CAUSAL_RELATIONS}
 
 
-# TODO only count over causal edges
-def get_source_abundances(graph):
+def get_source_abundances(graph, function):
     """Returns a set of all ABUNDANCE nodes that have an in-degree of 0, which likely means that it is an external
     perterbagen and is not known to have any causal origin from within the biological system.
 
@@ -135,42 +136,48 @@ def get_source_abundances(graph):
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
-    :return: A set of source ABUNDANCE nodes
+    :param function: The function to filter by
+    :type function: str
+    :return: A set of source nodes
     :rtype: set
     """
     return {n for n, d in graph.nodes_iter(data=True) if
-            d[FUNCTION] == ABUNDANCE and not has_causal_in_edges(graph, n) and has_causal_out_edges(graph, n)}
+            d[FUNCTION] == function and not has_causal_in_edges(graph, n) and has_causal_out_edges(graph, n)}
 
 
-def get_central_abundances(graph):
+def get_central_abundances(graph, function):
     """Returns a set of all ABUNDANCE nodes that have both an in-degree > 0 and out-degree > 0. This means
     that they are an integral part of a pathway, since they are both produced and consumed.
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
+    :param function: The function to filter by
+    :type function: str
     :return: A set of central ABUNDANCE nodes
     :rtype: set
     """
     result = set()
 
     for n, d in graph.nodes_iter(data=True):
-        if d[FUNCTION] == ABUNDANCE and has_causal_in_edges(graph, n) and has_causal_out_edges(graph, n):
+        if d[FUNCTION] == function and has_causal_in_edges(graph, n) and has_causal_out_edges(graph, n):
             result.add(n)
 
     return result
 
 
-def get_sink_abundances(graph):
+def get_sink_abundances(graph, function):
     """Returns a set of all ABUNDANCE nodes that have an causal out-degree of 0, which likely means that the knowledge
     assembly is incomplete, or there is a curation error.
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
+    :param function: The function to filter by
+    :type function: str
     :return: A set of sink ABUNDANCE nodes
     :rtype: set
     """
     return {n for n, d in graph.nodes_iter(data=True) if
-            d[FUNCTION] == ABUNDANCE and not has_causal_out_edges(graph, n) and has_causal_in_edges(graph, n)}
+            d[FUNCTION] == function and not has_causal_out_edges(graph, n) and has_causal_in_edges(graph, n)}
 
 
 # EDGE HISTOGRAMS
@@ -180,6 +187,7 @@ def count_relations(graph):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: A Counter from {relation type: frequency}
     :rtype: Counter
     """
     return Counter(d[RELATION] for _, _, d in graph.edges_iter(data=True))
@@ -206,6 +214,7 @@ def count_unique_relations(graph):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: Counter from {relation type: frequency}
     :rtype: Counter
     """
     return Counter(itt.chain.from_iterable(get_edge_relations(graph).values()))
@@ -216,6 +225,7 @@ def count_annotations(graph):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: A Counter from {annotation key: frequency}
     :rtype: Counter
     """
     return Counter(key for _, _, d in graph.edges_iter(data=True) if ANNOTATIONS in d for key in d[ANNOTATIONS])
@@ -228,6 +238,7 @@ def count_annotation_instances(graph, annotation):
     :type graph: pybel.BELGraph
     :param annotation: An annotation to count
     :type annotation: str
+    :return: A Counter from {annotation value: frequency}
     :rtype: Counter
     """
     return Counter(
@@ -247,6 +258,7 @@ def count_annotation_instances_filtered(graph, annotation, source_filter=None, t
     :type source_filter: lambda
     :param target_filter: a predicate (graph, node) -> bool for keeping target nodes
     :type target_filter: lambda
+    :return: A Counter from {annotation value: frequency}
     :rtype: Counter
     """
     source_filter = keep_node_permissive if source_filter is None else source_filter
@@ -261,7 +273,7 @@ def get_unique_annotations(graph):
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
-    :return: Dictionary of {annotation: set of values}
+    :return: Dictionary of {annotation key: set of annotation values}
     :rtype: dict
     """
     result = defaultdict(set)
@@ -283,6 +295,7 @@ def count_error_types(graph):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: A Counter of {error type: frequency}
     :rtype: Counter
     """
     return Counter(e.__class__.__name__ for _, _, e, _ in graph.warnings)
@@ -293,16 +306,18 @@ def count_naked_names(graph):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: A Counter from {name: frequency}
     :rtype: Counter
     """
     return Counter(e.name for _, _, e, _ in graph.warnings if isinstance(e, NakedNameWarning))
 
 
 def calculate_incorrect_name_dict(graph):
-    """Groups all of the incorrect identifiers in a dict of {namespace: list of wrong names}
+    """Groups all of the incorrect identifiers in a dict of {namespace: list of erroneous names}
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: A dictionary of {namespace: list of erroneous names}
     :rtype: dict
     """
     missing = defaultdict(list)
@@ -322,7 +337,7 @@ def calculate_suggestions(incorrect_name_dict, namespace_dict):
     :type incorrect_name_dict: dict
     :param namespace_dict: A dictionary of {namespace: list of allowed names}
     :type namespace_dict: dict
-    :return: A dictionary of suggestions for each wrong namespace, name pair
+    :return: A dictionary of suggestions for each wrong (namespace, name) pair
     :rtype: dict
     """
     suggestions_cache = defaultdict(list)
@@ -346,7 +361,7 @@ def calculate_error_by_annotation(graph, annotation):
     :type graph: pybel.BELGraph
     :param annotation: The annotation to group errors by
     :type annotation: str
-    :return:
+    :return: A dictionary of {annotation value: list of errors}
     :rtype: dict
     """
     results = defaultdict(list)
