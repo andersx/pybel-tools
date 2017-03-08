@@ -41,7 +41,7 @@ def group_subgraphs(graph, annotation='Subgraph'):
 def group_subgraphs_filtered(graph, node_filter, annotation='Subgraph'):
     """Groups the nodes occurring in edges matching the given annotation, filtered
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param node_filter: A predicate (graph, node) -> bool for passing nodes
     :param annotation: The annotation to use for grouping
@@ -54,13 +54,14 @@ def group_subgraphs_filtered(graph, node_filter, annotation='Subgraph'):
 def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
     """Builds a new subgraph induced over all edges whose annotations match the given key and value
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param value: The value for the annotation
     :type value: str
     :param annotation: An annotation
     :type annotation: str
-    :rtype: BELGraph
+    :return: A subgraph of the original BEL graph
+    :rtype: pybel.BELGraph
     """
     bg = BELGraph()
 
@@ -84,7 +85,7 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
 def get_triangles(graph, node):
     """Yields all triangles pointed by the given node
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param node: The source node
     :type node: tuple
@@ -104,7 +105,7 @@ def filter_graph(graph, expand_nodes=None, remove_nodes=None, **kwargs):
     2. Add nodes
     3. Remove nodes
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param expand_nodes: Add the neighborhoods around all of these nodes
     :type expand_nodes: list
@@ -113,7 +114,7 @@ def filter_graph(graph, expand_nodes=None, remove_nodes=None, **kwargs):
     :param kwargs: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
     :type kwargs: dict
     :return: A BEL Graph
-    :rtype: BELGraph
+    :rtype: pybel.BELGraph
     """
 
     expand_nodes = [] if expand_nodes is None else expand_nodes
