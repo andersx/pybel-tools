@@ -8,11 +8,6 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
     <style>
-
-
-
-
-
         .link_continuous {
             fill: none;
             stroke-width: 1px;
@@ -68,11 +63,9 @@
     </style>
     <script type="text/javascript">
         window.graph = {{ json }};
-        {#        window.node_hashes = {{ node_hashes  }};#}
     </script>
     <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <script type="text/javascript"
@@ -99,8 +92,8 @@
 
 
             // Graph uses 0.85 x 0.85 of the window size
-            var w = $("#graph-chart").width(), h =  w.innerHeight ||
-                e.clientHeight ||  g.clientHeight;
+            var w = $("#graph-chart").width(), h = w.innerHeight ||
+                e.clientHeight || g.clientHeight;
 
             var focus_node = null, highlight_node = null;
 
@@ -772,10 +765,7 @@
 
 </head>
 <body>
-
-        <div id="graph-chart">
-        </div>
-        <!-- /.Force -->
-
+<div id="graph-chart">
+</div>
 </body>
 </html>
