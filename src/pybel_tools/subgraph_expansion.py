@@ -1,8 +1,9 @@
 from collections import Counter, defaultdict
 
 from pybel.constants import ANNOTATIONS
+from .node_filters import keep_node_permissive
 from .summary import count_annotation_values
-from .utils import check_has_annotation, keep_node_permissive
+from .utils import check_has_annotation
 
 
 def get_possible_successor_edges(graph, subgraph):

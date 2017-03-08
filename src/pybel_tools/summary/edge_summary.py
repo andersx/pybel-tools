@@ -8,7 +8,8 @@ import itertools as itt
 from collections import Counter, defaultdict
 
 from pybel.constants import RELATION, ANNOTATIONS
-from ..utils import get_value_sets, check_has_annotation, keep_node_permissive
+from ..node_filters import keep_node_permissive
+from ..utils import get_value_sets, check_has_annotation
 
 __all__ = [
     'count_relations',

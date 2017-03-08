@@ -71,49 +71,6 @@ def check_has_annotation(data, key):
     return _check_has_data(data, ANNOTATIONS, key)
 
 
-def keep_node_permissive(graph, node):
-    """A default node filter that is true for all nodes
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param node: The node
-    :type node: tuple
-    :return: True
-    :rtype: bool
-    """
-    return True
-
-
-def keep_node(graph, node, super_nodes=None):
-    """A default node filter for removing unwanted nodes in an analysis.
-
-    This function returns false for nodes that have PATHOLOGY or are on a pre-defined blacklist. This can be most
-    easily used with :py:func:`functools.partial`:
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param node: The node to check if it should be kepy
-    :type node: tuple
-    :param super_nodes: A list of nodes to automatically throw out
-    :type super_nodes: list of tuples
-    :return: Should the node be kept?
-    :rtype: bool
-
-
-    >>> from functools import partial
-    >>> from pybel.constants import GENE
-    >>> from pybel_tools.utils import keep_node
-    >>> cool_filter = partial(keep_node, super_nodes={(GENE, 'HGNC', 'APP')})
-    """
-
-    if graph.node[node][FUNCTION] == PATHOLOGY:
-        return False
-
-    if super_nodes and node in super_nodes:
-        return False
-
-    return True
-
 
 def calculate_tanimoto_set_distances(dict_of_sets):
     """Returns a distance matrix keyed by the keys in the given dict. Distances are calculated
