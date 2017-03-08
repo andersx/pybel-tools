@@ -43,7 +43,19 @@ $(document).ready(function () {
 
     $("#submit-button").on("click", function () {
         get_selected_nodes(tree);
-    })
+    });
+
+    // Saves visualized network as image
+    $("#save-svg-graph").click(function () {
+
+        console.log('asdfasdf');
+        var graphName = "graph_image";
+        var svgContainer = $("#graph-chart").svg(),
+            svgGet = svgContainer.svg("get");
+        svgGet = svgGet.toSVG();
+        var blob = new Blob([svgGet], {type: "data:image/svg+xml;charset="});
+        saveAs(blob, graphName + ".svg");
+    });
 
 });
 
@@ -764,14 +776,3 @@ function init_d3_force(graph) {
     });
 }
 
-// Saves visualized network as image
-$("#save-svg-graph").click(function () {
-
-    console.log('asdfasdf');
-    var graphName = "graph_image";
-    var svgContainer = $("#graph-chart").svg(),
-        svgGet = svgContainer.svg("get");
-    svgGet = svgGet.toSVG();
-    var blob = new Blob([svgGet], {type: "data:image/svg+xml;charset="});
-    saveAs(blob, graphName + ".svg");
-});

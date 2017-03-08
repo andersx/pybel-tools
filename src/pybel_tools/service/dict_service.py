@@ -9,9 +9,15 @@ import logging
 import flask
 from flask import Flask
 
-from pybel.io import to_json_dict
+from pybel import to_bel, to_cx_json, to_graphml, to_bytes
+from pybel.io import to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
 from ..summary import get_annotation_values_by_annotation
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 log = logging.getLogger(__name__)
 
@@ -70,9 +76,35 @@ def build_dictionary_service_app(dsa):
 
         graph = api.query_filtered_builder(network_id, expand_nodes, remove_nodes, **annotations)
 
-        graph_json = to_node_link(graph)
+        format = flask.request.args.get('format')
 
-        return flask.jsonify(graph_json)
+        if format is None:
+            graph_json = to_node_link(graph)
+
+            return flask.jsonify(graph_json)
+
+        if format == 'cx':
+            return flask.jsonify(to_cx_json(graph))
+
+        elif format == 'bytes':
+            g_bytes = to_bytes(graph)
+            return flask.send_file(g_bytes)
+
+        sio = StringIO()
+
+        if format == 'bel':
+            to_bel(graph, sio)
+            return flask.Response(sio, mimetype='text/plain')
+
+        if format == 'graphml':
+            to_graphml(graph, sio)
+            return flask.Response(sio, mimetype=' text/xml')
+
+        if format == 'csv':
+            to_csv(graph, sio)
+            return flask.Response(sio, mimetype=' text/comma-separated-values')
+
+        return flask.abort(404)
 
     @dsa.route('/supernetwork/', methods=['GET'])
     def get_network_filtered():
