@@ -4,6 +4,8 @@ This module contains a set of default functions for filtering nodes and building
 
 """
 
+from __future__ import print_function
+
 from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY
 
 
@@ -29,10 +31,10 @@ def function_filter_builder(function):
     :rtype: lambda
     """
 
-    def node_filter(graph, node):
+    def function_filter(graph, node):
         return graph.node[node][FUNCTION] != function
 
-    return node_filter
+    return function_filter
 
 
 def exclusion_filter_builder(*nodes):
@@ -44,10 +46,10 @@ def exclusion_filter_builder(*nodes):
     :rtype: lambda
     """
 
-    def node_filter(graph, node):
+    def exclusion_filter(graph, node):
         return all(node != n for n in nodes)
 
-    return node_filter
+    return exclusion_filter
 
 
 pathology_filter = function_filter_builder(PATHOLOGY)
@@ -105,7 +107,7 @@ def keep_node(graph, node, super_nodes=None):
     return True
 
 
-def filter_concatenator(*filters):
+def concatenate_node_filters(*filters):
     """Concatenates multiple node filters to a new filter that requires all filters to be met
 
     :param filters: a list of predicates (graph, node) -> bool
@@ -114,13 +116,21 @@ def filter_concatenator(*filters):
     :rtype: lambda
     """
 
-    def new_filter(graph, node):
+    # If no filters are given, then return the trivially permissive filter
+    if not filters:
+        return keep_node_permissive
+
+    # If only one filter is given, don't bother wrapping it
+    if 1 == len(filters):
+        return filters[0]
+
+    def concatenated_filter(graph, node):
         return all(f(graph, node) for f in filters)
 
-    return new_filter
+    return concatenated_filter
 
 
-def apply_node_filters(graph, *filters):
+def filter_nodes(graph, *filters):
     """Applies a set of filters to the nodes iterator of a BEL graph
 
     :param graph: A BEL graph
@@ -130,7 +140,23 @@ def apply_node_filters(graph, *filters):
     :return: An iterable of nodes that pass all filters
     :rtype: iter
     """
+
+    # If no filters are given, return the standard node iterator
     if not filters:
         return graph.nodes_iter()
 
-    return filter(filter_concatenator(*filters), graph.nodes_iter())
+    concatenated_filter = concatenate_node_filters(*filters)
+
+    return (node for node in graph.nodes_iter() if concatenated_filter(graph, node))
+
+
+def summarize_filter(graph, *filters):
+    """Prints a summary of the number of nodes passing a given set of filters
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param filters: a list of filters
+    :type filters: list
+    """
+    passed = sum(1 for _ in filter_nodes(graph, *filters))
+    print('{}/{} nodes passed'.format(passed, graph.number_of_nodes()))
