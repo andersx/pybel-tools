@@ -1092,7 +1092,6 @@
 
     <div class="container align_row">
         <div class="col-md-12">
-            <h2 class="title text-center"> Biological Network Explorer</h2>
             <!-- / Force -->
             <div id="graph-chart">
             </div>
@@ -1100,113 +1099,6 @@
         </div>
     </div>
 </div><!-- /.container-fluid -->
-
-<div id="info-graph" class="modal fade"><!-- /.info-graph Modal -->
-    <div class="modal-dialog"><!-- /.Modal dialog -->
-        <div class="modal-content"><!-- /.Modal content -->
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                    ×
-                </button>
-                <h4 class="modal-title">Functionalities and info</h4>
-            </div>
-
-            <div class="modal-body text-left"><!-- /.Modal body -->
-
-                <h4>Subgraph info</h4>
-                <p class="color_red text-left">Number of nodes: <span class="color_black">{{ number_nodes }}</span></p>
-
-                <p class="color_red text-left">Number of edges: <span class="color_black">{{ number_edges }}</span></p>
-
-                <p class="color_red text-left">Average degree connectivity: <span
-                        class="color_black">{{ number_edges }}</span>
-                </p>
-
-                <h5 class="text-left"><span class="color_red">Selection </span> Network</h5>
-                <hr>
-                <hr>
-                <div class="text-center">
-                    <button type="button" id="hide_node_names" class="btn btn-info">Hide BEL names
-                    </button>
-                    <button type="button" id="restore_node_names" class="btn btn-info">Restore BEL names
-                    </button>
-                    <button type="button" id="restore" class="btn btn-info">Restore ALL
-                    </button>
-                </div>
-                <h4>Network Visualization Info</h4>
-                <div class="table-wrapper">
-                    <table class="table table-responsive">
-                        <thead>
-                        <tr>
-                            <th><b>Function</b></th>
-                            <th><b>Action</b></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>Expand/Delete node from the network</td>
-                            <td>Right click on node</td>
-                        </tr>
-                        <tr>
-                            <td>Freeze graph</td>
-                            <td>Press Space</td>
-                        </tr>
-                        <tr>
-                            <td>Pin a node down (fix it)</td>
-                            <td>Drag the node to the desire position</td>
-                        </tr>
-                        <tr>
-                            <td>Release node (unfix it)</td>
-                            <td>Doubleclick on the node</td>
-                        </tr>
-                        <tr>
-                            <td>Highlight node and its neighbourhood</td>
-                            <td>Mouseover node</td>
-                        </tr>
-                        <tr>
-                            <td>Zooming</td>
-                            <td>Zooming buttons</td>
-                        </tr>
-                        <tr>
-                            <td>Panning</td>
-                            <td>Mouse click and drag</td>
-                        </tr>
-                        <tr>
-                            <td>Undo changes</td>
-                            <td>Double click in the graph</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <hr>
-                <h4>Paths Visualization Info (Sankey Diagram)</h4>
-                <div class="table-wrapper">
-                    <table class="table table-responsive">
-                        <thead>
-                        <tr>
-                            <th><b>Function</b></th>
-                            <th><b>Action</b></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>See all connections of node via paths</td>
-                            <td>Click on node</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div><!-- /.Modal body -->
-
-            <div class="modal-footer">
-                <button class="btn btn-default" data-dismiss="modal" type="button">
-                    Close
-                </button>
-            </div>
-
-        </div><!-- /.Modal content -->
-    </div><!-- /.Modal dialog -->
-</div><!-- /.info-graph Modal -->
 
 <div aria-hidden="true" style="display: none;" id="legend" class="modal fade"><!-- /.Legend Modal -->
     <div class="modal-dialog">
