@@ -13,7 +13,7 @@ from operator import itemgetter
 import pandas as pd
 
 from pybel.constants import *
-from ..selection import group_subgraphs_filtered
+from ..selection import group_nodes_by_annotation_filtered
 from ..utils import calculate_tanimoto_set_distances
 from ..utils import check_has_annotation, count_dict_values
 
@@ -95,7 +95,7 @@ def rank_subgraph_by_node_filter(graph, node_filter, annotation='Subgraph', reve
     >>> from pybel import from_pickle
     >>> from pybel.constants import *
     >>> from pybel_tools.integration import overlay_type_data
-    >>> from pybel_tools.summary.summary import rank_subgraph_by_node_filter
+    >>> from pybel_tools.summary import rank_subgraph_by_node_filter
     >>> import pandas as pd
     >>> graph = from_pickle('~/dev/bms/aetionomy/alzheimers.gpickle')
     >>> df = pd.read_csv('~/dev/bananas/data/alzheimers_dgxp.csv', columns=['Gene', 'log2fc'])
@@ -104,7 +104,7 @@ def rank_subgraph_by_node_filter(graph, node_filter, annotation='Subgraph', reve
     >>> results = rank_subgraph_by_node_filter(graph, lambda g, n: 1.3 < abs(g.node[n]['log2fc']))
     """
 
-    r1 = group_subgraphs_filtered(graph, node_filter, annotation)
+    r1 = group_nodes_by_annotation_filtered(graph, node_filter=node_filter, annotation=annotation)
     r2 = count_dict_values(r1)
     return sorted(r2.items(), key=itemgetter(1), reverse=reverse)
 
@@ -115,6 +115,6 @@ def summarize_node_overlap(graph, node_filter, annotation='Subgraph'):
     Provides an alternate view on subgraph similarity, from a more node-centric view
 
     """
-    r1 = group_subgraphs_filtered(graph, node_filter, annotation)
+    r1 = group_nodes_by_annotation_filtered(graph, node_filter=node_filter, annotation=annotation)
     r2 = calculate_tanimoto_set_distances(r1)
     return r2

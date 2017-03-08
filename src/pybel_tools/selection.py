@@ -9,13 +9,14 @@ from itertools import combinations
 
 from pybel import BELGraph
 from pybel.constants import ANNOTATIONS
+from .node_filters import filter_nodes
 from .utils import check_has_annotation
 
 log = logging.getLogger(__name__)
 
 
-def group_subgraphs(graph, annotation='Subgraph'):
-    """Groups the nodes that occur in edges by the given annotation
+def group_nodes_by_annotation(graph, annotation='Subgraph'):
+    """Groups the nodes occurring in edges by the given annotation
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -28,7 +29,6 @@ def group_subgraphs(graph, annotation='Subgraph'):
     result = defaultdict(set)
 
     for u, v, d in graph.edges_iter(data=True):
-
         if not check_has_annotation(d, annotation):
             continue
 
@@ -38,8 +38,8 @@ def group_subgraphs(graph, annotation='Subgraph'):
     return result
 
 
-def group_subgraphs_filtered(graph, node_filter, annotation='Subgraph'):
-    """Groups the nodes occurring in edges matching the given annotation, filtered
+def group_nodes_by_annotation_filtered(graph, node_filter, annotation='Subgraph'):
+    """Groups the nodes occurring in edges by the given annotation, with a node filter applied
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -48,7 +48,19 @@ def group_subgraphs_filtered(graph, node_filter, annotation='Subgraph'):
     :return: A dictionary of {annotation value: set of nodes}
     :rtype: dict
     """
-    return {k: {n for n in v if node_filter(graph, n)} for k, v in group_subgraphs(graph, annotation).items()}
+    return {k: {n for n in v if node_filter(graph, n)} for k, v in group_nodes_by_annotation(graph, annotation).items()}
+
+
+def get_subgraph_by_node_filter(graph, *filters):
+    """Induces a graph on the nodes that pass all filters
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param filters: a list of (graph, node) -> bool
+    :return: An induced BEL subgraph
+    :rtype: pybel.BELGraph
+    """
+    return graph.subgraph(filter_nodes(graph, *filters))
 
 
 def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
@@ -97,7 +109,7 @@ def get_triangles(graph, node):
             yield b, a
 
 
-def filter_graph(graph, expand_nodes=None, remove_nodes=None, **kwargs):
+def filter_graph(graph, expand_nodes=None, remove_nodes=None, **annotations):
     """Queries graph's edges with multiple filters
 
     Order of operations:
@@ -111,8 +123,8 @@ def filter_graph(graph, expand_nodes=None, remove_nodes=None, **kwargs):
     :type expand_nodes: list
     :param remove_nodes: Remove these nodes and all of their in/out edges
     :type remove_nodes: list
-    :param kwargs: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
-    :type kwargs: dict
+    :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
+    :type annotations: dict
     :return: A BEL Graph
     :rtype: pybel.BELGraph
     """
@@ -122,14 +134,14 @@ def filter_graph(graph, expand_nodes=None, remove_nodes=None, **kwargs):
 
     result_graph = BELGraph()
 
-    for u, v, k, d in graph.edges_iter(keys=True, data=True, **{ANNOTATIONS: kwargs}):
+    for u, v, k, d in graph.edges_iter(keys=True, data=True, **{ANNOTATIONS: annotations}):
         result_graph.add_edge(u, v, key=k, attr_dict=d)
 
     for node in result_graph.nodes_iter():
         result_graph.node[node] = graph.node[node]
 
     for node in expand_nodes:
-        expand_graph_around_node(result_graph, graph, node)
+        expand_node_neighborhood(result_graph, graph, node)
 
     for node in remove_nodes:
         if node not in result_graph:
@@ -141,7 +153,7 @@ def filter_graph(graph, expand_nodes=None, remove_nodes=None, **kwargs):
     return result_graph
 
 
-def expand_graph_around_node(graph, query_graph, node):
+def expand_node_neighborhood(graph, query_graph, node):
     """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
     in place.
 
