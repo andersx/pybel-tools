@@ -2,7 +2,6 @@ $(document).ready(function () {
 
     function get_selected_nodes(tree) {
         var selected_nodes = tree.selected(true);
-        console.log(selected_nodes);
 
         var selection_hash_map = {};
 
@@ -21,7 +20,6 @@ $(document).ready(function () {
 
         $.getJSON("/network/" + window.id + '?' + params, function (data) {
 
-            console.log(data);
             init_d3_force(data);
         });
 
@@ -511,6 +509,8 @@ function init_d3_force(graph) {
     // Highlight nodes from array of ids and change the opacity of the rest of nodes
     function selected_nodes_highlight(node_list) {
 
+        console.log(node_list);
+
         hide_select_nodes_text(node_list, false);
 
         // Filter not mapped nodes to change opacity
@@ -658,19 +658,19 @@ function init_d3_force(graph) {
         $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='node-checkbox " + value_array.function + "'></div><span class>" + value_array.cname + "</span></li>");
     });
 
-    $('#get-checked-data').on('click', function (event) {
+    $('#get-checked-nodes').on('click', function (event) {
         event.preventDefault();
-        var checkedItems = {}, counter = 0;
+        var checkedItems = [];
         $(".node-checkbox:checked").each(function (idx, li) {
-            checkedItems[counter] = $(li).text();
-            counter++;
+            checkedItems.push(li.parentElement.childNodes[2].innerHTML);
         });
-        console.log(checkedItems);
+
+        reset_attributes();
+
+        selected_nodes_highlight(checkedItems);
+        reset_attributes_on_double_click();
+
     });
-
-    // Autocompletion
-    node_names = node_names.sort();
-
 
     ///////////////////////////////////////
     // Build the edge selection toggle
@@ -688,20 +688,34 @@ function init_d3_force(graph) {
 
     });
 
+    $('#get-checked-edges').on('click', function (event) {
+        event.preventDefault();
+        var checkedItems = [];
+        $(".node-checkbox:checked").each(function (idx, li) {
+            checkedItems.push(li.parentElement.childNodes[2].innerHTML);
+        });
 
-    // Shortest path autocompletion input
-    node_names = node_names.sort();
+        reset_attributes();
 
-    $("#source-node").autocomplete({
-        source: node_names,
-        appendTo: "#info-graph"
+        selected_edge_highlight(checkedItems);
+
+        reset_attributes_on_double_click()
     });
 
-    $("#target-node").autocomplete({
-        source: node_names,
-        appendTo: "#info-graph"
-    });
 
+    // // Shortest path autocompletion input
+    // node_names = node_names.sort();
+    //
+    // $("#source-node").autocomplete({
+    //     source: node_names,
+    //     appendTo: "#info-graph"
+    // });
+    //
+    // $("#target-node").autocomplete({
+    //     source: node_names,
+    //     appendTo: "#info-graph"
+    // });
+    //
 
     // Required for multiple autocompletion
     function split(val) {
@@ -737,30 +751,6 @@ function init_d3_force(graph) {
                 showCurrentLi = ((currentLiText.toLowerCase()).replace(/\s+/g, '')).indexOf(searchText) !== -1;
             $(this).toggle(showCurrentLi);
         }
-    });
-
-    // Select node in the graph from selector
-    $(".node_selector").click(function () {
-
-        reset_attributes();
-
-        // $this=li, first element is the a with the id of the node
-        var node_array = [$(this)[0].childNodes[0].id.split(',')];
-        selected_nodes_highlight(node_array);
-        reset_attributes_on_double_click();
-
-    });
-
-    // Select node in the graph from selector
-    $(".edge_selector").on("click", "#value", function () {
-
-        reset_attributes();
-
-        // textContent or innerHTML
-        var edge_name = $(this)[0].innerHTML;
-        selected_edge_highlight(edge_name);
-
-        reset_attributes_on_double_click()
     });
 
     // Hide text in graph
