@@ -13,7 +13,6 @@ $(document).ready(function () {
                 return child.text
 
             });
-
         });
 
         var params = $.param(selection_hash_map, true);
