@@ -399,9 +399,6 @@ section {
 
 .inspire-tree {
     font: 400 12px Helvetica Nueue, Verdana, sans-serif;
-    height: 80vh;
-    max-height: 70vh;
-    overflow: auto;
     border: 1px solid;
     margin: 1em;
     width: 100%;

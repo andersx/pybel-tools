@@ -59,7 +59,7 @@
 
             <div class="col-lg-8" id="graph-chart"><!-- force -->
             </div><!-- force -->
-            <div class="col-lg-4"><!-- filters and tools div -->
+            <div class="col-lg-4" style="max-height: 70vh;height: 70vh;overflow: auto;"><!-- filters and tools div -->
 
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
@@ -77,7 +77,6 @@
                         <a class="nav-link disabled" data-toggle="tab" href="#edges-panel" role="tab"><i
                                 class="fa fa-long-arrow-right" aria-hidden="true"></i> Edges</a>
                     </li>
-
                 </ul>
 
                 <!-- Tab panes -->
@@ -94,8 +93,7 @@
                                    class="wide form-control not-rounded"
                                    aria-describedby="sizing-addon1" type="text"/>
                         </div>
-                        <div class="not-rounded2" id="node-list"
-                             style="max-height: 70vh;height: 70vh;overflow: auto;"></div>
+                        <div class="not-rounded2" id="node-list"></div>
 
                     </div>
                     <div class="tab-pane not-rounded" id="edges-panel" role="tabpanel">
@@ -107,8 +105,7 @@
                                    class="wide form-control not-rounded"
                                    aria-describedby="sizing-addon1" type="text"/>
                         </div>
-                        <div id="edge-list" class="not-rounded2"
-                             style="max-height: 70vh;height: 70vh;overflow: auto;"></div>
+                        <div id="edge-list" class="not-rounded2"></div>
                     </div>
                 </div>
             </div>
@@ -117,18 +114,30 @@
         </div><!-- visualization row -->
         <div class="row"><!-- button row -->
             <div class="col-lg-8">
-                <button type="button" class="btn btn-primary 1rem" data-toggle="modal" data-target="#legend">
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#legend">
                     Legend
                 </button>
-                <button type="button" class="btn btn-primary pull-right 1rem" data-toggle="modal" data-target="#info-graph">
-                    Info and funcionalities
+                <button type="button" class="btn btn-primary pull-right button-padding" data-toggle="modal"
+                        data-target="#info-graph">
+                    Info and design
                 </button>
 
             </div>
 
             <div class="col-lg-4 center">
-                <button type="button" id="submit-button" class="btn btn-primary">
+                <button type="button" id="submit-button" class="btn btn-primary button-padding">
                     Submit
+                </button>
+            </div>
+        </div><!-- button row -->
+        <div class="row"><!-- button row -->
+            <div class="col-lg-8">
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
+                    Path search
+                </button>
+                <button type="button" class="btn btn-primary button-padding pull-right" data-toggle="modal"
+                        data-target="#export">
+                    Export
                 </button>
             </div>
         </div><!-- button row -->
@@ -142,18 +151,18 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                     ×
                 </button>
-                <h4 class="modal-title">Functionalities and info</h4>
+                <h4 class="modal-title">Info and design</h4>
             </div>
 
             <div class="modal-body text-left"><!-- /.Modal body -->
 
                 <hr>
                 <div class="text-center">
-                    <button type="button" id="hide_node_names" class="btn btn-info">Hide BEL names
+                    <button type="button" id="hide_node_names" class="btn btn-info button-padding">Hide BEL names
                     </button>
-                    <button type="button" id="restore_node_names" class="btn btn-info">Restore BEL names
+                    <button type="button" id="restore_node_names" class="btn btn-info button-padding">Restore BEL names
                     </button>
-                    <button type="button" id="restore" class="btn btn-info">Restore ALL
+                    <button type="button" id="restore" class="btn btn-info button-padding">Restore ALL
                     </button>
                 </div>
                 <h4>Network Visualization Info</h4>
@@ -515,9 +524,114 @@
     </div>
     <!-- .modal-content -->
 </div>
-<!-- .modal-dialog -->
-</div><!-- .Legend Modal -->
 
+
+<div id="paths" class="modal fade"><!-- /paths Modal -->
+    <div class="modal-dialog"><!-- /.Modal dialog -->
+        <div class="modal-content"><!-- /.Modal content -->
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body text-left"><!-- /.Modal body -->
+                <h4>Path mining tools</h4>
+                <hr>
+                <div>
+                    <p class="color_red text-left">Shortest path between two nodes </p>
+                    <form id="shortest-path-form" method="get">
+                        <label>
+                            <input class="text-left" type="checkbox" name="visualization-options" value="hide">
+                            Hide other nodes
+                        </label>
+                        <div class="input-group">
+                        <span class="input-group-addon" id="sizing-addon"><i class="fa fa-arrow-circle-o-right"
+                                                                             aria-hidden="true"></i></span>
+                            <input placeholder="Source node" name="source" id="source-node" class="text-left"
+                                   aria-describedby="sizing-addon1" type="text"/>
+                        </div>
+                        <div class="input-group">
+                        <span class="input-group-addon" id="sizing-addon"><i class="fa fa-paper-plane-o"
+                                                                             aria-hidden="true"></i></span>
+                            <input placeholder="Target node" name="target" id="target-node" class="text-left"
+                                   aria-describedby="sizing-addon1" type="text"/>
+                        </div>
+                    </form>
+                    <div class="buttons">
+                        <input type="button" class="button-shortest-path" id="show-network-input" value="Show"/>
+                        <input type="button" class="button-shortest-path" id="get-shortest-path-bel-input"
+                               value="Extract to BEL"/>
+                    </div>
+                </div>
+                <hr>
+                <div>
+                    <p class="color_red text-left">All paths between two nodes </p>
+                    <form id="all-paths-form" method="get">
+                        <label>
+                            <input class="text-left" type="checkbox" name="visualization-options" value="hide">
+                            Hide other nodes
+                        </label>
+                        <div class="input-group">
+                        <span class="input-group-addon" id="sizing-addon"><i class="fa fa-arrow-circle-o-right"
+                                                                             aria-hidden="true"></i></span>
+                            <input placeholder="Source node" name="source" id="source-node2" class="text-left"
+                                   aria-describedby="sizing-addon1" type="text"/>
+                        </div>
+                        <div class="input-group">
+                        <span class="input-group-addon" id="sizing-addon"><i class="fa fa-paper-plane-o"
+                                                                             aria-hidden="true"></i></span>
+                            <input placeholder="Target node" name="target" id="target-node2" class="text-left"
+                                   aria-describedby="sizing-addon1" type="text"/>
+                        </div>
+                    </form>
+                    <div class="buttons">
+                        <input type="button" class="button-all-paths" id="all-paths-show-input" value="Show"/>
+                        <input type="button" class="button-all-paths" id="get-all-paths-bel-input"
+                               value="Extract to BEL"/>
+                    </div>
+                </div>
+            </div><!-- /.Modal body -->
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" type="button">
+                    Close
+                </button>
+            </div>
+
+        </div><!-- /.Modal content -->
+    </div><!-- /.Modal dialog -->
+</div><!-- /.paths Modal -->
+
+
+<div id="export" class="modal fade"><!-- /.export-graph Modal -->
+    <div class="modal-dialog"><!-- /.Modal dialog -->
+        <div class="modal-content"><!-- /.Modal content -->
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body text-left"><!-- /.Modal body -->
+                <h4>Export options</h4>
+                <hr>
+                <div>
+                    <button type="button" id="save-svg-graph" class="btn btn-primary" aria-label="Left Align">
+                        <i class="fa fa-file-image-o"></i></button>
+                </div>
+
+            </div><!-- /.Modal body -->
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" type="button">
+                    Close
+                </button>
+            </div>
+
+        </div><!-- /.Modal content -->
+    </div><!-- /.Modal dialog -->
+</div><!-- /.export-graph Modal -->
 
 </body>
 </html>

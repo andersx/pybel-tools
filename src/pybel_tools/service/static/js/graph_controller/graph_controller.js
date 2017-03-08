@@ -83,8 +83,6 @@ function render_frame() {
 // Initialize d3.js force to plot the networks from neo4j json
 function init_d3_force(graph) {
 
-    console.log(graph);
-
     //////////////////////////////
     // Main graph visualization //
     //////////////////////////////
@@ -496,8 +494,6 @@ function init_d3_force(graph) {
 
         hide_select_nodes_text(mapped_nodes_names, false);
 
-        console.log(mapped_nodes_names);
-
         var not_mapped_nodes_objects = node.filter(function (node_object) {
             return mapped_nodes_names.indexOf(node_object.cname) < 0;
         });
@@ -520,7 +516,6 @@ function init_d3_force(graph) {
         // Not mapped links
         var links_not_mapped = g.selectAll(".link").filter(function (el) {
             // Source and target should be present in the edge
-
             return !((searchForArray(node_list, el.source.cname) >= 0 || searchForArray(node_list, el.target.cname) >= 0));
         });
 
@@ -703,19 +698,19 @@ function init_d3_force(graph) {
     });
 
 
-    // // Shortest path autocompletion input
-    // node_names = node_names.sort();
-    //
-    // $("#source-node").autocomplete({
-    //     source: node_names,
-    //     appendTo: "#info-graph"
-    // });
-    //
-    // $("#target-node").autocomplete({
-    //     source: node_names,
-    //     appendTo: "#info-graph"
-    // });
-    //
+    // Shortest path autocompletion input
+    node_names = node_names.sort();
+
+    $("#source-node").autocomplete({
+        source: node_names,
+        appendTo: "#paths"
+    });
+
+    $("#target-node").autocomplete({
+        source: node_names,
+        appendTo: "#paths"
+    });
+
 
     // Required for multiple autocompletion
     function split(val) {
@@ -771,8 +766,10 @@ function init_d3_force(graph) {
 
 // Saves visualized network as image
 $("#save-svg-graph").click(function () {
+
+    console.log('asdfasdf');
     var graphName = "graph_image";
-    var svgContainer = $("svg").svg(),
+    var svgContainer = $("#graph-chart").svg(),
         svgGet = svgContainer.svg("get");
     svgGet = svgGet.toSVG();
     var blob = new Blob([svgGet], {type: "data:image/svg+xml;charset="});
