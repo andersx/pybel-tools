@@ -4,6 +4,7 @@ This module contains functions that help mutate a network
 
 """
 
+import itertools as itt
 import logging
 from collections import defaultdict
 
@@ -314,20 +315,59 @@ def add_inferred_edges(graph, relations):
             graph.add_edge(v, u, key=unqualified_edge_code[relation], **{RELATION: INFERRED_INVERSE[relation]})
 
 
-# TODO: Implement
-def add_inferred_two_way_edge(graph, u, v):
+def add_inverse_edge(graph, u, v, k, d):
+    """Adds the same edge, but in the opposite direction if not already present
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param u: A BEL node
+    :type u: tuple
+    :param v: A BEL node
+    :type u: tuple
+    :param k: The edge key
+    :type k: int
+    :param d: The data dictionary from the connection between (u, v)
+    :type d: dict
+    """
+
+    for attr_dict in graph.edge[v][u].values():
+        if attr_dict == d:
+            return
+
+    if k < 0:
+        graph.add_edge(v, u, key=k, attr_dict=d)
+    else:
+        graph.add_edge(v, u, attr_dict=d)
+
+
+def infer_missing_two_way_edges(graph):
     """If a two way edge exists, and the opposite direction doesn't exist, add it to the graph
 
     Use: two way edges from BEL definition and/or axiomatic inverses of membership relations
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
-    :param u: the source node
-    :type u: tuple
-    :param v: the target node
-    :type v: tuple
     """
-    raise NotImplementedError
+    for u, v, k, d in graph.edges_iter(data=True, keys=True):
+        if d[RELATION] in TWO_WAY_RELATIONS:
+            add_inverse_edge(graph, u, v, k, d)
+
+
+def add_missing_unqualified_edges(subgraph, graph):
+    """Adds the missing unqualified edges between entities in the subgraph that are contained within the full graph
+
+    :param subgraph: The query BEL subgraph
+    :type subgraph: pybel.BELGraph
+    :param graph: The full BEL graph
+    :type graph: pybel.BELGraph
+    """
+    for u, v in itt.combinations(subgraph.nodes_iter(), 2):
+        if not graph.has_edge(u, v):
+            continue
+
+        for k in graph.edge[u][v]:
+            if k < 0:
+                subgraph.add_edge(u, v, key=k, attr_dict=graph.edge[u][v][k])
 
 
 def add_canonical_names(graph):
