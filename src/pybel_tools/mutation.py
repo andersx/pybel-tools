@@ -424,3 +424,19 @@ def serialize_authors(graph):
             continue
 
         graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = '|'.join(authors)
+
+
+def remove_nodes_by_namespace(graph, function, namespace):
+    """Removes nodes with the given function and namespace
+
+    :param graph: A BEL graph
+    :type: graph: pybel.BELGraph
+    :param function: The function to filter
+    :param namespace: The namespace to filter
+    """
+    remove_nodes = []
+    for node, data in graph.nodes(data=True):
+        if data[FUNCTION] == function and data[NAMESPACE] == namespace:
+            remove_nodes.append(node)
+
+    graph.remove_nodes_from(remove_nodes)
