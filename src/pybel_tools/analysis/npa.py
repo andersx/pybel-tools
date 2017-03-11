@@ -11,7 +11,8 @@ from __future__ import print_function
 import logging
 
 from pybel.canonicalize import calculate_canonical_name
-from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS
+from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, BIOPROCESS
+from ..selection import get_nodes_by_function, get_upstream_causal_subgraph
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +27,47 @@ DEFAULT_SCORE = 999.99
 
 #: Signifies whether a node has predecessors in the node's data dictionary
 HUB = 'hub'
+
+
+# TODO implement
+def calculate_average_npa_by_annotation(graph, annotation='Subgraph', weight=WEIGHT):
+    """For each subgraph induced over the edges matching the annotation, calculate the average NPA score
+    for all of the contained biological processes
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param annotation: A BEL annotation
+    :type annotation: str
+    :param weight: The key in the node data dictionary representing the experimental data
+    :type weight: str
+    """
+    raise NotImplementedError
+
+
+def run_on_upstream_of_bioprocess(graph, weight=WEIGHT):
+    """Runs NPA on graphs constrained to be strictly one element upstream of biological processes.
+    This function can be later extended to go back multiple levels.
+
+    1. Get all biological processes
+    2. Get subgraphs induced one level back from each biological process
+    3. NPA on each induced subgraph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param weight: The key in the node data dictionary representing the experimental data
+    :type weight: str
+    :return: A dictionary of {node: upstream causal subgraph}
+    :rtype: dict
+    """
+
+    nodes = list(get_nodes_by_function(graph, BIOPROCESS))
+
+    sgs = {node: get_upstream_causal_subgraph(graph, node) for node in nodes}
+
+    for sg in sgs.values():
+        run(sg, weight=weight)
+
+    return sgs
 
 
 def run(graph, weight=WEIGHT):
