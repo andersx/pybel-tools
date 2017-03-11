@@ -8,11 +8,26 @@ from collections import defaultdict
 from itertools import combinations
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS
+from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, FUNCTION
 from .node_filters import filter_nodes
 from .utils import check_has_annotation
 
 log = logging.getLogger(__name__)
+
+
+def get_nodes_by_function(graph, function):
+    """Get all nodes of a given type
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param function: The BEL function to filter by
+    :type function: str
+    :return: An iterable of all BEL nodes with the given function
+    :rtype: iter
+    """
+    for node, data in graph.nodes_iter(data=True):
+        if data[FUNCTION] == function:
+            yield node
 
 
 def group_nodes_by_annotation(graph, annotation='Subgraph'):
