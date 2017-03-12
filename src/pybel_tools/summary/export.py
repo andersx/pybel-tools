@@ -12,8 +12,7 @@ import pandas as pd
 
 from pybel import to_pickle
 from pybel.constants import *
-from .edge_summary import count_annotation_values
-from .edge_summary import count_relations
+from .edge_summary import count_relations, get_annotation_values
 from .node_summary import count_functions
 from ..selection import get_subgraph_by_annotation
 
@@ -38,7 +37,7 @@ def plot_summary_axes(graph, lax, rax):
     >>> from pybel import from_pickle
     >>> from pybel_tools.summary import plot_summary_axes
     >>> graph = from_pickle('~/dev/bms/aetionomy/parkinsons.gpickle')
-    >>> fig, axes = plt.subplots(1, 2, figsize=(16, 4))
+    >>> fig, axes = plt.subplots(1, 2, figsize=(10, 4))
     >>> plot_summary_axes(graph, axes[0], axes[1])
     >>> plt.tight_layout()
     >>> plt.show()
@@ -47,8 +46,8 @@ def plot_summary_axes(graph, lax, rax):
     ntc = count_functions(graph)
     etc = count_relations(graph)
 
-    df = pd.DataFrame.from_dict(ntc, orient='index')
-    df_ec = pd.DataFrame.from_dict(etc, orient='index')
+    df = pd.DataFrame.from_dict(dict(ntc), orient='index')
+    df_ec = pd.DataFrame.from_dict(dict(etc), orient='index')
 
     df.sort_values(0, ascending=True).plot(kind='barh', logx=True, ax=lax)
     lax.set_title('Number Nodes: {}'.format(graph.number_of_nodes()))
@@ -57,7 +56,7 @@ def plot_summary_axes(graph, lax, rax):
     rax.set_title('Number Edges: {}'.format(graph.number_of_edges()))
 
 
-def plot_summary(graph, plt, figsize=(11, 4), **kwargs):
+def plot_summary(graph, plt, **kwargs):
     """Plots your graph summary statistics. This function is a thin wrapper around :code:`plot_summary_axis`. It
     automatically takes care of building figures given matplotlib's pyplot module as an argument. After, you need
     to run :code:`plt.show()`.
@@ -72,6 +71,7 @@ def plot_summary(graph, plt, figsize=(11, 4), **kwargs):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param plt: Give :code:`matplotlib.pyplot` to this parameter
+    :param kwargs: keyword arguments to give to :func:`plt.subplots`
 
     Example usage:
 
@@ -79,11 +79,11 @@ def plot_summary(graph, plt, figsize=(11, 4), **kwargs):
     >>> from pybel import from_pickle
     >>> from pybel_tools.summary import plot_summary
     >>> graph = from_pickle('~/dev/bms/aetionomy/parkinsons.gpickle')
-    >>> plot_summary(graph, plt, figsize=(16, 4))
+    >>> plot_summary(graph, plt, figsize=(10, 4))
     >>> plt.show()
 
     """
-    fig, axes = plt.subplots(1, 2, figsize=figsize, **kwargs)
+    fig, axes = plt.subplots(1, 2, **kwargs)
     lax = axes[0]
     rax = axes[1]
 
@@ -96,6 +96,7 @@ def print_summary(graph, file=None):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :param file: A writeable file or file-like object. If None, defaults to :code:`sys.stdout`
     """
     print('Number of nodes: {}'.format(graph.number_of_nodes()), file=file)
     print('Number of edges: {}'.format(graph.number_of_edges()), file=file)
@@ -113,9 +114,7 @@ def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
     :param annotation: An annotation to split by. Suggestion: 'Subgraph'
     :type annotation: str
     """
-    c = count_annotation_values(graph, annotation)
-
-    for value in c:
+    for value in get_annotation_values(graph, annotation):
         sg = get_subgraph_by_annotation(graph, annotation, value)
         sg.document.update(graph.document)
 
