@@ -2,8 +2,6 @@
 
 An variant of the Network Pertubation Amplitude algorithm inspired by Reagon Kharki's implementation
 
-@auth
-
 """
 
 from __future__ import print_function
@@ -13,6 +11,16 @@ import logging
 from pybel.canonicalize import calculate_canonical_name
 from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, BIOPROCESS
 from ..selection import get_nodes_by_function, get_upstream_causal_subgraph
+
+__all__ = [
+    'WEIGHT',
+    'SCORE',
+    'DEFAULT_SCORE',
+    'HUB',
+    'run_on_upstream_of_bioprocess',
+    'run',
+    'prune_unweighted_leaves',
+]
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +52,34 @@ def calculate_average_npa_by_annotation(graph, annotation='Subgraph', weight=WEI
     raise NotImplementedError
 
 
-def run_on_upstream_of_bioprocess(graph, weight=WEIGHT):
+def _get_unweighted_leaves(graph, weight):
+    """
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param weight: The key in the node data dictionary representing the experimental data
+    :type weight: str
+    :return: An iterable over leaves (nodes with an in-degree of 0) that don't have the given annotation
+    :rtype: iter
+    """
+    for node in graph.nodes_iter():
+        if graph.in_degree(node) == 0 and graph.out_degree(node) == 1 and weight not in graph.node[node]:
+            yield node
+
+
+def prune_unweighted_leaves(graph, weight):
+    """
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param weight: The key in the node data dictionary representing the experimental data
+    :type weight: str
+    """
+    unweighted_leaves = list(_get_unweighted_leaves(graph, weight))
+    graph.remove_nodes_from(unweighted_leaves)
+
+
+def run_on_upstream_of_bioprocess(graph, weight):
     """Runs NPA on graphs constrained to be strictly one element upstream of biological processes.
     This function can be later extended to go back multiple levels.
 
@@ -70,7 +105,7 @@ def run_on_upstream_of_bioprocess(graph, weight=WEIGHT):
     return sgs
 
 
-def run(graph, weight=WEIGHT):
+def run(graph, weight):
     """
 
     Nodes that don't have any predecessors can be calculated directly
@@ -82,7 +117,6 @@ def run(graph, weight=WEIGHT):
     :type graph: pybel.BELGraph
     :param weight: The key in the node data dictionary representing the experimental data
     :type weight: str
-    :return:
     """
     for node in graph.nodes_iter():
         graph.node[node][SCORE] = DEFAULT_SCORE
@@ -111,7 +145,7 @@ def run(graph, weight=WEIGHT):
             log.info('investigating node: %s', calculate_canonical_name(graph, node))
 
             if not any(predecessor in all_hubs for predecessor in graph.predecessors(node)):
-                graph.node[node][SCORE] = calculate_npa_score_iteration(graph, node)
+                graph.node[node][SCORE] = calculate_npa_score_iteration(graph, node, weight)
                 remove.add(node)
                 log.info('removing node: %s', calculate_canonical_name(graph, node))
 
@@ -119,17 +153,18 @@ def run(graph, weight=WEIGHT):
         log.info('remove list: %s', remove)
 
         if not remove:  # all previous hubs in the list have been considered
-            get_score_central_hub(graph, all_hubs, hub_list)
+            get_score_central_hub(graph, all_hubs, hub_list, weight)
             return
 
 
-def get_score_central_hub(graph, all_hubs, hub_list):
+def get_score_central_hub(graph, all_hubs, hub_list, weight):
     """Recursively scores central hubs
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param all_hubs: set
     :type hub_list: list
+    :param weight: The label for the NPA node weight
 
     """
     if not hub_list:
@@ -142,23 +177,25 @@ def get_score_central_hub(graph, all_hubs, hub_list):
         if any(graph.node[predecessor][SCORE] == DEFAULT_SCORE for predecessor in graph.predecessors_iter(node)):
             new_hub_list.append(node)
         else:
-            graph.node[node][SCORE] = calculate_npa_score_iteration(graph, node)
+            graph.node[node][SCORE] = calculate_npa_score_iteration(graph, node, weight)
 
-    get_score_central_hub(graph, all_hubs, new_hub_list)
+    get_score_central_hub(graph, all_hubs, new_hub_list, weight)
 
 
-def calculate_npa_score_iteration(graph, node):
+def calculate_npa_score_iteration(graph, node, weight):
     """Calculates the score of the given node
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :param node: A node in the BEL graph
     :type node: tuple
+    :param weight: The tag for the weight
+    :type weight: str
     :return: The new weight of the node
     :rtype: float
     """
 
-    score = graph.node[node][WEIGHT]
+    score = graph.node[node][weight]
 
     for predecessor in graph.predecessors_iter(node):
         if graph.edge[predecessor][node][RELATION] in CAUSAL_INCREASE_RELATIONS:
