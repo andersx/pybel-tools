@@ -151,6 +151,17 @@ def get_upstream_causal_subgraph(graph, nbunch):
     return bg
 
 
+def get_upstream_leaves(graph):
+    """Gets all leaves of the graph (with no incoming edges and only one outgoing edge)
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    """
+    for node, data in graph.nodes_iter(data=True):
+        if 0 == len(graph.predecessors(node)) and 1 == len(graph.successors(node)):
+            yield node
+
+
 def get_triangles(graph, node):
     """Yields all triangles pointed by the given node
 

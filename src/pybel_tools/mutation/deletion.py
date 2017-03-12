@@ -2,6 +2,8 @@
 
 from pybel.constants import FUNCTION, NAMESPACE, GENE, RNA
 from ..filters.node_filters import filter_nodes
+from ..summary.edge_summary import get_inconsistent_edges
+from ..utils import list_edges
 
 __all__ = [
     'remove_nodes_by_namespace',
@@ -9,6 +11,7 @@ __all__ = [
     'prune_by_type',
     'prune',
     'remove_filtered_nodes',
+    'remove_inconsistent_edges',
 ]
 
 
@@ -98,3 +101,14 @@ def remove_filtered_nodes(graph, *filters):
     nodes_to_remove = list(filter_nodes(graph, *filters))
     graph.remove_nodes_from(nodes_to_remove)
 
+
+def remove_inconsistent_edges(graph):
+    """Remove all edges between node paris with consistent edges.
+
+    This is the all-or-nothing approach. It would be better to do more careful investigation of the evidences.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    """
+    for u, v in get_inconsistent_edges(graph):
+        graph.remove_edges_from(list_edges(graph, u, v))

@@ -115,6 +115,19 @@ def calculate_global_tanimoto_set_distances(dict_of_sets):
     return DataFrame.from_dict(dict(result))
 
 
+def list_edges(graph, u, v):
+    """Lists all edges between the given nodes
+
+    :param graph: A BEL Graph
+    :param graph: pybel.BELGraph
+    :param u: A BEL node
+    :param v: A BEL node
+    :return: A list of (node, node, key)
+    :rtype: list
+    """
+    return [(u, v, k) for k in graph.edge[u][v].keys()]
+
+
 def barh(d, plt, title=None):
     """A convenience function for plotting a horizontal bar plot from a Counter"""
     labels = sorted(d, key=d.get)
