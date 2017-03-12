@@ -1,5 +1,5 @@
 Subgraph Expansion Workflow
 ===========================
 
-.. automodule:: pybel_tools.subgraph_expansion
+.. automodule:: pybel_tools.mutation.subgraph_expansion
     :members:

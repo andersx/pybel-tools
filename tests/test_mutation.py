@@ -4,7 +4,7 @@ from pybel import BELGraph
 from pybel.constants import *
 from pybel.constants import unqualified_edge_code
 from pybel_tools.mutation import collapse_by_central_dogma, collapse_nodes
-from pybel_tools.mutation import infer_central_dogmatic_transcriptions, infer_central_dogmatic_translations
+from pybel_tools.mutation.inference import infer_central_dogmatic_transcriptions, infer_central_dogmatic_translations
 from tests.constants import add_simple
 
 HGNC = 'HGNC'
