@@ -8,8 +8,8 @@ from collections import defaultdict
 from itertools import combinations
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, FUNCTION
-from .node_filters import filter_nodes
+from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, FUNCTION, METADATA_NAME
+from .filters.node_filters import filter_nodes, keep_node_permissive
 from .utils import check_has_annotation
 
 log = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ def group_nodes_by_annotation(graph, annotation='Subgraph'):
     return result
 
 
-def group_nodes_by_annotation_filtered(graph, node_filter, annotation='Subgraph'):
+def group_nodes_by_annotation_filtered(graph, node_filter=None, annotation='Subgraph'):
     """Groups the nodes occurring in edges by the given annotation, with a node filter applied
 
     :param graph: A BEL graph
@@ -63,6 +63,9 @@ def group_nodes_by_annotation_filtered(graph, node_filter, annotation='Subgraph'
     :return: A dictionary of {annotation value: set of nodes}
     :rtype: dict
     """
+    if node_filter is None:
+        node_filter = keep_node_permissive
+
     return {k: {n for n in v if node_filter(graph, n)} for k, v in group_nodes_by_annotation(graph, annotation).items()}
 
 
@@ -91,6 +94,7 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
     :rtype: pybel.BELGraph
     """
     bg = BELGraph()
+    bg.name = '{} - {} - {}'.format(graph.document[METADATA_NAME], annotation, value)
 
     for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
         if not check_has_annotation(attr_dict, annotation):

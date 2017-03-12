@@ -12,6 +12,14 @@ from pybel.constants import ANNOTATIONS
 from pybel.parser.parse_exceptions import NakedNameWarning, MissingNamespaceNameWarning
 from ..utils import check_has_annotation
 
+__all__ = [
+    'count_error_types',
+    'count_naked_names',
+    'calculate_incorrect_name_dict',
+    'calculate_suggestions',
+    'calculate_error_by_annotation',
+]
+
 
 def count_error_types(graph):
     """Counts the occurrence of each type of error in a graph

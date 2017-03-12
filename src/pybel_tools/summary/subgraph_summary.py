@@ -17,6 +17,13 @@ from ..selection import group_nodes_by_annotation_filtered
 from ..utils import calculate_tanimoto_set_distances
 from ..utils import check_has_annotation, count_dict_values
 
+__all__ = [
+    'calculate_subgraph_edge_overlap',
+    'summarize_subgraph_edge_overlap',
+    'rank_subgraph_by_node_filter',
+    'summarize_subgraph_node_overlap',
+]
+
 
 def calculate_subgraph_edge_overlap(graph, annotation='Subgraph'):
     """Builds a dataframe to show the overlap between different subgraphs
@@ -109,7 +116,7 @@ def rank_subgraph_by_node_filter(graph, node_filter, annotation='Subgraph', reve
     return sorted(r2.items(), key=itemgetter(1), reverse=reverse)
 
 
-def summarize_node_overlap(graph, node_filter, annotation='Subgraph'):
+def summarize_subgraph_node_overlap(graph, node_filter=None, annotation='Subgraph'):
     """Calculates the subgraph similarity tanimoto similarity in nodes passing the given filter
 
     Provides an alternate view on subgraph similarity, from a more node-centric view

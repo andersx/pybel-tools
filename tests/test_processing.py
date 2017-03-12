@@ -2,7 +2,7 @@ import unittest
 
 import pybel
 from pybel.constants import *
-from pybel_tools.mutation import prune_by_type, prune, add_inferred_edges
+from pybel_tools.mutation import prune_by_type, prune, infer_missing_inverse_edge
 
 
 class TestProcessing(unittest.TestCase):
@@ -39,5 +39,5 @@ class TestProcessing(unittest.TestCase):
         self.assertEqual(6, self.graph.number_of_nodes())
 
     def test_infer(self):
-        add_inferred_edges(self.graph, TRANSLATED_TO)
+        infer_missing_inverse_edge(self.graph, TRANSLATED_TO)
         self.assertEqual(20, self.graph.number_of_edges())

@@ -6,6 +6,20 @@ This module contains functions that calculate properties of nodes
 
 from pybel.constants import RELATION, CAUSAL_RELATIONS, FUNCTION
 
+__all__ = [
+    'is_causal_relation',
+    'get_causal_out_edges',
+    'get_causal_in_edges',
+    'has_causal_out_edges',
+    'has_causal_in_edges',
+    'is_causal_source',
+    'is_causal_central',
+    'is_causal_sink',
+    'get_causal_source_nodes',
+    'get_causal_central_nodes',
+    'get_causal_sink_nodes',
+]
+
 
 def is_causal_relation(graph, u, v, d):
     return d[RELATION] in CAUSAL_RELATIONS

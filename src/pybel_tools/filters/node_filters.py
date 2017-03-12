@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This module contains a set of default functions for filtering nodes and building node filtering functions
@@ -7,6 +9,18 @@ This module contains a set of default functions for filtering nodes and building
 from __future__ import print_function
 
 from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY
+
+__all__ = [
+    'keep_node_permissive',
+    'list_filter_builder',
+    'function_filter_builder',
+    'exclusion_filter_builder',
+    'pathology_filter',
+    'keep_molecularly_active',
+    'concatenate_node_filters',
+    'filter_nodes',
+    'summarize_node_filter',
+]
 
 
 def keep_node_permissive(graph, node):
@@ -22,8 +36,24 @@ def keep_node_permissive(graph, node):
     return True
 
 
+def list_filter_builder(nodes):
+    """Builds a filter that fails on nodes in the given list
+
+    :param nodes: An iterable of BEL nodes
+    :type nodes: iter
+    :return: A node filter (graph, node) -> bool
+    :rtype: lambda
+    """
+    nodes = set(nodes)
+
+    def list_filter(graph, node):
+        return node in nodes
+
+    return list_filter
+
+
 def function_filter_builder(function):
-    """Builds a filter that fails on nodes of the fiven function
+    """Builds a filter that fails on nodes of the given function
 
     :param function: A BEL Function
     :type function: str
@@ -76,37 +106,6 @@ def keep_molecularly_active(graph, node):
     return False
 
 
-def keep_node(graph, node, super_nodes=None):
-    """A default node filter for removing unwanted nodes in an analysis.
-
-    This function returns false for nodes that have PATHOLOGY or are on a pre-defined blacklist. This can be most
-    easily used with :py:func:`functools.partial`:
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param node: The node to check if it should be kepy
-    :type node: tuple
-    :param super_nodes: A list of nodes to automatically throw out
-    :type super_nodes: list of tuples
-    :return: Should the node be kept?
-    :rtype: bool
-
-
-    >>> from functools import partial
-    >>> from pybel.constants import GENE
-    >>> from pybel_tools.node_filters import keep_node
-    >>> cool_filter = partial(keep_node, super_nodes={(GENE, 'HGNC', 'APP')})
-    """
-
-    if graph.node[node][FUNCTION] == PATHOLOGY:
-        return False
-
-    if super_nodes and node in super_nodes:
-        return False
-
-    return True
-
-
 def concatenate_node_filters(*filters):
     """Concatenates multiple node filters to a new filter that requires all filters to be met
 
@@ -143,14 +142,16 @@ def filter_nodes(graph, *filters):
 
     # If no filters are given, return the standard node iterator
     if not filters:
-        return graph.nodes_iter()
+        for node in graph.nodes_iter():
+            yield node
+    else:
+        concatenated_filter = concatenate_node_filters(*filters)
+        for node in graph.nodes_iter():
+            if concatenated_filter(graph, node):
+                yield node
 
-    concatenated_filter = concatenate_node_filters(*filters)
 
-    return (node for node in graph.nodes_iter() if concatenated_filter(graph, node))
-
-
-def summarize_filter(graph, *filters):
+def summarize_node_filter(graph, *filters):
     """Prints a summary of the number of nodes passing a given set of filters
 
     :param graph: A BEL graph

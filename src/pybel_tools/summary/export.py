@@ -16,6 +16,14 @@ from .edge_summary import count_relations, get_annotation_values
 from .node_summary import count_functions
 from ..selection import get_subgraph_by_annotation
 
+__all__ = [
+    'plot_summary_axes',
+    'plot_summary',
+    'info',
+    'print_summary',
+    'subgraphs_to_pickles',
+]
+
 
 def plot_summary_axes(graph, lax, rax):
     """Plots your graph summary statistics on the given axes.
@@ -50,10 +58,10 @@ def plot_summary_axes(graph, lax, rax):
     df_ec = pd.DataFrame.from_dict(dict(etc), orient='index')
 
     df.sort_values(0, ascending=True).plot(kind='barh', logx=True, ax=lax)
-    lax.set_title('Number Nodes: {}'.format(graph.number_of_nodes()))
+    lax.set_title('Number of nodes: {}'.format(graph.number_of_nodes()))
 
     df_ec.sort_values(0, ascending=True).plot(kind='barh', logx=True, ax=rax)
-    rax.set_title('Number Edges: {}'.format(graph.number_of_edges()))
+    rax.set_title('Number of edges: {}'.format(graph.number_of_edges()))
 
 
 def plot_summary(graph, plt, **kwargs):
@@ -90,6 +98,21 @@ def plot_summary(graph, plt, **kwargs):
     plot_summary_axes(graph, lax, rax)
     plt.tight_layout()
 
+    return fig, axes
+
+
+def info(graph):
+    """Puts useful information about the graph in a string
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :rtype: str
+    """
+    s = '{}\n'.format(nx.info(graph))
+    s += 'Network density: {}\n'.format(nx.density(graph))
+    s += 'Number of weakly connected components: {}\n'.format(nx.number_weakly_connected_components(graph))
+    return s
+
 
 def print_summary(graph, file=None):
     """Prints useful information about the graph
@@ -98,9 +121,7 @@ def print_summary(graph, file=None):
     :type graph: pybel.BELGraph
     :param file: A writeable file or file-like object. If None, defaults to :code:`sys.stdout`
     """
-    print('Number of nodes: {}'.format(graph.number_of_nodes()), file=file)
-    print('Number of edges: {}'.format(graph.number_of_edges()), file=file)
-    print('Number of weakly connected components: {}'.format(nx.number_weakly_connected_components(graph)), file=file)
+    print(info(graph), file=file)
 
 
 def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
