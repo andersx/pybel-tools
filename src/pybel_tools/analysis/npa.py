@@ -16,8 +16,7 @@ from ..selection import get_upstream_leaves
 __all__ = [
     'WEIGHT',
     'NPA_SCORE',
-    'NPA_DEFAULT_SCORE',
-    'NPA_HUB',
+    'DEFAULT_SCORE',
     'run_on_upstream_of_bioprocess',
     'run',
     'remove_unweighted_leaves',
@@ -29,10 +28,7 @@ log = logging.getLogger(__name__)
 NPA_SCORE = 'score'
 
 #: The default score for NPA
-NPA_DEFAULT_SCORE = 999.99
-
-#: Signifies whether a node has predecessors in the node's data dictionary
-NPA_HUB = 'hub'
+DEFAULT_SCORE = 999.99
 
 
 # TODO implement
@@ -79,6 +75,7 @@ def remove_unweighted_leaves(graph, key):
 
 def remove_unweighted_sources(graph, key):
     """
+
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param key: The key in the node data dictionary representing the experimental data
@@ -115,7 +112,7 @@ def run_on_upstream_of_bioprocess(graph, key):
     return sgs
 
 
-def run(graph, key):
+def run(graph, key, initial_score=DEFAULT_SCORE):
     """
 
     Nodes that don't have any predecessors can be calculated directly
@@ -128,16 +125,15 @@ def run(graph, key):
     :param key: The key in the node data dictionary representing the experimental data
     :type key: str
     """
-    for node in graph.nodes_iter():
-        graph.node[node][NPA_SCORE] = NPA_DEFAULT_SCORE
 
+    all_hubs = set()
+
+    for node in graph.nodes_iter():
         if not graph.predecessors(node):
             graph.node[node][NPA_SCORE] = graph.node[node].get(key, 0)
-            graph.node[node][NPA_HUB] = False
         else:
-            graph.node[node][NPA_HUB] = True
-
-    all_hubs = {node for node in graph.nodes_iter() if graph.node[node][NPA_HUB]}
+            graph.node[node][NPA_SCORE] = initial_score
+            all_hubs.add(node)
 
     hub_list = list(all_hubs)
 
@@ -154,8 +150,9 @@ def run(graph, key):
         for node in hub_list:
             log.info('investigating node: %s', calculate_canonical_name(graph, node))
 
-            if not any(predecessor in all_hubs for predecessor in graph.predecessors(node)):
-                graph.node[node][NPA_SCORE] = calculate_npa_score_iteration(graph, node, key)
+            # if this hub only has upstream not-hubs, then calculate its score based on them and remove from hub list
+            if all(predecessor not in all_hubs for predecessor in graph.predecessors(node)):
+                graph.node[node][NPA_SCORE] = calculate_npa_score_iteration(graph, node)
                 remove.add(node)
                 log.info('removing node: %s', calculate_canonical_name(graph, node))
 
@@ -167,7 +164,7 @@ def run(graph, key):
             return
 
 
-def get_score_central_hub(graph, all_hubs, hub_list, key):
+def get_score_central_hub(graph, all_hubs, hub_list, key, recur_limit=20):
     """Recursively scores central hubs
 
     :param graph: A BEL graph
@@ -176,49 +173,96 @@ def get_score_central_hub(graph, all_hubs, hub_list, key):
     :type hub_list: list
     :param key: The key in the node data dictionary representing the experimental data
     :type key: str
-
     """
-    if not hub_list:
+    if not hub_list or recur_limit == 0:
         return
 
     log.info('scoring hub list: %s', hub_list)
     new_hub_list = []
 
     for node in hub_list:
-        if any(graph.node[predecessor][NPA_SCORE] == NPA_DEFAULT_SCORE for predecessor in
-               graph.predecessors_iter(node)):
+        if any(graph.node[predecessor][NPA_SCORE] == DEFAULT_SCORE for predecessor in graph.predecessors_iter(node)):
             new_hub_list.append(node)
         else:
-            graph.node[node][NPA_SCORE] = calculate_npa_score_iteration(graph, node, key)
+            graph.node[node][NPA_SCORE] = calculate_npa_score_iteration(graph, node)
 
-    get_score_central_hub(graph, all_hubs, new_hub_list, key)
+    get_score_central_hub(graph, all_hubs, new_hub_list, key, recur_limit - 1)
 
 
-def calculate_npa_score_iteration(graph, node, key):
+def calculate_npa_score_iteration(graph, node):
     """Calculates the score of the given node
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :param node: A node in the BEL graph
     :type node: tuple
-    :param key: The key in the node data dictionary representing the experimental data
-    :type key: str
-    :return: The new weight of the node
+    :return: The new score of the node
     :rtype: float
     """
-
-    if key not in graph.node[node]:
-        print(node)
-
-    score = graph.node[node][key]
+    score = graph.node[node][NPA_SCORE] if NPA_SCORE in graph.node[node] else DEFAULT_SCORE
 
     for predecessor, _, d in graph.in_edges_iter(node, data=True):
-        if RELATION not in d:
-            print(predecessor, node, d)
-
         if d[RELATION] in CAUSAL_INCREASE_RELATIONS:
             score += graph.node[predecessor][NPA_SCORE]
         elif d[RELATION] in CAUSAL_DECREASE_RELATIONS:
             score -= graph.node[predecessor][NPA_SCORE]
 
     return score
+
+
+class NpaRunner:
+    def __init__(self, graph, key):
+        """
+
+        :param graph: A BEL graph
+        :type graph: pybel.BELGraph
+        :param key:
+        :param initial_score:
+        """
+
+        self.graph = graph.copy()
+        self.key = key
+
+        self.all_hubs = set()
+
+        for node, data in self.graph.nodes_iter(data=True):
+            if not self.graph.predecessors(node):
+                self.graph.node[node][NPA_SCORE] = data.get(key, 0)
+                print('initializing {}'.format(node))
+            else:
+                self.all_hubs.add(node)
+
+        self.hub_list = list(self.all_hubs)
+
+    def iter_leaves(self):
+        """Returns an iterable over all leaves
+
+        What makes a leaf?
+
+        A node is a leaf if:
+         - it doesn't have any predecessors, OR
+         - all of its predecessors have NPA score in their data dictionaries
+
+        :return:
+        """
+        for n in self.graph.nodes_iter():
+
+            if NPA_SCORE in self.graph.node[n]:
+                continue
+
+            if not any(NPA_SCORE not in self.graph.node[p] for p in self.graph.predecessors_iter(n)):
+                yield n
+
+    def chomp_leaves(self):
+        leaves = set(self.iter_leaves())
+
+        if not leaves:
+            print('no leaves')
+            return
+
+        for leaf in leaves:
+            self.graph.node[leaf][NPA_SCORE] = calculate_npa_score_iteration(self.graph, leaf)
+            print('chomping {}'.format(leaf))
+
+    def get_remaining_graph(self):
+        return self.graph.subgraph(n for n, d in self.graph.nodes_iter(data=True) if NPA_SCORE not in d)
