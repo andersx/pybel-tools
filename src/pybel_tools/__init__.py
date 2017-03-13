@@ -24,6 +24,13 @@ Get the Latest
    $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
 """
 
+from . import integration
+from . import mutation
+from . import selection
+from . import summary
+from . import visualization
+
+
 __version__ = '0.1.2-dev'
 
 __title__ = 'pybel_tools'

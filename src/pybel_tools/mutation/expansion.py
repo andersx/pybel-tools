@@ -2,13 +2,16 @@
 
 from collections import Counter, defaultdict
 
-from pybel.constants import ANNOTATIONS
+from pybel import BELGraph
+from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS
+from .merge import left_merge
 from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filters
 from ..filters.node_filters import keep_node_permissive, concatenate_node_filters
 from ..summary.edge_summary import count_annotation_values
 from ..utils import check_has_annotation
 
 __all__ = [
+    'get_upstream_causal_subgraph',
     'get_possible_successor_edges',
     'get_possible_predecessor_edges',
     'count_sources',
@@ -19,8 +22,29 @@ __all__ = [
     'get_subgraph_fill_edges',
     'fill_subgraph',
     'expand_node_neighborhood',
+    'expand_upstream_causal_subgraph',
 ]
 
+def get_upstream_causal_subgraph(graph, nbunch):
+    """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param nbunch: A BEL node or iterable of BEL nodes
+    :type nbunch: tuple or list of tuples
+    :return: A BEL Graph
+    :rtype: pybel.BELGraph
+    """
+    bg = BELGraph()
+
+    for u, v, k, d in graph.in_edges_iter(nbunch, keys=True, data=True):
+        if d[RELATION] in CAUSAL_RELATIONS:
+            bg.add_edge(u, v, key=k, attr_dict=d)
+
+    for node in bg.nodes_iter():
+        bg.node[node].update(graph.node[node])
+
+    return bg
 
 def get_possible_successor_edges(graph, subgraph):
     """Gets the set of possible successor edges peripheral to the subgraph
@@ -246,3 +270,18 @@ def expand_node_neighborhood(graph, query_graph, node):
             graph.add_edge(node, successor, key=k, attr_dict=d)
         else:
             graph.add_edge(node, successor, attr_dict=d)
+
+
+def expand_upstream_causal_subgraph(graph, subgraph):
+    """Adds the upstream causal relations to the given subgraph
+
+    :param graph: The full graph
+    :type graph: pybel.BELGraph
+    :param subgraph: A subgraph to find the upstream information
+    :type subgraph: pybel.BELGraph
+    """
+    for node in subgraph.nodes():
+        upstream = get_upstream_causal_subgraph(graph, node)
+        left_merge(subgraph, upstream)
+
+

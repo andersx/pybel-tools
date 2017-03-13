@@ -10,28 +10,12 @@ and provide an even more rich mechanism inventory.
 
 """
 
-from .induce_subgraph import get_upstream_causal_subgraph
 from .leaves import get_unweighted_upstream_leaves
-from ..mutation.merge import left_merge
 
 __all__ = [
-    'expand_upstream_causal_subgraph',
     'remove_unweighted_leaves',
     'remove_unweighted_sources'
 ]
-
-
-def expand_upstream_causal_subgraph(graph, subgraph):
-    """Adds the upstream causal relations to the given subgraph
-
-    :param graph: The full graph
-    :type graph: pybel.BELGraph
-    :param subgraph: A subgraph to find the upstream information
-    :type subgraph: pybel.BELGraph
-    """
-    for node in subgraph.nodes():
-        upstream = get_upstream_causal_subgraph(graph, node)
-        left_merge(subgraph, upstream)
 
 
 def remove_unweighted_leaves(graph, key):

@@ -14,7 +14,6 @@ __all__ = [
     'get_subgraph_by_node_filter',
     'get_subgraph_by_annotation',
     'get_causal_subgraph',
-    'get_upstream_causal_subgraph',
     'filter_graph',
 ]
 
@@ -72,28 +71,6 @@ def get_causal_subgraph(graph):
     for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
         if attr_dict[RELATION] in CAUSAL_RELATIONS:
             bg.add_edge(u, v, key=key, attr_dict=attr_dict)
-
-    for node in bg.nodes_iter():
-        bg.node[node].update(graph.node[node])
-
-    return bg
-
-
-def get_upstream_causal_subgraph(graph, nbunch):
-    """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param nbunch: A BEL node or iterable of BEL nodes
-    :type nbunch: tuple or list of tuples
-    :return: A BEL Graph
-    :rtype: pybel.BELGraph
-    """
-    bg = BELGraph()
-
-    for u, v, k, d in graph.in_edges_iter(nbunch, keys=True, data=True):
-        if d[RELATION] in CAUSAL_RELATIONS:
-            bg.add_edge(u, v, key=k, attr_dict=d)
 
     for node in bg.nodes_iter():
         bg.node[node].update(graph.node[node])

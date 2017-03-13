@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 An variant of the Network Pertubation Amplitude algorithm inspired by Reagon Kharki's implementation
@@ -12,7 +14,7 @@ from operator import itemgetter
 
 from pybel.canonicalize import calculate_canonical_name
 from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, BIOPROCESS
-from ..selection.induce_subgraph import get_upstream_causal_subgraph
+from ..mutation.expansion import get_upstream_causal_subgraph
 from ..selection.utils import get_nodes_by_function
 
 __all__ = [
@@ -221,7 +223,7 @@ class NpaRunner:
     def in_out_ratio(self, node):
         return self.graph.in_degree(node) / float(self.graph.out_degree(node))
 
-    def remove_random_edge(self):
+    def get_random_edge(self):
         """This function should be run when there are no leaves, but there are still unscored nodes. It will introduce
         a probabilistic element to the algorithm, where some edges are disregarded randomly to eventually get a score
         for the network. This means that the NPA score can be averaged over many runs for a given graph, and a better
@@ -238,7 +240,11 @@ class NpaRunner:
         node, deg = min(nodes, key=itemgetter(1))
         log.debug('checking %s with in/out ratio: %s', node, deg)
         edge_to_remove = random.sample(self.graph.in_edges(node, keys=True), 1)
-        self.graph.remove_edge(*edge_to_remove)
+        return edge_to_remove
+
+    def remove_random_edge(self):
+        edge = self.get_random_edge()
+        self.graph.remove_edge(*edge)
 
     def remove_random_edge_until_has_leaves(self):
         while True:
@@ -251,24 +257,14 @@ class NpaRunner:
         leaves = set(self.iter_leaves())
 
         if not leaves:
-            # this means that there still are some unscored, so choose a random one that has minimal number of in
-            # edges, and disregard those in-edges
-
-            """
-            1. get all unscored
-            2. rank by in-degree
-            3. weighted probability over all in-edges where lower in-degree means higher probability
-            4. pick randomly which edge
-
-            """
-
-            leaf = random.sample(set(self.iter_unscored()), 1)
-            log.warning('no leaves. randomly chose: %s', leaf)
-            leaves = [leaf]
+            log.warning('no leaves.')
+            return False
 
         for leaf in leaves:
             self.graph.node[leaf][NPA_SCORE] = calculate_npa_score_iteration(self.graph, leaf)
             log.debug('chomping %s', leaf)
+
+        return True
 
     def get_remaining_graph(self):
         return self.graph.subgraph(n for n, d in self.graph.nodes_iter(data=True) if NPA_SCORE not in d)
