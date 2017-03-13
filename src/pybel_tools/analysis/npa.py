@@ -227,7 +227,7 @@ class NpaRunner:
         for node, data in self.graph.nodes_iter(data=True):
             if not self.graph.predecessors(node):
                 self.graph.node[node][NPA_SCORE] = data.get(key, 0)
-                print('initializing {}'.format(node))
+                log.debug('initializing %s with %s', node, self.graph.node[node][NPA_SCORE])
             else:
                 self.all_hubs.add(node)
 
@@ -256,12 +256,12 @@ class NpaRunner:
         leaves = set(self.iter_leaves())
 
         if not leaves:
-            print('no leaves')
+            log.warning('no leaves')
             return
 
         for leaf in leaves:
             self.graph.node[leaf][NPA_SCORE] = calculate_npa_score_iteration(self.graph, leaf)
-            print('chomping {}'.format(leaf))
+            log.debug('chomping %s', leaf)
 
     def get_remaining_graph(self):
         return self.graph.subgraph(n for n, d in self.graph.nodes_iter(data=True) if NPA_SCORE not in d)
