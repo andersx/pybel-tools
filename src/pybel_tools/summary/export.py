@@ -19,7 +19,8 @@ from ..selection import get_subgraph_by_annotation
 __all__ = [
     'plot_summary_axes',
     'plot_summary',
-    'info',
+    'info_str',
+    'info_json',
     'print_summary',
     'subgraphs_to_pickles',
 ]
@@ -101,17 +102,43 @@ def plot_summary(graph, plt, **kwargs):
     return fig, axes
 
 
-def info(graph):
+def info_list(graph):
+    """Returns useful information about the graph as a list of tuples
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :rtype: list
+    """
+    number_nodes = graph.number_of_nodes()
+    return [
+        ('Name', graph.name),
+        ('Number of nodes', number_nodes),
+        ('Number of edges', graph.number_of_edges()),
+        ('Network density', nx.density(graph)),
+        ('Number weakly connected components', nx.number_weakly_connected_components(graph)),
+        ('Average in-degree', sum(graph.in_degree().values()) / float(number_nodes)),
+        ('Average out-degree', sum(graph.out_degree().values()) / float(number_nodes)),
+    ]
+
+
+def info_json(graph):
+    """Returns useful information about the graph as a dictionary
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :rtype: dict
+    """
+    return dict(info_list(graph))
+
+
+def info_str(graph):
     """Puts useful information about the graph in a string
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :rtype: str
     """
-    s = '{}\n'.format(nx.info(graph))
-    s += 'Network density: {}\n'.format(nx.density(graph))
-    s += 'Number of weakly connected components: {}\n'.format(nx.number_weakly_connected_components(graph))
-    return s
+    return '\n'.join('{}: {}'.format(k, v) for k, v in info_list(graph))
 
 
 def print_summary(graph, file=None):
@@ -121,7 +148,7 @@ def print_summary(graph, file=None):
     :type graph: pybel.BELGraph
     :param file: A writeable file or file-like object. If None, defaults to :code:`sys.stdout`
     """
-    print(info(graph), file=file)
+    print(info_str(graph), file=file)
 
 
 def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
