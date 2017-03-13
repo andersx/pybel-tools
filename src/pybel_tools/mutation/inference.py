@@ -37,9 +37,9 @@ def infer_central_dogmatic_translations(graph):
     """
     for node, data in graph.nodes(data=True):
         if data[FUNCTION] == PROTEIN and NAMESPACE in data and VARIANTS not in data:
-            new_tup, new_dict = _infer_converter_helper(node, data, RNA)
-            graph.add_node(new_tup, attr_dict=new_dict)
-            graph.add_unqualified_edge(new_tup, node, TRANSLATED_TO)
+            rna_node, rna_attr_dict = _infer_converter_helper(node, data, RNA)
+            graph.add_node(rna_node, attr_dict=rna_attr_dict)
+            graph.add_unqualified_edge(rna_node, node, TRANSLATED_TO)
 
 
 def infer_central_dogmatic_transcriptions(graph):
@@ -50,9 +50,9 @@ def infer_central_dogmatic_transcriptions(graph):
     """
     for node, data in graph.nodes(data=True):
         if data[FUNCTION] in {MIRNA, RNA} and NAMESPACE in data and VARIANTS not in data:
-            new_tup, new_dict = _infer_converter_helper(node, data, GENE)
-            graph.add_node(new_tup, attr_dict=new_dict)
-            graph.add_unqualified_edge(new_tup, node, TRANSCRIBED_TO)
+            gene_node, gene_attr_dict = _infer_converter_helper(node, data, GENE)
+            graph.add_node(gene_node, attr_dict=gene_attr_dict)
+            graph.add_unqualified_edge(gene_node, node, TRANSCRIBED_TO)
 
 
 def infer_central_dogma(graph):
