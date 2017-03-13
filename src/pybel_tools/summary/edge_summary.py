@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This module contains functions that provide summaries of the edges in a graph
@@ -7,7 +9,7 @@ This module contains functions that provide summaries of the edges in a graph
 import itertools as itt
 from collections import Counter, defaultdict
 
-from pybel.constants import RELATION, ANNOTATIONS
+from pybel.constants import RELATION, ANNOTATIONS, CITATION, CITATION_TYPE, CITATION_REFERENCE
 from ..filters.node_filters import keep_node_permissive
 from ..utils import get_value_sets, check_has_annotation
 
@@ -24,6 +26,8 @@ __all__ = [
     'is_consistent',
     'get_consistent_edges',
     'get_inconsistent_edges',
+    'count_citations',
+    'count_citations_by_subgraph',
 ]
 
 
@@ -195,3 +199,49 @@ def get_inconsistent_edges(graph):
     for u, v in set(graph.edges_iter()):
         if not is_consistent(graph, u, v):
             yield u, v
+
+
+def count_citations(graph, **annotations):
+    """Counts the citations in a graph based on a given filter
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param annotations: The annotation filters to use
+    :type annotations: dict
+    :return: A counter from {(citation type, citation reference): frequency}
+    :rtype: Counter
+    """
+    citations = defaultdict(set)
+
+    for u, v, d in graph.edges_iter(data=True, **annotations):
+        if CITATION not in d:
+            continue
+
+        c = d[CITATION]
+        citations[u, v].add((c[CITATION_TYPE], c[CITATION_REFERENCE]))
+
+    counter = Counter(itt.chain.from_iterable(citations.values()))
+
+    return counter
+
+
+def count_citations_by_subgraph(graph, annotation='Subgraph'):
+    """Groups the citation counters by subgraphs induced by the annotation
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param annotation: The annotation to use to group the graph
+    :type annotation: str
+    :return: A dictionary of Counters {subgraph name: Counter from {citation: frequency}}
+    """
+    citations = defaultdict(lambda: defaultdict(set))
+    for u, v, d in graph.edges_iter(data=True):
+        if not check_has_annotation(d, annotation) or CITATION not in d:
+            continue
+
+        c = d[CITATION]
+        k = d[ANNOTATIONS][annotation]
+
+        citations[k][u, v].add((c[CITATION_TYPE], c[CITATION_REFERENCE]))
+
+    return {k: Counter(itt.chain.from_iterable(v.values())) for k, v in citations.items()}
