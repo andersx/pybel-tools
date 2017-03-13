@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This module contains functions that provide summaries of the errors encountered while parsing a BEL script

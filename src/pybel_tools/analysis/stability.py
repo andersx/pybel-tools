@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from networkx import DiGraph
 
 from pybel.constants import *

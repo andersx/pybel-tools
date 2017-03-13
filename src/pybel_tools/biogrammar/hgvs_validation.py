@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 1. Get all nodes with VARIANTS in their data

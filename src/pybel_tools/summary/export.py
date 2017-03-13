@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This module contains functions that provide aggregate summaries of graphs including visualization with matplotlib,
