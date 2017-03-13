@@ -8,7 +8,7 @@ from collections import Counter, defaultdict
 
 from pandas import DataFrame
 
-from pybel.constants import ANNOTATIONS, FUNCTION, PATHOLOGY
+from pybel.constants import ANNOTATIONS
 
 
 def count_defaultdict(dict_of_lists):
@@ -25,8 +25,8 @@ def count_defaultdict(dict_of_lists):
 def get_value_sets(dict_of_iterables):
     """Takes a dictionary of lists/iterables/counters and gets the sets of the values
 
-    :param dict_of_lists: A dictionary of lists
-    :type dict_of_lists: dict or defaultdict
+    :param dict_of_iterables: A dictionary of lists
+    :type dict_of_iterables: dict or defaultdict
     :return: A dictionary of {key: set of values}
     :rtype: dict
     """
@@ -71,7 +71,6 @@ def check_has_annotation(data, key):
     return _check_has_data(data, ANNOTATIONS, key)
 
 
-
 def calculate_tanimoto_set_distances(dict_of_sets):
     """Returns a distance matrix keyed by the keys in the given dict. Distances are calculated
     based on pairwise tanimoto similarity of the sets contained
@@ -89,7 +88,7 @@ def calculate_tanimoto_set_distances(dict_of_sets):
     for x in dict_of_sets:
         result[x][x] = 1
 
-    return DataFrame.from_dict(result)
+    return DataFrame.from_dict(dict(result))
 
 
 def calculate_global_tanimoto_set_distances(dict_of_sets):
@@ -113,4 +112,40 @@ def calculate_global_tanimoto_set_distances(dict_of_sets):
     for x in dict_of_sets:
         result[x][x] = 1 - len(x) / len(universe)
 
-    return DataFrame.from_dict(result)
+    return DataFrame.from_dict(dict(result))
+
+
+def list_edges(graph, u, v):
+    """Lists all edges between the given nodes
+
+    :param graph: A BEL Graph
+    :param graph: pybel.BELGraph
+    :param u: A BEL node
+    :param v: A BEL node
+    :return: A list of (node, node, key)
+    :rtype: list
+    """
+    return [(u, v, k) for k in graph.edge[u][v].keys()]
+
+
+def barh(d, plt, title=None):
+    """A convenience function for plotting a horizontal bar plot from a Counter"""
+    labels = sorted(d, key=d.get)
+    index = range(len(labels))
+
+    plt.yticks(index, labels)
+    plt.barh(index, [d[v] for v in labels])
+
+    if title is not None:
+        plt.title(title)
+
+
+def barv(d, plt, title=None, rotation='vertical'):
+    """A convenience function for plotting a vertical bar plot from a Counter"""
+    labels = sorted(d, key=d.get, reverse=True)
+    index = range(len(labels))
+    plt.xticks(index, labels, rotation=rotation)
+    plt.bar(index, [d[v] for v in labels])
+
+    if title is not None:
+        plt.title(title)

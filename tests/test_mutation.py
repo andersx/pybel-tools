@@ -4,7 +4,7 @@ from pybel import BELGraph
 from pybel.constants import *
 from pybel.constants import unqualified_edge_code
 from pybel_tools.mutation import collapse_by_central_dogma, collapse_nodes
-from pybel_tools.mutation import infer_central_dogmatic_transcriptions, infer_central_dogmatic_translations
+from pybel_tools.mutation.inference import infer_central_dogmatic_transcriptions, infer_central_dogmatic_translations
 from tests.constants import add_simple
 
 HGNC = 'HGNC'
@@ -20,6 +20,9 @@ p2 = PROTEIN, HGNC, '2'
 g3 = GENE, HGNC, '3'
 r3 = RNA, HGNC, '3'
 p3 = PROTEIN, HGNC, '3'
+
+g4 = GENE, HGNC, '4'
+m4 = MIRNA, HGNC, '4'
 
 
 class TestCollapseDownstream(unittest.TestCase):
@@ -104,31 +107,33 @@ class TestInference(unittest.TestCase):
         add_simple(graph, *g1)
         add_simple(graph, *p2)
         add_simple(graph, *g3)
+        add_simple(graph, *m4)
 
         graph.add_edge(p1, p2, **{RELATION: INCREASES})
         graph.add_edge(g1, g3, **{RELATION: POSITIVE_CORRELATION})
 
-        self.assertEqual(4, graph.number_of_nodes())
+        self.assertEqual(5, graph.number_of_nodes())
         self.assertEqual(2, graph.number_of_edges())
 
         infer_central_dogmatic_translations(graph)
 
-        self.assertEqual(6, graph.number_of_nodes())
+        self.assertEqual(7, graph.number_of_nodes())
         self.assertEqual(4, graph.number_of_edges())
         self.assertIn(r1, graph)
         self.assertIn(r2, graph)
 
         infer_central_dogmatic_transcriptions(graph)
 
-        self.assertEqual(7, graph.number_of_nodes())
-        self.assertEqual(6, graph.number_of_edges())
+        self.assertEqual(9, graph.number_of_nodes())
+        self.assertEqual(7, graph.number_of_edges())
         self.assertIn(g1, graph)
         self.assertIn(g2, graph)
         self.assertIn(g3, graph)
+        self.assertIn(g4, graph)
 
         collapse_by_central_dogma(graph)
 
-        self.assertEqual(3, graph.number_of_nodes())
+        self.assertEqual(4, graph.number_of_nodes())
         self.assertEqual(2, graph.number_of_edges())
 
         self.assertTrue(graph.has_edge(p1, g3))

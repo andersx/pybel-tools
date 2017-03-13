@@ -9,7 +9,7 @@ import logging
 import flask
 from flask import Flask
 
-from pybel import to_bel, to_cx_json, to_graphml, to_bytes
+from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines
 from pybel.io import to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
 from ..summary import get_annotation_values_by_annotation
@@ -63,8 +63,7 @@ def build_dictionary_service_app(dsa):
         json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in
                      unique_annotation_dict.items()]
 
-        return flask.render_template('network_visualization.html',
-                                     **{'filter_json': json_dict, 'network_id': network_id})
+        return flask.render_template('network_visualization.html', filter_json=json_dict, network_id=network_id)
 
     @dsa.route('/network/<int:network_id>', methods=['GET'])
     def get_network_by_id_filtered(network_id):
@@ -79,33 +78,31 @@ def build_dictionary_service_app(dsa):
         format = flask.request.args.get('format')
 
         if format is None:
-            graph_json = to_node_link(graph)
-
-            return flask.jsonify(graph_json)
+            return flask.jsonify(to_node_link(graph))
 
         if format == 'cx':
             return flask.jsonify(to_cx_json(graph))
 
-        elif format == 'bytes':
+        if format == 'bytes':
             g_bytes = to_bytes(graph)
-            return flask.send_file(g_bytes)
-
-        sio = StringIO()
+            return flask.Response(g_bytes, mimetype='application/octet-stream')
 
         if format == 'bel':
-            to_bel(graph, sio)
-            return flask.Response(sio, mimetype='text/plain')
+            return flask.Response('\n'.join(to_bel_lines(graph)), mimetype='text/plain')
 
         if format == 'graphml':
             bio = BytesIO()
-
             to_graphml(graph, bio)
-            return flask.Response(StringIO(bio), mimetype=' text/xml')
+            bio.seek(0)
+            s = bio.read().decode('utf-8')
+            return flask.Response(s, mimetype=' text/xml')
 
         if format == 'csv':
+            sio = StringIO()
             to_csv(graph, sio)
             sio.seek(0)
-            return flask.send_file(sio, attachment_filename="testing.txt", as_attachment=True)
+            s = sio.getvalue()
+            return flask.send_file(s, attachment_filename="testing.txt", as_attachment=True)
 
         return flask.abort(404)
 

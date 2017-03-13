@@ -8,7 +8,7 @@ import itertools as itt
 from collections import Counter, defaultdict
 
 from pybel.constants import RELATION, ANNOTATIONS
-from ..node_filters import keep_node_permissive
+from ..filters.node_filters import keep_node_permissive
 from ..utils import get_value_sets, check_has_annotation
 
 __all__ = [
@@ -20,7 +20,10 @@ __all__ = [
     'get_annotation_values_by_annotation',
     'count_annotation_values',
     'get_annotation_values',
-    'count_annotation_values_filtered'
+    'count_annotation_values_filtered',
+    'is_consistent',
+    'get_consistent_edges',
+    'get_inconsistent_edges',
 ]
 
 
@@ -152,3 +155,43 @@ def count_annotation_values_filtered(graph, annotation, source_filter=None, targ
 
     return Counter(d[ANNOTATIONS][annotation] for u, v, d in graph.edges_iter(data=True) if
                    check_has_annotation(d, annotation) and source_filter(graph, u) and target_filter(graph, v))
+
+
+def is_consistent(graph, u, v):
+    """Returns if the edges between the given nodes are constitient, meaning they all have the same relation
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param u: The source BEL node
+    :param v: The target BEL node
+    :return: Do the edges between these nodes all have the same relation
+    :rtype: bool
+    """
+    relations = {d[RELATION] for d in graph.edge[u][v].values()}
+    return 1 == len(relations)
+
+
+def get_consistent_edges(graph):
+    """Returns an iterator over consistent edges
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: An iterator over (source, target) node pairs corresponding to edges with many inconsistent relations
+    :rtype: iter
+    """
+    for u, v in set(graph.edges_iter()):
+        if is_consistent(graph, u, v):
+            yield u, v
+
+
+def get_inconsistent_edges(graph):
+    """Returns an iterator over inconsistent edges
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: An iterator over (source, target) node pairs corresponding to edges with many inconsistent relations
+    :rtype: iter
+    """
+    for u, v in set(graph.edges_iter()):
+        if not is_consistent(graph, u, v):
+            yield u, v

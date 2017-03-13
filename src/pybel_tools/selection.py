@@ -8,11 +8,26 @@ from collections import defaultdict
 from itertools import combinations
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS
-from .node_filters import filter_nodes
+from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, FUNCTION, METADATA_NAME
+from .filters.node_filters import filter_nodes, keep_node_permissive
 from .utils import check_has_annotation
 
 log = logging.getLogger(__name__)
+
+
+def get_nodes_by_function(graph, function):
+    """Get all nodes of a given type
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param function: The BEL function to filter by
+    :type function: str
+    :return: An iterable of all BEL nodes with the given function
+    :rtype: iter
+    """
+    for node, data in graph.nodes_iter(data=True):
+        if data[FUNCTION] == function:
+            yield node
 
 
 def group_nodes_by_annotation(graph, annotation='Subgraph'):
@@ -38,7 +53,7 @@ def group_nodes_by_annotation(graph, annotation='Subgraph'):
     return result
 
 
-def group_nodes_by_annotation_filtered(graph, node_filter, annotation='Subgraph'):
+def group_nodes_by_annotation_filtered(graph, node_filter=None, annotation='Subgraph'):
     """Groups the nodes occurring in edges by the given annotation, with a node filter applied
 
     :param graph: A BEL graph
@@ -48,6 +63,9 @@ def group_nodes_by_annotation_filtered(graph, node_filter, annotation='Subgraph'
     :return: A dictionary of {annotation value: set of nodes}
     :rtype: dict
     """
+    if node_filter is None:
+        node_filter = keep_node_permissive
+
     return {k: {n for n in v if node_filter(graph, n)} for k, v in group_nodes_by_annotation(graph, annotation).items()}
 
 
@@ -76,22 +94,72 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
     :rtype: pybel.BELGraph
     """
     bg = BELGraph()
+    bg.name = '{} - {} - {}'.format(graph.document[METADATA_NAME], annotation, value)
 
     for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
         if not check_has_annotation(attr_dict, annotation):
             continue
 
         if attr_dict[ANNOTATIONS][annotation] == value:
-
-            if u not in bg:
-                bg.add_node(u, graph.node[u])
-
-            if v not in bg:
-                bg.add_node(v, graph.node[v])
-
             bg.add_edge(u, v, key=key, attr_dict=attr_dict)
 
+    for node in bg.nodes_iter():
+        bg.node[node].update(graph.node[node])
+
     return bg
+
+
+def get_causal_subgraph(graph):
+    """Builds a new subgraph induced over all edges that are causal
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: A subgraph of the original BEL graph
+    :rtype: pybel.BELGraph
+    """
+    bg = BELGraph()
+
+    for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
+        if attr_dict[RELATION] in CAUSAL_RELATIONS:
+            bg.add_edge(u, v, key=key, attr_dict=attr_dict)
+
+    for node in bg.nodes_iter():
+        bg.node[node].update(graph.node[node])
+
+    return bg
+
+
+def get_upstream_causal_subgraph(graph, nbunch):
+    """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param nbunch: A BEL node or iterable of BEL nodes
+    :type nbunch: tuple or list of tuples
+    :return: A BEL Graph
+    :rtype: pybel.BELGraph
+    """
+    bg = BELGraph()
+
+    for u, v, k, d in graph.in_edges_iter(nbunch, keys=True, data=True):
+        if d[RELATION] in CAUSAL_RELATIONS:
+            bg.add_edge(u, v, key=k, attr_dict=d)
+
+    for node in bg.nodes_iter():
+        bg.node[node].update(graph.node[node])
+
+    return bg
+
+
+def get_upstream_leaves(graph):
+    """Gets all leaves of the graph (with no incoming edges and only one outgoing edge)
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    """
+    for node, data in graph.nodes_iter(data=True):
+        if 0 == len(graph.predecessors(node)) and 1 == len(graph.successors(node)):
+            yield node
 
 
 def get_triangles(graph, node):
