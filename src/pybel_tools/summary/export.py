@@ -12,11 +12,8 @@ from __future__ import print_function
 import networkx as nx
 import pandas as pd
 
-from pybel import to_pickle
-from pybel.constants import *
-from .edge_summary import count_relations, get_annotation_values
+from .edge_summary import count_relations
 from .node_summary import count_functions
-from ..selection.induce_subgraph import get_subgraph_by_annotation
 
 __all__ = [
     'plot_summary_axes',
@@ -24,7 +21,6 @@ __all__ = [
     'info_str',
     'info_json',
     'print_summary',
-    'subgraphs_to_pickles',
 ]
 
 
@@ -151,23 +147,3 @@ def print_summary(graph, file=None):
     :param file: A writeable file or file-like object. If None, defaults to :code:`sys.stdout`
     """
     print(info_str(graph), file=file)
-
-
-def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
-    """Groups the given graph into subgraphs by the given annotation with :func:`group_subgraphs` and outputs them
-    as gpickle files to the given directory with :func:`pybel.to_pickle`
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param directory: A directory to output the pickles
-    :type directory: str
-    :param annotation: An annotation to split by. Suggestion: 'Subgraph'
-    :type annotation: str
-    """
-    for value in get_annotation_values(graph, annotation):
-        sg = get_subgraph_by_annotation(graph, annotation, value)
-        sg.document.update(graph.document)
-
-        file_name = '{}_{}.gpickle'.format(annotation, value.replace(' ', '_'))
-        path = os.path.join(directory, file_name)
-        to_pickle(sg, path)

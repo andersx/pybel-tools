@@ -150,13 +150,11 @@ class NpaRunner:
 
         if not leaves:
             log.warning('no leaves.')
-            return False
+            return
 
         for leaf in leaves:
             self.graph.node[leaf][self.tag] = self.calculate_npa_score_iteration(leaf)
             log.debug('chomping %s', leaf)
-
-        return True
 
     def run(self):
         """Calculates NPA scores for all leaves until there are none, removes edges until there are, and repeats until

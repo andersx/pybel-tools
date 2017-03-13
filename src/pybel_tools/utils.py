@@ -11,6 +11,18 @@ from pandas import DataFrame
 from pybel.constants import ANNOTATIONS
 
 
+def graph_edge_data_iter(graph):
+    """Iterates over the edge data dictionaries
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: An iterator over the edge dictionaries in the graph
+    :rtype: iter
+    """
+    for _, _, d in graph.edges_iter(data=True):
+        yield d
+
+
 def count_defaultdict(dict_of_lists):
     """Takes a dictionary and applies a counter to each list
 

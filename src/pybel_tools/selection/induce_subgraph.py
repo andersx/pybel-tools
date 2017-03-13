@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import os
 
-from pybel import BELGraph
+from pybel import BELGraph, to_pickle
 from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, METADATA_NAME
 from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood
@@ -15,6 +16,7 @@ __all__ = [
     'get_subgraph_by_annotation',
     'get_causal_subgraph',
     'filter_graph',
+    'subgraphs_to_pickles',
 ]
 
 
@@ -120,3 +122,26 @@ def filter_graph(graph, expand_nodes=None, remove_nodes=None, **annotations):
         result_graph.remove_node(node)
 
     return result_graph
+
+
+def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
+    """Groups the given graph into subgraphs by the given annotation with :func:`group_subgraphs` and outputs them
+    as gpickle files to the given directory with :func:`pybel.to_pickle`
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param directory: A directory to output the pickles
+    :type directory: str
+    :param annotation: An annotation to split by. Suggestion: 'Subgraph'
+    :type annotation: str
+    """
+
+    vs = {d[ANNOTATIONS][annotation] for _, _, d in graph.edges_iter(data=True) if check_has_annotation(d, annotation)}
+
+    for value in vs:
+        sg = get_subgraph_by_annotation(graph, annotation, value)
+        sg.document.update(graph.document)
+
+        file_name = '{}_{}.gpickle'.format(annotation, value.replace(' ', '_'))
+        path = os.path.join(directory, file_name)
+        to_pickle(sg, path)

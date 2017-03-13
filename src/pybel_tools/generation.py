@@ -10,10 +10,10 @@ and provide an even more rich mechanism inventory.
 
 """
 
-from .leaves import get_unweighted_upstream_leaves
-from ..mutation.deletion import remove_inconsistent_edges
-from ..mutation.expansion import get_upstream_causal_subgraph, expand_upstream_causal_subgraph
-from ..mutation.merge import collapse_consistent_edges
+from .selection.leaves import get_unweighted_upstream_leaves
+from .mutation.deletion import remove_inconsistent_edges
+from .mutation.expansion import get_upstream_causal_subgraph, expand_upstream_causal_subgraph
+from .mutation.merge import collapse_consistent_edges
 
 __all__ = [
     'remove_unweighted_leaves',
