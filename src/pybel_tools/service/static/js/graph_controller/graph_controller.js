@@ -125,6 +125,8 @@ function init_d3_force(graph) {
 
     var focus_node = null, highlight_node = null;
 
+    // Highlight color variables
+
     // Highlight color of the node boundering
     var highlight_node_boundering = "#4EB2D4";
 
