@@ -14,7 +14,6 @@ from ..selection import get_nodes_by_function, get_upstream_causal_subgraph
 from ..selection import get_upstream_leaves
 
 __all__ = [
-    'WEIGHT',
     'NPA_SCORE',
     'DEFAULT_SCORE',
     'run_on_upstream_of_bioprocess',
