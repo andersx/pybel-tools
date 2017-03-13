@@ -12,6 +12,8 @@ import jinja2
 
 from pybel.io import to_jsons
 
+from ..mutation import add_canonical_names
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 TEMPLATE_ENVIRONMENT = jinja2.Environment(
@@ -45,6 +47,9 @@ def build_graph_context(graph):
     :return: JSON context for rendering
     :rtype: dict
     """
+
+    add_canonical_names(graph)
+
     return {
         'json': to_jsons(graph),
         'number_nodes': graph.number_of_nodes(),
