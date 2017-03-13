@@ -97,8 +97,16 @@
 
             var focus_node = null, highlight_node = null;
 
-            // Highlight color of the nodes
-            var highlight_color = "#4EB2D4";
+            // Highlight color variables
+
+            // Highlight color of the node boundering
+            var highlight_node_boundering = "#4EB2D4";
+
+            // Highlight color of the edge
+            var highlighted_link_color = "#4EB2D4";
+
+            // Text highlight color
+            var highlight_text = "#4EB2D4";
 
             // Size when zooming scale
             var size = d3.scalePow().exponent(1)
@@ -158,8 +166,10 @@
             var color_circunferencia = "black";
             var default_link_color = "#888";
             var nominal_base_node_size = 8;
+
             // Normal and highlighted stroke of the links (double the width of the link when highlighted)
-            var nominal_stroke = 1.5, highlighted_stroke = 3;
+            var nominal_stroke = 1.5;
+
             // Zoom variables
             var min_zoom = 0.1, max_zoom = 10;
             var border = 1, bordercolor = 'black';
@@ -335,10 +345,10 @@
             function exit_highlight() {
                 highlight_node = null;
                 if (focus_node === null) {
-                    if (highlight_color != color_circunferencia) {
+                    if (highlight_node_boundering != color_circunferencia) {
                         circle.style("stroke", color_circunferencia);
-                        text.style("font-weight", "normal");
-                        link.style("stroke-width", nominal_stroke);
+                        text.style("fill", "black");
+                        link.style("stroke", default_link_color);
                     }
                 }
             }
@@ -347,18 +357,19 @@
                 if (focus_node !== null) d = focus_node;
                 highlight_node = d;
 
-                if (highlight_color != color_circunferencia) {
+                if (highlight_node_boundering != color_circunferencia) {
                     circle.style("stroke", function (o) {
-                        return isConnected(d, o) ? highlight_color : color_circunferencia;
+                        return isConnected(d, o) ? highlight_node_boundering : color_circunferencia;
                     });
-                    text.style("font-weight", function (o) {
-                        return isConnected(d, o) ? "bold" : "normal";
+                    text.style("fill", function (o) {
+                        return isConnected(d, o) ? highlight_text : "black";
                     });
-                    link.style("stroke-width", function (o) {
-                        return o.source.index == d.index || o.target.index == d.index ? highlighted_stroke : nominal_stroke;
+                    link.style("stroke", function (o) {
+                        return o.source.index == d.index || o.target.index == d.index ? highlighted_link_color : default_link_color;
                     });
                 }
             }
+
 
             // Freeze the graph when space is pressed
             function freezeGraph() {
