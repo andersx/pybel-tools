@@ -58,7 +58,7 @@ def serialize_authors(graph):
 
 
 def add_canonical_names(graph):
-    """Adds a canonical name to each node's data dictionary if they are missing
+    """Adds a canonical name to each node's data dictionary if they are missing, in place
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
