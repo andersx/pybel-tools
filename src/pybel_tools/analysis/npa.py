@@ -2,7 +2,7 @@
 
 """
 
-An variant of the Network Pertubation Amplitude algorithm inspired by Reagon Kharki's implementation
+An variant of the Network Pertubation Amplitude algorithm
 
 """
 
@@ -12,16 +12,11 @@ import logging
 import random
 from operator import itemgetter
 
-from pybel.canonicalize import calculate_canonical_name
-from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, BIOPROCESS
-from ..mutation.expansion import get_upstream_causal_subgraph
-from ..selection.utils import get_nodes_by_function
+from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS
 
 __all__ = [
-    'NPA_SCORE',
-    'DEFAULT_SCORE',
-    'run_on_upstream_of_bioprocess',
-    'run',
+    'NpaRunner',
+    'average_npa_run'
 ]
 
 log = logging.getLogger(__name__)
@@ -33,195 +28,77 @@ NPA_SCORE = 'score'
 DEFAULT_SCORE = 999.99
 
 
-# TODO implement
-def calculate_average_npa_by_annotation(graph, key, annotation='Subgraph'):
-    """For each subgraph induced over the edges matching the annotation, calculate the average NPA score
-    for all of the contained biological processes
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param key: The key in the node data dictionary representing the experimental data
-    :type key: str
-    :param annotation: A BEL annotation
-    :type annotation: str
-    """
-    raise NotImplementedError
-
-
-def run_on_upstream_of_bioprocess(graph, key):
-    """Runs NPA on graphs constrained to be strictly one element upstream of biological processes.
-    This function can be later extended to go back multiple levels.
-
-    1. Get all biological processes
-    2. Get subgraphs induced one level back from each biological process
-    3. NPA on each induced subgraph
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param key: The key in the node data dictionary representing the experimental data
-    :type key: str
-    :return: A dictionary of {node: upstream causal subgraph}
-    :rtype: dict
-    """
-
-    nodes = list(get_nodes_by_function(graph, BIOPROCESS))
-
-    sgs = {node: get_upstream_causal_subgraph(graph, node) for node in nodes}
-
-    for sg in sgs.values():
-        run(sg, key=key)
-
-    return sgs
-
-
-def run(graph, key, initial_score=DEFAULT_SCORE):
-    """
-
-    Nodes that don't have any predecessors can be calculated directly
-
-    1. For nodes without predecessors, their differential gene expression score is assigned as their NPA score
-    2. All nodes with predecessors
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param key: The key in the node data dictionary representing the experimental data
-    :type key: str
-    """
-
-    all_hubs = set()
-
-    for node in graph.nodes_iter():
-        if not graph.predecessors(node):
-            graph.node[node][NPA_SCORE] = graph.node[node].get(key, 0)
-        else:
-            graph.node[node][NPA_SCORE] = initial_score
-            all_hubs.add(node)
-
-    hub_list = list(all_hubs)
-
-    iteration_count = 0
-
-    while hub_list:
-
-        iteration_count += 1
-
-        log.info('Iteration %s', iteration_count)
-
-        remove = set()
-
-        for node in hub_list:
-            log.info('investigating node: %s', calculate_canonical_name(graph, node))
-
-            # if this hub only has upstream not-hubs, then calculate its score based on them and remove from hub list
-            if all(predecessor not in all_hubs for predecessor in graph.predecessors(node)):
-                graph.node[node][NPA_SCORE] = calculate_npa_score_iteration(graph, node)
-                remove.add(node)
-                log.info('removing node: %s', calculate_canonical_name(graph, node))
-
-        hub_list = [node for node in hub_list if node not in remove]
-        log.info('remove list: %s', remove)
-
-        if not remove:  # all previous hubs in the list have been considered
-            get_score_central_hub(graph, all_hubs, hub_list, key)
-            return
-
-
-def get_score_central_hub(graph, all_hubs, hub_list, key, recur_limit=20):
-    """Recursively scores central hubs
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param all_hubs: set
-    :type hub_list: list
-    :param key: The key in the node data dictionary representing the experimental data
-    :type key: str
-    """
-    if not hub_list or recur_limit == 0:
-        return
-
-    log.info('scoring hub list: %s', hub_list)
-    new_hub_list = []
-
-    for node in hub_list:
-        if any(graph.node[predecessor][NPA_SCORE] == DEFAULT_SCORE for predecessor in graph.predecessors_iter(node)):
-            new_hub_list.append(node)
-        else:
-            graph.node[node][NPA_SCORE] = calculate_npa_score_iteration(graph, node)
-
-    get_score_central_hub(graph, all_hubs, new_hub_list, key, recur_limit - 1)
-
-
-def calculate_npa_score_iteration(graph, node):
-    """Calculates the score of the given node
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param node: A node in the BEL graph
-    :type node: tuple
-    :return: The new score of the node
-    :rtype: float
-    """
-    score = graph.node[node][NPA_SCORE] if NPA_SCORE in graph.node[node] else DEFAULT_SCORE
-
-    for predecessor, _, d in graph.in_edges_iter(node, data=True):
-        if d[RELATION] in CAUSAL_INCREASE_RELATIONS:
-            score += graph.node[predecessor][NPA_SCORE]
-        elif d[RELATION] in CAUSAL_DECREASE_RELATIONS:
-            score -= graph.node[predecessor][NPA_SCORE]
-
-    return score
-
-
 class NpaRunner:
-    def __init__(self, graph, key):
-        """
+    def __init__(self, graph, node, key, tag=None, default_score=None):
+        """Initializes the NPA runner class
 
         :param graph: A BEL graph
         :type graph: pybel.BELGraph
-        :param key:
-        :param initial_score:
+        :param node: The BEL node that is the focus of this analysis
+        :type node: tuple
+        :param key: The key for the nodes' data dictionaries that points to their original experimental measurements
+        :type key: str
+        :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
+        :type tag: str
+        :param default_score: The initial NPA score for all nodes. This number can go up or down.
+        :type default_score: float
         """
 
         self.graph = graph.copy()
+        self.final_node = node
         self.key = key
 
-        self.all_hubs = set()
+        self.default_score = DEFAULT_SCORE if default_score is None else default_score
+        self.tag = NPA_SCORE if tag is None else tag
 
         for node, data in self.graph.nodes_iter(data=True):
             if not self.graph.predecessors(node):
-                self.graph.node[node][NPA_SCORE] = data.get(key, 0)
-                log.debug('initializing %s with %s', node, self.graph.node[node][NPA_SCORE])
-            else:
-                self.all_hubs.add(node)
-
-        self.hub_list = list(self.all_hubs)
-
-    def iter_unscored(self):
-        for n, d in self.graph.nodes_iter(data=True):
-            if NPA_SCORE not in d:
-                yield n
+                self.graph.node[node][self.tag] = data.get(key, 0)
+                log.debug('initializing %s with %s', node, self.graph.node[node][self.tag])
 
     def iter_leaves(self):
-        """Returns an iterable over all leaves
+        """Returns an iterable over all nodes that are leaves. A node is a leaf if either:
 
-        What makes a leaf?
-
-        A node is a leaf if:
          - it doesn't have any predecessors, OR
          - all of its predecessors have NPA score in their data dictionaries
 
-        :return:
+        :return: An iterable over all leaf nodes
+        :rtype: iter
         """
         for n in self.graph.nodes_iter():
 
-            if NPA_SCORE in self.graph.node[n]:
+            if self.tag in self.graph.node[n]:
                 continue
 
-            if not any(NPA_SCORE not in self.graph.node[p] for p in self.graph.predecessors_iter(n)):
+            if not any(self.tag not in self.graph.node[p] for p in self.graph.predecessors_iter(n)):
                 yield n
 
+    def has_leaves(self):
+        """Returns if the current graph has any leaves.
+
+        Implementation is not that smart currently, and does a full sweep.
+
+        :return: Does the current graph have any leaves?
+        :rtype: bool
+        """
+        leaves = list(self.iter_leaves())
+        return leaves
+
     def in_out_ratio(self, node):
+        """Calculates the ratio of in-degree / out-degree of a node
+
+        :param node: A BEL node
+        :type node: tuple
+        :return: The in-degree / out-degree ratio for the given node
+        :rtype: float
+        """
         return self.graph.in_degree(node) / float(self.graph.out_degree(node))
+
+    def unscored_nodes_iter(self):
+        """Iterates over all nodes without a NPA score"""
+        for node, data in self.graph.nodes_iter(data=True):
+            if self.tag not in data:
+                yield node
 
     def get_random_edge(self):
         """This function should be run when there are no leaves, but there are still unscored nodes. It will introduce
@@ -234,19 +111,29 @@ class NpaRunner:
            2. rank by in-degree
            3. weighted probability over all in-edges where lower in-degree means higher probability
            4. pick randomly which edge
-        """
 
-        nodes = [(n, self.in_out_ratio(n)) for n, d in self.graph.nodes_iter(data=True) if NPA_SCORE not in d]
+
+        :return: A random in-edge to the lowest in/out degree ratio node. This is a 3-tuple of (node, node, key)
+        :rtype: tuple
+        """
+        nodes = [(n, self.in_out_ratio(n)) for n in self.unscored_nodes_iter() if n != self.final_node]
         node, deg = min(nodes, key=itemgetter(1))
-        log.debug('checking %s with in/out ratio: %s', node, deg)
-        edge_to_remove = random.sample(self.graph.in_edges(node, keys=True), 1)
+        log.log(5, 'checking %s (in/out ratio: %.3f)', node, deg)
+        possible_edges = self.graph.in_edges(node, keys=True)
+        log.log(5, 'possible edges: %s', possible_edges)
+        edge_to_remove = random.choice(possible_edges)
+        log.log(5, 'chose: %s', edge_to_remove)
+
         return edge_to_remove
 
     def remove_random_edge(self):
-        edge = self.get_random_edge()
-        self.graph.remove_edge(*edge)
+        """Removes a random in-edge from the node with the lowest in/out degree ratio"""
+        u, v, k = self.get_random_edge()
+        log.debug('removing %s, %s (%s)', u, v, k)
+        self.graph.remove_edge(u, v, k)
 
     def remove_random_edge_until_has_leaves(self):
+        """Removes random edges until there is at least one leaf node"""
         while True:
             leaves = set(self.iter_leaves())
             if leaves:
@@ -254,6 +141,11 @@ class NpaRunner:
             self.remove_random_edge()
 
     def chomp_leaves(self):
+        """Calculates the NPA score for all leaves
+
+        :return: If there are leaves
+        :rtype: bool
+        """
         leaves = set(self.iter_leaves())
 
         if not leaves:
@@ -261,10 +153,110 @@ class NpaRunner:
             return False
 
         for leaf in leaves:
-            self.graph.node[leaf][NPA_SCORE] = calculate_npa_score_iteration(self.graph, leaf)
+            self.graph.node[leaf][self.tag] = self.calculate_npa_score_iteration(leaf)
             log.debug('chomping %s', leaf)
 
         return True
 
+    def run(self):
+        """Calculates NPA scores for all leaves until there are none, removes edges until there are, and repeats until
+        all nodes have been scored
+        """
+        while not self.done_chomping():
+            self.remove_random_edge_until_has_leaves()
+            self.chomp_leaves()
+
+    def run_with_graph_transformation(self):
+        """Calculates NPA scores for all leaves until there are none, removes edges until there are, and repeats until
+        all nodes have been scored. Also, yields the current graph at every step so you can make a cool animation
+        of how the graph changes throughout the course of the algorithm
+
+        :return: An iterable of BEL graphs
+        :rtype: iter
+        """
+        yield self.get_remaining_graph()
+        while not self.done_chomping():
+            while not list(self.iter_leaves()):
+                self.remove_random_edge()
+                yield self.get_remaining_graph()
+            self.chomp_leaves()
+            yield self.get_remaining_graph()
+
+    def done_chomping(self):
+        """Determines if the algorithm is complete by checking if the target node of this analysis has been scored
+        yet. Because the algorithm removes edges when it gets stuck until it is un-stuck, it is always guaranteed to
+        finish.
+
+        :return: Is the algorithm done running?
+        :rtype: bool
+        """
+        return self.tag in self.graph.node[self.final_node]
+
+    def get_final_score(self):
+        """Returns the final score for the target node
+
+        :return: The final score for the target node
+        :rtype: float
+        """
+        if not self.done_chomping():
+            raise ValueError('Algorithm has not completed')
+
+        return self.graph.node[self.final_node][self.tag]
+
+    def calculate_npa_score_iteration(self, node):
+        """Calculates the score of the given node
+
+        :param node: A node in the BEL graph
+        :type node: tuple
+        :return: The new score of the node
+        :rtype: float
+        """
+        score = self.graph.node[node][self.tag] if self.tag in self.graph.node[node] else self.default_score
+
+        for predecessor, _, d in self.graph.in_edges_iter(node, data=True):
+            if d[RELATION] in CAUSAL_INCREASE_RELATIONS:
+                score += self.graph.node[predecessor][self.tag]
+            elif d[RELATION] in CAUSAL_DECREASE_RELATIONS:
+                score -= self.graph.node[predecessor][self.tag]
+
+        return score
+
     def get_remaining_graph(self):
-        return self.graph.subgraph(n for n, d in self.graph.nodes_iter(data=True) if NPA_SCORE not in d)
+        """Allows for introspection on the algorithm at a given point by returning the subgraph induced
+        by all unscored nodes
+
+        :return: The remaining unscored BEL graph
+        :rtype: pybel.BELGraph
+        """
+        return self.graph.subgraph(self.unscored_nodes_iter())
+
+
+def average_npa_run(graph, node, key, tag=None, default_score=None, iterations=100):
+    """Gets the average NPA score over multiple runs.
+
+    This function is very simple, and can be copied to do more interesting statistics over the :class:`NpaRunner`
+    instances.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node: The BEL node that is the focus of this analysis
+    :type node: tuple
+    :param key: The key for the nodes' data dictionaries that points to their original experimental measurements
+    :type key: str
+    :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
+    :type tag: str
+    :param default_score: The initial NPA score for all nodes. This number can go up or down.
+    :type default_score: float
+    :param iterations: The number of times to run the NPA algorithm.
+    :type iterations: int
+    :return: The average score for the target node
+    :rtype: float
+    """
+
+    res = []
+    for i in range(iterations):
+        runner = NpaRunner(graph, node, key, tag=tag, default_score=default_score)
+        runner.run()
+        res.append(runner.get_final_score())
+
+    return sum(res) / len(res)
