@@ -39,7 +39,7 @@ def infer_central_dogmatic_translations(graph):
         if data[FUNCTION] == PROTEIN and NAMESPACE in data and VARIANTS not in data:
             new_tup, new_dict = _infer_converter_helper(node, data, RNA)
             graph.add_node(new_tup, attr_dict=new_dict)
-            graph.add_edge(new_tup, node, key=unqualified_edge_code[TRANSLATED_TO], **{RELATION: TRANSLATED_TO})
+            graph.add_unqualified_edge(new_tup, node, TRANSLATED_TO)
 
 
 def infer_central_dogmatic_transcriptions(graph):
@@ -49,10 +49,10 @@ def infer_central_dogmatic_transcriptions(graph):
     :type graph: pybel.BELGraph
     """
     for node, data in graph.nodes(data=True):
-        if data[FUNCTION] == RNA and NAMESPACE in data and VARIANTS not in data:
+        if data[FUNCTION] in {MIRNA, RNA} and NAMESPACE in data and VARIANTS not in data:
             new_tup, new_dict = _infer_converter_helper(node, data, GENE)
             graph.add_node(new_tup, attr_dict=new_dict)
-            graph.add_edge(new_tup, node, key=unqualified_edge_code[TRANSCRIBED_TO], **{RELATION: TRANSCRIBED_TO})
+            graph.add_unqualified_edge(new_tup, node, TRANSCRIBED_TO)
 
 
 def infer_central_dogma(graph):
