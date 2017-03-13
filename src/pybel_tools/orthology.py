@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This module has tools for downloading and structuring gene orthology data from HGNC, RGD, and MGI
 
 """
+
 import pandas as pd
 import requests
 

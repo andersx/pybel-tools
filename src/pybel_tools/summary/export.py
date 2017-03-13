@@ -14,7 +14,7 @@ from pybel import to_pickle
 from pybel.constants import *
 from .edge_summary import count_relations, get_annotation_values
 from .node_summary import count_functions
-from ..selection import get_subgraph_by_annotation
+from ..selection.induce_subgraph import get_subgraph_by_annotation
 
 __all__ = [
     'plot_summary_axes',

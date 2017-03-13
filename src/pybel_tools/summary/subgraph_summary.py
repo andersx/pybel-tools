@@ -13,9 +13,8 @@ from operator import itemgetter
 import pandas as pd
 
 from pybel.constants import *
-from ..selection import group_nodes_by_annotation_filtered
-from ..utils import calculate_tanimoto_set_distances
-from ..utils import check_has_annotation, count_dict_values
+from ..selection.group_nodes import group_nodes_by_annotation_filtered
+from ..utils import calculate_tanimoto_set_distances, check_has_annotation, count_dict_values
 
 __all__ = [
     'calculate_subgraph_edge_overlap',

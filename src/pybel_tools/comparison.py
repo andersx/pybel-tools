@@ -1,7 +1,7 @@
 import itertools as itt
 import logging
 
-from .summary import get_edge_relations
+from .summary.edge_summary import get_edge_relations
 
 log = logging.getLogger(__name__)
 
