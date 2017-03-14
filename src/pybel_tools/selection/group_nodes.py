@@ -8,6 +8,7 @@ from ..utils import check_has_annotation
 
 __all__ = [
     'group_nodes_by_annotation',
+    'average_node_annotation',
     'group_nodes_by_annotation_filtered'
 ]
 
@@ -32,6 +33,32 @@ def group_nodes_by_annotation(graph, annotation='Subgraph'):
         result[d[ANNOTATIONS][annotation]].add(u)
         result[d[ANNOTATIONS][annotation]].add(v)
 
+    return result
+
+
+def average_node_annotation(graph, key, annotation='Subgraph', aggregator=None):
+    """Groups graph into subgraphs and assigns each subgraph a score based on the average of all nodes values
+    for the given node key
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    :param annotation: A BEL annotation to use to group nodes
+    :type annotation: str
+    :param aggregator: A function from list of values -> aggregate value. Defaults to taking the average of a list of
+                       floats.
+    :type aggregator: lambda
+    """
+
+    if aggregator is None:
+        aggregator = lambda x: sum(x) / len(x)
+
+    result = {}
+    grouping = group_nodes_by_annotation(graph, annotation)
+    for subgraph, nodes in grouping.items():
+        values = [graph.node[node][key] for node in nodes if key in graph.node[node]]
+        result[subgraph] = aggregator(values)
     return result
 
 

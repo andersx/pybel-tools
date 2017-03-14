@@ -8,11 +8,8 @@ Caveats: only works on directed acyclic graphs
 import logging
 
 from pybel.canonicalize import calculate_canonical_name
-from pybel.constants import BIOPROCESS
 from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS
 from .npa import DEFAULT_SCORE, NPA_SCORE
-from ..mutation.expansion import get_upstream_causal_subgraph
-from ..selection.utils import get_nodes_by_function
 
 log = logging.getLogger(__name__)
 
@@ -36,47 +33,6 @@ def calculate_npa_score_iteration(graph, node):
             score -= graph.node[predecessor][NPA_SCORE]
 
     return score
-
-
-# TODO implement
-def calculate_average_npa_by_annotation(graph, key, annotation='Subgraph'):
-    """For each subgraph induced over the edges matching the annotation, calculate the average NPA score
-    for all of the contained biological processes
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param key: The key in the node data dictionary representing the experimental data
-    :type key: str
-    :param annotation: A BEL annotation
-    :type annotation: str
-    """
-    raise NotImplementedError
-
-
-def run_on_upstream_of_bioprocess(graph, key):
-    """Runs NPA on graphs constrained to be strictly one element upstream of biological processes.
-    This function can be later extended to go back multiple levels.
-
-    1. Get all biological processes
-    2. Get subgraphs induced one level back from each biological process
-    3. NPA on each induced subgraph
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param key: The key in the node data dictionary representing the experimental data
-    :type key: str
-    :return: A dictionary of {node: upstream causal subgraph}
-    :rtype: dict
-    """
-
-    nodes = list(get_nodes_by_function(graph, BIOPROCESS))
-
-    sgs = {node: get_upstream_causal_subgraph(graph, node) for node in nodes}
-
-    for sg in sgs.values():
-        run(sg, key=key)
-
-    return sgs
 
 
 def run(graph, key, initial_score=DEFAULT_SCORE):

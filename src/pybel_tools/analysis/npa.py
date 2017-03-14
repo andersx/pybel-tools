@@ -12,7 +12,10 @@ import logging
 import random
 from operator import itemgetter
 
+from pybel.constants import BIOPROCESS
 from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS
+from ..generation import generate_mechanism
+from ..selection.utils import get_nodes_by_function
 
 __all__ = [
     'NpaRunner',
@@ -229,11 +232,8 @@ class NpaRunner:
         return self.graph.subgraph(self.unscored_nodes_iter())
 
 
-def average_npa_run(graph, node, key, tag=None, default_score=None, iterations=100):
-    """Gets the average NPA score over multiple runs.
-
-    This function is very simple, and can be copied to do more interesting statistics over the :class:`NpaRunner`
-    instances.
+def average_npa_run_helper(graph, node, key, tag=None, default_score=None, runs=None):
+    """Runs NPA multiple times and yields the NpaRunner object after each run has been completed
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -245,16 +245,90 @@ def average_npa_run(graph, node, key, tag=None, default_score=None, iterations=1
     :type tag: str
     :param default_score: The initial NPA score for all nodes. This number can go up or down.
     :type default_score: float
-    :param iterations: The number of times to run the NPA algorithm.
-    :type iterations: int
+    :param runs: The number of times to run the NPA algorithm. Defaults to 100.
+    :type runs: int
+    :return: An iterable over the runners after each iteration
+    :rtype: iter
+    """
+    runs = 100 if runs is None else runs
+
+    for _ in range(runs):
+        runner = NpaRunner(graph, node, key, tag=tag, default_score=default_score)
+        runner.run()
+        yield runner
+
+
+def average_npa_run(graph, node, key, tag=None, default_score=None, runs=None):
+    """Gets the average NPA score over multiple runs.
+
+    This function is very simple, and can be copied to do more interesting statistics over the :class:`NpaRunner`
+    instances. To iterate over the runners themselves, see :func:`average_npa_run_helper`
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node: The BEL node that is the focus of this analysis
+    :type node: tuple
+    :param key: The key for the nodes' data dictionaries that points to their original experimental measurements
+    :type key: str
+    :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
+    :type tag: str
+    :param default_score: The initial NPA score for all nodes. This number can go up or down.
+    :type default_score: float
+    :param runs: The number of times to run the NPA algorithm. Defaults to 100.
+    :type runs: int
     :return: The average score for the target node
     :rtype: float
     """
+    runners = average_npa_run_helper(graph, node, key, tag, default_score=default_score, runs=runs)
+    scores = [runner.get_final_score() for runner in runners]
+    return sum(scores) / len(scores)
 
-    res = []
-    for i in range(iterations):
-        runner = NpaRunner(graph, node, key, tag=tag, default_score=default_score)
-        runner.run()
-        res.append(runner.get_final_score())
 
-    return sum(res) / len(res)
+def npa_all_bioprocesses(graph, key, tag=None, default_score=None, runs=None):
+    """Runs NPA on graphs constrained to be strictly one element upstream of biological processes.
+    This function can be later extended to go back multiple levels.
+
+    1. Get all biological processes
+    2. Get subgraphs induced one level back from each biological process
+    3. NPA on each induced subgraph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
+    :type tag: str
+    :param default_score: The initial NPA score for all nodes. This number can go up or down.
+    :type default_score: float
+    :param runs: The number of times to run the NPA algorithm. Defaults to 100.
+    :type runs: int
+    :return: A dictionary of {node: upstream causal subgraph}
+    :rtype: dict
+    """
+    results = {}
+    for node in get_nodes_by_function(graph, BIOPROCESS):
+        candidate_mechanism = generate_mechanism(graph, node, key)
+        score = average_npa_run(candidate_mechanism, node, key, tag=tag, default_score=default_score, runs=runs)
+        results[node] = score
+    return results
+
+
+# TODO implement
+def calculate_average_npa_by_annotation(graph, key, annotation='Subgraph'):
+    """For each subgraph induced over the edges matching the annotation, calculate the average NPA score
+    for all of the contained biological processes
+
+    Assumes you haven't done anything yet
+
+    1. Calculates scores with pbt.analysis.npa.npa_all_bioprocesses
+    2. Overlays data with pbt.integration.overlay_data
+    3. Calculates averages with pbt.selection.group_nodes.average_node_annotation
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    :param annotation: A BEL annotation
+    :type annotation: str
+    """
+    raise NotImplementedError

@@ -10,10 +10,10 @@ and provide an even more rich mechanism inventory.
 
 """
 
-from .selection.leaves import get_unweighted_upstream_leaves
 from .mutation.deletion import remove_inconsistent_edges
 from .mutation.expansion import get_upstream_causal_subgraph, expand_upstream_causal_subgraph
 from .mutation.merge import collapse_consistent_edges
+from .selection.leaves import get_unweighted_upstream_leaves
 
 __all__ = [
     'remove_unweighted_leaves',
@@ -35,7 +35,7 @@ def remove_unweighted_leaves(graph, key):
 
 
 def remove_unweighted_sources(graph, key):
-    """
+    """Prunes unannotated nodes on the periphery of the subgraph
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -45,6 +45,19 @@ def remove_unweighted_sources(graph, key):
     for node in graph.nodes():
         if graph.in_degree(node) == 0 and key not in graph.node[node]:
             graph.remove_node(node)
+
+
+def prune_mechanism_by_data(graph, key):
+    """
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param key: The key in the node data dictionary representing the experimental data. If none, does not prune
+                unannotated nodes after generation
+    :type key: str
+    """
+    remove_unweighted_leaves(graph, key)
+    remove_unweighted_sources(graph, key)
 
 
 def generate_mechanism(graph, node, key=None):
@@ -66,7 +79,6 @@ def generate_mechanism(graph, node, key=None):
     collapse_consistent_edges(subgraph)
 
     if key is not None:
-        remove_unweighted_leaves(subgraph, key)
-        remove_unweighted_sources(subgraph, key)
+        prune_mechanism_by_data(subgraph, key)
 
     return subgraph
