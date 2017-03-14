@@ -11,7 +11,8 @@ from collections import Counter, defaultdict
 
 from pandas import DataFrame
 
-from pybel.constants import ANNOTATIONS
+from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
+    CITATION_AUTHORS, CITATION_COMMENTS
 
 
 def graph_edge_data_iter(graph):
@@ -164,3 +165,21 @@ def barv(d, plt, title=None, rotation='vertical'):
 
     if title is not None:
         plt.title(title)
+
+
+def citation_to_tuple(citation):
+    """Converts a citation dictionary to a tuple. Can be useful for sorting and serialization purposes
+
+    :param citation: A citation dictionary
+    :type citation: dict
+    :return: A citation tuple
+    :rtype: tuple
+    """
+    return tuple([
+        citation.get(CITATION_TYPE),
+        citation.get(CITATION_NAME),
+        citation.get(CITATION_REFERENCE),
+        citation.get(CITATION_DATE),
+        citation.get(CITATION_AUTHORS),
+        citation.get(CITATION_COMMENTS)
+    ])

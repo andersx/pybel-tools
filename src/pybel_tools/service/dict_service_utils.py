@@ -11,36 +11,31 @@ import networkx as nx
 
 from pybel import from_bytes, BELGraph
 from pybel.constants import *
+from pybel.cx import hash_tuple
 from pybel.manager.graph_cache import GraphCacheManager
 from pybel.manager.models import Network
+from .base_service import PybelService
 from ..mutation import add_canonical_names, left_merge
 from ..selection import filter_graph
+from ..utils import citation_to_tuple
 
 log = logging.getLogger(__name__)
 
 
-def _citation_to_tuple(citation):
-    return tuple([
-        citation.get(CITATION_TYPE),
-        citation.get(CITATION_NAME),
-        citation.get(CITATION_REFERENCE),
-        citation.get(CITATION_DATE),
-        citation.get(CITATION_AUTHORS),
-        citation.get(CITATION_COMMENTS)
-    ])
-
-
 def _node_to_identifier(node, graph):
-    return hash(graph.nodes[node])
+    return hash_tuple(graph.nodes[node])
 
 
-class DictionaryService:
+class DictionaryService(PybelService):
     """
 
     The dictionary service contains functions that implement the PyBEL API with a in-memory backend using dictionaries.
 
     """
+
     def __init__(self):
+        super(DictionaryService, self).__init__()
+
         #: dictionary of {int id: BELGraph graph}
         self.networks = {}
 
@@ -183,7 +178,7 @@ class DictionaryService:
     def get_citations_in_network(self, network_id):
         g = self.get_network_by_id(network_id)
         citations = set(data[CITATION] for _, _, data in g.edges_iter(data=True))
-        return list(sorted(citations, key=_citation_to_tuple))
+        return list(sorted(citations, key=citation_to_tuple))
 
     def get_edges_in_network(self, network_id):
         g = self.get_network_by_id(network_id)

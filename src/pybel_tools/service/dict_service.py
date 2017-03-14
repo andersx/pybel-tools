@@ -41,7 +41,8 @@ def get_dict_service(dsa):
 
 
 def build_dictionary_service_app(dsa):
-    """Builds the PyBEL Dictionary-Backed API Service
+    """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
+    with :func:`get_dict_service`
 
     :param dsa: A Flask App
     :type dsa: Flask
