@@ -1,6 +1,8 @@
-"""
-Created on 2/6/2017
+# -*- coding: utf-8 -*-
 
-@author: ddomingo
+from . import inline
+from . import visualization
+from .inline import *
+from .visualization import *
 
-"""
+__all__ = visualization.__all__ + inline.__all__

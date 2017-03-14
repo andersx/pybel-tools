@@ -1,8 +1,37 @@
-"""Tools for using BEL documents in python"""
+# -*- coding: utf-8 -*-
 
-from .summary import *
+"""
 
-__version__ = '0.1.1'
+PyBEL Tools is tested on Python3 installations on Mac OS and Linux.
+
+.. warning:: Python2 and Windows compatibility haven't been tested
+
+Installation
+------------
+
+Easiest
+~~~~~~~
+
+.. code-block:: sh
+
+   $ python3 -m pip install pybel_tools
+
+Get the Latest
+~~~~~~~~~~~~~~~
+
+.. code-block:: sh
+
+   $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
+"""
+
+from . import generation
+from . import integration
+from . import mutation
+from . import selection
+from . import summary
+from . import visualization
+
+__version__ = '0.1.2'
 
 __title__ = 'pybel_tools'
 __description__ = 'Tools for using BEL documents in python'

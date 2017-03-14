@@ -1,71 +1,79 @@
+# -*- coding: utf-8 -*-
+
+"""
+
+This module provides functions for making HTML visualizations of BEL Graphs
+
+"""
+
 from __future__ import print_function
 
-import json
 import os
 
-import jinja2
+from pybel.io import to_jsons
+from .utils import render_template
+from ..mutation import add_canonical_names
 
-import pybel
-
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-
-TEMPLATE_ENVIRONMENT = jinja2.Environment(
-    autoescape=False,
-    loader=jinja2.FileSystemLoader(os.path.join(HERE, 'templates')),
-    trim_blocks=False
-)
-
-TEMPLATE_ENVIRONMENT.globals['STATIC_PREFIX'] =  HERE + '/static/'
+__all__ = ['to_html', 'to_html_file', 'to_html_path']
 
 
-def render_template(template_filename, context):
-    return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
+def render_graph_template(context=None):
+    """Renders the graph template as an HTML string
 
-
-def render_graph_template(context):
-    return render_template('graph_template.html', context)
+    :param context: The data dictionary to pass to the Jinja templating engine
+    :type context: dict
+    :rtype: str
+    """
+    return render_template('graph_template.html', context=context)
 
 
 def build_graph_context(graph):
-    """
-    :param graph:
-    :type graph: pybel.BELGraph
-    :return:
-    """
-    graph_json_str = pybel.io.to_jsons(graph)
+    """Builds the data dictionary to be used by the Jinja templating engine in :py:func:`to_html`
 
-    node_dict = {node: hash(node) for node in graph}
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :return: JSON context for rendering
+    :rtype: dict
+    """
+
+    add_canonical_names(graph)
 
     return {
-        'json': graph_json_str,
-        # 'node_hashes': json.dumps(node_dict),
-        'number_nodes': '10',
-        'number_edges': '32434'
+        'json': to_jsons(graph),
+        'number_nodes': graph.number_of_nodes(),
+        'number_edges': graph.number_of_edges()
     }
 
 
 def to_html(graph):
     """Creates an HTML visualization for the given JSON representation of a BEL graph
 
-    :param graph:
-    :type graph:
-    :return:
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :return: HTML string representing the graph
+    :rtype: str
     """
-    return render_graph_template(build_graph_context(graph))
+    return render_graph_template(context=build_graph_context(graph))
 
 
-# def main():
-#     with open(os.path.expanduser('~/Desktop/graph.json')) as f:
-#         data = json.load(f)
-#
-#     with open(os.path.expanduser('~/Desktop/test.html'), 'w') as f:
-#         print(render_graph_template({
-#             'json': json.dumps(data),
-#             'number_nodes': '10',
-#             'number_edges': '32434'
-#         }), file=f)
+def to_html_file(graph, file):
+    """Writes the HTML visualization to a file or file-like
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param file: A file or file-like
+    :type file: file
+    """
+    print(to_html(graph), file=file)
 
 
-if __name__ == "__main__":
-    main()
+def to_html_path(graph, path):
+    """Writes the HTML visualization to a file specified by the file path
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param path: The file path
+    :type path: str
+    """
+    with open(os.path.expanduser(path), 'w') as f:
+        to_html_file(graph, f)
