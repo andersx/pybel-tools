@@ -58,45 +58,42 @@
     </style>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
-
     <script type="text/javascript">
-        // Initialize d3.js force to plot the networks from neo4j json
         function init_d3_force(graph) {
-
-            //////////////////////////////
-            // Main graph visualization //
-            //////////////////////////////
-
             g = document.getElementsByTagName('body')[0];
 
 
             // Graph uses 0.85 x 0.85 of the window size
-            var w = $("#graph-chart").width(), h = w.innerHeight ||
-                document.documentElement.clientHeight || g.clientHeight;
+            w = $("#graph-chart").width();
+            h = w.innerHeight || document.documentElement.clientHeight || g.clientHeight;
 
-            var focus_node = null, highlight_node = null;
+            focus_node = null;
+            highlight_node = null;
 
             // Highlight color variables
 
             // Highlight color of the node boundering
-            var highlight_node_boundering = "#4EB2D4";
+            highlight_node_boundering = "#4EB2D4";
 
             // Highlight color of the edge
-            var highlighted_link_color = "#4EB2D4";
+            highlighted_link_color = "#4EB2D4";
 
             // Text highlight color
-            var highlight_text = "#4EB2D4";
+            highlight_text = "#4EB2D4";
 
             // Size when zooming scale
-            var size = d3.scalePow().exponent(1)
+            size = d3.scalePow().exponent(1)
                 .domain([1, 100])
                 .range([8, 24]);
 
             // Simulation parameters
-            var linkDistance = 100, fCharge = -1000, linkStrength = 0.7, collideStrength = 1;
+            linkDistance = 100;
+            fCharge = -1000;
+            linkStrength = 0.7;
+            collideStrength = 1;
 
             // Simulation defined with variables
-            var simulation = d3.forceSimulation()
+            simulation = d3.forceSimulation()
                 .force("link", d3.forceLink()
                     .distance(linkDistance)
                     .strength(linkStrength)
@@ -115,7 +112,7 @@
                 .force("x", d3.forceX(0));
 
             // Pin down functionality
-            var node_drag = d3.drag()
+            node_drag = d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
                 .on("end", dragended);
@@ -142,18 +139,20 @@
 
             //END Pin down functionality
 
-            var color_circunferencia = "black";
-            var default_link_color = "#888";
-            var nominal_base_node_size = 8;
+            color_circunferencia = "black";
+            default_link_color = "#888";
+            nominal_base_node_size = 8;
 
             // Normal and highlighted stroke of the links (double the width of the link when highlighted)
-            var nominal_stroke = 1.5;
+            nominal_stroke = 1.5;
 
             // Zoom variables
-            var min_zoom = 0.1, max_zoom = 10;
-            var border = 1, bordercolor = 'black';
+            min_zoom = 0.1;
+            max_zoom = 10;
+            border = 1;
+            bordercolor = 'black';
 
-            var svg = d3.select("#graph-chart").append("svg")
+            svg = d3.select("#graph-chart").append("svg")
                 .attr("width", w)
                 .attr("height", h);
 
@@ -201,9 +200,9 @@
             }
 
             // g = svg object where the graph will be appended
-            var g = svg.append("g");
+            g = svg.append("g");
 
-            var linkedByIndex = {};
+            linkedByIndex = {};
             graph.links.forEach(function (d) {
                 linkedByIndex[d.source + "," + d.target] = true;
             });
@@ -242,7 +241,7 @@
 
             // Definition of links nodes text...
 
-            var link = g.selectAll(".link")
+            link = g.selectAll(".link")
                 .data(graph.links)
                 .enter().append("line")
                 .style("stroke-width", nominal_stroke)
@@ -276,7 +275,7 @@
                     }
                 });
 
-            var node = g.selectAll(".nodes")
+            node = g.selectAll(".nodes")
                 .data(graph.nodes)
                 .enter().append("g")
                 .attr("class", "node")
@@ -284,7 +283,7 @@
                 .on('dblclick', releasenode)
                 .call(node_drag);
 
-            var circle = node.append("path")
+            circle = node.append("path")
                 .attr("d", d3.symbol()
                     .size(function (d) {
                         return Math.PI * Math.pow(size(d.size) || nominal_base_node_size, 2);
@@ -296,7 +295,7 @@
                 .style("stroke-width", nominal_stroke)
                 .style("stroke", color_circunferencia);
 
-            var text = node.append("text")
+            text = node.append("text")
                 .attr("class", "node-name")
                 // .attr("id", nodehashes[d])
                 .attr("fill", "black")
@@ -359,14 +358,12 @@
         }
     </script>
     <script type="text/javascript">
-
-        var graph = {{ json }};
+        graph = {{ json }};
 
         $(document).ready(function () {
             init_d3_force(graph);
         });
     </script>
-
 </head>
 <body>
 <div id="graph-chart"></div>
