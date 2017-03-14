@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 This module contains all of the services necessary through the PyBEL API Definition, backed by a network
 dictionary

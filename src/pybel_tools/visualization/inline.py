@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 Utilities for displaying graphs with inline HTML in Jupyter Notebooks

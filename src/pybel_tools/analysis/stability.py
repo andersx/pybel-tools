@@ -79,6 +79,7 @@ def get_dampened_pairs(graph):
     return results
 
 
+# TODO implement
 def get_unstable_correlation_triples(graph):
     """Find all triples of nodes A, B, C such that A pos B, A pos C, and B neg C
 
@@ -86,8 +87,10 @@ def get_unstable_correlation_triples(graph):
     :type graph: pybel.BELGraph
     :return:
     """
+    raise NotImplementedError
 
 
+# TODO implement
 def get_mutually_unstable_correlation_triples(graph):
     """Find all triples of nodes A, B, C such that A neg B, A neg C, and B neg C
 
@@ -95,6 +98,7 @@ def get_mutually_unstable_correlation_triples(graph):
     :type graph: pybel.BELGraph
     :return:
     """
+    raise NotImplementedError
 
 
 def jens_transformation(graph):

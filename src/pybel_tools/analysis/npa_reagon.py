@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """A variant of the Network Pertubation Amplitude algorithm inspired by Reagon Kharki's implementation
 
 Caveats: only works on directed acyclic graphs

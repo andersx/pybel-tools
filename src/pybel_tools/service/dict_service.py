@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This module runs the dictionary-backed PyBEL API

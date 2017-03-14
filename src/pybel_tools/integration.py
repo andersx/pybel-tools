@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 """
 
 pybel_tools.integrate holds functions that help add more data to the network
 
 """
+
 import logging
 
 from pybel.constants import FUNCTION, NAMESPACE, NAME

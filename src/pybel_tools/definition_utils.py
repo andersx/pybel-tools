@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Utilities for serializing OWL namespaces in the XML format from Protege to BEL Namespace File"""
 
 from __future__ import print_function

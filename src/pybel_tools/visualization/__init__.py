@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from . import inline
 from . import visualization
 from .inline import *

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from pygments.lexer import RegexLexer, words
 from pygments.token import Name, Comment, Text, String, Keyword, Operator, Punctuation
 

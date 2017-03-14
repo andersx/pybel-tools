@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This module provides functions for making HTML visualizations of BEL Graphs

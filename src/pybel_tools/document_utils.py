@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Utilities to merge multiple BEL documents on the same topic"""
 
 from __future__ import print_function

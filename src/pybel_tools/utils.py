@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This module contains functions useful throughout PyBEL Tools
 
 """
+
 import itertools as itt
 from collections import Counter, defaultdict
 
