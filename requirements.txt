@@ -9,4 +9,4 @@ click
 pygments
 pandas
 fuzzywuzzy
-
+ipython
