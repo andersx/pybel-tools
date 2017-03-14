@@ -10,6 +10,7 @@ from IPython.display import Javascript
 
 from pybel.io import to_jsons
 from .utils import render_template
+from ..mutation import add_canonical_names
 
 __all__ = ['to_jupyter', 'to_jupyter_str']
 
@@ -19,7 +20,23 @@ def generate_id():
     return "".join(sample('abcdefghjkmopqrstuvqxyz', 16))
 
 
-def to_jupyter_str(graph, width=1000, height=600):
+def to_jupyter(graph, width=900, height=600):
+    """Displays the BEL graph inline in a Jupyter notebook.
+
+    To use successfully, make run as the last statement in a cell inside a Jupyter notebook.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param width: The width of the visualization window to render
+    :type width: int
+    :param height: The height of the visualization window to render
+    :type height: int
+    :return:
+    """
+    return Javascript(to_jupyter_str(graph, width=width, height=height))
+
+
+def to_jupyter_str(graph, width=900, height=600):
     """Returns the string to be javascript-ified by the Jupyter notebook function :func:`IPython.display.Javascript`
 
     :param graph: A BEL graph
@@ -31,10 +48,10 @@ def to_jupyter_str(graph, width=1000, height=600):
     :return: The javascript string to turn into magic
     :rtype: str
     """
-    d3_code = render_template('pybel_vis.js')
-
+    add_canonical_names(graph)
     gjson = to_jsons(graph)
 
+    d3_code = render_template('pybel_vis.js')
     chart_id = generate_id()
 
     javascript_vars = """
@@ -65,19 +82,3 @@ def to_jupyter_str(graph, width=1000, height=600):
     result = d3_code + javascript_vars + require_code
 
     return result
-
-
-def to_jupyter(graph, width=1000, height=600):
-    """Displays the BEL graph inline in a Jupyter notebook.
-
-    To use successfully, make run as the last statement in a cell inside a Jupyter notebook.
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param width: The width of the visualization window to render
-    :type width: int
-    :param height: The height of the visualization window to render
-    :type height: int
-    :return:
-    """
-    return Javascript(to_jupyter_str(graph, width=width, height=height))
