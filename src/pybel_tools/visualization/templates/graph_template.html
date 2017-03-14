@@ -2,64 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <style>
-        .link_continuous {
-            fill: none;
-            stroke-width: 1px;
-        }
-
-        .link_dashed {
-            fill: none;
-            stroke-width: 1px;
-            stroke-dasharray: 4, 4;
-
-        }
-
-        .Pathology {
-            fill: #FF7F0E;
-        }
-
-        .Abundance {
-            fill: #AEC7E8;
-        }
-
-        .Gene {
-            fill: #FFBB78;
-        }
-
-        .miRNA {
-            fill: #D62728;
-        }
-
-        .Protein {
-            fill: #1F77B4;
-        }
-
-        .RNA {
-            fill: #FF9896;
-        }
-
-        .BiologicalProcess {
-            fill: #2CA02C;
-        }
-
-        .Pathology {
-            fill: #FF7F0E;
-        }
-
-        .Complex {
-            fill: #98DF8A;
-        }
-
-        .Composite {
-            fill: #9467BD;
-        }
-
-    </style>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
     <script type="text/javascript">
-        function init_d3_force(graph) {
+        function init_d3_force(d3, graph) {
             g = document.getElementsByTagName('body')[0];
 
 
@@ -357,11 +303,65 @@
 
         }
     </script>
+    <style>
+        .link_continuous {
+            fill: none;
+            stroke-width: 1px;
+        }
+
+        .link_dashed {
+            fill: none;
+            stroke-width: 1px;
+            stroke-dasharray: 4, 4;
+
+        }
+
+        .Pathology {
+            fill: #FF7F0E;
+        }
+
+        .Abundance {
+            fill: #AEC7E8;
+        }
+
+        .Gene {
+            fill: #FFBB78;
+        }
+
+        .miRNA {
+            fill: #D62728;
+        }
+
+        .Protein {
+            fill: #1F77B4;
+        }
+
+        .RNA {
+            fill: #FF9896;
+        }
+
+        .BiologicalProcess {
+            fill: #2CA02C;
+        }
+
+        .Pathology {
+            fill: #FF7F0E;
+        }
+
+        .Complex {
+            fill: #98DF8A;
+        }
+
+        .Composite {
+            fill: #9467BD;
+        }
+
+    </style>
     <script type="text/javascript">
         graph = {{ json }};
 
         $(document).ready(function () {
-            init_d3_force(graph);
+            init_d3_force(d3, graph);
         });
     </script>
 </head>
