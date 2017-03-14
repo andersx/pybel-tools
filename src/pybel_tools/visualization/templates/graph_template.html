@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
     <style>
         .link_continuous {
             fill: none;
@@ -57,17 +56,10 @@
         }
 
     </style>
-    <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
-    <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
+
     <script type="text/javascript">
-
-        window.graph = {{ json }};
-
         // Initialize d3.js force to plot the networks from neo4j json
         function init_d3_force(graph) {
 
@@ -75,14 +67,12 @@
             // Main graph visualization //
             //////////////////////////////
 
-            d = document;
-            e = d.documentElement;
-            g = d.getElementsByTagName('body')[0];
+            g = document.getElementsByTagName('body')[0];
 
 
             // Graph uses 0.85 x 0.85 of the window size
             var w = $("#graph-chart").width(), h = w.innerHeight ||
-                e.clientHeight || g.clientHeight;
+                document.documentElement.clientHeight || g.clientHeight;
 
             var focus_node = null, highlight_node = null;
 
@@ -223,10 +213,9 @@
             }
 
             function ticked() {
-                link
-                    .attr("x1", function (d) {
-                        return d.source.x;
-                    })
+                link.attr("x1", function (d) {
+                    return d.source.x;
+                })
                     .attr("y1", function (d) {
                         return d.source.y;
                     })
@@ -262,8 +251,7 @@
                     if (['decreases', 'directlyDecreases', 'increases', 'directlyIncreases', 'negativeCorrelation',
                             'positiveCorrelation'].indexOf(d.relation) >= 0) {
                         return "link link_continuous"
-                    }
-                    else {
+                    } else {
                         return "link link_dashed"
                     }
                 })
@@ -281,11 +269,9 @@
                 .attr("marker-end", function (d) {
                     if (['increases', 'directlyIncreases', 'positiveCorrelation'].indexOf(d.relation) >= 0) {
                         return "url(#arrowhead)"
-                    }
-                    else if (['decreases', 'directlyDecreases', 'negativeCorrelation'].indexOf(d.relation) >= 0) {
+                    } else if (['decreases', 'directlyDecreases', 'negativeCorrelation'].indexOf(d.relation) >= 0) {
                         return "url(#stub)"
-                    }
-                    else {
+                    } else {
                         return ""
                     }
                 });
@@ -370,17 +356,19 @@
             // Call freezeGraph when a key is pressed, freezeGraph checks whether this key is "Space" that triggers the freeze
             d3.select(window).on("keydown", freezeGraph);
 
-
+        }
     </script>
     <script type="text/javascript">
+
+        var graph = {{ json }};
+
         $(document).ready(function () {
-            init_d3_force(window.graph);
+            init_d3_force(graph);
         });
     </script>
 
 </head>
 <body>
-<div id="graph-chart">
-</div>
+<div id="graph-chart"></div>
 </body>
 </html>
