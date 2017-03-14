@@ -5,13 +5,21 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
     <script type="text/javascript">
-        function init_d3_force(d3, graph) {
+
+        function_colors = {
+            "Abundance": "#AEC7E8",
+            "Gene": "#FFBB78",
+            "RNA": "#FF9896",
+            "miRNA": "#D62728",
+            "Protein": "#1F77B4",
+            "Complex": "#98DF8A",
+            "Composite": "#9467BD",
+            "BiologicalProcess": "#2CA02C",
+            "Pathology": "#FF7F0E",
+        };
+
+        function init_d3_force(d3, graph, w, h) {
             g = document.getElementsByTagName('body')[0];
-
-
-            // Graph uses 0.85 x 0.85 of the window size
-            w = $("#graph-chart").width();
-            h = w.innerHeight || document.documentElement.clientHeight || g.clientHeight;
 
             focus_node = null;
             highlight_node = null;
@@ -192,12 +200,12 @@
                 .enter().append("line")
                 .style("stroke-width", nominal_stroke)
                 .style("stroke", default_link_color)
-                .attr("class", function (d) {
+                .style("stroke-dasharray", function (d) {
                     if (['decreases', 'directlyDecreases', 'increases', 'directlyIncreases', 'negativeCorrelation',
                             'positiveCorrelation'].indexOf(d.relation) >= 0) {
-                        return "link link_continuous"
+                        return "none"
                     } else {
-                        return "link link_dashed"
+                        return "4, 4"
                     }
                 })
                 .attr("marker-start", function (d) {
@@ -237,6 +245,9 @@
                 )
                 .attr("class", function (d) {
                     return d.function
+                })
+                .style('fill', function (d) {
+                    return function_colors[d.function]
                 })
                 .style("stroke-width", nominal_stroke)
                 .style("stroke", color_circunferencia);
@@ -302,66 +313,15 @@
             d3.select(window).on("keydown", freezeGraph);
 
         }
-    </script>
-    <style>
-        .link_continuous {
-            fill: none;
-            stroke-width: 1px;
-        }
 
-        .link_dashed {
-            fill: none;
-            stroke-width: 1px;
-            stroke-dasharray: 4, 4;
-
-        }
-
-        .Pathology {
-            fill: #FF7F0E;
-        }
-
-        .Abundance {
-            fill: #AEC7E8;
-        }
-
-        .Gene {
-            fill: #FFBB78;
-        }
-
-        .miRNA {
-            fill: #D62728;
-        }
-
-        .Protein {
-            fill: #1F77B4;
-        }
-
-        .RNA {
-            fill: #FF9896;
-        }
-
-        .BiologicalProcess {
-            fill: #2CA02C;
-        }
-
-        .Pathology {
-            fill: #FF7F0E;
-        }
-
-        .Complex {
-            fill: #98DF8A;
-        }
-
-        .Composite {
-            fill: #9467BD;
-        }
-
-    </style>
-    <script type="text/javascript">
         graph = {{ json }};
 
         $(document).ready(function () {
-            init_d3_force(d3, graph);
+            w = $("#graph-chart").width();
+            g = document.getElementsByTagName('body')[0];
+            h = w.innerHeight || document.documentElement.clientHeight || g.clientHeight;
+
+            init_d3_force(d3, graph, w, h);
         });
     </script>
 </head>
