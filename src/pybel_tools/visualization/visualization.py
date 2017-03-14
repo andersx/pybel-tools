@@ -8,35 +8,21 @@ from __future__ import print_function
 
 import os
 
-import jinja2
-
 from pybel.io import to_jsons
-
+from .utils import render_template
 from ..mutation import add_canonical_names
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-
-TEMPLATE_ENVIRONMENT = jinja2.Environment(
-    autoescape=False,
-    loader=jinja2.FileSystemLoader(os.path.join(HERE, 'templates')),
-    trim_blocks=False
-)
-
-TEMPLATE_ENVIRONMENT.globals['STATIC_PREFIX'] = HERE + '/static/'
+__all__ = ['to_html', 'to_html_file', 'to_html_path']
 
 
-def render_template(template_filename, context):
-    return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
-
-
-def render_graph_template(context):
+def render_graph_template(context=None):
     """Renders the graph template as an HTML string
 
     :param context: The data dictionary to pass to the Jinja templating engine
     :type context: dict
     :rtype: str
     """
-    return render_template('graph_template.html', context)
+    return render_template('graph_template.html', context=context)
 
 
 def build_graph_context(graph):
@@ -65,7 +51,7 @@ def to_html(graph):
     :return: HTML string representing the graph
     :rtype: str
     """
-    return render_graph_template(build_graph_context(graph))
+    return render_graph_template(context=build_graph_context(graph))
 
 
 def to_html_file(graph, file):
