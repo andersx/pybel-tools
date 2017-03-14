@@ -1,7 +1,5 @@
-function show_bel_graph(d3, graph, chart_id, w, h) {
-    g = document.getElementsByTagName('body')[0];
-
-    function_colors = {
+function init_d3_force(d3, graph, chart, width, height) {
+    const function_colors = {
         "Abundance": "#AEC7E8",
         "Gene": "#FFBB78",
         "RNA": "#FF9896",
@@ -10,36 +8,36 @@ function show_bel_graph(d3, graph, chart_id, w, h) {
         "Complex": "#98DF8A",
         "Composite": "#9467BD",
         "BiologicalProcess": "#2CA02C",
-        "Pathology": "#FF7F0E",
+        "Pathology": "#FF7F0E"
     };
 
-    focus_node = null;
-    highlight_node = null;
+    var focus_node = null;
+    var highlight_node = null;
 
     // Highlight color variables
 
     // Highlight color of the node boundering
-    highlight_node_boundering = "#4EB2D4";
+    const highlight_node_boundering = "#4EB2D4";
 
     // Highlight color of the edge
-    highlighted_link_color = "#4EB2D4";
+    const highlighted_link_color = "#4EB2D4";
 
     // Text highlight color
-    highlight_text = "#4EB2D4";
+    const highlight_text = "#4EB2D4";
 
     // Size when zooming scale
-    size = d3.scalePow().exponent(1)
+    var size = d3.scalePow().exponent(1)
         .domain([1, 100])
         .range([8, 24]);
 
     // Simulation parameters
-    linkDistance = 100;
-    fCharge = -1000;
-    linkStrength = 0.7;
-    collideStrength = 1;
+    const linkDistance = 100;
+    const fCharge = -1000;
+    const linkStrength = 0.7;
+    const collideStrength = 1;
 
     // Simulation defined with variables
-    simulation = d3.forceSimulation()
+    var simulation = d3.forceSimulation()
         .force("link", d3.forceLink()
             .distance(linkDistance)
             .strength(linkStrength)
@@ -53,12 +51,12 @@ function show_bel_graph(d3, graph, chart_id, w, h) {
         .force("charge", d3.forceManyBody()
             .strength(fCharge)
         )
-        .force("center", d3.forceCenter(w / 2, h / 2))
+        .force("center", d3.forceCenter(width / 2, height / 2))
         .force("y", d3.forceY(0))
         .force("x", d3.forceX(0));
 
     // Pin down functionality
-    node_drag = d3.drag()
+    var node_drag = d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended);
@@ -85,22 +83,22 @@ function show_bel_graph(d3, graph, chart_id, w, h) {
 
     //END Pin down functionality
 
-    color_circunferencia = "black";
-    default_link_color = "#888";
-    nominal_base_node_size = 8;
+    const color_circunferencia = "black";
+    const default_link_color = "#888";
+    const nominal_base_node_size = 8;
 
     // Normal and highlighted stroke of the links (double the width of the link when highlighted)
-    nominal_stroke = 1.5;
+    const nominal_stroke = 1.5;
 
     // Zoom variables
-    min_zoom = 0.1;
-    max_zoom = 10;
-    border = 1;
-    bordercolor = 'black';
+    const min_zoom = 0.1;
+    const max_zoom = 10;
+    const border = 1;
+    const bordercolor = 'black';
 
-    svg = d3.select(chart_id).append("svg")
-        .attr("width", w)
-        .attr("height", h);
+    var svg = d3.select(chart).append("svg")
+        .attr("width", width)
+        .attr("height", height);
 
     // // Create definition for arrowhead.
     svg.append("defs").append("marker")
@@ -146,9 +144,9 @@ function show_bel_graph(d3, graph, chart_id, w, h) {
     }
 
     // g = svg object where the graph will be appended
-    g = svg.append("g");
+    var g = svg.append("g");
 
-    linkedByIndex = {};
+    var linkedByIndex = {};
     graph.links.forEach(function (d) {
         linkedByIndex[d.source + "," + d.target] = true;
     });
@@ -187,7 +185,7 @@ function show_bel_graph(d3, graph, chart_id, w, h) {
 
     // Definition of links nodes text...
 
-    link = g.selectAll(".link")
+    var link = g.selectAll(".link")
         .data(graph.links)
         .enter().append("line")
         .style("stroke-width", nominal_stroke)
@@ -221,7 +219,7 @@ function show_bel_graph(d3, graph, chart_id, w, h) {
             }
         });
 
-    node = g.selectAll(".nodes")
+    var node = g.selectAll(".nodes")
         .data(graph.nodes)
         .enter().append("g")
         .attr("class", "node")
@@ -229,7 +227,7 @@ function show_bel_graph(d3, graph, chart_id, w, h) {
         .on('dblclick', releasenode)
         .call(node_drag);
 
-    circle = node.append("path")
+    var circle = node.append("path")
         .attr("d", d3.symbol()
             .size(function (d) {
                 return Math.PI * Math.pow(size(d.size) || nominal_base_node_size, 2);
@@ -244,7 +242,7 @@ function show_bel_graph(d3, graph, chart_id, w, h) {
         .style("stroke-width", nominal_stroke)
         .style("stroke", color_circunferencia);
 
-    text = node.append("text")
+    var text = node.append("text")
         .attr("class", "node-name")
         // .attr("id", nodehashes[d])
         .attr("fill", "black")

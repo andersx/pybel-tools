@@ -11,17 +11,66 @@ from IPython.display import Javascript
 from pybel.io import to_jsons
 from .utils import render_template
 
-__all__ = ['to_jupyter']
+__all__ = ['to_jupyter', 'to_jupyter_str']
+
 
 def generate_id():
     """Generates a random string of letters"""
     return "".join(sample('abcdefghjkmopqrstuvqxyz', 16))
 
 
+def to_jupyter_str(graph, width=1000, height=600):
+    """Returns the string to be javascript-ified by the Jupyter notebook function :func:`IPython.display.Javascript`
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param width: The width of the visualization window to render
+    :type width: int
+    :param height: The height of the visualization window to render
+    :type height: int
+    :return: The javascript string to turn into magic
+    :rtype: str
+    """
+    d3_code = render_template('pybel_vis.js')
+
+    gjson = to_jsons(graph)
+
+    chart_id = generate_id()
+
+    javascript_vars = """
+        var chart = "{}";
+        var width = {};
+        var height = {};
+        var graph = {};
+    """.format(chart_id, width, height, gjson)
+
+    require_code = """
+        require.config({
+          paths: {
+              d3: '//cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min'
+          }
+        });
+
+        var elementInnerHTML = "<div id='" + chart + "'></div>";
+
+        element.append(elementInnerHTML);
+
+        var chartQualified = "#" + chart;
+
+        require(['d3'], function(d3) {
+            return init_d3_force(d3, graph, chartQualified, width, height);
+        });
+    """
+
+    result = d3_code + javascript_vars + require_code
+
+    return result
+
+
 def to_jupyter(graph, width=1000, height=600):
     """Displays the BEL graph inline in a Jupyter notebook.
 
-    To use successfully, make run as the last statement in a cell inside a jupyter notebook.
+    To use successfully, make run as the last statement in a cell inside a Jupyter notebook.
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -31,27 +80,4 @@ def to_jupyter(graph, width=1000, height=600):
     :type height: int
     :return:
     """
-    d3_code = render_template('pybel_vis.js')
-
-    gjson = to_jsons(graph)
-
-    chart_id = generate_id()
-
-    javascript_vars = "var chart_idx='{}', graphx={}, widthx={}, heightx={};".format(chart_id, gjson, width, height)
-    require_code = """
-        require.config({
-              paths: {
-                  d3: '//cdnjs.cloudflare.com/ajax/libs/d3/3.4.8/d3.min'
-              }
-            });
-
-        element.append("<div id='" + chart_idx + "'></div>");
-
-        require(['d3'], function(d3) {
-            show_bel_graph(d3, graphx, chart_idx,  widthx, heightx)
-        });
-    """
-
-    result = javascript_vars + d3_code + require_code
-
-    return Javascript(result)
+    return Javascript(to_jupyter_str(graph, width=width, height=height))
