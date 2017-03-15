@@ -15,6 +15,7 @@ PyBEL Tools Documentation
    selection
    integration
    mutation
+   visualization
 
 .. toctree::
    :caption: Pipelines
@@ -22,6 +23,8 @@ PyBEL Tools Documentation
 
    orthology
    expansion
+   generation
+   npa
 
 .. toctree::
    :caption: Services

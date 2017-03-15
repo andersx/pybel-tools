@@ -19,7 +19,11 @@ from ..selection.utils import get_nodes_by_function
 
 __all__ = [
     'NpaRunner',
-    'average_npa_run'
+    'multirun',
+    'multirun_average',
+    'workflow',
+    'workflow_all',
+    'workflow_all_average',
 ]
 
 log = logging.getLogger(__name__)
@@ -28,17 +32,17 @@ log = logging.getLogger(__name__)
 NPA_SCORE = 'score'
 
 #: The default score for NPA
-DEFAULT_SCORE = 999.99
+DEFAULT_SCORE = 0
 
 
 class NpaRunner:
-    def __init__(self, graph, node, key, tag=None, default_score=None):
+    def __init__(self, graph, target_node, key, tag=None, default_score=None):
         """Initializes the NPA runner class
 
         :param graph: A BEL graph
         :type graph: pybel.BELGraph
-        :param node: The BEL node that is the focus of this analysis
-        :type node: tuple
+        :param target_node: The BEL node that is the focus of this analysis
+        :type target_node: tuple
         :param key: The key for the nodes' data dictionaries that points to their original experimental measurements
         :type key: str
         :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
@@ -48,7 +52,7 @@ class NpaRunner:
         """
 
         self.graph = graph.copy()
-        self.final_node = node
+        self.target_node = target_node
         self.key = key
 
         self.default_score = DEFAULT_SCORE if default_score is None else default_score
@@ -57,7 +61,7 @@ class NpaRunner:
         for node, data in self.graph.nodes_iter(data=True):
             if not self.graph.predecessors(node):
                 self.graph.node[node][self.tag] = data.get(key, 0)
-                log.debug('initializing %s with %s', node, self.graph.node[node][self.tag])
+                log.debug('initializing %s with %s', target_node, self.graph.node[node][self.tag])
 
     def iter_leaves(self):
         """Returns an iterable over all nodes that are leaves. A node is a leaf if either:
@@ -68,13 +72,12 @@ class NpaRunner:
         :return: An iterable over all leaf nodes
         :rtype: iter
         """
-        for n in self.graph.nodes_iter():
-
-            if self.tag in self.graph.node[n]:
+        for node in self.graph.nodes_iter():
+            if self.tag in self.graph.node[node]:
                 continue
 
-            if not any(self.tag not in self.graph.node[p] for p in self.graph.predecessors_iter(n)):
-                yield n
+            if not any(self.tag not in self.graph.node[p] for p in self.graph.predecessors_iter(node)):
+                yield node
 
     def has_leaves(self):
         """Returns if the current graph has any leaves.
@@ -119,11 +122,13 @@ class NpaRunner:
         :return: A random in-edge to the lowest in/out degree ratio node. This is a 3-tuple of (node, node, key)
         :rtype: tuple
         """
-        nodes = [(n, self.in_out_ratio(n)) for n in self.unscored_nodes_iter() if n != self.final_node]
+        nodes = [(n, self.in_out_ratio(n)) for n in self.unscored_nodes_iter() if n != self.target_node]
         node, deg = min(nodes, key=itemgetter(1))
         log.log(5, 'checking %s (in/out ratio: %.3f)', node, deg)
+
         possible_edges = self.graph.in_edges(node, keys=True)
         log.log(5, 'possible edges: %s', possible_edges)
+
         edge_to_remove = random.choice(possible_edges)
         log.log(5, 'chose: %s', edge_to_remove)
 
@@ -144,11 +149,7 @@ class NpaRunner:
             self.remove_random_edge()
 
     def chomp_leaves(self):
-        """Calculates the NPA score for all leaves
-
-        :return: If there are leaves
-        :rtype: bool
-        """
+        """Calculates the NPA score for all leaves"""
         leaves = set(self.iter_leaves())
 
         if not leaves:
@@ -191,7 +192,7 @@ class NpaRunner:
         :return: Is the algorithm done running?
         :rtype: bool
         """
-        return self.tag in self.graph.node[self.final_node]
+        return self.tag in self.graph.node[self.target_node]
 
     def get_final_score(self):
         """Returns the final score for the target node
@@ -202,7 +203,7 @@ class NpaRunner:
         if not self.done_chomping():
             raise ValueError('Algorithm has not completed')
 
-        return self.graph.node[self.final_node][self.tag]
+        return self.graph.node[self.target_node][self.tag]
 
     def calculate_npa_score_iteration(self, node):
         """Calculates the score of the given node
@@ -232,7 +233,7 @@ class NpaRunner:
         return self.graph.subgraph(self.unscored_nodes_iter())
 
 
-def average_npa_run_helper(graph, node, key, tag=None, default_score=None, runs=None):
+def multirun(graph, node, key, tag=None, default_score=None, runs=None):
     """Runs NPA multiple times and yields the NpaRunner object after each run has been completed
 
     :param graph: A BEL graph
@@ -245,20 +246,23 @@ def average_npa_run_helper(graph, node, key, tag=None, default_score=None, runs=
     :type tag: str
     :param default_score: The initial NPA score for all nodes. This number can go up or down.
     :type default_score: float
-    :param runs: The number of times to run the NPA algorithm. Defaults to 100.
+    :param runs: The number of times to run the NPA algorithm. Defaults to 1000.
     :type runs: int
     :return: An iterable over the runners after each iteration
     :rtype: iter
     """
-    runs = 100 if runs is None else runs
+    runs = 1000 if runs is None else runs
 
-    for _ in range(runs):
-        runner = NpaRunner(graph, node, key, tag=tag, default_score=default_score)
-        runner.run()
-        yield runner
+    for i in range(runs):
+        try:
+            runner = NpaRunner(graph, node, key, tag=tag, default_score=default_score)
+            runner.run()
+            yield runner
+        except:
+            log.warning('NPA for %s failed on run %s', node, i)
 
 
-def average_npa_run(graph, node, key, tag=None, default_score=None, runs=None):
+def multirun_average(graph, node, key, tag=None, default_score=None, runs=None):
     """Gets the average NPA score over multiple runs.
 
     This function is very simple, and can be copied to do more interesting statistics over the :class:`NpaRunner`
@@ -274,23 +278,18 @@ def average_npa_run(graph, node, key, tag=None, default_score=None, runs=None):
     :type tag: str
     :param default_score: The initial NPA score for all nodes. This number can go up or down.
     :type default_score: float
-    :param runs: The number of times to run the NPA algorithm. Defaults to 100.
+    :param runs: The number of times to run the NPA algorithm. Defaults to 1000.
     :type runs: int
     :return: The average score for the target node
     :rtype: float
     """
-    runners = average_npa_run_helper(graph, node, key, tag, default_score=default_score, runs=runs)
+    runners = multirun(graph, node, key, tag, default_score=default_score, runs=runs)
     scores = [runner.get_final_score() for runner in runners]
     return sum(scores) / len(scores)
 
 
-def npa_all_bioprocesses(graph, key, tag=None, default_score=None, runs=None):
-    """Runs NPA on graphs constrained to be strictly one element upstream of biological processes.
-    This function can be later extended to go back multiple levels.
-
-    1. Get all biological processes
-    2. Get subgraphs induced one level back from each biological process
-    3. NPA on each induced subgraph
+def workflow(graph, node, key, tag=None, default_score=None, runs=None):
+    """Generates candidate mechanism and runs NPA. retun
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -300,16 +299,72 @@ def npa_all_bioprocesses(graph, key, tag=None, default_score=None, runs=None):
     :type tag: str
     :param default_score: The initial NPA score for all nodes. This number can go up or down.
     :type default_score: float
-    :param runs: The number of times to run the NPA algorithm. Defaults to 100.
+    :param runs: The number of times to run the NPA algorithm. Defaults to 1000.
+    :type runs: int
+    :return: A list of runners
+    :rtype: list
+    """
+    sg = generate_mechanism(graph, node, key)
+    runners = multirun(sg, node, key, tag=tag, default_score=default_score, runs=runs)
+    return list(runners)
+
+
+def workflow_all(graph, key, tag=None, default_score=None, runs=None):
+    """Runs NPA and get runners for every possible candidate mechanism
+
+    1. Get all biological processes
+    2. Get candidate mechanism induced two level back from each biological process
+    3. NPA on each candidate mechanism for multiple runs
+    4. Return all runner results
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
+    :type tag: str
+    :param default_score: The initial NPA score for all nodes. This number can go up or down.
+    :type default_score: float
+    :param runs: The number of times to run the NPA algorithm. Defaults to 1000.
+    :type runs: int
+    :return: A dictionary of {node: list of runners}
+    :rtype: dict
+    """
+    results = {}
+    for node in get_nodes_by_function(graph, BIOPROCESS):
+        results[node] = workflow(graph, node, key, tag=tag, default_score=default_score, runs=runs)
+    return results
+
+
+def workflow_all_average(graph, key, tag=None, default_score=None, runs=None):
+    """Runs NPA to get average score for every possible candidate mechanism
+
+    1. Get all biological processes
+    2. Get candidate mechanism induced two level back from each biological process
+    3. NPA on each candidate mechanism for multiple runs
+    4. Report average NPA scores for each candidate mechanism
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
+    :type tag: str
+    :param default_score: The initial NPA score for all nodes. This number can go up or down.
+    :type default_score: float
+    :param runs: The number of times to run the NPA algorithm. Defaults to 1000.
     :type runs: int
     :return: A dictionary of {node: upstream causal subgraph}
     :rtype: dict
     """
     results = {}
     for node in get_nodes_by_function(graph, BIOPROCESS):
-        candidate_mechanism = generate_mechanism(graph, node, key)
-        score = average_npa_run(candidate_mechanism, node, key, tag=tag, default_score=default_score, runs=runs)
-        results[node] = score
+        sg = generate_mechanism(graph, node, key)
+
+        try:
+            results[node] = multirun_average(sg, node, key, tag=tag, default_score=default_score, runs=runs)
+        except:
+            log.exception('could not run on %', node)
     return results
 
 
