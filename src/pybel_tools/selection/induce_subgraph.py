@@ -5,6 +5,7 @@ import os
 
 from pybel import BELGraph, to_pickle
 from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, METADATA_NAME
+from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood
 from ..utils import check_has_annotation
@@ -13,6 +14,7 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     'get_subgraph_by_node_filter',
+    'get_subgraph_by_shortest_paths',
     'get_subgraph_by_annotation',
     'get_causal_subgraph',
     'filter_graph',
@@ -30,6 +32,26 @@ def get_subgraph_by_node_filter(graph, *filters):
     :rtype: pybel.BELGraph
     """
     return graph.subgraph(filter_nodes(graph, *filters))
+
+
+def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
+    """Induces a subgraph over the nodes in the pairwise shortest paths between all of the nodes in the given list
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param nodes: A set of nodes over which to calculate shortest paths
+    :type nodes: set
+    :param cutoff:  Depth to stop the shortest path search. Only paths of length <= cutoff are returned.
+    :type cutoff: int
+    :param weight: Edge data key corresponding to the edge weight. If None, performs unwighted search
+    :type weight: str
+    :return: A BEL graph induced over the nodes appearing in the shortest paths between the given nodes
+    :rtype: pybel.BELGraph
+    """
+    if weight is None:
+        return graph.subgraph(get_nodes_in_shortest_paths(graph, nodes, cutoff=cutoff))
+    else:
+        return graph.subgraph(get_nodes_in_dijkstra_paths(graph, nodes, cutoff=cutoff, weight=weight))
 
 
 def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
