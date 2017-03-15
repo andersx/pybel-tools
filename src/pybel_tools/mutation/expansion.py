@@ -25,6 +25,7 @@ __all__ = [
     'expand_upstream_causal_subgraph',
 ]
 
+
 def get_upstream_causal_subgraph(graph, nbunch):
     """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
 
@@ -45,6 +46,7 @@ def get_upstream_causal_subgraph(graph, nbunch):
         bg.node[node].update(graph.node[node])
 
     return bg
+
 
 def get_possible_successor_edges(graph, subgraph):
     """Gets the set of possible successor edges peripheral to the subgraph
@@ -95,7 +97,7 @@ def count_possible_predecessors(graph, subgraph):
 
 
 def get_subgraph_edges(graph, value, annotation='Subgraph', source_filter=None, target_filter=None):
-    """
+    """Gets all edges from a given subgraph whose source and target nodes pass all of the given filters
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
@@ -103,6 +105,9 @@ def get_subgraph_edges(graph, value, annotation='Subgraph', source_filter=None, 
     :param annotation:  The annotation to search
     :param source_filter: Optional filter for source nodes (graph, node) -> bool
     :param target_filter: Optional filter for target nodes (graph, node) -> bool
+    :return: An iterable of (source node, target node, key, data) for all edges that match the annotation/value and
+             node filters
+    :rtype: iter
     """
     if source_filter is None:
         source_filter = keep_node_permissive
@@ -118,16 +123,24 @@ def get_subgraph_edges(graph, value, annotation='Subgraph', source_filter=None, 
 
 
 def get_subgraph_fill_edges(graph, subgraph, node_filters=None, edge_filters=None, threshold=2):
-    """
+    """Iterates over all possible edges, peripheral to a given subgraph, that could be added from the given graph.
+    Edges could be added if they go to nodes that are involved in relationships that occur with more than the
+    threshold (default 2) number of nodes in the subgraph.
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :param subgraph: A set of nodes
     :type subgraph: iter
-    :param node_filters: Optional filter function (graph, node) -> bool
+    :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
+                         :code:`pybel_tools.filters.node_filters` for more information
+    :type node_filter: lambda
+    :param edge_filters: Optional. A list of edge filter predicates with the interface (graph, node, node, key, data)
+                          -> bool. See :code:`pybel_tools.filters.edge_filters` for more information
+    :type edge_filter: lambda
     :param threshold: Minimum frequency of betweenness occurrence to add a gap node
+    :return: An iterable of (source node, target node, key, data) for all edges that could be added to the subgraph
+    :rtype: iter
     """
-
     node_filter = concatenate_node_filters(node_filters) if node_filters else keep_node_permissive
     edge_filter = concatenate_edge_filters(edge_filters) if edge_filters else keep_edge_permissive
 
@@ -152,14 +165,16 @@ def get_subgraph_fill_edges(graph, subgraph, node_filters=None, edge_filters=Non
 
 
 def fill_subgraph(graph, subgraph, node_filter=None, edge_filters=None, threshold=2):
-    """
+    """Calculates what nodes can be added to the subgraph with :func:`get_subgraph_fill_edges` and adds them
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param subgraph: A BEL graph
     :type subgraph: pybel.BELGraph
     :param node_filter: Optional filter function (graph, node) -> bool
+    :type node_filter: lambda
     :param threshold: Minimum frequency of betweenness occurrence to add a gap node
+    :type threshold: int
     """
     for u, v, k, d in get_subgraph_fill_edges(graph, subgraph, node_filter, edge_filters, threshold):
         if u not in subgraph:
@@ -169,6 +184,7 @@ def fill_subgraph(graph, subgraph, node_filter=None, edge_filters=None, threshol
         subgraph.add_edge(u, v, key=k, attr_dict=d)
 
 
+# TODO implement
 def infer_subgraph_expansion(graph, annotation='Subgraph'):
     """Infers the annotations for subgraphs on to edges
 
@@ -186,6 +202,7 @@ def infer_subgraph_expansion(graph, annotation='Subgraph'):
     raise NotImplementedError
 
 
+# TODO implement
 def enrich_unqualified(graph, subgraph):
     """Enriches the subgraph with the unqualified edges from the graph.
 
@@ -204,6 +221,7 @@ def enrich_unqualified(graph, subgraph):
     raise NotImplementedError
 
 
+# TODO implement
 def expand_internal_causal(graph, subgraph, target_filter=None):
     """Adds causal edges between entities in the subgraph
 
@@ -222,54 +240,54 @@ def expand_internal_causal(graph, subgraph, target_filter=None):
     raise NotImplementedError('Not finished implementing')
 
 
-def expand_node_neighborhood(graph, query_graph, node):
+def expand_node_neighborhood(subgraph, graph, node):
     """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
     in place.
 
-    :param graph: The graph to add stuff to
+    :param subgraph: The graph to add stuff to
+    :type subgraph: pybel.BELGraph
+    :param graph: The graph containing the stuff to add
     :type graph: pybel.BELGraph
-    :param query_graph: The graph containing the stuff to add
-    :type query_graph: pybel.BELGraph
     :param node: A node tuples from the query graph
     :type node: tuple
     """
-    if node not in query_graph:
-        raise ValueError('{} not in graph {}'.format(node, graph.name))
-
     if node not in graph:
-        graph.add_node(node, attr_dict=query_graph.node[node])
+        raise ValueError('{} not in graph {}'.format(node, subgraph.name))
+
+    if node not in subgraph:
+        subgraph.add_node(node, attr_dict=graph.node[node])
 
     skip_predecessors = set()
-    for predecessor in query_graph.predecessors_iter(node):
-        if predecessor in graph:
+    for predecessor in graph.predecessors_iter(node):
+        if predecessor in subgraph:
             skip_predecessors.add(predecessor)
             continue
-        graph.add_node(predecessor, attr_dict=query_graph.node[node])
+        subgraph.add_node(predecessor, attr_dict=graph.node[node])
 
-    for predecessor, _, k, d in query_graph.in_edges_iter(node, data=True, keys=True):
+    for predecessor, _, k, d in graph.in_edges_iter(node, data=True, keys=True):
         if predecessor in skip_predecessors:
             continue
 
         if k < 0:
-            graph.add_edge(predecessor, node, key=k, attr_dict=d)
+            subgraph.add_edge(predecessor, node, key=k, attr_dict=d)
         else:
-            graph.add_edge(predecessor, node, attr_dict=d)
+            subgraph.add_edge(predecessor, node, attr_dict=d)
 
     skip_successors = set()
-    for successor in query_graph.successors_iter(node):
-        if successor in graph:
+    for successor in graph.successors_iter(node):
+        if successor in subgraph:
             skip_successors.add(successor)
             continue
-        graph.add_node(successor, attr_dict=query_graph.node[node])
+        subgraph.add_node(successor, attr_dict=graph.node[node])
 
-    for _, successor, k, d in query_graph.out_edges_iter(node, data=True, keys=True):
+    for _, successor, k, d in graph.out_edges_iter(node, data=True, keys=True):
         if successor in skip_successors:
             continue
 
         if k < 0:
-            graph.add_edge(node, successor, key=k, attr_dict=d)
+            subgraph.add_edge(node, successor, key=k, attr_dict=d)
         else:
-            graph.add_edge(node, successor, attr_dict=d)
+            subgraph.add_edge(node, successor, attr_dict=d)
 
 
 def expand_upstream_causal_subgraph(graph, subgraph):
@@ -283,5 +301,3 @@ def expand_upstream_causal_subgraph(graph, subgraph):
     for node in subgraph.nodes():
         upstream = get_upstream_causal_subgraph(graph, node)
         left_merge(subgraph, upstream)
-
-
