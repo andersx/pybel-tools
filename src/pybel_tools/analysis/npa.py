@@ -148,17 +148,23 @@ class NpaRunner:
                 return
             self.remove_random_edge()
 
-    def chomp_leaves(self):
-        """Calculates the NPA score for all leaves"""
+    def score_leaves(self):
+        """Calculates the NPA score for all leaves
+
+        :return: The list of leaf nodes that were scored
+        :rtype: list
+        """
         leaves = set(self.iter_leaves())
 
         if not leaves:
             log.warning('no leaves.')
-            return
+            return []
 
         for leaf in leaves:
-            self.graph.node[leaf][self.tag] = self.calculate_npa_score_iteration(leaf)
+            self.graph.node[leaf][self.tag] = self.calculate_score(leaf)
             log.debug('chomping %s', leaf)
+
+        return leaves
 
     def run(self):
         """Calculates NPA scores for all leaves until there are none, removes edges until there are, and repeats until
@@ -166,7 +172,7 @@ class NpaRunner:
         """
         while not self.done_chomping():
             self.remove_random_edge_until_has_leaves()
-            self.chomp_leaves()
+            self.score_leaves()
 
     def run_with_graph_transformation(self):
         """Calculates NPA scores for all leaves until there are none, removes edges until there are, and repeats until
@@ -181,7 +187,7 @@ class NpaRunner:
             while not list(self.iter_leaves()):
                 self.remove_random_edge()
                 yield self.get_remaining_graph()
-            self.chomp_leaves()
+            self.score_leaves()
             yield self.get_remaining_graph()
 
     def done_chomping(self):
@@ -205,7 +211,7 @@ class NpaRunner:
 
         return self.graph.node[self.target_node][self.tag]
 
-    def calculate_npa_score_iteration(self, node):
+    def calculate_score(self, node):
         """Calculates the score of the given node
 
         :param node: A node in the BEL graph
@@ -298,6 +304,8 @@ def workflow(graph, node, key, tag=None, default_score=None, runs=None):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :param node: The BEL node that is the focus of this analysis
+    :type node: tuple
     :param key: The key in the node data dictionary representing the experimental data
     :type key: str
     :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
@@ -365,7 +373,6 @@ def workflow_all_average(graph, key, tag=None, default_score=None, runs=None):
     results = {}
     for node in get_nodes_by_function(graph, BIOPROCESS):
         sg = generate_mechanism(graph, node, key)
-
         try:
             results[node] = multirun_average(sg, node, key, tag=tag, default_score=default_score, runs=runs)
         except:
