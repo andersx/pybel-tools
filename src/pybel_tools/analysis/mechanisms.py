@@ -55,6 +55,6 @@ def compare(graph, annotation='Subgraph'):
         candidate_nodes = canonical_nodes[candidate]
         canonical_nodes = candidate_nodes[canonical]
         tanimoto = tanimoto_set_similarity(candidate_nodes, canonical_nodes)
-        results[candidate][canonical] = tanimoto
+        results[canonical][candidate] = tanimoto
 
     return DataFrame(results)
