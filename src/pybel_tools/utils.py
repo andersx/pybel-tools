@@ -12,7 +12,7 @@ from collections import Counter, defaultdict
 from pandas import DataFrame
 
 from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
-    CITATION_AUTHORS, CITATION_COMMENTS
+    CITATION_AUTHORS, CITATION_COMMENTS, RELATION
 
 
 def graph_edge_data_iter(graph):
@@ -183,3 +183,41 @@ def citation_to_tuple(citation):
         citation.get(CITATION_AUTHORS),
         citation.get(CITATION_COMMENTS)
     ])
+
+
+def is_edge_consistent(graph, u, v):
+    """Checks if all edges between two nodes have the same relation
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param u: The source BEL node
+    :type u: tuple
+    :param v: The target BEL node
+    :type v: tuple
+    :return: If all edges from the source to target node have the same relation
+    :rtype: bool
+    """
+    if not graph.has_edge(u, v):
+        raise ValueError('{} does not contain an edge ({}, {})'.format(graph, u, v))
+
+    return 0 == len(set(d[RELATION] for d in graph.edge[u][v].values()))
+
+
+def safe_add_edge(graph, u, v, k, d):
+    """Adds an edge while preserving negative keys, and paying no respect to positive ones
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param u: The source BEL node
+    :type u: tuple
+    :param v: The target BEL node
+    :type v: tuple
+    :param k: The edge key. If less than zero, corresponds to an unqualified edge, else is disregarded
+    :type k: int
+    :param d: The edge data dictionary
+    :type d: dict
+    """
+    if k < 0:
+        graph.add_edge(u, v, key=k, attr_dict=d)
+    else:
+        graph.add_edge(u, v, attr_dict=d)
