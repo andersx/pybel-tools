@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+"""This module contains functions to compare generated subgraphs to canonical subgraphs"""
+
 import itertools as itt
 from collections import defaultdict
 

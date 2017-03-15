@@ -14,6 +14,7 @@ PyBEL Tools Documentation
    comparison
    selection
    integration
+   filters
    mutation
    visualization
 
