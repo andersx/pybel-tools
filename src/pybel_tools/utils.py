@@ -87,6 +87,18 @@ def check_has_annotation(data, key):
     return _check_has_data(data, ANNOTATIONS, key)
 
 
+def tanimoto_set_similarity(a, b):
+    """Calculates the tanimoto set similarity
+
+    :param a: A set
+    :type a: set
+    :param b: Another set
+    :type b: set
+    :return: The similarity between
+    :rtype: float
+    """
+    return len(a & b) / len(a | b)
+
 def calculate_tanimoto_set_distances(dict_of_sets):
     """Returns a distance matrix keyed by the keys in the given dict. Distances are calculated
     based on pairwise tanimoto similarity of the sets contained
