@@ -1,8 +1,8 @@
 NPA Variant Workflow
 ====================
 
-.. autoclass:: pybel_tools.analysis.npa.NpaRunner
+.. automodule:: pybel_tools.analysis.npa
     :members:
 
-.. automodule:: pybel_tools.analysis.npa
+.. autoclass:: pybel_tools.analysis.npa.NpaRunner
     :members:

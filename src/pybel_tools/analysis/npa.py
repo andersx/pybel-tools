@@ -259,7 +259,7 @@ def multirun(graph, node, key, tag=None, default_score=None, runs=None):
             runner.run()
             yield runner
         except:
-            log.warning('NPA for %s failed on run %s', node, i)
+            log.debug('Run %s failed for %s', i, node)
 
 
 def multirun_average(graph, node, key, tag=None, default_score=None, runs=None):
@@ -285,6 +285,11 @@ def multirun_average(graph, node, key, tag=None, default_score=None, runs=None):
     """
     runners = multirun(graph, node, key, tag, default_score=default_score, runs=runs)
     scores = [runner.get_final_score() for runner in runners]
+
+    if not scores:
+        log.warning('Unable to run NPA on %s', node)
+        return None
+
     return sum(scores) / len(scores)
 
 

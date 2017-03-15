@@ -139,7 +139,13 @@ def add_missing_unqualified_edges(subgraph, graph):
 
 
 def opening_by_central_dogma(graph):
-    """Performs origin completion then collapsing to furthest downstream, in place
+    """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
+    gene node to its RNA/miRNA node, then possibly from RNA to protein if available.
+
+    Equivalent to:
+
+    >>> infer_central_dogma(graph)
+    >>> collapse_by_central_dogma(graph)
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
@@ -149,7 +155,17 @@ def opening_by_central_dogma(graph):
 
 
 def opening_by_central_dogma_to_genes(graph):
-    """Performs origin completion then collapsing to gene, in place
+    """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
+    protein and RNA/miRNA nodes to the gene node.
+
+    This function is equivalent to:
+
+    >>> infer_central_dogma(graph)
+    >>> collapse_by_central_dogma_to_genes(graph)
+
+    This method is useful to help overcome issues with BEL curation, when curators sometimes haphazardly annotate
+    entities as either a gene, RNA, or protein. There is possibly significant biological subtlty that can be lost
+    during this process, but sometimes this must be done to overcome the noise introduced by these kinds of mistakes.
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
