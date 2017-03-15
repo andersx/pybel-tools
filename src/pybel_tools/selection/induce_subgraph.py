@@ -61,7 +61,7 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
     :type graph: pybel.BELGraph
     :param value: The value for the annotation
     :type value: str
-    :param annotation: An annotation
+    :param annotation: The annotation to group by
     :type annotation: str
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph

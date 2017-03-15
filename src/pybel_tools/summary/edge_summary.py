@@ -126,14 +126,14 @@ def count_annotation_values(graph, annotation):
 
 
 def get_annotation_values(graph, annotation):
-    """Counts in how many edges each annotation appears in a graph
+    """Get all values for the given annotation
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param annotation: An annotation to count
+    :param annotation: The annotation to summarize
     :type annotation: str
-    :return: A Counter from {annotation value: frequency}
-    :rtype: Counter
+    :return: A set of all annotation values
+    :rtype: set
     """
     return set(count_annotation_values(graph, annotation))
 
