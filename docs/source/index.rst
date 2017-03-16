@@ -11,10 +11,10 @@ PyBEL Tools Documentation
    :name: graphutils
 
    summary
+   filters
    comparison
    selection
    integration
-   filters
    mutation
    visualization
 

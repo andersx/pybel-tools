@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
+Node Filters
+------------
 
-This module contains a set of default functions for filtering nodes and building node filtering functions
+A node filter is a function that takes two arguments: a :class:`pybel.BELGraph` and a node tuple. It returns a boolean
+representing whether the node passed the given test.
 
-The signature of the built-in method, :func:`filter`, is (function, iterable)
+This module contains a set of default functions for filtering lists of nodes and building node filtering functions.
 
-All node filters should be applicable if the iterable is graph.nodes_iter() such that
-
-filter(your_node_filter, graph.nodes_iter()) is applicable.
-
+A general use for a node filter function is to use the built-in :func:`filter` in code like
+:code:`filter(your_node_filter, graph.nodes_iter())`
 """
 
 from __future__ import print_function

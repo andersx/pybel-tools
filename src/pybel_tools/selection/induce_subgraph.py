@@ -147,8 +147,8 @@ def filter_graph(graph, expand_nodes=None, remove_nodes=None, **annotations):
 
 
 def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
-    """Groups the given graph into subgraphs by the given annotation with :func:`group_subgraphs` and outputs them
-    as gpickle files to the given directory with :func:`pybel.to_pickle`
+    """Groups the given graph into subgraphs by the given annotation with :func:`get_subgraph_by_annotation` and
+    outputs them as gpickle files to the given directory with :func:`pybel.to_pickle`
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
