@@ -19,9 +19,12 @@ __all__ = [
     'keep_molecularly_active',
     'concatenate_node_filters',
     'filter_nodes',
+    'count_passed_node_filter',
     'summarize_node_filter',
 ]
 
+
+# Example filter
 
 def keep_node_permissive(graph, node):
     """A default node filter that is true for all nodes
@@ -34,6 +37,31 @@ def keep_node_permissive(graph, node):
     :rtype: bool
     """
     return True
+
+
+# Filter Builders
+
+def concatenate_node_filters(*filters):
+    """Concatenates multiple node filters to a new filter that requires all filters to be met
+
+    :param filters: a list of predicates (graph, node) -> bool
+    :type filters: list
+    :return: A combine filter (graph, node) -> bool
+    :rtype: lambda
+    """
+
+    # If no filters are given, then return the trivially permissive filter
+    if not filters:
+        return keep_node_permissive
+
+    # If only one filter is given, don't bother wrapping it
+    if 1 == len(filters):
+        return filters[0]
+
+    def concatenated_filter(graph, node):
+        return all(f(graph, node) for f in filters)
+
+    return concatenated_filter
 
 
 def list_filter_builder(nodes):
@@ -82,6 +110,8 @@ def exclusion_filter_builder(*nodes):
     return exclusion_filter
 
 
+# Default Filters
+
 pathology_filter = function_filter_builder(PATHOLOGY)
 
 
@@ -106,28 +136,7 @@ def keep_molecularly_active(graph, node):
     return False
 
 
-def concatenate_node_filters(*filters):
-    """Concatenates multiple node filters to a new filter that requires all filters to be met
-
-    :param filters: a list of predicates (graph, node) -> bool
-    :type filters: list
-    :return: A combine filter (graph, node) -> bool
-    :rtype: lambda
-    """
-
-    # If no filters are given, then return the trivially permissive filter
-    if not filters:
-        return keep_node_permissive
-
-    # If only one filter is given, don't bother wrapping it
-    if 1 == len(filters):
-        return filters[0]
-
-    def concatenated_filter(graph, node):
-        return all(f(graph, node) for f in filters)
-
-    return concatenated_filter
-
+# Appliers
 
 def filter_nodes(graph, *filters):
     """Applies a set of filters to the nodes iterator of a BEL graph
@@ -151,6 +160,17 @@ def filter_nodes(graph, *filters):
                 yield node
 
 
+def count_passed_node_filter(graph, *filters):
+    """Counts how many nodes pass a given set of filters
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param filters: a list of filters
+    :type filters: list
+    """
+    return sum(1 for _ in filter_nodes(graph, *filters))
+
+
 def summarize_node_filter(graph, *filters):
     """Prints a summary of the number of nodes passing a given set of filters
 
@@ -159,5 +179,5 @@ def summarize_node_filter(graph, *filters):
     :param filters: a list of filters
     :type filters: list
     """
-    passed = sum(1 for _ in filter_nodes(graph, *filters))
+    passed = count_passed_node_filter(graph, *filters)
     print('{}/{} nodes passed {}'.format(passed, graph.number_of_nodes(), ', '.join(f.__name__ for f in filters)))

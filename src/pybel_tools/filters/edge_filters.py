@@ -13,6 +13,7 @@ __all__ = [
     'keep_causal_edges',
     'concatenate_edge_filters',
     'filter_edges',
+    'count_passed_edge_filter',
     'summarize_edge_filter'
 ]
 
@@ -70,6 +71,19 @@ def filter_edges(graph, *filters):
                 yield u, v, k, d
 
 
+def count_passed_edge_filter(graph, *filters):
+    """Returns the number of edges passing a given set of filters
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param filters: a list of filters
+    :type filters: list
+    :return: The number of edges passing a given set of filters
+    :rtype: int
+    """
+    return sum(1 for _ in filter_edges(graph, *filters))
+
+
 def summarize_edge_filter(graph, *filters):
     """Prints a summary of the number of edges passing a given set of filters
 
@@ -78,5 +92,5 @@ def summarize_edge_filter(graph, *filters):
     :param filters: a list of filters
     :type filters: list
     """
-    passed = sum(1 for _ in filter_edges(graph, *filters))
+    passed = count_passed_edge_filter(graph, *filters)
     print('{}/{} edges passed {}'.format(passed, graph.number_of_edges(), ', '.join(f.__name__ for f in filters)))
