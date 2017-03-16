@@ -151,14 +151,14 @@ class NpaRunner:
     def score_leaves(self):
         """Calculates the NPA score for all leaves
 
-        :return: The list of leaf nodes that were scored
-        :rtype: list
+        :return: The set of leaf nodes that were scored
+        :rtype: set
         """
         leaves = set(self.iter_leaves())
 
         if not leaves:
             log.warning('no leaves.')
-            return []
+            return set()
 
         for leaf in leaves:
             self.graph.node[leaf][self.tag] = self.calculate_score(leaf)
