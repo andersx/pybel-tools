@@ -6,6 +6,7 @@ import logging
 from pybel.constants import *
 from .collapse import collapse_by_central_dogma, collapse_by_central_dogma_to_genes
 from ..constants import INFERRED_INVERSE
+from ..utils import safe_add_edge
 
 __all__ = [
     'infer_central_dogma',
@@ -95,8 +96,7 @@ def infer_missing_inverse_edge(graph, relations):
         for u, v in graph.edges_iter(**{RELATION: relation}):
             graph.add_edge(v, u, key=unqualified_edge_code[relation], **{RELATION: INFERRED_INVERSE[relation]})
 
-
-def infer_missing_backwards_edge(graph, u, v, k, d):
+def infer_missing_backwards_edge(graph, u, v, key, attr_dict):
     """Adds the same edge, but in the opposite direction if not already present
 
     :param graph: A BEL graph
@@ -105,20 +105,17 @@ def infer_missing_backwards_edge(graph, u, v, k, d):
     :type u: tuple
     :param v: A BEL node
     :type u: tuple
-    :param k: The edge key
-    :type k: int
-    :param d: The data dictionary from the connection between (u, v)
-    :type d: dict
+    :param key: The edge key
+    :type key: int
+    :param attr_dict: The data dictionary from the connection between (u, v)
+    :type attr_dict: dict
     """
 
     for attr_dict in graph.edge[v][u].values():
-        if attr_dict == d:
+        if attr_dict == attr_dict:
             return
 
-    if k < 0:
-        graph.add_edge(v, u, key=k, attr_dict=d)
-    else:
-        graph.add_edge(v, u, attr_dict=d)
+    safe_add_edge(graph, v, u, key=key, attr_dict=attr_dict)
 
 
 def add_missing_unqualified_edges(subgraph, graph):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-import itertools as itt
+from itertools import chain
 
 from networkx import single_source_shortest_path, single_source_dijkstra_path
 
@@ -19,19 +19,14 @@ def get_nodes_in_shortest_paths(graph, nodes, cutoff=None):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :param nodes: The list of nodes to use to use to find all shortest paths
+    :type nodes: iter
     :param cutoff:  Depth to stop the search. Only paths of length <= cutoff are returned.
     :type cutoff: int
     :return: A set of nodes appearing in the shortest paths between nodes in the BEL graph
     :rtype: set
     """
-    return set(itt.chain.from_iterable(single_source_shortest_path(graph, node, cutoff=cutoff) for node in nodes))
-
-    #: Alternate solution:
-    # result = set()
-    # for node in nodes:
-    #    path = single_source_shortest_path(graph, node, cutoff=cutoff)
-    #    result |= set(path)
-    # return result
+    return set(chain.from_iterable(single_source_shortest_path(graph, n, cutoff=cutoff) for n in nodes))
 
 
 def get_nodes_in_dijkstra_paths(graph, nodes, cutoff=None, weight='weight'):
@@ -42,6 +37,8 @@ def get_nodes_in_dijkstra_paths(graph, nodes, cutoff=None, weight='weight'):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :param nodes: The list of nodes to use to use to find all shortest paths
+    :type nodes: iter
     :param cutoff:  Depth to stop the search. Only paths of length <= cutoff are returned.
     :type cutoff: int
     :param weight: Edge data key corresponding to the edge weight
@@ -49,8 +46,4 @@ def get_nodes_in_dijkstra_paths(graph, nodes, cutoff=None, weight='weight'):
     :return: A set of nodes appearing in the weighted shortest paths between nodes in the BEL graph
     :rtype: set
     """
-    result = set()
-    for node in nodes:
-        path = single_source_dijkstra_path(graph, node, cutoff=cutoff, weight=weight)
-        result |= set(path)
-    return result
+    return set(chain.from_iterable(single_source_dijkstra_path(graph, n, cutoff=cutoff, weight=weight) for n in nodes))

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from ..filters.node_filters import data_does_not_contain_key_builder, upstream_leaf_predicate
+
 __all__ = [
     'get_upstream_leaves',
     'get_unweighted_upstream_leaves'
@@ -9,17 +11,23 @@ __all__ = [
 def get_upstream_leaves(graph):
     """Gets all leaves of the graph (with no incoming edges and only one outgoing edge)
 
+    .. seealso:: :func:`upstream_leaf_predicate`
+
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :return: An iterator over nodes that are upstream leaves
+    :rtype: iter
     """
-    for node, data in graph.nodes_iter(data=True):
-        if 0 == len(graph.predecessors(node)) and 1 == len(graph.successors(node)):
+    for node in graph.nodes_iter():
+        if upstream_leaf_predicate(graph, node):
             yield node
 
 
 def get_unweighted_upstream_leaves(graph, key):
     """Gets all leaves of the graph with no incoming edges, one outgoing edge, and without the given key in
     its data dictionary
+
+    .. seealso :: :func:`data_does_not_contain_key_builder`
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -28,6 +36,8 @@ def get_unweighted_upstream_leaves(graph, key):
     :return: An iterable over leaves (nodes with an in-degree of 0) that don't have the given annotation
     :rtype: iter
     """
+    data_does_not_contain_key = data_does_not_contain_key_builder(key)
+
     for node in get_upstream_leaves(graph):
-        if key not in graph.node[node]:
+        if data_does_not_contain_key(graph, node):
             yield node

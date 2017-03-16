@@ -100,6 +100,7 @@ def tanimoto_set_similarity(a, b):
     union_size = len(a | b)
     return len(a & b) / union_size if union_size > 0 else 0
 
+
 def calculate_tanimoto_set_distances(dict_of_sets):
     """Returns a distance matrix keyed by the keys in the given dict. Distances are calculated
     based on pairwise tanimoto similarity of the sets contained
@@ -144,7 +145,7 @@ def calculate_global_tanimoto_set_distances(dict_of_sets):
     return DataFrame.from_dict(dict(result))
 
 
-def list_edges(graph, u, v):
+def all_edges_iter(graph, u, v):
     """Lists all edges between the given nodes
 
     :param graph: A BEL Graph
@@ -154,7 +155,11 @@ def list_edges(graph, u, v):
     :return: A list of (node, node, key)
     :rtype: list
     """
-    return [(u, v, k) for k in graph.edge[u][v].keys()]
+    if u not in graph.edge or v not in graph.edge[u]:
+        raise ValueError('Graph has no edges')
+
+    for k in graph.edge[u][v].keys():
+        yield u, v, k
 
 
 def barh(d, plt, title=None):
@@ -216,7 +221,7 @@ def is_edge_consistent(graph, u, v):
     return 0 == len(set(d[RELATION] for d in graph.edge[u][v].values()))
 
 
-def safe_add_edge(graph, u, v, k, d):
+def safe_add_edge(graph, u, v, key, attr_dict, **attr):
     """Adds an edge while preserving negative keys, and paying no respect to positive ones
 
     :param graph: A BEL Graph
@@ -225,12 +230,14 @@ def safe_add_edge(graph, u, v, k, d):
     :type u: tuple
     :param v: The target BEL node
     :type v: tuple
-    :param k: The edge key. If less than zero, corresponds to an unqualified edge, else is disregarded
-    :type k: int
-    :param d: The edge data dictionary
-    :type d: dict
+    :param key: The edge key. If less than zero, corresponds to an unqualified edge, else is disregarded
+    :type key: int
+    :param attr_dict: The edge data dictionary
+    :type attr_dict: dict
+    :param attr: Edge data to assign via keyword arguments
+    :type attr: dict
     """
-    if k < 0:
-        graph.add_edge(u, v, key=k, attr_dict=d)
+    if key < 0:
+        graph.add_edge(u, v, key=key, attr_dict=attr_dict, **attr)
     else:
-        graph.add_edge(u, v, attr_dict=d)
+        graph.add_edge(u, v, attr_dict=attr_dict, **attr)
