@@ -97,7 +97,8 @@ def tanimoto_set_similarity(a, b):
     :return: The similarity between
     :rtype: float
     """
-    return len(a & b) / len(a | b)
+    union_size = len(a | b)
+    return len(a & b) / union_size if union_size > 0 else 0
 
 def calculate_tanimoto_set_distances(dict_of_sets):
     """Returns a distance matrix keyed by the keys in the given dict. Distances are calculated
