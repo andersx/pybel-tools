@@ -16,13 +16,16 @@ from ..mutation import add_canonical_names
 
 __all__ = ['to_jupyter', 'to_jupyter_str']
 
+DEFAULT_WIDTH = 1000
+DEFAULT_HEIGHT = 650
+
 
 def generate_id():
     """Generates a random string of letters"""
     return "".join(sample('abcdefghjkmopqrstuvqxyz', 16))
 
 
-def to_jupyter(graph, width=900, height=600):
+def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
     """Displays the BEL graph inline in a Jupyter notebook.
 
     To use successfully, make run as the last statement in a cell inside a Jupyter notebook.
@@ -38,7 +41,7 @@ def to_jupyter(graph, width=900, height=600):
     return Javascript(to_jupyter_str(graph, width=width, height=height))
 
 
-def to_jupyter_str(graph, width=900, height=600):
+def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
     """Returns the string to be javascript-ified by the Jupyter notebook function :func:`IPython.display.Javascript`
 
     :param graph: A BEL graph
