@@ -87,18 +87,41 @@ def check_has_annotation(data, key):
     return _check_has_data(data, ANNOTATIONS, key)
 
 
-def tanimoto_set_similarity(a, b):
+def set_percentage(x, y):
+    """What percentage of x is contained within y?
+
+    :param x: A set
+    :type x: set
+    :param y: Another set
+    :type y: set
+    :return: The percentage of x contained within y
+    :rtype: float
+    """
+    a, b = set(x), set(y)
+
+    if not a:
+        return 0
+
+    return len(a & b) / len(a)
+
+
+def tanimoto_set_similarity(x, y):
     """Calculates the tanimoto set similarity
 
-    :param a: A set
-    :type a: set
-    :param b: Another set
-    :type b: set
+    :param x: A set
+    :type x: set
+    :param y: Another set
+    :type y: set
     :return: The similarity between
     :rtype: float
     """
+    a, b = set(x), set(y)
     union_size = len(a | b)
-    return len(a & b) / union_size if union_size > 0 else 0
+
+    if union_size == 0:
+        return 0
+
+    return len(a & b) / union_size
 
 
 def calculate_tanimoto_set_distances(dict_of_sets):
