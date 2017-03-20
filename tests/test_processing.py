@@ -2,17 +2,19 @@ import unittest
 
 import pybel
 from pybel.constants import *
-from pybel_tools.mutation import remove_leaves_by_type, prune, infer_missing_inverse_edge
+from pybel_tools.mutation import remove_leaves_by_type, prune, infer_missing_inverse_edge, infer_central_dogma
 
 
 class TestProcessing(unittest.TestCase):
     def setUp(self):
         if 'PYBEL_BASE' in os.environ:
             test_bel_simple_path = os.path.join(os.environ['PYBEL_BASE'], 'tests', 'bel', 'test_bel.bel')
-            self.graph = pybel.from_path(test_bel_simple_path, complete_origin=True)
+            self.graph = pybel.from_path(test_bel_simple_path)
         else:
             test_bel_simple_url = 'https://raw.githubusercontent.com/pybel/pybel/develop/tests/bel/test_bel.bel'
-            self.graph = pybel.from_url(test_bel_simple_url, complete_origin=True)
+            self.graph = pybel.from_url(test_bel_simple_url)
+
+        infer_central_dogma(self.graph)
 
         n1 = GENE, 'HGNC', 'AKT1'
         n2 = RNA, 'HGNC', 'EGFR'
