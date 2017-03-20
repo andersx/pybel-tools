@@ -11,7 +11,7 @@ import networkx as nx
 
 from pybel import from_bytes, BELGraph
 from pybel.constants import *
-from pybel.cx import hash_tuple
+from pybel.utils import hash_tuple
 from pybel.manager.graph_cache import GraphCacheManager
 from pybel.manager.models import Network
 from .base_service import PybelService
