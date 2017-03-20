@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module runs the dictionary-backed PyBEL API
-
-"""
+"""This module runs the dictionary-backed PyBEL API"""
 
 import logging
 
 import flask
 from flask import Flask
 
-from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines
-from pybel.io import to_json_dict, to_csv
+from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
 from ..summary import get_annotation_values_by_annotation
 
 try:
     from StringIO import StringIO
+    from BytesIO import BytesIO
 except ImportError:
     from io import StringIO, BytesIO
 

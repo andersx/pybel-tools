@@ -7,9 +7,7 @@ import logging
 from collections import defaultdict, Counter
 
 from pybel.constants import *
-from pybel.constants import CITATION, CITATION_TYPE, CITATION_REFERENCE, ANNOTATIONS
-from pybel_tools.utils import check_has_annotation
-from ..utils import graph_edge_data_iter, count_defaultdict
+from ..utils import graph_edge_data_iter, count_defaultdict, check_has_annotation
 
 __all__ = [
     'count_pmids'
@@ -168,6 +166,7 @@ def count_authors_by_subgraph(graph, annotation='Subgraph'):
     :param annotation: The annotation to use to group the graph
     :type annotation: str
     :return: A dictionary of Counters {subgraph name: Counter from {author: frequency}}
+    :rtype: dict
     """
     authors = defaultdict(list)
     for d in graph_edge_data_iter(graph):

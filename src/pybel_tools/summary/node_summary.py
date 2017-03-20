@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module contains functions that provide summaries of the nodes in a graph
-
-"""
+"""This module contains functions that provide summaries of the nodes in a graph"""
 
 from collections import Counter, defaultdict
 

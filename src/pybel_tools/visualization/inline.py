@@ -36,13 +36,14 @@ def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
     :type width: int
     :param height: The height of the visualization window to render
     :type height: int
-    :return:
+    :return: An IPython notebook Javascript object
+    :rtype: :class:`IPython.display.Javascript`
     """
     return Javascript(to_jupyter_str(graph, width=width, height=height))
 
 
 def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
-    """Returns the string to be javascript-ified by the Jupyter notebook function :func:`IPython.display.Javascript`
+    """Returns the string to be javascript-ified by the Jupyter notebook function :class:`IPython.display.Javascript`
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph

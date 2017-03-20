@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module contains functions that handle and summarize subgraphs of graphs
-
-"""
+"""This module contains functions that handle and summarize subgraphs of graphs"""
 
 from __future__ import print_function
 

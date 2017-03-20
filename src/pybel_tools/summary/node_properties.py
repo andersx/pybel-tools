@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module contains functions that calculate properties of nodes
-
-"""
+"""This module contains functions that calculate properties of nodes"""
 
 from pybel.constants import RELATION, CAUSAL_RELATIONS, FUNCTION
 

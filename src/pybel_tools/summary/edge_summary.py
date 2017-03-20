@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module contains functions that provide summaries of the edges in a graph
-
-"""
+"""This module contains functions that provide summaries of the edges in a graph"""
 
 import itertools as itt
 from collections import Counter, defaultdict

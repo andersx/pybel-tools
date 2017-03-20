@@ -52,6 +52,15 @@ class DictionaryService(PybelService):
             raise ValueError()
 
     def _build_edge_json(self, graph, u, v, d):
+        """
+
+        :param graph:
+        :type graph: pybel.BELGraph
+        :param u:
+        :param v:
+        :param d:
+        :return:
+        """
         return {
             'source': graph.node[u] + {'id': self.node_nid[u]},
             'target': graph.node[v] + {'id': self.node_nid[v]},
@@ -144,14 +153,12 @@ class DictionaryService(PybelService):
         if self.full_network is not None:
             return self.full_network
 
-        result = BELGraph()
+        self.full_network = BELGraph()
 
         for network_id in self.get_network_ids():
-            left_merge(result, self.get_network_by_id(network_id))
+            left_merge(self.full_network, self.get_network_by_id(network_id))
 
-        self.full_network = result
-
-        return result
+        return self.full_network
 
     def get_node_by_id(self, node_id):
         """Returns the node tuple based on the node id
@@ -194,10 +201,10 @@ class DictionaryService(PybelService):
         return successors + predecessors
 
     def _query_helper(self, original_graph, expand_nodes=None, remove_nodes=None, **annotations):
-        result_graph = filter_graph(original_graph, expand_nodes=expand_nodes, remove_nodes=remove_nodes, **annotations)
-        add_canonical_names(result_graph)
-        self.relabel_nodes_to_identifiers(result_graph)
-        return result_graph
+        result = filter_graph(original_graph, expand_nodes=expand_nodes, remove_nodes=remove_nodes, **annotations)
+        add_canonical_names(result)
+        self.relabel_nodes_to_identifiers(result)
+        return result
 
     def query_all_builder(self, expand_nodes=None, remove_nodes=None, **annotations):
         original_graph = self.get_super_network()
