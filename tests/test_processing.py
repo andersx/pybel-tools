@@ -38,7 +38,7 @@ class TestProcessing(unittest.TestCase):
 
     def test_prune(self):
         prune_central_dogma(self.graph)
-        self.assertEqual(6, self.graph.number_of_nodes())
+        self.assertEqual(9, self.graph.number_of_nodes())
 
     def test_infer(self):
         infer_missing_inverse_edge(self.graph, TRANSLATED_TO)

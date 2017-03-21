@@ -342,6 +342,16 @@ def enrich_variants(graph, subgraph):
     :type graph: pybel.BELGraph
     :param subgraph: A BEL graph's subgraph
     :type subgraph: pybel.BELGraph
+
+    Equivalent to:
+
+    >>> from pybel.constants import PROTEIN, RNA, MIRNA, GENE
+    >>> enrich_variants_helper(graph, subgraph, PROTEIN)
+    >>> enrich_variants_helper(graph, subgraph, RNA)
+    >>> enrich_variants_helper(graph, subgraph, MIRNA)
+    >>> enrich_variants_helper(graph, subgraph, GENE)
+
+    .. seealso:: :func:`enrich_variants_helper`
     """
     enrich_variants_helper(graph, subgraph, PROTEIN)
     enrich_variants_helper(graph, subgraph, RNA)
@@ -352,15 +362,23 @@ def enrich_variants(graph, subgraph):
 def enrich_unqualified(graph, subgraph):
     """Enriches the subgraph with the unqualified edges from the graph.
 
-    The reason you might want to do this is you induce a subgraph from the original graph based on an annotation filter,
-    but the unqualified edges that don't have annotations that most likely connect elements within your graph are
-    not included.
-
-
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param subgraph: A BEL graph's subgraph
     :type subgraph: pybel.BELGraph
+
+    The reason you might want to do this is you induce a subgraph from the original graph based on an annotation filter,
+    but the unqualified edges that don't have annotations that most likely connect elements within your graph are
+    not included.
+
+    .. seealso:: :func:`enrich_complexes`, :func:`enrich_composities`, :func:`enrich_reactions`, and :func:`enrich_variants`.
+
+    Equivalent to:
+
+    >>> enrich_complexes(graph, subgraph)
+    >>> enrich_composites(graph, subgraph)
+    >>> enrich_reactions(graph, subgraph)
+    >>> enrich_variants(graph, subgraph)
     """
     enrich_complexes(graph, subgraph)
     enrich_composites(graph, subgraph)

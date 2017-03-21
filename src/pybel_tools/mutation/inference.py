@@ -12,7 +12,7 @@ __all__ = [
     'infer_missing_two_way_edges',
     'infer_missing_backwards_edge',
     'infer_missing_inverse_edge',
-    'add_missing_unqualified_edges',
+    'enrich_internal_unqualified_edges',
 ]
 
 log = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def infer_central_dogmatic_transcriptions(graph):
 
 def infer_central_dogma(graph):
     """Adds all RNA-Protein translations then all Gene-RNA transcriptions by applying
-    :code:`infer_central_dogmatic_translations` then :code:`infer_central_dogmatic_transcriptions`
+    :func:`infer_central_dogmatic_translations` then :func:`infer_central_dogmatic_transcriptions`
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
@@ -74,7 +74,7 @@ def infer_missing_two_way_edges(graph):
     """
     for u, v, k, d in graph.edges_iter(data=True, keys=True):
         if d[RELATION] in TWO_WAY_RELATIONS:
-            infer_missing_backwards_edge(graph, u, v, k, d)
+            infer_missing_backwards_edge(graph, u, v, k)
 
 
 def infer_missing_inverse_edge(graph, relations):
@@ -93,7 +93,8 @@ def infer_missing_inverse_edge(graph, relations):
         for u, v in graph.edges_iter(**{RELATION: relation}):
             graph.add_edge(v, u, key=unqualified_edge_code[relation], **{RELATION: INFERRED_INVERSE[relation]})
 
-def infer_missing_backwards_edge(graph, u, v, key, attr_dict):
+
+def infer_missing_backwards_edge(graph, u, v, key):
     """Adds the same edge, but in the opposite direction if not already present
 
     :param graph: A BEL graph
@@ -101,27 +102,25 @@ def infer_missing_backwards_edge(graph, u, v, key, attr_dict):
     :param u: A BEL node
     :type u: tuple
     :param v: A BEL node
-    :type u: tuple
+    :type v: tuple
     :param key: The edge key
     :type key: int
-    :param attr_dict: The data dictionary from the connection between (u, v)
-    :type attr_dict: dict
     """
 
     for attr_dict in graph.edge[v][u].values():
-        if attr_dict == attr_dict:
+        if attr_dict == graph.edge[u][v][k]:
             return
 
-    safe_add_edge(graph, v, u, key=key, attr_dict=attr_dict)
+    safe_add_edge(graph, v, u, key=key, attr_dict=graph.edge[u][v][k])
 
 
-def add_missing_unqualified_edges(subgraph, graph):
+def enrich_internal_unqualified_edges(graph, subgraph):
     """Adds the missing unqualified edges between entities in the subgraph that are contained within the full graph
 
-    :param subgraph: The query BEL subgraph
-    :type subgraph: pybel.BELGraph
     :param graph: The full BEL graph
     :type graph: pybel.BELGraph
+    :param subgraph: The query BEL subgraph
+    :type subgraph: pybel.BELGraph
     """
     for u, v in itt.combinations(subgraph.nodes_iter(), 2):
         if not graph.has_edge(u, v):
