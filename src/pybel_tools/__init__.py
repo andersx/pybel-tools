@@ -32,7 +32,7 @@ from . import selection
 from . import summary
 from . import visualization
 
-__version__ = '0.1.3-dev'
+__version__ = '0.1.3'
 
 __title__ = 'pybel_tools'
 __description__ = 'Tools for using BEL documents in python'
