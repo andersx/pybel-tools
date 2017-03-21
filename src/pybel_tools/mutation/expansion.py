@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import itertools as itt
+import logging
 from collections import Counter, defaultdict
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS
+from pybel.constants import *
 from .merge import left_merge
 from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filters
 from ..filters.node_filters import keep_node_permissive, concatenate_node_filters
+from ..selection.utils import get_nodes_by_function
 from ..summary.edge_summary import count_annotation_values
 from ..utils import check_has_annotation
 
@@ -23,7 +26,15 @@ __all__ = [
     'fill_subgraph',
     'expand_node_neighborhood',
     'expand_upstream_causal_subgraph',
+    'enrich_grouping',
+    'enrich_complexes',
+    'enrich_composites',
+    'enrich_reactions',
+    'enrich_unqualified',
+    'expand_internal_causal'
 ]
+
+log = logging.getLogger(__name__)
 
 
 def get_upstream_causal_subgraph(graph, nbunch):
@@ -164,19 +175,21 @@ def get_subgraph_fill_edges(graph, subgraph, node_filters=None, edge_filters=Non
             yield new_node, already_in_graph, k, d
 
 
-def fill_subgraph(graph, subgraph, node_filter=None, edge_filters=None, threshold=2):
+def fill_subgraph(graph, subgraph, node_filters=None, edge_filters=None, threshold=2):
     """Calculates what nodes can be added to the subgraph with :func:`get_subgraph_fill_edges` and adds them
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param subgraph: A BEL graph
     :type subgraph: pybel.BELGraph
-    :param node_filter: Optional filter function (graph, node) -> bool
-    :type node_filter: lambda
+    :param node_filters: Optional list of node filter functions (graph, node) -> bool
+    :type node_filters: list
+    :param edge_filters: Optional list of edge filter functions (graph, node, node, key, data) -> bool
+    :type edge_filters: list
     :param threshold: Minimum frequency of betweenness occurrence to add a gap node
     :type threshold: int
     """
-    for u, v, k, d in get_subgraph_fill_edges(graph, subgraph, node_filter, edge_filters, threshold):
+    for u, v, k, d in get_subgraph_fill_edges(graph, subgraph, node_filters, edge_filters, threshold):
         if u not in subgraph:
             subgraph.add_node(u, attr_dict=graph.node[u])
         if v not in subgraph:
@@ -202,7 +215,101 @@ def infer_subgraph_expansion(graph, annotation='Subgraph'):
     raise NotImplementedError
 
 
-# TODO implement
+def enrich_grouping(graph, subgraph, function, relation):
+    """Adds all of the grouped elements. See :func:`enrich_complexes`, :func:`enrich_composites`, and
+    :func:`enrich_reactions`
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param subgraph: A BEL graph's subgraph
+    :type subgraph: pybel.BELGraph
+    """
+    for u in get_nodes_by_function(subgraph, function):
+        for _, v, d in graph.out_edges_iter(u, data=True):
+            if d[RELATION] != relation:
+                continue
+
+            if v not in subgraph:
+                subgraph.add_node(v, attr_dict=graph.node[v])
+
+            if v not in subgraph.edge[u] or unqualified_edge_code[relation] not in subgraph.edge[u][v]:
+                subgraph.add_unqualified_edge(u, v, relation)
+
+
+def enrich_complexes(graph, subgraph):
+    """Adds all of the members of the complexes in the subgraph that are in the original graph with appropriate
+    :data:`pybel.constants.HAS_COMPONENT` relationships, in place.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param subgraph: A BEL graph's subgraph
+    :type subgraph: pybel.BELGraph
+    """
+    enrich_grouping(graph, subgraph, COMPLEX, HAS_COMPONENT)
+
+
+def enrich_composites(graph, subgraph):
+    """Adds all of the members of the composite abundances in the subgraph that are in the original graph with
+    appropriate :data:`pybel.constants.HAS_COMPONENT` relationships, in place.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param subgraph: A BEL graph's subgraph
+    :type subgraph: pybel.BELGraph
+    """
+    enrich_grouping(graph, subgraph, COMPOSITE, HAS_COMPONENT)
+
+
+def enrich_reactions(graph, subgraph):
+    """Adds all of the reactants and products of reactions in the subgraph that are in the original graph with
+    appropriate :data:`pybel.constants.HAS_REACTANT` and :data:`pybel.constants.HAS_PRODUCT` relationships,
+    respectively, in place.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param subgraph: A BEL graph's subgraph
+    :type subgraph: pybel.BELGraph
+    """
+    enrich_grouping(graph, subgraph, REACTION, HAS_REACTANT)
+    enrich_grouping(graph, subgraph, REACTION, HAS_PRODUCT)
+
+
+def enrich_variants_helper(graph, subgraph, function):
+    """Adds the reference nodes for all variants of the given function
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param subgraph: A BEL graph's subgraph
+    :type subgraph: pybel.BELGraph
+    :param function: The BEL function to filter by
+    :type function: str
+    """
+    for v in get_nodes_by_function(subgraph, function):
+        for u, _, d in graph.in_edges_iter(v, data=True):
+            if d[RELATION] != HAS_VARIANT:
+                continue
+
+            if u not in subgraph:
+                subgraph.add_node(u, attr_dict=graph.node[u])
+
+            if v not in subgraph.edge[u] or unqualified_edge_code[HAS_VARIANT] not in subgraph.edge[u][v]:
+                subgraph.add_unqualified_edge(u, v, HAS_VARIANT)
+
+
+def enrich_variants(graph, subgraph):
+    """Adds the reference nodes for all variants of genes, RNAs, miRNAs, and proteins
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param subgraph: A BEL graph's subgraph
+    :type subgraph: pybel.BELGraph
+    """
+    enrich_variants_helper(graph, subgraph, PROTEIN)
+    enrich_variants_helper(graph, subgraph, RNA)
+    enrich_variants_helper(graph, subgraph, MIRNA)
+    enrich_variants_helper(graph, subgraph, GENE)
+
+
 def enrich_unqualified(graph, subgraph):
     """Enriches the subgraph with the unqualified edges from the graph.
 
@@ -210,44 +317,59 @@ def enrich_unqualified(graph, subgraph):
     but the unqualified edges that don't have annotations that most likely connect elements within your graph are
     not included.
 
-    TODO: example
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param subgraph: A BEL graph's subgraph
     :type subgraph: pybel.BELGraph
-    :return:
     """
-    raise NotImplementedError
+    enrich_complexes(graph, subgraph)
+    enrich_composites(graph, subgraph)
+    enrich_reactions(graph, subgraph)
+    enrich_variants(graph, subgraph)
 
 
-# TODO implement
-def expand_internal_causal(graph, subgraph, target_filter=None):
-    """Adds causal edges between entities in the subgraph
+def expand_internal_causal(graph, subgraph):
+    """Adds causal edges between entities in the subgraph.
 
     :param graph: The full graph
     :type graph: pybel.BELGraph
     :param subgraph: A subgraph to find the upstream information
     :type subgraph: pybel.BELGraph
+
+    Future:
+
     :param target_filter: A predicate for target nodes (graph, node) -> bool. Could be used to not match nodes that
                           are the causal root for a tree that's being grown
     :type target_filter: lambda
 
     """
-    if target_filter is None:
-        target_filter = keep_node_permissive
+    for u, v in itt.product(subgraph.nodes_iter(), 2):
+        if subgraph.has_edge(u, v) or not graph.has_edge(u, v):
+            continue
 
-    raise NotImplementedError('Not finished implementing')
+        rs = defaultdict(list)
+        for k, d in graph.edge[u][v].items():
+            if d[RELATION] not in CAUSAL_RELATIONS:
+                continue
+            rs[d[RELATION]].append(d)
+
+        if 1 == len(rs):
+            relation = list(rs)[0]
+            for d in rs[relation]:
+                subgraph.add_edge(u, v, attr_dict=d)
+        else:
+            log.debug('Multiple relationship types found between %s and %s', u, v)
 
 
-def expand_node_neighborhood(subgraph, graph, node):
+def expand_node_neighborhood(graph, subgraph, node):
     """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
     in place.
 
-    :param subgraph: The graph to add stuff to
-    :type subgraph: pybel.BELGraph
     :param graph: The graph containing the stuff to add
     :type graph: pybel.BELGraph
+    :param subgraph: The graph to add stuff to
+    :type subgraph: pybel.BELGraph
     :param node: A node tuples from the query graph
     :type node: tuple
     """

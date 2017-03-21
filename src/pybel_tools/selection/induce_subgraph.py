@@ -125,25 +125,25 @@ def filter_graph(graph, expand_nodes=None, remove_nodes=None, **annotations):
     expand_nodes = [] if expand_nodes is None else expand_nodes
     remove_nodes = [] if remove_nodes is None else remove_nodes
 
-    result_graph = BELGraph()
+    subgraph = BELGraph()
 
     for u, v, k, d in graph.edges_iter(keys=True, data=True, **{ANNOTATIONS: annotations}):
-        result_graph.add_edge(u, v, key=k, attr_dict=d)
+        subgraph.add_edge(u, v, key=k, attr_dict=d)
 
-    for node in result_graph.nodes_iter():
-        result_graph.node[node] = graph.node[node]
+    for node in subgraph.nodes_iter():
+        subgraph.node[node] = graph.node[node]
 
     for node in expand_nodes:
-        expand_node_neighborhood(result_graph, graph, node)
+        expand_node_neighborhood(graph, subgraph, node)
 
     for node in remove_nodes:
-        if node not in result_graph:
+        if node not in subgraph:
             log.warning('%s is not in graph %s', node, graph.name)
             continue
 
-        result_graph.remove_node(node)
+        subgraph.remove_node(node)
 
-    return result_graph
+    return subgraph
 
 
 def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
