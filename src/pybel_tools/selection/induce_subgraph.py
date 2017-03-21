@@ -4,7 +4,7 @@ import logging
 import os
 
 from pybel import BELGraph, to_pickle
-from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, METADATA_NAME
+from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, METADATA_NAME, GRAPH_METADATA
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood
@@ -67,7 +67,7 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
     :rtype: pybel.BELGraph
     """
     bg = BELGraph()
-    bg.name = '{} - {} - {}'.format(graph.document[METADATA_NAME], annotation, value)
+    bg.graph[GRAPH_METADATA][METADATA_NAME] = '{} - {}={}'.format(graph.document[METADATA_NAME], annotation, value)
 
     for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
         if not check_has_annotation(attr_dict, annotation):
@@ -91,6 +91,7 @@ def get_causal_subgraph(graph):
     :rtype: pybel.BELGraph
     """
     bg = BELGraph()
+    bg.graph[GRAPH_METADATA][METADATA_NAME] = '{} - Causal Subgraph'.format(graph.document[METADATA_NAME])
 
     for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
         if attr_dict[RELATION] in CAUSAL_RELATIONS:
