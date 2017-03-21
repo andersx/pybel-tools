@@ -2,7 +2,7 @@ import unittest
 
 import pybel
 from pybel.constants import *
-from pybel_tools.mutation import remove_leaves_by_type, prune, infer_missing_inverse_edge, infer_central_dogma
+from pybel_tools.mutation import remove_leaves_by_type, prune_central_dogma, infer_missing_inverse_edge, infer_central_dogma
 
 
 class TestProcessing(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestProcessing(unittest.TestCase):
         self.assertEqual(10, self.graph.number_of_nodes())
 
     def test_prune(self):
-        prune(self.graph)
+        prune_central_dogma(self.graph)
         self.assertEqual(6, self.graph.number_of_nodes())
 
     def test_infer(self):

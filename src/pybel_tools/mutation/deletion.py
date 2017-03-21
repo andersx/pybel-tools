@@ -11,7 +11,7 @@ from ..utils import all_edges_iter
 __all__ = [
     'remove_nodes_by_namespace',
     'remove_leaves_by_type',
-    'prune',
+    'prune_central_dogma',
     'remove_filtered_nodes',
     'remove_inconsistent_edges',
 ]
@@ -41,8 +41,9 @@ def remove_leaves_by_type(graph, function=None, prune_threshold=1):
 
     :param graph: a BEL network
     :type graph: pybel.BELGraph
-    :param function: If set, filters by the node's function from :code:`pybel.constants` like :code:`GENE`, :code:`RNA`,
-                     :code:`PROTEIN`, or :code:`BIOPROCESS`
+    :param function: If set, filters by the node's function from :code:`pybel.constants` like
+                    :data:`GENE`, :data:`pybel.constants.RNA`, :data:`pybel.constants.PROTEIN`, or
+                    :data:`pybel.contants.BIOPROCESS`
     :type function: str
     :param prune_threshold: Removes nodes with less than or equal to this number of connections. Defaults to :code:`1`
     :type prune_threshold: int
@@ -51,7 +52,9 @@ def remove_leaves_by_type(graph, function=None, prune_threshold=1):
     graph.remove_nodes_from(nodes)
 
 
-def prune(graph):
+
+
+def prune_central_dogma(graph):
     """Prunes genes, then RNA, in place
 
     :param graph: a BEL network

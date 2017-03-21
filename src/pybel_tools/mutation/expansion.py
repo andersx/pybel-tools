@@ -11,7 +11,7 @@ from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filter
 from ..filters.node_filters import keep_node_permissive, concatenate_node_filters
 from ..selection.utils import get_nodes_by_function
 from ..summary.edge_summary import count_annotation_values
-from ..utils import check_has_annotation
+from ..utils import check_has_annotation, safe_add_edge
 
 __all__ = [
     'get_upstream_causal_subgraph',
@@ -144,10 +144,10 @@ def get_subgraph_fill_edges(graph, subgraph, node_filters=None, edge_filters=Non
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
                          :code:`pybel_tools.filters.node_filters` for more information
-    :type node_filter: lambda
+    :type node_filters: lambda
     :param edge_filters: Optional. A list of edge filter predicates with the interface (graph, node, node, key, data)
                           -> bool. See :code:`pybel_tools.filters.edge_filters` for more information
-    :type edge_filter: lambda
+    :type edge_filters: lambda
     :param threshold: Minimum frequency of betweenness occurrence to add a gap node
     :return: An iterable of (source node, target node, key, data) for all edges that could be added to the subgraph
     :rtype: iter
@@ -391,11 +391,7 @@ def expand_node_neighborhood(graph, subgraph, node):
     for predecessor, _, k, d in graph.in_edges_iter(node, data=True, keys=True):
         if predecessor in skip_predecessors:
             continue
-
-        if k < 0:
-            subgraph.add_edge(predecessor, node, key=k, attr_dict=d)
-        else:
-            subgraph.add_edge(predecessor, node, attr_dict=d)
+        safe_add_edge(graph, predecessor, node, k, d)
 
     skip_successors = set()
     for successor in graph.successors_iter(node):
@@ -407,11 +403,7 @@ def expand_node_neighborhood(graph, subgraph, node):
     for _, successor, k, d in graph.out_edges_iter(node, data=True, keys=True):
         if successor in skip_successors:
             continue
-
-        if k < 0:
-            subgraph.add_edge(node, successor, key=k, attr_dict=d)
-        else:
-            subgraph.add_edge(node, successor, attr_dict=d)
+        safe_add_edge(graph, node, successor, k, d)
 
 
 def expand_upstream_causal_subgraph(graph, subgraph):

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from pybel.constants import GENE, RELATION, TRANSCRIBED_TO, RNA, TRANSLATED_TO
-from pybel_tools.selection import get_nodes_by_function
 
+from pybel.constants import GENE, RELATION, TRANSCRIBED_TO, RNA, TRANSLATED_TO
 from ..filters.node_filters import data_does_not_contain_key_builder, upstream_leaf_predicate
+from ..selection.utils import get_nodes_by_function
 
 __all__ = [
     'get_upstream_leaves',
@@ -54,7 +54,7 @@ def get_gene_leaves(graph):
     :type graph: pybel.BELGraph
     """
     for node in get_nodes_by_function(graph, GENE):
-        if graph.in_degree_iter(node) != 0:
+        if graph.in_degree(node) != 0:
             continue
 
         if graph.out_degree(node) != 1:
@@ -73,7 +73,7 @@ def get_rna_leaves(graph):
     :type graph: pybel.BELGraph
     """
     for node in get_nodes_by_function(graph, RNA):
-        if graph.in_degree_iter(node) != 0:
+        if graph.in_degree(node) != 0:
             continue
 
         if graph.out_degree(node) != 1:

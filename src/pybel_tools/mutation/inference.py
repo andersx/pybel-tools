@@ -4,7 +4,6 @@ import itertools as itt
 import logging
 
 from pybel.constants import *
-from .collapse import collapse_by_central_dogma, collapse_by_central_dogma_to_genes
 from ..constants import INFERRED_INVERSE
 from ..utils import safe_add_edge
 
@@ -14,8 +13,6 @@ __all__ = [
     'infer_missing_backwards_edge',
     'infer_missing_inverse_edge',
     'add_missing_unqualified_edges',
-    'opening_by_central_dogma',
-    'opening_by_central_dogma_to_genes',
 ]
 
 log = logging.getLogger(__name__)
@@ -133,39 +130,3 @@ def add_missing_unqualified_edges(subgraph, graph):
         for k in graph.edge[u][v]:
             if k < 0:
                 subgraph.add_edge(u, v, key=k, attr_dict=graph.edge[u][v][k])
-
-
-def opening_by_central_dogma(graph):
-    """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
-    gene node to its RNA/miRNA node, then possibly from RNA to protein if available.
-
-    Equivalent to:
-
-    >>> infer_central_dogma(graph)
-    >>> collapse_by_central_dogma(graph)
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    """
-    infer_central_dogma(graph)
-    collapse_by_central_dogma(graph)
-
-
-def opening_by_central_dogma_to_genes(graph):
-    """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
-    protein and RNA/miRNA nodes to the gene node.
-
-    This function is equivalent to:
-
-    >>> infer_central_dogma(graph)
-    >>> collapse_by_central_dogma_to_genes(graph)
-
-    This method is useful to help overcome issues with BEL curation, when curators sometimes haphazardly annotate
-    entities as either a gene, RNA, or protein. There is possibly significant biological subtlty that can be lost
-    during this process, but sometimes this must be done to overcome the noise introduced by these kinds of mistakes.
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    """
-    infer_central_dogma(graph)
-    collapse_by_central_dogma_to_genes(graph)
