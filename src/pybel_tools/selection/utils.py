@@ -6,7 +6,9 @@ from pybel.constants import FUNCTION, NAMESPACE
 
 __all__ = [
     'get_nodes_by_function',
+    'get_nodes_by_function_namespace',
     'get_triangles',
+    'get_leaves_by_type',
 ]
 
 
@@ -55,6 +57,7 @@ def get_triangles(graph, node):
             yield a, b
         if graph.edge[b][a]:
             yield b, a
+
 
 # FIXME what's up with graph.adj[node]? can use graph.in_degree(node) and graph.out_degree(node) much better
 def get_leaves_by_type(graph, function=None, prune_threshold=1):
