@@ -11,10 +11,12 @@ PyBEL Tools Documentation
    :name: graphutils
 
    summary
+   filters
    comparison
    selection
    integration
    mutation
+   visualization
 
 .. toctree::
    :caption: Pipelines
@@ -22,6 +24,8 @@ PyBEL Tools Documentation
 
    orthology
    expansion
+   generation
+   npa
 
 .. toctree::
    :caption: Services

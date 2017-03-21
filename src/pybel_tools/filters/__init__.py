@@ -2,7 +2,9 @@
 
 """
 
-This module contains functions for filtering node and edge iterables
+This module contains functions for filtering node and edge iterables. It relies heavily on the concepts of
+`functional programming <https://en.wikipedia.org/wiki/Functional_programming>`_ and the concept of
+`predicates <https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)>`_.
 
 """
 

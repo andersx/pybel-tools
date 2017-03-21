@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module runs the dictionary-backed PyBEL API
-
-"""
+"""This module runs the dictionary-backed PyBEL API"""
 
 import logging
 
 import flask
 from flask import Flask
 
-from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines
-from pybel.io import to_json_dict, to_csv
+from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
 from ..summary import get_annotation_values_by_annotation
 
 try:
     from StringIO import StringIO
+    from BytesIO import BytesIO
 except ImportError:
     from io import StringIO, BytesIO
 
@@ -41,7 +37,8 @@ def get_dict_service(dsa):
 
 
 def build_dictionary_service_app(dsa):
-    """Builds the PyBEL Dictionary-Backed API Service
+    """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
+    with :func:`get_dict_service`
 
     :param dsa: A Flask App
     :type dsa: Flask
@@ -77,34 +74,33 @@ def build_dictionary_service_app(dsa):
 
         graph = api.query_filtered_builder(network_id, expand_nodes, remove_nodes, **annotations)
 
-        format = flask.request.args.get('format')
+        serve_format = flask.request.args.get('format')
 
-        if format is None:
+        if serve_format is None:
             return flask.jsonify(to_node_link(graph))
 
-        if format == 'cx':
+        if serve_format == 'cx':
             return flask.jsonify(to_cx_json(graph))
 
-        if format == 'bytes':
+        if serve_format == 'bytes':
             g_bytes = to_bytes(graph)
             return flask.Response(g_bytes, mimetype='application/octet-stream')
 
-        if format == 'bel':
+        if serve_format == 'bel':
             return flask.Response('\n'.join(to_bel_lines(graph)), mimetype='text/plain')
 
-        if format == 'graphml':
+        if serve_format == 'graphml':
             bio = BytesIO()
             to_graphml(graph, bio)
             bio.seek(0)
             s = bio.read().decode('utf-8')
-            return flask.Response(s, mimetype=' text/xml')
+            return flask.Response(s, mimetype='text/xml')
 
-        if format == 'csv':
+        if serve_format == 'csv':
             sio = StringIO()
             to_csv(graph, sio)
             sio.seek(0)
-            s = sio.getvalue()
-            return flask.send_file(s, attachment_filename="testing.txt", as_attachment=True)
+            return flask.send_file(sio, attachment_filename="testing.txt", as_attachment=True)
 
         return flask.abort(404)
 

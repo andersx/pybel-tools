@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module contains functions useful throughout PyBEL Tools
-
-"""
+"""This module contains functions useful throughout PyBEL Tools"""
 
 import itertools as itt
 from collections import Counter, defaultdict
 
 from pandas import DataFrame
 
-from pybel.constants import ANNOTATIONS
+from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
+    CITATION_AUTHORS, CITATION_COMMENTS, RELATION
 
 
 def graph_edge_data_iter(graph):
@@ -86,14 +83,51 @@ def check_has_annotation(data, key):
     return _check_has_data(data, ANNOTATIONS, key)
 
 
+def set_percentage(x, y):
+    """What percentage of x is contained within y?
+
+    :param x: A set
+    :type x: set
+    :param y: Another set
+    :type y: set
+    :return: The percentage of x contained within y
+    :rtype: float
+    """
+    a, b = set(x), set(y)
+
+    if not a:
+        return 0.0
+
+    return len(a & b) / len(a)
+
+
+def tanimoto_set_similarity(x, y):
+    """Calculates the tanimoto set similarity
+
+    :param x: A set
+    :type x: set
+    :param y: Another set
+    :type y: set
+    :return: The similarity between
+    :rtype: float
+    """
+    a, b = set(x), set(y)
+    union = a | b
+
+    if not union:
+        return 0.0
+
+    return len(a & b) / len(union)
+
+
 def calculate_tanimoto_set_distances(dict_of_sets):
     """Returns a distance matrix keyed by the keys in the given dict. Distances are calculated
     based on pairwise tanimoto similarity of the sets contained
 
     :param dict_of_sets: A dict of {x: set of y}
     :type dict_of_sets: dict
-    :return: A distance matrix based on the set overlap (tanimoto) score between each x
-    :rtype: pandas.DataFrame
+    :return: A similarity matrix based on the set overlap (tanimoto) score between each x as a dict of dicts
+    :rtype: dict
     """
     result = defaultdict(dict)
 
@@ -101,9 +135,9 @@ def calculate_tanimoto_set_distances(dict_of_sets):
         result[x][y] = result[y][x] = len(dict_of_sets[x] & dict_of_sets[y]) / len(dict_of_sets[x] | dict_of_sets[y])
 
     for x in dict_of_sets:
-        result[x][x] = 1
+        result[x][x] = 1.0
 
-    return DataFrame.from_dict(dict(result))
+    return dict(result)
 
 
 def calculate_global_tanimoto_set_distances(dict_of_sets):
@@ -113,8 +147,8 @@ def calculate_global_tanimoto_set_distances(dict_of_sets):
 
     :param dict_of_sets: A dict of {x: set of y}
     :type dict_of_sets: dict
-    :return: A distance matrix based on the
-    :rtype: pandas.DataFrame
+    :return: A similarity matrix based on the alternative tanimoto distance as a dict of dicts
+    :rtype: dict
     """
     universe = set(itt.chain.from_iterable(dict_of_sets.values()))
     universe_size = len(universe)
@@ -122,15 +156,15 @@ def calculate_global_tanimoto_set_distances(dict_of_sets):
     result = defaultdict(dict)
 
     for x, y in itt.combinations(dict_of_sets, 2):
-        result[x][y] = result[y][x] = 1 - len(dict_of_sets[x] | dict_of_sets[y]) / universe_size
+        result[x][y] = result[y][x] = 1.0 - len(dict_of_sets[x] | dict_of_sets[y]) / universe_size
 
     for x in dict_of_sets:
-        result[x][x] = 1 - len(x) / len(universe)
+        result[x][x] = 1.0 - len(x) / universe_size
 
-    return DataFrame.from_dict(dict(result))
+    return dict(result)
 
 
-def list_edges(graph, u, v):
+def all_edges_iter(graph, u, v):
     """Lists all edges between the given nodes
 
     :param graph: A BEL Graph
@@ -140,7 +174,11 @@ def list_edges(graph, u, v):
     :return: A list of (node, node, key)
     :rtype: list
     """
-    return [(u, v, k) for k in graph.edge[u][v].keys()]
+    if u not in graph.edge or v not in graph.edge[u]:
+        raise ValueError('Graph has no edges')
+
+    for k in graph.edge[u][v].keys():
+        yield u, v, k
 
 
 def barh(d, plt, title=None):
@@ -164,3 +202,61 @@ def barv(d, plt, title=None, rotation='vertical'):
 
     if title is not None:
         plt.title(title)
+
+
+def citation_to_tuple(citation):
+    """Converts a citation dictionary to a tuple. Can be useful for sorting and serialization purposes
+
+    :param citation: A citation dictionary
+    :type citation: dict
+    :return: A citation tuple
+    :rtype: tuple
+    """
+    return tuple([
+        citation.get(CITATION_TYPE),
+        citation.get(CITATION_NAME),
+        citation.get(CITATION_REFERENCE),
+        citation.get(CITATION_DATE),
+        citation.get(CITATION_AUTHORS),
+        citation.get(CITATION_COMMENTS)
+    ])
+
+
+def is_edge_consistent(graph, u, v):
+    """Checks if all edges between two nodes have the same relation
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param u: The source BEL node
+    :type u: tuple
+    :param v: The target BEL node
+    :type v: tuple
+    :return: If all edges from the source to target node have the same relation
+    :rtype: bool
+    """
+    if not graph.has_edge(u, v):
+        raise ValueError('{} does not contain an edge ({}, {})'.format(graph, u, v))
+
+    return 0 == len(set(d[RELATION] for d in graph.edge[u][v].values()))
+
+
+def safe_add_edge(graph, u, v, key, attr_dict, **attr):
+    """Adds an edge while preserving negative keys, and paying no respect to positive ones
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param u: The source BEL node
+    :type u: tuple
+    :param v: The target BEL node
+    :type v: tuple
+    :param key: The edge key. If less than zero, corresponds to an unqualified edge, else is disregarded
+    :type key: int
+    :param attr_dict: The edge data dictionary
+    :type attr_dict: dict
+    :param attr: Edge data to assign via keyword arguments
+    :type attr: dict
+    """
+    if key < 0:
+        graph.add_edge(u, v, key=key, attr_dict=attr_dict, **attr)
+    else:
+        graph.add_edge(u, v, attr_dict=attr_dict, **attr)

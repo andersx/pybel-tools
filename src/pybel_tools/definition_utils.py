@@ -8,9 +8,9 @@ import getpass
 import sys
 import time
 
-from pybel.constants import NAMESPACE_DOMAIN_TYPES
+from pybel.constants import NAMESPACE_DOMAIN_TYPES, belns_encodings
 from pybel.manager.utils import parse_owl
-from pybel.parser import language
+
 
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'
 DATE_FMT = '%Y-%m-%d'
@@ -187,7 +187,7 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
         print(line, file=file)
     print(file=file)
 
-    function_values = ''.join(sorted(functions if functions is not None else language.belns_encodings.keys()))
+    function_values = ''.join(sorted(functions if functions is not None else belns_encodings.keys()))
 
     print('[Values]', file=file)
 
@@ -212,6 +212,7 @@ def write_namespace_from_owl(url, file=None):
     write_namespace(owl['title'],
                     owl['subject'],
                     owl['description'],
+                    'Other',
                     owl['creator'],
                     owl['email'],
                     url,

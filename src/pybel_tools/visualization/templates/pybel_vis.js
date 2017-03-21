@@ -1,14 +1,15 @@
 function init_d3_force(d3, graph, chart, width, height) {
     const function_colors = {
-        "Abundance": "#AEC7E8",
-        "Gene": "#FFBB78",
-        "RNA": "#FF9896",
-        "miRNA": "#D62728",
         "Protein": "#1F77B4",
-        "Complex": "#98DF8A",
-        "Composite": "#9467BD",
+        "Pathology": "#FF7F0E",
         "BiologicalProcess": "#2CA02C",
-        "Pathology": "#FF7F0E"
+        "miRNA": "#D62728",
+        "Complex": "#9467bd",
+        "Composite": "#9467bd",
+        "Reaction": "#8c564b",
+        "Gene": "#e377c2",
+        "Abundance": "#bcbd22",
+        "RNA": "#17becf"
     };
 
     var focus_node = null;
@@ -84,7 +85,7 @@ function init_d3_force(d3, graph, chart, width, height) {
     //END Pin down functionality
 
     const color_circunferencia = "black";
-    const default_link_color = "#888";
+    const default_link_color = "#AAAAAA";
     const nominal_base_node_size = 8;
 
     // Normal and highlighted stroke of the links (double the width of the link when highlighted)

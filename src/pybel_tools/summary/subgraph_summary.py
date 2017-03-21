@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module contains functions that handle and summarize subgraphs of graphs
-
-"""
+"""This module contains functions that handle and summarize subgraphs of graphs"""
 
 from __future__ import print_function
 
@@ -12,18 +8,30 @@ import itertools as itt
 from collections import defaultdict
 from operator import itemgetter
 
-import pandas as pd
-
 from pybel.constants import *
-from ..selection.group_nodes import group_nodes_by_annotation_filtered
+from ..selection.group_nodes import group_nodes_by_annotation_filtered, group_nodes_by_annotation
 from ..utils import calculate_tanimoto_set_distances, check_has_annotation, count_dict_values
 
 __all__ = [
+    'count_subgraph_sizes',
     'calculate_subgraph_edge_overlap',
     'summarize_subgraph_edge_overlap',
     'rank_subgraph_by_node_filter',
     'summarize_subgraph_node_overlap',
 ]
+
+
+def count_subgraph_sizes(graph, annotation='Subgraph'):
+    """Counts the number of nodes in each subgraph induced by an anotation
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param annotation: The annotation to group by and compare. Defaults to 'Subgraph'
+    :type annotation: str
+    :return: A dictionary from {annotation value: number of nodes}
+    :rtype: dict
+    """
+    return count_dict_values(group_nodes_by_annotation(graph, annotation))
 
 
 def calculate_subgraph_edge_overlap(graph, annotation='Subgraph'):
@@ -49,52 +57,41 @@ def calculate_subgraph_edge_overlap(graph, annotation='Subgraph'):
             continue
         sg2edge[d[ANNOTATIONS][annotation]].add((u, v))
 
-    subgraph_intersection = {}
-    subgraph_union = {}
-    subgraph_overlap = {}
+    subgraph_intersection = defaultdict(dict)
+    subgraph_union = defaultdict(dict)
+    subgraph_overlap = defaultdict(dict)
 
     for sg1, sg2 in itt.combinations(sorted(sg2edge), 2):
         subgraph_intersection[sg1, sg2] = sg2edge[sg1] & sg2edge[sg2]
-        subgraph_union[sg1, sg2] = sg2edge[sg1] | sg2edge[sg2]
-        subgraph_overlap[sg1, sg2] = len(subgraph_intersection[sg1, sg2]) / len(subgraph_union[sg1, sg2])
+        subgraph_union[sg1][sg2] = sg2edge[sg1] | sg2edge[sg2]
+        subgraph_overlap[sg1][sg2] = len(subgraph_intersection[sg1][sg2]) / len(subgraph_union[sg1][sg2])
 
     return sg2edge, subgraph_intersection, subgraph_union, subgraph_overlap
 
 
 def summarize_subgraph_edge_overlap(graph, annotation='Subgraph'):
-    """Returns a distance matrix between all subgraphs (or other given annotation)
+    """Returns a similarity matrix between all subgraphs (or other given annotation)
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :param annotation: The annotation to group by and compare. Defaults to :code:`"Subgraph"`
     :type annotation: str
-    :return: A similarity matrix in a pandas dataframe
-    :rtype: pd.DataFrame
+    :return: A similarity matrix in a dict of dicts
+    :rtype: dict
     """
-    sg2edge, subgraph_intersection, subgraph_union, subgraph_overlap = calculate_subgraph_edge_overlap(graph,
-                                                                                                       annotation)
-    labels = sorted(sg2edge)
-    mat = []
-    for sg1 in labels:
-        row = []
-        for sg2 in labels:
-            if sg1 == sg2:
-                row.append(1)
-            elif (sg1, sg2) in subgraph_overlap:
-                row.append(subgraph_overlap[sg1, sg2])
-            elif (sg2, sg1) in subgraph_overlap:
-                row.append(subgraph_overlap[sg2, sg1])
-        mat.append(row)
-    return pd.DataFrame(mat, index=labels, columns=labels)
+    _, _, _, subgraph_overlap = calculate_subgraph_edge_overlap(graph, annotation)
+    return subgraph_overlap
 
 
 def rank_subgraph_by_node_filter(graph, node_filter, annotation='Subgraph', reverse=True):
     """Ranks subgraphs by which have the most nodes matching an given filter
 
-    :param graph:
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
     :param node_filter:
     :param annotation:
     :param reverse:
+    :type reverse: bool
     :return:
 
     A use case for this function would be to identify which subgraphs contain the most differentially expressed

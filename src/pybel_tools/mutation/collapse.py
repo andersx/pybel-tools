@@ -4,6 +4,8 @@ import logging
 from collections import defaultdict
 
 from pybel.constants import *
+from .deletion import prune_central_dogma
+from .inference import infer_central_dogma
 
 __all__ = [
     'collapse_nodes',
@@ -12,6 +14,7 @@ __all__ = [
     'collapse_by_central_dogma',
     'collapse_by_central_dogma_to_genes',
     'collapse_variants_to_genes',
+    'opening_on_central_dogma',
 ]
 
 log = logging.getLogger(__name__)
@@ -25,7 +28,6 @@ def collapse_nodes(graph, dict_of_sets_of_nodes):
     :param dict_of_sets_of_nodes: A dictionary of {node: set of nodes}
     :type dict_of_sets_of_nodes: dict
     """
-
     for key_node, value_nodes in dict_of_sets_of_nodes.items():
         for value_node in value_nodes:
             for successor in graph.successors_iter(value_node):
@@ -59,7 +61,6 @@ def build_central_dogma_collapse_dict(graph):
     :rtype: dict
     """
     collapse_dict = defaultdict(set)
-
     r2p = {}
 
     for rna_node, protein_node, d in graph.edges_iter(data=True):
@@ -90,8 +91,8 @@ def build_central_dogma_collapse_gene_dict(graph):
     :rtype: dict
     """
     collapse_dict = defaultdict(set)
-
     r2g = {}
+
     for gene_node, rna_node, d in graph.edges_iter(data=True):
         if d[RELATION] != TRANSCRIBED_TO:
             continue
@@ -135,7 +136,8 @@ def collapse_by_central_dogma_to_genes(graph):
 
 
 def collapse_variants_to_genes(graph):
-    """Finds all protein variants that are pointing to a gene and not a protein and fixes them
+    """Finds all protein variants that are pointing to a gene and not a protein and fixes them by changing their
+    function to be :data:`pybel.constants.GENE`
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
@@ -147,3 +149,56 @@ def collapse_variants_to_genes(graph):
             continue
         if any(d[RELATION] == TRANSCRIBED_TO for u, v, d in graph.in_edges_iter(data=True)):
             graph.node[node][FUNCTION] = GENE
+
+
+def opening_on_central_dogma(graph):
+    """Infers central dogmatic relations with :func:`infer_central_dogma` then successively prunes gene leaves then
+    RNA leaves with :func:`prune_central_dogma` to connect disparate elements in a knowledge assembly
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+
+    Equivalent to:
+
+    >>> infer_central_dogma(graph)
+    >>> prune_central_dogma(graph)
+
+    """
+    infer_central_dogma(graph)
+    prune_central_dogma(graph)
+
+
+def collapse_by_opening_on_central_dogma(graph):
+    """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
+    gene node to its RNA/miRNA node, then possibly from RNA to protein if available.
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+
+    Equivalent to:
+
+    >>> infer_central_dogma(graph)
+    >>> collapse_by_central_dogma(graph)
+    """
+    infer_central_dogma(graph)
+    collapse_by_central_dogma(graph)
+
+
+def collapse_by_opening_by_central_dogma_to_genes(graph):
+    """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
+    protein and RNA/miRNA nodes to the gene node.
+
+    This method is useful to help overcome issues with BEL curation, when curators sometimes haphazardly annotate
+    entities as either a gene, RNA, or protein. There is possibly significant biological subtlty that can be lost
+    during this process, but sometimes this must be done to overcome the noise introduced by these kinds of mistakes.
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+
+    Equivalent to:
+
+    >>> infer_central_dogma(graph)
+    >>> collapse_by_central_dogma_to_genes(graph)
+    """
+    infer_central_dogma(graph)
+    collapse_by_central_dogma_to_genes(graph)

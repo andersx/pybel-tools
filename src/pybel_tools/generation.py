@@ -34,6 +34,21 @@ def remove_unweighted_leaves(graph, key):
     graph.remove_nodes_from(unweighted_leaves)
 
 
+def get_unweighted_sources(graph, key):
+    """Gets unannotated nodes on the periphery of the subgraph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    :return: An iterator over BEL nodes that are unannotated and on the periphery of this subgraph
+    :rtype: iter
+    """
+    for node in graph.nodes_iter():
+        if graph.in_degree(node) == 0 and key not in graph.node[node]:
+            yield node
+
+
 def remove_unweighted_sources(graph, key):
     """Prunes unannotated nodes on the periphery of the subgraph
 
@@ -42,9 +57,8 @@ def remove_unweighted_sources(graph, key):
     :param key: The key in the node data dictionary representing the experimental data
     :type key: str
     """
-    for node in graph.nodes():
-        if graph.in_degree(node) == 0 and key not in graph.node[node]:
-            graph.remove_node(node)
+    nodes = list(get_unweighted_sources(graph, key))
+    graph.remove_nodes_from(nodes)
 
 
 def prune_mechanism_by_data(graph, key):
