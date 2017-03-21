@@ -11,6 +11,7 @@ import requests
 
 from pybel.constants import CITATION, CITATION_NAME, CITATION_REFERENCE, CITATION_TYPE, EVIDENCE, ANNOTATIONS
 from pybel.constants import GENE, ORTHOLOGOUS, RELATION
+from .utils import safe_add_edge
 
 HGNC = 'HGNC'
 MGI = 'MGI'
@@ -45,7 +46,6 @@ def download_orthologies_from_hgnc(path):
 
     :param path: output path
     """
-
     res = requests.get(FULL_RESOURCE)
 
     with open(path, 'w') as f:
@@ -179,17 +179,10 @@ def collapse_orthologies(graph):
         for u, _, k, d in graph.in_edges_iter(ortholog, data=True, keys=True):
             if d[RELATION] == ORTHOLOGOUS:
                 continue
-
-            if k < 0:
-                graph.add_edge(u, hgnc, key=k, attr_dict=d)
-            else:
-                graph.add_edge(u, hgnc, attr_dict=d)
+            safe_add_edge(graph, u, hgnc, k, d)
 
         for _, v, k, d in graph.out_edges_iter(ortholog, data=True, keys=True):
-            if k < 0:
-                graph.add_edge(hgnc, v, key=k, attr_dict=d)
-            else:
-                graph.add_edge(hgnc, v, attr_dict=d)
+            safe_add_edge(graph, hgnc, v, k, d)
 
         orthologs.append(ortholog)
 
