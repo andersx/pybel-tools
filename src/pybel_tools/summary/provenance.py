@@ -10,7 +10,13 @@ from pybel.constants import *
 from ..utils import graph_edge_data_iter, count_defaultdict, check_has_annotation
 
 __all__ = [
-    'count_pmids'
+    'count_pmids',
+    'get_pmids',
+    'count_citations',
+    'count_citations_by_annotation',
+    'count_authors',
+    'get_authors',
+    'count_authors_by_annotation',
 ]
 
 log = logging.getLogger(__name__)
@@ -97,7 +103,7 @@ def count_citations(graph, **annotations):
     return counter
 
 
-def count_citations_by_subgraph(graph, annotation='Subgraph'):
+def count_citations_by_annotation(graph, annotation='Subgraph'):
     """Groups the citation counters by subgraphs induced by the annotation
 
     :param graph: A BEL graph
@@ -158,7 +164,7 @@ def get_authors(graph):
     return authors
 
 
-def count_authors_by_subgraph(graph, annotation='Subgraph'):
+def count_authors_by_annotation(graph, annotation='Subgraph'):
     """Groups the author counters by subgraphs induced by the annotation
 
     :param graph: A BEL graph
