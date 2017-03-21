@@ -72,7 +72,7 @@ def add_canonical_names(graph):
         graph.node[node][CNAME] = calculate_canonical_name(graph, node)
 
 
-def fix_pubmed_citations(graph):
+def fix_pubmed_citations(graph, stringify_authors=True):
     """Overwrites all PubMed citations with values from NCBI.
 
     Sets authors as list, so probably a good idea to run :func:`pybel_tools.mutation.serialize_authors` before
@@ -80,6 +80,9 @@ def fix_pubmed_citations(graph):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :param stringify_authors: Converts all author lists to author strings using
+                              :func:`pybel_tools.mutation.serialize_authors`. Defaults to :code:`True`.
+    :type stringify_authors: bool
     """
     pmids = get_pmids(graph)
     pmid_data = get_citations_by_pmids(pmids)
@@ -95,3 +98,6 @@ def fix_pubmed_citations(graph):
             continue
 
         graph.edge[u][v][k][CITATION].update(pmid_data[pmid])
+
+    if stringify_authors:
+        serialize_authors(graph)
