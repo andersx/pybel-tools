@@ -56,7 +56,7 @@ def get_triangles(graph, node):
         if graph.edge[b][a]:
             yield b, a
 
-
+# FIXME what's up with graph.adj[node]? can use graph.in_degree(node) and graph.out_degree(node) much better
 def get_leaves_by_type(graph, function=None, prune_threshold=1):
     """Returns an iterable over all nodes in graph (in-place) with only a connection to one node. Useful for gene and
      RNA. Allows for optional filter by function type.
