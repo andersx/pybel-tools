@@ -17,7 +17,7 @@ __all__ = [
     'get_subgraph_by_shortest_paths',
     'get_subgraph_by_annotation',
     'get_causal_subgraph',
-    'filter_graph',
+    'get_filtered_subgraph',
     'subgraphs_to_pickles',
 ]
 
@@ -67,7 +67,7 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
     :rtype: pybel.BELGraph
     """
     bg = BELGraph()
-    bg.graph[GRAPH_METADATA][METADATA_NAME] = '{} - {}={}'.format(graph.document[METADATA_NAME], annotation, value)
+    bg.graph[GRAPH_METADATA][METADATA_NAME] = '{} - ({}: {})'.format(graph.document[METADATA_NAME], annotation, value)
 
     for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
         if not check_has_annotation(attr_dict, annotation):
@@ -91,7 +91,7 @@ def get_causal_subgraph(graph):
     :rtype: pybel.BELGraph
     """
     bg = BELGraph()
-    bg.graph[GRAPH_METADATA][METADATA_NAME] = '{} - Causal Subgraph'.format(graph.document[METADATA_NAME])
+    bg.graph[GRAPH_METADATA][METADATA_NAME] = '{} - Induced Causal Subgraph'.format(graph.document[METADATA_NAME])
 
     for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
         if attr_dict[RELATION] in CAUSAL_RELATIONS:
@@ -103,7 +103,7 @@ def get_causal_subgraph(graph):
     return bg
 
 
-def filter_graph(graph, expand_nodes=None, remove_nodes=None, **annotations):
+def get_filtered_subgraph(graph, expand_nodes=None, remove_nodes=None, **annotations):
     """Queries graph's edges with multiple filters
 
     Order of operations:

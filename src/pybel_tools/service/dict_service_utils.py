@@ -16,7 +16,7 @@ from pybel.manager.graph_cache import GraphCacheManager
 from pybel.manager.models import Network
 from .base_service import PybelService
 from ..mutation import add_canonical_names, left_merge
-from ..selection import filter_graph
+from ..selection import get_filtered_subgraph
 from ..utils import citation_to_tuple
 
 log = logging.getLogger(__name__)
@@ -201,7 +201,7 @@ class DictionaryService(PybelService):
         return successors + predecessors
 
     def _query_helper(self, original_graph, expand_nodes=None, remove_nodes=None, **annotations):
-        result = filter_graph(original_graph, expand_nodes=expand_nodes, remove_nodes=remove_nodes, **annotations)
+        result = get_filtered_subgraph(original_graph, expand_nodes=expand_nodes, remove_nodes=remove_nodes, **annotations)
         add_canonical_names(result)
         self.relabel_nodes_to_identifiers(result)
         return result
