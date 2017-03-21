@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module contains functions useful throughout PyBEL Tools
-
-"""
+"""This module contains functions useful throughout PyBEL Tools"""
 
 import itertools as itt
 from collections import Counter, defaultdict
@@ -100,7 +96,7 @@ def set_percentage(x, y):
     a, b = set(x), set(y)
 
     if not a:
-        return 0
+        return 0.0
 
     return len(a & b) / len(a)
 
@@ -116,12 +112,12 @@ def tanimoto_set_similarity(x, y):
     :rtype: float
     """
     a, b = set(x), set(y)
-    union_size = len(a | b)
+    union = a | b
 
-    if union_size == 0:
-        return 0
+    if not union:
+        return 0.0
 
-    return len(a & b) / union_size
+    return len(a & b) / len(union)
 
 
 def calculate_tanimoto_set_distances(dict_of_sets):
@@ -130,8 +126,8 @@ def calculate_tanimoto_set_distances(dict_of_sets):
 
     :param dict_of_sets: A dict of {x: set of y}
     :type dict_of_sets: dict
-    :return: A distance matrix based on the set overlap (tanimoto) score between each x
-    :rtype: pandas.DataFrame
+    :return: A similarity matrix based on the set overlap (tanimoto) score between each x as a dict of dicts
+    :rtype: dict
     """
     result = defaultdict(dict)
 
@@ -139,9 +135,9 @@ def calculate_tanimoto_set_distances(dict_of_sets):
         result[x][y] = result[y][x] = len(dict_of_sets[x] & dict_of_sets[y]) / len(dict_of_sets[x] | dict_of_sets[y])
 
     for x in dict_of_sets:
-        result[x][x] = 1
+        result[x][x] = 1.0
 
-    return DataFrame.from_dict(dict(result))
+    return dict(result)
 
 
 def calculate_global_tanimoto_set_distances(dict_of_sets):
@@ -151,8 +147,8 @@ def calculate_global_tanimoto_set_distances(dict_of_sets):
 
     :param dict_of_sets: A dict of {x: set of y}
     :type dict_of_sets: dict
-    :return: A distance matrix based on the
-    :rtype: pandas.DataFrame
+    :return: A similarity matrix based on the alternative tanimoto distance as a dict of dicts
+    :rtype: dict
     """
     universe = set(itt.chain.from_iterable(dict_of_sets.values()))
     universe_size = len(universe)
@@ -160,12 +156,12 @@ def calculate_global_tanimoto_set_distances(dict_of_sets):
     result = defaultdict(dict)
 
     for x, y in itt.combinations(dict_of_sets, 2):
-        result[x][y] = result[y][x] = 1 - len(dict_of_sets[x] | dict_of_sets[y]) / universe_size
+        result[x][y] = result[y][x] = 1.0 - len(dict_of_sets[x] | dict_of_sets[y]) / universe_size
 
     for x in dict_of_sets:
-        result[x][x] = 1 - len(x) / len(universe)
+        result[x][x] = 1.0 - len(x) / universe_size
 
-    return DataFrame.from_dict(dict(result))
+    return dict(result)
 
 
 def all_edges_iter(graph, u, v):
