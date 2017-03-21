@@ -22,16 +22,16 @@ __all__ = [
 ]
 
 
-def get_subgraph_by_node_filter(graph, *filters):
+def get_subgraph_by_node_filter(graph, filters):
     """Induces a graph on the nodes that pass all filters
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param filters: a list of (graph, node) -> bool
+    :param filters: A node filter (graph, node) -> bool or list of node filters (graph, node) -> bool
     :return: An induced BEL subgraph
     :rtype: pybel.BELGraph
     """
-    return graph.subgraph(filter_nodes(graph, *filters))
+    return graph.subgraph(filter_nodes(graph, filters))
 
 
 def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):

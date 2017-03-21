@@ -14,6 +14,7 @@ __all__ = [
     'collapse_by_central_dogma',
     'collapse_by_central_dogma_to_genes',
     'collapse_variants_to_genes',
+    'opening_on_central_dogma',
 ]
 
 log = logging.getLogger(__name__)
@@ -135,7 +136,8 @@ def collapse_by_central_dogma_to_genes(graph):
 
 
 def collapse_variants_to_genes(graph):
-    """Finds all protein variants that are pointing to a gene and not a protein and fixes them
+    """Finds all protein variants that are pointing to a gene and not a protein and fixes them by changing their
+    function to be :data:`pybel.constants.GENE`
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph

@@ -24,6 +24,7 @@ Get the Latest
    $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
 """
 
+from . import filters
 from . import generation
 from . import integration
 from . import mutation

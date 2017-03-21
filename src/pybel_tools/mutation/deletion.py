@@ -67,7 +67,7 @@ def prune_central_dogma(graph):
     graph.remove_nodes_from(rna_leaves)
 
 
-def remove_filtered_nodes(graph, *filters):
+def remove_filtered_nodes(graph, filters):
     """Removes nodes passing the given filters
 
     :param graph: A BEL graph
@@ -75,7 +75,7 @@ def remove_filtered_nodes(graph, *filters):
     :param filters: a list of filters
     :type filters: list
     """
-    nodes = list(filter_nodes(graph, *filters))
+    nodes = list(filter_nodes(graph, filters))
     graph.remove_nodes_from(nodes)
 
 

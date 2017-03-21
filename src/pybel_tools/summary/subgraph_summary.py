@@ -8,18 +8,30 @@ import itertools as itt
 from collections import defaultdict
 from operator import itemgetter
 
-import pandas as pd
-
 from pybel.constants import *
-from ..selection.group_nodes import group_nodes_by_annotation_filtered
+from ..selection.group_nodes import group_nodes_by_annotation_filtered, group_nodes_by_annotation
 from ..utils import calculate_tanimoto_set_distances, check_has_annotation, count_dict_values
 
 __all__ = [
+    'count_subgraph_sizes',
     'calculate_subgraph_edge_overlap',
     'summarize_subgraph_edge_overlap',
     'rank_subgraph_by_node_filter',
     'summarize_subgraph_node_overlap',
 ]
+
+
+def count_subgraph_sizes(graph, annotation='Subgraph'):
+    """Counts the number of nodes in each subgraph induced by an anotation
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param annotation: The annotation to group by and compare. Defaults to 'Subgraph'
+    :type annotation: str
+    :return: A dictionary from {annotation value: number of nodes}
+    :rtype: dict
+    """
+    return count_dict_values(group_nodes_by_annotation(graph, annotation))
 
 
 def calculate_subgraph_edge_overlap(graph, annotation='Subgraph'):
