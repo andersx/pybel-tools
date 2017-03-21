@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-Utilities for displaying graphs with inline HTML in Jupyter Notebooks
-
-"""
+"""Utilities for displaying graphs with inline HTML in Jupyter Notebooks"""
 
 from random import sample
 
