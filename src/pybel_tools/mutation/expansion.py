@@ -30,6 +30,7 @@ __all__ = [
     'enrich_complexes',
     'enrich_composites',
     'enrich_reactions',
+    'enrich_variants',
     'enrich_unqualified',
     'expand_internal',
     'expand_internal_causal',
@@ -143,7 +144,7 @@ def get_subgraph_edges(graph, value, annotation='Subgraph', source_filter=None, 
 
 
 def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filters=None):
-    """
+    """Gets a summary dictionary of all peripheral nodes to a given subgraph
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
@@ -155,7 +156,8 @@ def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filte
     :param edge_filters: Optional. A list of edge filter predicates with the interface (graph, node, node, key, data)
                           -> bool. See :code:`pybel_tools.filters.edge_filters` for more information
     :type edge_filters: lambda
-    :return:
+    :return: A dictionary of {external node: {'successor': {internal node: list of (key, dict)},
+                                            'predecessor': {internal node: list of (key, dict)}}}
     :rtype: dict
 
     For example, it might be useful to quantify the number of predecessors and successors
@@ -206,8 +208,6 @@ def expand_periphery(graph, subgraph, node_filters=None, edge_filters=None, thre
                           -> bool. See :code:`pybel_tools.filters.edge_filters` for more information
     :type edge_filters: lambda
     :param threshold: Minimum frequency of betweenness occurrence to add a gap node
-    :return: An iterable of (source node, target node, key, data) for all edges that could be added to the subgraph
-    :rtype: iter
 
     A reasonable edge filter to use is :func:`pybel_tools.filters.keep_causal_edges` because this function can allow
     for huge expansions if there happen to be hub nodes.
@@ -371,7 +371,7 @@ def enrich_unqualified(graph, subgraph):
     but the unqualified edges that don't have annotations that most likely connect elements within your graph are
     not included.
 
-    .. seealso:: :func:`enrich_complexes`, :func:`enrich_composities`, :func:`enrich_reactions`, and :func:`enrich_variants`.
+    .. seealso:: :func:`enrich_complexes`, :func:`enrich_composites`, :func:`enrich_reactions`, and :func:`enrich_variants`.
 
     Equivalent to:
 
