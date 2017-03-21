@@ -7,7 +7,7 @@ import logging
 from collections import defaultdict, Counter
 
 from pybel.constants import *
-from ..utils import graph_edge_data_iter, count_defaultdict, check_has_annotation
+from ..utils import graph_edge_data_iter, count_defaultdict, check_has_annotation, count_dict_values
 
 __all__ = [
     'count_pmids',
@@ -15,6 +15,7 @@ __all__ = [
     'count_citations',
     'count_citations_by_annotation',
     'count_authors',
+    'count_author_publications',
     'get_authors',
     'count_authors_by_annotation',
 ]
@@ -33,8 +34,10 @@ def _generate_citation_dict(graph):
     results = defaultdict(lambda: defaultdict(set))
 
     for u, v, d in graph.edges_iter(data=True):
+        if CITATION not in d:
+            continue
         c = d[CITATION]
-        results[c[CITATION_TYPE]][u, v].add((c[CITATION_REFERENCE], c[CITATION_NAME]))
+        results[c[CITATION_TYPE]][u, v].add(c[CITATION_REFERENCE].strip())
 
     return results
 
@@ -58,12 +61,7 @@ def get_pmids(graph):
     :return: A set of all PubMed identifiers cited in the construction of this graph
     :rtype: set
     """
-    citations = set()
-    for d in graph_edge_data_iter(graph):
-        if not has_pubmed_citation(d):
-            continue
-        citations.add(d[CITATION][CITATION_REFERENCE])
-    return citations
+    return {d[CITATION][CITATION_REFERENCE].strip() for d in graph_edge_data_iter(graph) if has_pubmed_citation(d)}
 
 
 def count_pmids(graph):
@@ -72,7 +70,7 @@ def count_pmids(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A Counter from {(pmid, name): frequency}
-    :rtype: Counter
+    :rtype: collections.Counter
     """
     citations = _generate_citation_dict(graph)
     counter = Counter(itt.chain.from_iterable(citations['PubMed'].values()))
@@ -87,7 +85,7 @@ def count_citations(graph, **annotations):
     :param annotations: The annotation filters to use
     :type annotations: dict
     :return: A counter from {(citation type, citation reference): frequency}
-    :rtype: Counter
+    :rtype: collections.Counter
     """
     citations = defaultdict(set)
 
@@ -96,7 +94,7 @@ def count_citations(graph, **annotations):
             continue
 
         c = d[CITATION]
-        citations[u, v].add((c[CITATION_TYPE], c[CITATION_REFERENCE]))
+        citations[u, v].add((c[CITATION_TYPE], c[CITATION_REFERENCE].strip()))
 
     counter = Counter(itt.chain.from_iterable(citations.values()))
 
@@ -120,7 +118,7 @@ def count_citations_by_annotation(graph, annotation='Subgraph'):
         c = d[CITATION]
         k = d[ANNOTATIONS][annotation]
 
-        citations[k][u, v].add((c[CITATION_TYPE], c[CITATION_REFERENCE]))
+        citations[k][u, v].add((c[CITATION_TYPE], c[CITATION_REFERENCE].strip()))
 
     return {k: Counter(itt.chain.from_iterable(v.values())) for k, v in citations.items()}
 
@@ -131,18 +129,38 @@ def count_authors(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A Counter from {author name: frequency}
-    :rtype: Counter
+    :rtype: collections.Counter
     """
     authors = []
-
     for d in graph_edge_data_iter(graph):
         if CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
             continue
-        if isinstance(d[CITATION_AUTHORS], str):
-            raise ValueError('Graph should be converyed with pybel.mutation.parse_authors first')
-        authors.extend(d[CITATION_AUTHORS])
+        if isinstance(d[CITATION][CITATION_AUTHORS], str):
+            raise ValueError('Graph should be converyed with pbt.mutation.parse_authors first')
+        for author in d[CITATION][CITATION_AUTHORS]:
+            authors.append(author)
 
     return Counter(authors)
+
+
+def count_author_publications(graph):
+    """Counts the number of publications of each author to the given graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :return: A Counter from {author name: frequency}
+    :rtype: collections.Counter
+    """
+    authors = defaultdict(list)
+    for d in graph_edge_data_iter(graph):
+        if CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
+            continue
+        if isinstance(d[CITATION][CITATION_AUTHORS], str):
+            raise ValueError('Graph should be converted with pbt.mutation.parse_authors first')
+        for author in d[CITATION][CITATION_AUTHORS]:
+            authors[author].append(d[CITATION][CITATION_REFERENCE].strip())
+
+    return Counter(count_dict_values(count_defaultdict(authors)))
 
 
 def get_authors(graph):
@@ -157,9 +175,9 @@ def get_authors(graph):
     for d in graph_edge_data_iter(graph):
         if CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
             continue
-        if isinstance(d[CITATION_AUTHORS], str):
-            raise ValueError('Graph should be converyed with pybel.mutation.parse_authors first')
-        for author in d[CITATION_AUTHORS]:
+        if isinstance(d[CITATION][CITATION_AUTHORS], str):
+            raise ValueError('Graph should be converyed with pbt.mutation.parse_authors first')
+        for author in d[CITATION][CITATION_AUTHORS]:
             authors.add(author)
     return authors
 
@@ -178,8 +196,8 @@ def count_authors_by_annotation(graph, annotation='Subgraph'):
     for d in graph_edge_data_iter(graph):
         if not check_has_annotation(d, annotation) or CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
             continue
-        if isinstance(d[CITATION_AUTHORS], str):
-            raise ValueError('Graph should be converyed with pybel.mutation.parse_authors first')
-        for author in d[CITATION_AUTHORS]:
+        if isinstance(d[CITATION][CITATION_AUTHORS], str):
+            raise ValueError('Graph should be converted with pybel.mutation.parse_authors first')
+        for author in d[CITATION][CITATION_AUTHORS]:
             authors[d[ANNOTATIONS][annotation]].append(author)
     return count_defaultdict(authors)
