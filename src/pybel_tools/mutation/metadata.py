@@ -68,9 +68,7 @@ def add_canonical_names(graph):
     """
     for node, data in graph.nodes_iter(data=True):
         if CNAME in data:
-            log.debug('Canonical name already in dictionary for %s', data[CNAME])
             continue
-
         graph.node[node][CNAME] = calculate_canonical_name(graph, node)
 
 
