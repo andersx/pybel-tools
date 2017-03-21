@@ -74,34 +74,33 @@ def build_dictionary_service_app(dsa):
 
         graph = api.query_filtered_builder(network_id, expand_nodes, remove_nodes, **annotations)
 
-        format = flask.request.args.get('format')
+        serve_format = flask.request.args.get('format')
 
-        if format is None:
+        if serve_format is None:
             return flask.jsonify(to_node_link(graph))
 
-        if format == 'cx':
+        if serve_format == 'cx':
             return flask.jsonify(to_cx_json(graph))
 
-        if format == 'bytes':
+        if serve_format == 'bytes':
             g_bytes = to_bytes(graph)
             return flask.Response(g_bytes, mimetype='application/octet-stream')
 
-        if format == 'bel':
+        if serve_format == 'bel':
             return flask.Response('\n'.join(to_bel_lines(graph)), mimetype='text/plain')
 
-        if format == 'graphml':
+        if serve_format == 'graphml':
             bio = BytesIO()
             to_graphml(graph, bio)
             bio.seek(0)
             s = bio.read().decode('utf-8')
-            return flask.Response(s, mimetype=' text/xml')
+            return flask.Response(s, mimetype='text/xml')
 
-        if format == 'csv':
+        if serve_format == 'csv':
             sio = StringIO()
             to_csv(graph, sio)
             sio.seek(0)
-            s = sio.getvalue()
-            return flask.send_file(s, attachment_filename="testing.txt", as_attachment=True)
+            return flask.send_file(sio, attachment_filename="testing.txt", as_attachment=True)
 
         return flask.abort(404)
 
