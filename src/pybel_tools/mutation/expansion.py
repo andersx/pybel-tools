@@ -224,7 +224,8 @@ def enrich_grouping(graph, subgraph, function, relation):
     :param subgraph: A BEL graph's subgraph
     :type subgraph: pybel.BELGraph
     """
-    for u in get_nodes_by_function(subgraph, function):
+    nodes = list(get_nodes_by_function(subgraph, function))
+    for u in nodes:
         for _, v, d in graph.out_edges_iter(u, data=True):
             if d[RELATION] != relation:
                 continue
@@ -284,7 +285,8 @@ def enrich_variants_helper(graph, subgraph, function):
     :param function: The BEL function to filter by
     :type function: str
     """
-    for v in get_nodes_by_function(subgraph, function):
+    nodes = list(get_nodes_by_function(subgraph, function))
+    for v in nodes:
         for u, _, d in graph.in_edges_iter(v, data=True):
             if d[RELATION] != HAS_VARIANT:
                 continue

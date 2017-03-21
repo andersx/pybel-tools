@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from pybel.constants import GENE, RNA
+"""This module contains convenient functions for removing nodes/edges that are returned from selection functions"""
+
 from ..filters.node_filters import filter_nodes
+from ..selection.leaves import get_gene_leaves, get_rna_leaves
 from ..selection.utils import get_leaves_by_type, get_nodes_by_function_namespace
 from ..summary.edge_summary import get_inconsistent_edges
 from ..utils import all_edges_iter
@@ -44,12 +46,9 @@ def remove_leaves_by_type(graph, function=None, prune_threshold=1):
     :type function: str
     :param prune_threshold: Removes nodes with less than or equal to this number of connections. Defaults to :code:`1`
     :type prune_threshold: int
-    :return: The number of nodes pruned
-    :rtype: int
     """
     nodes = list(get_leaves_by_type(graph, function=function, prune_threshold=prune_threshold))
     graph.remove_nodes_from(nodes)
-    return len(nodes)
 
 
 def prune(graph):
@@ -58,8 +57,11 @@ def prune(graph):
     :param graph: a BEL network
     :type graph: pybel.BELGraph
     """
-    remove_leaves_by_type(graph, GENE)
-    remove_leaves_by_type(graph, RNA)
+    gene_leaves = list(get_gene_leaves(graph))
+    graph.remove_nodes_from(gene_leaves)
+
+    rna_leaves = list(get_rna_leaves(graph))
+    graph.remove_nodes_from(rna_leaves)
 
 
 def remove_filtered_nodes(graph, *filters):
