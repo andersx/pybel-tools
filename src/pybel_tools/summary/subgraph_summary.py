@@ -59,14 +59,14 @@ def calculate_subgraph_edge_overlap(graph, annotation='Subgraph'):
 
     subgraph_intersection = defaultdict(dict)
     subgraph_union = defaultdict(dict)
-    subgraph_overlap = defaultdict(dict)
+    result = defaultdict(dict)
 
-    for sg1, sg2 in itt.combinations(sorted(sg2edge), 2):
-        subgraph_intersection[sg1, sg2] = sg2edge[sg1] & sg2edge[sg2]
+    for sg1, sg2 in itt.product(sg2edge, repeat=2):
+        subgraph_intersection[sg1][sg2] = sg2edge[sg1] & sg2edge[sg2]
         subgraph_union[sg1][sg2] = sg2edge[sg1] | sg2edge[sg2]
-        subgraph_overlap[sg1][sg2] = len(subgraph_intersection[sg1][sg2]) / len(subgraph_union[sg1][sg2])
+        result[sg1][sg2] = len(subgraph_intersection[sg1][sg2]) / len(subgraph_union[sg1][sg2])
 
-    return sg2edge, subgraph_intersection, subgraph_union, subgraph_overlap
+    return sg2edge, subgraph_intersection, subgraph_union, result
 
 
 def summarize_subgraph_edge_overlap(graph, annotation='Subgraph'):
