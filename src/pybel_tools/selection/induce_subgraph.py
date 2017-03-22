@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     'get_subgraph_by_node_filter',
+    'get_subgraph_by_neighborhood',
     'get_subgraph_by_shortest_paths',
     'get_subgraph_by_annotation',
     'get_causal_subgraph',
@@ -32,6 +33,35 @@ def get_subgraph_by_node_filter(graph, filters):
     :rtype: pybel.BELGraph
     """
     return graph.subgraph(filter_nodes(graph, filters))
+
+
+def get_subgraph_by_neighborhood(graph, nodes):
+    """Gets a BEL graph around the neighborhoods of the given nodes
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param nodes:
+    :return: A BEL graph induced around the neighborhoods of the given nodes
+    :rtype: pybel.BELGraph
+    """
+    bg = BELGraph()
+
+    node_set = set(nodes)
+
+    for node in node_set:
+        if node not in graph:
+            raise ValueError('{} not in graph'.format(node))
+
+    for u, v, k, d in graph.in_edges_iter(nodes, keys=True, data=True):
+        bg.add_edge(u, v, key=k, attr_dict=d)
+
+    for u, v, k, d in graph.out_edges_iter(nodes, keys=True, data=True):
+        bg.add_edge(u, v, key=k, attr_dict=d)
+
+    for node in bg:
+        bg.node[node].update(graph.node[node])
+
+    return bg
 
 
 def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
