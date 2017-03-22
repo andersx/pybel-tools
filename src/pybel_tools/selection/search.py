@@ -15,9 +15,17 @@ def search_node_names(graph, query):
     :return: An iterator over nodes whose names match the search query
     :rtype: iter
     """
-    sname = query.lower()
-    for node, data in graph.nodes_iter(data=True):
-        if NAME not in data:
-            continue
-        if sname in data[NAME].lower():
-            yield node
+    if isinstance(query, str):
+        sname = query.lower()
+        for node, data in graph.nodes_iter(data=True):
+            if NAME not in data:
+                continue
+            if sname in data[NAME].lower():
+                yield node
+    else:
+        snames = {q.lower() for q in query}
+        for node, data in graph.nodes_iter(data=True):
+            if NAME not in data:
+                continue
+            if any(sname in data[NAME].lower() for sname in snames):
+                yield node
