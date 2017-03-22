@@ -24,12 +24,18 @@ Get the Latest
    $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
 """
 
+from . import citation_utils
+from . import comparison
+from . import definition_utils
+from . import document_utils
 from . import filters
 from . import generation
 from . import integration
 from . import mutation
+from . import orthology
 from . import selection
 from . import summary
+from . import utils
 from . import visualization
 
 __version__ = '0.1.4-dev'
