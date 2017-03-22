@@ -7,6 +7,7 @@ import logging
 from collections import defaultdict, Counter
 
 from pybel.constants import *
+from ..constants import PUBMED
 from ..utils import graph_edge_data_iter, count_defaultdict, check_has_annotation, count_dict_values
 
 __all__ = [
@@ -51,7 +52,7 @@ def has_pubmed_citation(edge_data_dictionary):
     :return: Does the edge data dictionary has a PubMed citation?
     :rtype: bool
     """
-    return CITATION in edge_data_dictionary and 'PubMed' == edge_data_dictionary[CITATION][CITATION_TYPE]
+    return CITATION in edge_data_dictionary and PUBMED == edge_data_dictionary[CITATION][CITATION_TYPE]
 
 
 def get_pmids(graph):
@@ -74,7 +75,7 @@ def count_pmids(graph):
     :rtype: collections.Counter
     """
     citations = _generate_citation_dict(graph)
-    counter = Counter(itt.chain.from_iterable(citations['PubMed'].values()))
+    counter = Counter(itt.chain.from_iterable(citations[PUBMED].values()))
     return counter
 
 
@@ -203,6 +204,7 @@ def count_authors_by_annotation(graph, annotation='Subgraph'):
     return count_defaultdict(authors)
 
 
+# TODO replace with edge_filter
 def get_evidences_by_pmid(graph, pmid):
     """Gets a set of all evidence strings associated with the given PubMed identifier in the graph
 
@@ -219,7 +221,7 @@ def get_evidences_by_pmid(graph, pmid):
         if CITATION not in d:
             continue
 
-        if 'PubMed' != d[CITATION][CITATION_TYPE]:
+        if PUBMED != d[CITATION][CITATION_TYPE]:
             continue
 
         if d[CITATION][CITATION_REFERENCE] != pmid:
@@ -229,7 +231,7 @@ def get_evidences_by_pmid(graph, pmid):
 
     return result
 
-
+# TODO replace with edge_filter
 def get_evidences_by_pmids(graph, pmids):
     """Gets a dictionary from the given PubMed identifiers to the sets of all evidence strings associated with each
     in the graph
@@ -249,7 +251,7 @@ def get_evidences_by_pmids(graph, pmids):
         if CITATION not in d:
             continue
 
-        if 'PubMed' != d[CITATION][CITATION_TYPE]:
+        if PUBMED != d[CITATION][CITATION_TYPE]:
             continue
 
         if d[CITATION][CITATION_REFERENCE] not in pmid_set:

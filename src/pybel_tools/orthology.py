@@ -11,6 +11,7 @@ import requests
 
 from pybel.constants import CITATION, CITATION_NAME, CITATION_REFERENCE, CITATION_TYPE, EVIDENCE, ANNOTATIONS
 from pybel.constants import GENE, ORTHOLOGOUS, RELATION
+from .constants import PUBMED
 from .utils import safe_add_edge
 
 HGNC = 'HGNC'
@@ -115,7 +116,7 @@ def add_orthology_statements(graph, orthologies, namespace):
         graph.add_edge(hgnc_node, ortholog_node, attr_dict={
             RELATION: ORTHOLOGOUS,
             CITATION: {
-                CITATION_TYPE: 'PubMed',
+                CITATION_TYPE: PUBMED,
                 CITATION_REFERENCE: '25355511',
                 CITATION_NAME: 'Rat Genome Database'
             },
