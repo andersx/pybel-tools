@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 EUTILS_URL_FMT = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id={}"
 
 
-def get_citations_by_pmids(pmids, group_size=200, sleep_time=1):
+def get_citations_by_pmids(pmids, group_size=200, sleep_time=1, return_errors=False):
     """Gets the citation information for the given list of PubMed identifiers using the NCBI's eutils service
 
     :param pmids: an iterable of PubMed identifiers
@@ -24,11 +24,15 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1):
     :type group_size: int
     :param sleep_time: Number of seconds to sleep between queries
     :type sleep_time: int
-    :return: A dictionary of {pmid: pmid data dictionary}
+    :param return_errors: Should a set of erroneous PubMed identifiers be returned?
+    :type return_errors: bool
+    :return: A dictionary of {pmid: pmid data dictionary} or a pair of this dictionary and a set ot erroneous
+            pmids if return_errors is :code:`True`
     :rtype: dict
     """
     pmids = [str(pmid).strip() for pmid in sorted(pmids)]
     result = defaultdict(dict)
+    errors = set()
     for pmidList in [','.join(pmids[i:i + group_size]) for i in range(0, len(pmids), group_size)]:
         url = EUTILS_URL_FMT.format(pmidList)
         res = requests.get(url)
@@ -40,6 +44,7 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1):
             p = pmid_result[pmid]
             if 'error' in p:
                 log.warning("problems with following id: %s", pmid)
+                errors.add(pmid)
                 continue
 
             result[pmid][CITATION_AUTHORS] = [x['name'] for x in p['authors']] if 'authors' in p else None
@@ -68,4 +73,4 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1):
 
         # Don't want to hit that rate limit
         time.sleep(sleep_time)
-    return result
+    return result, errors if return_errors else result

@@ -18,6 +18,8 @@ __all__ = [
     'count_author_publications',
     'get_authors',
     'count_authors_by_annotation',
+    'get_evidences_by_pmid',
+    'get_evidences_by_pmids',
 ]
 
 log = logging.getLogger(__name__)
@@ -36,8 +38,7 @@ def _generate_citation_dict(graph):
     for u, v, d in graph.edges_iter(data=True):
         if CITATION not in d:
             continue
-        c = d[CITATION]
-        results[c[CITATION_TYPE]][u, v].add(c[CITATION_REFERENCE].strip())
+        results[d[CITATION][CITATION_TYPE]][u, v].add(d[CITATION][CITATION_REFERENCE].strip())
 
     return results
 
@@ -115,10 +116,9 @@ def count_citations_by_annotation(graph, annotation='Subgraph'):
         if not check_has_annotation(d, annotation) or CITATION not in d:
             continue
 
-        c = d[CITATION]
         k = d[ANNOTATIONS][annotation]
 
-        citations[k][u, v].add((c[CITATION_TYPE], c[CITATION_REFERENCE].strip()))
+        citations[k][u, v].add((d[CITATION][CITATION_TYPE], d[CITATION][CITATION_REFERENCE].strip()))
 
     return {k: Counter(itt.chain.from_iterable(v.values())) for k, v in citations.items()}
 
@@ -201,3 +201,60 @@ def count_authors_by_annotation(graph, annotation='Subgraph'):
         for author in d[CITATION][CITATION_AUTHORS]:
             authors[d[ANNOTATIONS][annotation]].append(author)
     return count_defaultdict(authors)
+
+
+def get_evidences_by_pmid(graph, pmid):
+    """Gets a set of all evidence strings associated with the given PubMed identifier in the graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param pmid: A PubMed identifier, as a string
+    :type pmid: str
+    :return: A set of all evidence strings associated with the given PubMed identifier in the graph
+    :rtype: set
+    """
+    result = set()
+
+    for d in graph_edge_data_iter(graph):
+        if CITATION not in d:
+            continue
+
+        if 'PubMed' != d[CITATION][CITATION_TYPE]:
+            continue
+
+        if d[CITATION][CITATION_REFERENCE] != pmid:
+            continue
+
+        result.add(d[EVIDENCE])
+
+    return result
+
+
+def get_evidences_by_pmids(graph, pmids):
+    """Gets a dictionary from the given PubMed identifiers to the sets of all evidence strings associated with each
+    in the graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param pmids: An iterable of PubMed identifiers, as strings. Is consumed and converted to a set.
+    :type pmids: iter
+    :return: A dictionary of {pmid: set of all evidence strings}
+    :rtype: dict
+    """
+    pmid_set = set(pmids)
+
+    result = defaultdict(set)
+
+    for d in graph_edge_data_iter(graph):
+        if CITATION not in d:
+            continue
+
+        if 'PubMed' != d[CITATION][CITATION_TYPE]:
+            continue
+
+        if d[CITATION][CITATION_REFERENCE] not in pmid_set:
+            continue
+
+        result[d[CITATION][CITATION_REFERENCE]].add(d[EVIDENCE])
+
+    return result
