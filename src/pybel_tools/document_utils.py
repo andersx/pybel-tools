@@ -113,7 +113,7 @@ def make_document_metadata(name, contact, description, version=None, copyright=N
     :return: A list of lines for the document metadata section
     :rtype: list of str
     """
-    yield 'SET DOCUMENT Name = "{}'.format(name)
+    yield 'SET DOCUMENT Name = "{}"'.format(name)
     yield 'SET DOCUMENT Version = "{}"'.format('1.0.0' if version is None else version)
 
     if licenses is not None:
