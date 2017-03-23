@@ -3,6 +3,7 @@
 from itertools import combinations
 
 from pybel.constants import FUNCTION, NAMESPACE
+from ..filters.node_filters import function_inclusion_filter_builder, filter_nodes
 
 __all__ = [
     'get_nodes_by_function',
@@ -22,9 +23,7 @@ def get_nodes_by_function(graph, function):
     :return: An iterable of all BEL nodes with the given function
     :rtype: iter
     """
-    for node in graph.nodes_iter():
-        if function == graph.node[node][FUNCTION]:
-            yield node
+    return filter_nodes(graph, function_inclusion_filter_builder(function))
 
 
 def get_nodes_by_function_namespace(graph, function, namespace):
@@ -53,9 +52,9 @@ def get_triangles(graph, node):
     :type node: tuple
     """
     for a, b in combinations(graph.edge[node], 2):
-        if graph.edge[a][b]:
+        if b in graph.edge[a]:
             yield a, b
-        if graph.edge[b][a]:
+        if a in graph.edge[b]:
             yield b, a
 
 
