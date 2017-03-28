@@ -31,6 +31,7 @@ from . import document_utils
 from . import filters
 from . import generation
 from . import integration
+from . import ioutils
 from . import mutation
 from . import orthology
 from . import selection
