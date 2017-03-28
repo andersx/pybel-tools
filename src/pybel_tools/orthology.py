@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module has tools for downloading and structuring gene orthology data from HGNC, RGD, and MGI
-
-"""
+"""This module has tools for downloading and structuring gene orthology data from HGNC, RGD, and MGI"""
 
 import pandas as pd
 import requests
@@ -49,9 +45,9 @@ def download_orthologies_from_hgnc(path):
     """
     res = requests.get(FULL_RESOURCE)
 
-    with open(path, 'w') as f:
+    with open(path, 'w') as file:
         for line in res.iter_lines(decode_unicode=True):
-            print(line, file=f)
+            print(line, file=file)
 
 
 def structure_orthologies_from_hgnc(lines=None):

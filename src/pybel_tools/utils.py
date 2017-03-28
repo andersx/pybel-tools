@@ -5,8 +5,6 @@
 import itertools as itt
 from collections import Counter, defaultdict
 
-from pandas import DataFrame
-
 from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
     CITATION_AUTHORS, CITATION_COMMENTS, RELATION
 
