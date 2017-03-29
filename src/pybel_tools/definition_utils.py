@@ -22,7 +22,7 @@ __all__ = [
     'write_namespace_from_owl',
     'make_annotation_header',
     'write_annotation',
-    'export_names',
+    'export_namespaces',
 ]
 
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'
@@ -291,7 +291,7 @@ def write_annotation(keyword, values, citation_name, description=None, usage=Non
         print('{}{}|{}'.format(value_prefix, key.strip(), value.strip()), file=file)
 
 
-def export_names(graph, namespaces, directory=None):
+def export_namespaces(graph, namespaces, directory=None):
     """Exports all names and missing names from the given namespaces to their own BEL Namespace files in the given
     directory.
     
