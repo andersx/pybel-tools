@@ -8,6 +8,7 @@ from pybel.constants import *
 from pybel_tools.serialization.functional import convert_for_belief
 
 
+@unittest.skip('Implementation not yet started')
 class TestFunctionalize(unittest.TestCase):
     """These examples are taken from pybel's test functions in tests/test_parse_bel.py"""
 
