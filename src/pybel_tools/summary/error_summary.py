@@ -52,7 +52,8 @@ def get_incorrect_names(graph, namespace):
     :return: The set of all incorrect names from the given namespace in the graph
     :rtype: set
     """
-    return {e.name for _, _, e, _ in graph.warnings if e.namespace == namespace}
+    return {e.name for _, _, e, _ in graph.warnings if
+            isinstance(e, MissingNamespaceNameWarning) and e.namespace == namespace}
 
 
 def calculate_incorrect_name_dict(graph):
