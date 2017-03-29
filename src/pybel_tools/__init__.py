@@ -41,7 +41,7 @@ from . import summary
 from . import utils
 from . import visualization
 
-__version__ = '0.1.4-dev'
+__version__ = '0.1.4'
 
 __title__ = 'pybel_tools'
 __description__ = 'Tools for using BEL documents in python'
