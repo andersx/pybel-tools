@@ -5,12 +5,25 @@
 from __future__ import print_function
 
 import getpass
+import os
 import sys
 import time
 
-from pybel.constants import NAMESPACE_DOMAIN_TYPES, belns_encodings
+from pybel.constants import NAMESPACE_DOMAIN_TYPES, belns_encodings, METADATA_AUTHORS, METADATA_CONTACT, METADATA_NAME
 from pybel.manager.utils import parse_owl
+from .summary.node_summary import get_names_with_errors
 
+__all__ = [
+    'make_namespace_header',
+    'make_author_header',
+    'make_citation_header',
+    'make_properties_header',
+    'write_namespace',
+    'write_namespace_from_owl',
+    'make_annotation_header',
+    'write_annotation',
+    'export_names',
+]
 
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'
 DATE_FMT = '%Y-%m-%d'
@@ -34,25 +47,21 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     if domain not in NAMESPACE_DOMAIN_TYPES:
         raise ValueError('Invalid domain: {}. Should be one of: {}'.format(domain, NAMESPACE_DOMAIN_TYPES))
 
-    lines = [
-        '[Namespace]',
-        'Keyword={}'.format(keyword),
-        'NameString={}'.format(name),
-        'DomainString={}'.format(domain),
-        'VersionString={}'.format(version if version else '1.0.0'),
-        'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
-    ]
+    yield '[Namespace]'
+    yield 'Keyword={}'.format(keyword)
+    yield 'NameString={}'.format(name)
+    yield 'DomainString={}'.format(domain)
+    yield 'VersionString={}'.format(version if version else '1.0.0')
+    yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
 
     if description is not None:
-        lines.append('DescriptionString={}'.format(description))
+        yield 'DescriptionString={}'.format(description)
 
     if species is not None:
-        lines.append('SpeciesString={}'.format(species))
+        yield 'SpeciesString={}'.format(species)
 
     if query_url is not None:
-        lines.append('QueryValueURL={}'.format(query_url))
-
-    return lines
+        yield 'QueryValueURL={}'.format(query_url)
 
 
 def make_author_header(name=None, contact=None, copyright_str=None):
@@ -63,16 +72,12 @@ def make_author_header(name=None, contact=None, copyright_str=None):
     :param copyright_str: Namespace's copyright/license information. Defaults to :code:`Other/Proprietary`
     :return:
     """
-    lines = [
-        '[Author]',
-        'NameString={}'.format(name if name is not None else getpass.getuser()),
-        'CopyrightString={}'.format('Other/Proprietary' if copyright_str is None else copyright_str)
-    ]
+    yield '[Author]'
+    yield 'NameString={}'.format(name if name is not None else getpass.getuser())
+    yield 'CopyrightString={}'.format('Other/Proprietary' if copyright_str is None else copyright_str)
 
     if contact is not None:
-        lines.append('ContactInfoString={}'.format(contact))
-
-    return lines
+        yield 'ContactInfoString={}'.format(contact)
 
 
 def make_citation_header(name, description=None, url=None, version=None, date=None):
@@ -86,34 +91,28 @@ def make_citation_header(name, description=None, url=None, version=None, date=No
     :param date: Citation publish timestamp, ISO 8601 Date
     :return:
     """
-    lines = [
-        '[Citation]',
-        'NameString={}'.format(name),
-    ]
+    yield '[Citation]'
+    yield 'NameString={}'.format(name)
 
     if date is not None:
-        lines.append('PublishedDate={}'.format(date))
+        yield 'PublishedDate={}'.format(date)
 
     if version is not None:
-        lines.append('PublishedVersionString={}'.format(version))
+        yield 'PublishedVersionString={}'.format(version)
 
     if description is not None:
-        lines.append('DescriptionString={}'.format(description))
+        yield 'DescriptionString={}'.format(description)
 
     if url is not None:
-        lines.append('ReferenceURL={}'.format(url))
-
-    return lines
+        yield 'ReferenceURL={}'.format(url)
 
 
 def make_properties_header():
     """Makes the [Processing] section of a BELNS file"""
-    return [
-        '[Processing]',
-        'CaseSensitiveFlag=yes',
-        'DelimiterString=|',
-        'CacheableFlag=yes'
-    ]
+    yield '[Processing]'
+    yield 'CaseSensitiveFlag=yes'
+    yield 'DelimiterString=|'
+    yield 'CacheableFlag=yes'
 
 
 def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_name, citation_name, values,
@@ -134,8 +133,8 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
     :type author_name: str
     :param citation_name: The name of the citation
     :type citation_name: str
-    :param values: A dictionary of {values: encodings}
-    :type values: dict
+    :param values: An iterable of values (strings)
+    :type values: iter
     :param namespace_query_url: HTTP URL to query for details on namespace values (must be valid URL)
     :type namespace_query_url: str
     :param namespace_description: Namespace description
@@ -237,21 +236,17 @@ def make_annotation_header(keyword, description=None, usage=None, version=None, 
     :rtype: list of str
     """
 
-    lines = [
-        '[AnnotationDefinition]',
-        'Keyword={}'.format(keyword),
-        'TypeString={}'.format('list'),
-        'VersionString={}'.format(version if version else '1.0.0'),
-        'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
-    ]
+    yield '[AnnotationDefinition]'
+    yield 'Keyword={}'.format(keyword)
+    yield 'TypeString={}'.format('list')
+    yield 'VersionString={}'.format(version if version else '1.0.0')
+    yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
 
     if description is not None:
-        lines.append('DescriptionString={}'.format(description))
+        yield 'DescriptionString={}'.format(description)
 
     if usage is not None:
-        lines.append('UsageString={}'.format(usage))
-
-    return lines
+        yield 'UsageString={}'.format(usage)
 
 
 def write_annotation(keyword, values, citation_name, description=None, usage=None, version=None, created=None,
@@ -294,3 +289,33 @@ def write_annotation(keyword, values, citation_name, description=None, usage=Non
         if not key.strip():
             continue
         print('{}{}|{}'.format(value_prefix, key.strip(), value.strip()), file=file)
+
+
+def export_names(graph, namespaces, directory=None):
+    """Exports all names and missing names from the given namespaces to their own BEL Namespace files in the given
+    directory.
+    
+    Could be useful during quick and dirty curation where planned namespace building is not a priority.
+    
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param namespaces: An iterable of strings for the namespaces to process
+    :type namespaces: iter
+    :param directory: The path to the directory where to output the namespaces. Defaults to the current working
+                      directory returned by :func:`os.getcwd`
+    :type directory: str
+    """
+    directory = os.getcwd() if directory is None else directory
+
+    for namespace in namespaces:
+        with open(os.path.join(directory, '{}.belns'.format(namespace)), 'w') as file:
+            write_namespace(
+                namespace_name=namespace,
+                namespace_keyword=namespace,
+                namespace_domain='Other',
+                author_name=graph.document.get(METADATA_AUTHORS),
+                author_contact=graph.document.get(METADATA_CONTACT),
+                citation_name=graph.document.get(METADATA_NAME),
+                values=get_names_with_errors(graph, namespace),
+                file=file
+            )
