@@ -129,8 +129,9 @@ def collapse_by_central_dogma(graph):
 
 
 def collapse_by_central_dogma_to_genes(graph):
-    """Collapses all nodes from the central dogma (GENE, RNA, PROTEIN) to GENE in place. This function wraps
-    :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
+    """Collapses all nodes from the central dogma (:data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`, 
+    :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE` in place. This 
+    function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
     
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
