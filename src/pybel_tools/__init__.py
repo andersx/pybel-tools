@@ -34,6 +34,7 @@ from . import integration
 from . import ioutils
 from . import mutation
 from . import orthology
+from . import recuration
 from . import selection
 from . import serialization
 from . import summary
