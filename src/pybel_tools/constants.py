@@ -95,3 +95,4 @@ citation_format = 'SET Citation = {{"PubMed","{}","{}"}}\n'
 evidence_format = 'SET Evidence = "{}"\n\n\n'
 
 CNAME = 'cname'
+PUBMED = 'PubMed'

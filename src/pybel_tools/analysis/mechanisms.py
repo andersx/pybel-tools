@@ -5,8 +5,6 @@
 import itertools as itt
 from collections import defaultdict
 
-from pandas import DataFrame
-
 from pybel.constants import BIOPROCESS
 from ..generation import generate_mechanism
 from ..selection.induce_subgraph import get_subgraph_by_annotation
@@ -30,8 +28,8 @@ def compare(graph, annotation='Subgraph'):
     :type graph: pybel.BELGraph
     :param annotation: The annotation to group by
     :type annotation: str
-    :return: A data table comparing the canonical subgraphs to generated ones
-    :rtype: pandas.DataFrame
+    :return: A dictionary table comparing the canonical subgraphs to generated ones
+    :rtype: dict
     """
 
     canonical_mechanisms = {}
@@ -57,4 +55,4 @@ def compare(graph, annotation='Subgraph'):
         tanimoto = tanimoto_set_similarity(candidate_nodes, canonical_nodes)
         results[canonical][candidate] = tanimoto
 
-    return DataFrame(results)
+    return dict(results)

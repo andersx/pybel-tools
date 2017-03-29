@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-This module has tools for downloading and structuring gene orthology data from HGNC, RGD, and MGI
-
-"""
+"""This module has tools for downloading and structuring gene orthology data from HGNC, RGD, and MGI"""
 
 import pandas as pd
 import requests
 
 from pybel.constants import CITATION, CITATION_NAME, CITATION_REFERENCE, CITATION_TYPE, EVIDENCE, ANNOTATIONS
 from pybel.constants import GENE, ORTHOLOGOUS, RELATION
+from .constants import PUBMED
 from .utils import safe_add_edge
 
 HGNC = 'HGNC'
@@ -48,9 +45,9 @@ def download_orthologies_from_hgnc(path):
     """
     res = requests.get(FULL_RESOURCE)
 
-    with open(path, 'w') as f:
+    with open(path, 'w') as file:
         for line in res.iter_lines(decode_unicode=True):
-            print(line, file=f)
+            print(line, file=file)
 
 
 def structure_orthologies_from_hgnc(lines=None):
@@ -115,7 +112,7 @@ def add_orthology_statements(graph, orthologies, namespace):
         graph.add_edge(hgnc_node, ortholog_node, attr_dict={
             RELATION: ORTHOLOGOUS,
             CITATION: {
-                CITATION_TYPE: 'PubMed',
+                CITATION_TYPE: PUBMED,
                 CITATION_REFERENCE: '25355511',
                 CITATION_NAME: 'Rat Genome Database'
             },

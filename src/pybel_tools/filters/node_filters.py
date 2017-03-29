@@ -19,9 +19,11 @@ from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTI
 
 __all__ = [
     'keep_node_permissive',
-    'inclusion_filter_builder',
+    'node_inclusion_filter_builder',
+    'node_exclusion_filter_builder',
+    'function_inclusion_filter_builder',
     'function_exclusion_filter_builder',
-    'exclusion_filter_builder',
+    'include_pathology_filter',
     'exclude_pathology_filter',
     'keep_molecularly_active',
     'concatenate_node_filters',
@@ -50,7 +52,7 @@ def keep_node_permissive(graph, node):
     return True
 
 
-def inclusion_filter_builder(nodes):
+def node_inclusion_filter_builder(nodes):
     """Builds a filter that only passes on nodes in the given list
 
     :param nodes: A list of BEL nodes
@@ -75,7 +77,7 @@ def inclusion_filter_builder(nodes):
     return inclusion_filter
 
 
-def exclusion_filter_builder(nodes):
+def node_exclusion_filter_builder(nodes):
     """Builds a filter that fails on nodes in the given list
 
     :param nodes: A list of nodes
@@ -98,6 +100,50 @@ def exclusion_filter_builder(nodes):
         return node not in node_set
 
     return exclusion_filter
+
+
+def function_inclusion_filter_builder(function):
+    """Builds a filter that only passes on nodes of the given function(s)
+
+    :param function: A BEL Function or list/set/tuple of BEL functions
+    :type function: str or list or tuple or set
+    :return: A node filter (graph, node) -> bool
+    :rtype: lambda
+    """
+
+    if isinstance(function, str):
+        def function_inclusion_filter(graph, node):
+            """Passes only for a node that has the enclosed function
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param node: A BEL node
+            :type node: tuple
+            :return: If the node doesn't have the enclosed function
+            :rtype: bool
+            """
+            return graph.node[node][FUNCTION] == function
+
+        return function_inclusion_filter
+
+    elif isinstance(function, (list, tuple, set)):
+        functions = set(function)
+
+        def functions_inclusion_filter(graph, node):
+            """Passes only for a node that is one of the enclosed functions
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param node: A BEL node
+            :type node: tuple
+            :return: If the node doesn't have the enclosed functions
+            :rtype: bool
+            """
+            return graph.node[node][FUNCTION] in functions
+
+        return functions_inclusion_filter
+
+    raise ValueError('Invalid type for argument: {}'.format(function))
 
 
 def function_exclusion_filter_builder(function):
@@ -182,7 +228,7 @@ def concatenate_node_filters(filters):
 
     >>> from pybel.constants import GENE, PROTEIN, PATHOLOGY
     >>> path_filter = function_exclusion_filter_builder(PATHOLOGY)
-    >>> app_filter = exclusion_filter_builder([(PROTEIN, 'HGNC', 'APP'), (GENE, 'HGNC', 'APP')])
+    >>> app_filter = node_exclusion_filter_builder([(PROTEIN, 'HGNC', 'APP'), (GENE, 'HGNC', 'APP')])
     >>> my_filter = concatenate_node_filters([path_filter, app_filter])
     """
 
@@ -215,6 +261,10 @@ def concatenate_node_filters(filters):
 
 # Default Filters
 
+#: A filter that passes for nodes that are :data:`pybel.constants.PATHOLOGY`
+include_pathology_filter = function_inclusion_filter_builder(PATHOLOGY)
+
+#: A filter that fails for nodes that are :data:`pybel.constants.PATHOLOGY`
 exclude_pathology_filter = function_exclusion_filter_builder(PATHOLOGY)
 
 

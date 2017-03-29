@@ -5,8 +5,6 @@
 import itertools as itt
 from collections import Counter, defaultdict
 
-from pandas import DataFrame
-
 from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
     CITATION_AUTHORS, CITATION_COMMENTS, RELATION
 
@@ -49,11 +47,11 @@ def count_dict_values(dict_of_counters):
     """Counts the number of elements in each value (can be list, Counter, etc)
 
     :param dict_of_counters: A dictionary of things whose lengths can be measured (lists, Counters, dicts)
-    :type dict_of_counters: dict
-    :return: A dictionary with the same keys as the input but the count of the length of the values
-    :rtype: dict
+    :type dict_of_counters: dict or defaultdict
+    :return: A Counter with the same keys as the input but the count of the length of the values list/tuple/set/Counter
+    :rtype: collections.Counter
     """
-    return {k: len(v) for k, v in dict_of_counters.items()}
+    return Counter({k: len(v) for k, v in dict_of_counters.items()})
 
 
 def _check_has_data(d, sd, key):

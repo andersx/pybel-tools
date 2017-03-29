@@ -19,9 +19,9 @@ from getpass import getuser
 
 import click
 
-from pybel import from_pickle, to_database
+from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
-from .definition_utils import write_namespace
+from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 
 
@@ -126,6 +126,16 @@ def boilerplate(document_name, contact, description, pmids, version, copyright, 
         pmids=pmids,
         file=output
     )
+
+
+@document.command()
+@click.argument('namespaces', nargs=-1)
+@click.option('--path', type=click.File('r'), default=sys.stdin, help='Input BEL file path. Defaults to stdin.')
+@click.option('--directory', help='Output directory')
+def serialize_namespaces(namespaces, path, directory):
+    """Parses a BEL document then serializes the given namespaces (errors and all) to the given directory"""
+    graph = from_lines(path)
+    export_namespaces(namespaces, graph, directory)
 
 
 if __name__ == '__main__':

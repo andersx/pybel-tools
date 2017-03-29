@@ -5,6 +5,7 @@
 from collections import Counter, defaultdict
 
 from pybel.constants import FUNCTION, NAMESPACE, NAME
+from .error_summary import get_incorrect_names
 
 __all__ = [
     'count_functions',
@@ -107,3 +108,17 @@ def get_names_by_namespace(graph):
             result[data[NAMESPACE]].add(data[NAME])
 
     return result
+
+
+def get_names_with_errors(graph, namespace):
+    """Takes the names from the graph in a given namespace and the erroneous names from the same namespace and returns
+    them together as a unioned set
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param namespace: The namespace to filter by
+    :type namespace: str
+    :return: The set of all correct and incorrect names from the given namespace in the graph
+    :rtype: set
+    """
+    return get_names(graph, namespace) | get_incorrect_names(graph, namespace)

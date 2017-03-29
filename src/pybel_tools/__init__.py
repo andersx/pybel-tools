@@ -24,15 +24,24 @@ Get the Latest
    $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
 """
 
+from . import citation_utils
+from . import comparison
+from . import definition_utils
+from . import document_utils
 from . import filters
 from . import generation
 from . import integration
+from . import ioutils
 from . import mutation
+from . import orthology
+from . import recuration
 from . import selection
+from . import serialization
 from . import summary
+from . import utils
 from . import visualization
 
-__version__ = '0.1.4-dev'
+__version__ = '0.1.4'
 
 __title__ = 'pybel_tools'
 __description__ = 'Tools for using BEL documents in python'

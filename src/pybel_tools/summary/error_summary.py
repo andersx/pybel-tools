@@ -13,6 +13,7 @@ from ..utils import check_has_annotation
 __all__ = [
     'count_error_types',
     'count_naked_names',
+    'get_incorrect_names',
     'calculate_incorrect_name_dict',
     'calculate_suggestions',
     'calculate_error_by_annotation',
@@ -39,6 +40,20 @@ def count_naked_names(graph):
     :rtype: Counter
     """
     return Counter(e.name for _, _, e, _ in graph.warnings if isinstance(e, NakedNameWarning))
+
+
+def get_incorrect_names(graph, namespace):
+    """Returns the set of all incorrect names from the given namespace in the graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param namespace: The namespace to filter by
+    :type namespace: str
+    :return: The set of all incorrect names from the given namespace in the graph
+    :rtype: set
+    """
+    return {e.name for _, _, e, _ in graph.warnings if
+            isinstance(e, MissingNamespaceNameWarning) and e.namespace == namespace}
 
 
 def calculate_incorrect_name_dict(graph):

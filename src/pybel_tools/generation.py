@@ -7,18 +7,20 @@ This module provides functions for generating subgraphs based around a single no
 Subgraphs induced around biological processes should prove to be subgraphs of the NeuroMMSig/canonical mechanisms
 and provide an even more rich mechanism inventory.
 
-
 """
 
+from pybel.constants import BIOPROCESS
 from .mutation.deletion import remove_inconsistent_edges
 from .mutation.expansion import get_upstream_causal_subgraph, expand_upstream_causal_subgraph
 from .mutation.merge import collapse_consistent_edges
 from .selection.leaves import get_unweighted_upstream_leaves
+from .selection.utils import get_nodes_by_function
 
 __all__ = [
     'remove_unweighted_leaves',
     'remove_unweighted_sources',
-    'generate_mechanism'
+    'generate_mechanism',
+    'generate_bioprocess_mechanisms',
 ]
 
 
@@ -96,3 +98,17 @@ def generate_mechanism(graph, node, key=None):
         prune_mechanism_by_data(subgraph, key)
 
     return subgraph
+
+
+def generate_bioprocess_mechanisms(graph, key=None):
+    """Generates a mechanistic subgraph for each biological process in the graph using :func:`generate_mechanism`
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param key: The key in the node data dictionary representing the experimental data. If none, does not prune
+                unannotated nodes after generation
+    :type key: str
+    :return: A dictionary from {str bioprocess node: BELGraph candidate mechanism}
+    :rtype: dict
+    """
+    return {bp: generate_mechanism(graph, bp, key=key) for bp in get_nodes_by_function(graph, BIOPROCESS)}

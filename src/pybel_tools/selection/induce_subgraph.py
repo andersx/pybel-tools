@@ -8,14 +8,17 @@ from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, METADATA_NA
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood
+from ..summary.edge_summary import get_annotation_values
 from ..utils import check_has_annotation
 
 log = logging.getLogger(__name__)
 
 __all__ = [
     'get_subgraph_by_node_filter',
+    'get_subgraph_by_neighborhood',
     'get_subgraph_by_shortest_paths',
     'get_subgraph_by_annotation',
+    'get_subgraphs_by_annotation',
     'get_causal_subgraph',
     'get_filtered_subgraph',
     'subgraphs_to_pickles',
@@ -34,6 +37,35 @@ def get_subgraph_by_node_filter(graph, filters):
     return graph.subgraph(filter_nodes(graph, filters))
 
 
+def get_subgraph_by_neighborhood(graph, nodes):
+    """Gets a BEL graph around the neighborhoods of the given nodes
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param nodes:
+    :return: A BEL graph induced around the neighborhoods of the given nodes
+    :rtype: pybel.BELGraph
+    """
+    bg = BELGraph()
+
+    node_set = set(nodes)
+
+    for node in node_set:
+        if node not in graph:
+            raise ValueError('{} not in graph'.format(node))
+
+    for u, v, k, d in graph.in_edges_iter(nodes, keys=True, data=True):
+        bg.add_edge(u, v, key=k, attr_dict=d)
+
+    for u, v, k, d in graph.out_edges_iter(nodes, keys=True, data=True):
+        bg.add_edge(u, v, key=k, attr_dict=d)
+
+    for node in bg.nodes_iter():
+        bg.node[node].update(graph.node[node])
+
+    return bg
+
+
 def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
     """Induces a subgraph over the nodes in the pairwise shortest paths between all of the nodes in the given list
 
@@ -43,7 +75,7 @@ def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
     :type nodes: set
     :param cutoff:  Depth to stop the shortest path search. Only paths of length <= cutoff are returned.
     :type cutoff: int
-    :param weight: Edge data key corresponding to the edge weight. If None, performs unwighted search
+    :param weight: Edge data key corresponding to the edge weight. If None, performs unweighted search
     :type weight: str
     :return: A BEL graph induced over the nodes appearing in the shortest paths between the given nodes
     :rtype: pybel.BELGraph
@@ -80,6 +112,21 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
         bg.node[node].update(graph.node[node])
 
     return bg
+
+
+# TODO this is currently O(M^2) and can be easily done in O(M)
+def get_subgraphs_by_annotation(graph, annotation='Subgraph'):
+    """Builds a new subgraph induced over all edges for each value in the given annotation.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param annotation: The annotation to group by
+    :type annotation: str
+    :return: A dictionary of {str value: BELGraph subgraph}
+    :rtype: dict
+    """
+    values = get_annotation_values(graph, annotation)
+    return {value: get_subgraph_by_annotation(graph, value, annotation=annotation) for value in values}
 
 
 def get_causal_subgraph(graph):

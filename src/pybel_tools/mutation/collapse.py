@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 def collapse_nodes(graph, dict_of_sets_of_nodes):
     """Collapses all nodes in values to the key nodes in place
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param dict_of_sets_of_nodes: A dictionary of {node: set of nodes}
     :type dict_of_sets_of_nodes: dict
@@ -55,7 +55,7 @@ def collapse_nodes(graph, dict_of_sets_of_nodes):
 def build_central_dogma_collapse_dict(graph):
     """Builds a dictionary to direct the collapsing on the central dogma
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A dictionary of {node: set of nodes}
     :rtype: dict
@@ -85,7 +85,7 @@ def build_central_dogma_collapse_dict(graph):
 def build_central_dogma_collapse_gene_dict(graph):
     """Builds a dictionary to direct the collapsing on the central dogma
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A dictionary of {node: set of nodes}
     :rtype: dict
@@ -114,10 +114,14 @@ def build_central_dogma_collapse_gene_dict(graph):
 
 def collapse_by_central_dogma(graph):
     """Collapses all nodes from the central dogma (GENE, RNA, PROTEIN) to PROTEIN, or most downstream possible entity,
-    in place
+    in place. This function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_dict`.
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    
+    Equivalent to:
+    
+    >>> collapse_nodes(graph, build_central_dogma_collapse_dict(graph)) 
     """
     collapse_dict = build_central_dogma_collapse_dict(graph)
     log.info('Collapsing %d groups', len(collapse_dict))
@@ -125,10 +129,16 @@ def collapse_by_central_dogma(graph):
 
 
 def collapse_by_central_dogma_to_genes(graph):
-    """Collapses all nodes from the central dogma (GENE, RNA, PROTEIN) to GENE in place
-
-    :param graph: A BEL Graph
+    """Collapses all nodes from the central dogma (:data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`, 
+    :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE` in place. This 
+    function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
+    
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    
+    Equivalent to:
+    
+    >>> collapse_nodes(graph, build_central_dogma_collapse_gene_dict(graph))
     """
     collapse_dict = build_central_dogma_collapse_gene_dict(graph)
     log.info('Collapsing %d groups', len(collapse_dict))
@@ -139,7 +149,7 @@ def collapse_variants_to_genes(graph):
     """Finds all protein variants that are pointing to a gene and not a protein and fixes them by changing their
     function to be :data:`pybel.constants.GENE`
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
     """
     for node, data in graph.nodes(data=True):
@@ -155,7 +165,7 @@ def opening_on_central_dogma(graph):
     """Infers central dogmatic relations with :func:`infer_central_dogma` then successively prunes gene leaves then
     RNA leaves with :func:`prune_central_dogma` to connect disparate elements in a knowledge assembly
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
 
     Equivalent to:
@@ -170,9 +180,10 @@ def opening_on_central_dogma(graph):
 
 def collapse_by_opening_on_central_dogma(graph):
     """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
-    gene node to its RNA/miRNA node, then possibly from RNA to protein if available.
+    gene node to its RNA/miRNA node, then possibly from RNA to protein if available. Wraps :func:`infer_central_dogma`
+    and :func:`collapse_by_central_dogma`.
 
-    :param graph: A BEL Graph
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
 
     Equivalent to:
@@ -191,8 +202,10 @@ def collapse_by_opening_by_central_dogma_to_genes(graph):
     This method is useful to help overcome issues with BEL curation, when curators sometimes haphazardly annotate
     entities as either a gene, RNA, or protein. There is possibly significant biological subtlty that can be lost
     during this process, but sometimes this must be done to overcome the noise introduced by these kinds of mistakes.
-
-    :param graph: A BEL Graph
+    
+    Wraps :func:`infer_central_dogma` and :func:`collapse_by_central_dogma_to_genes`.
+    
+    :param graph: A BEL graph
     :type graph: pybel.BELGraph
 
     Equivalent to:

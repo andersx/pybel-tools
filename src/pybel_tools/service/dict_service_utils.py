@@ -11,9 +11,9 @@ import networkx as nx
 
 from pybel import from_bytes, BELGraph
 from pybel.constants import *
-from pybel.utils import hash_tuple
 from pybel.manager.graph_cache import GraphCacheManager
 from pybel.manager.models import Network
+from pybel.utils import hash_tuple
 from .base_service import PybelService
 from ..mutation import add_canonical_names, left_merge
 from ..selection import get_filtered_subgraph
@@ -201,7 +201,8 @@ class DictionaryService(PybelService):
         return successors + predecessors
 
     def _query_helper(self, original_graph, expand_nodes=None, remove_nodes=None, **annotations):
-        result = get_filtered_subgraph(original_graph, expand_nodes=expand_nodes, remove_nodes=remove_nodes, **annotations)
+        result = get_filtered_subgraph(original_graph, expand_nodes=expand_nodes, remove_nodes=remove_nodes,
+                                       **annotations)
         add_canonical_names(result)
         self.relabel_nodes_to_identifiers(result)
         return result

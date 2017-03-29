@@ -13,7 +13,9 @@ A general use for an edge filter function is to use the built-in :func:`filter` 
 :code:`filter(your_edge_filter, graph.edges_iter(keys=True, data=True))`
 """
 
-from pybel.constants import RELATION, CAUSAL_RELATIONS, ANNOTATIONS
+from pybel.constants import CITATION_AUTHORS
+from pybel.constants import RELATION, CAUSAL_RELATIONS, ANNOTATIONS, CITATION, CITATION_REFERENCE, CITATION_TYPE
+from ..constants import PUBMED
 from ..utils import check_has_annotation
 
 __all__ = [
@@ -86,6 +88,41 @@ def build_relation_filter(relations):
         return relation_filter
     else:
         raise ValueError('Invalid type for argument: {}'.format(relations))
+
+
+def build_citation_inclusion_filter(pmids):
+    """Only passes for edges with citations whose references are one of the given PubMed identifiers"""
+
+    if isinstance(pmids, str):
+        def citation_inclusion_filter(graph, u, v, k, d):
+            return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] == pmids
+
+        return citation_inclusion_filter
+
+    else:
+        pmids = set(pmids)
+
+        def citation_inclusion_filter(graph, u, v, k, d):
+            return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] in pmids
+
+        return citation_inclusion_filter
+
+
+def build_author_inclusion_filter(authors):
+    """Only passes for edges with author information that matches one of the given authors"""
+    if isinstance(authors, str):
+        def author_filter(graph, u, v, k, d):
+            return CITATION in d and CITATION_AUTHORS in d[CITATION] and d[CITATION][CITATION_AUTHORS] == authors
+
+        return author_filter
+
+    else:
+        author_set = set(authors)
+
+        def author_filter(graph, u, v, k, d):
+            return CITATION in d and CITATION_AUTHORS in d[CITATION] and d[CITATION][CITATION_AUTHORS] in author_set
+
+        return author_filter
 
 
 def concatenate_edge_filters(filters):

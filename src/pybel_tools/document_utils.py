@@ -14,6 +14,15 @@ import requests
 from .constants import default_namespaces, default_annotations
 from .constants import title_url_fmt, citation_format, abstract_url_fmt, evidence_format
 
+__all__ = [
+    'merge',
+    'make_document_metadata',
+    'make_document_namespaces',
+    'make_document_annotations',
+    'make_document_statement_group',
+    'write_boilerplate',
+]
+
 NAMESPACE_FMT = 'DEFINE NAMESPACE {} AS URL "{}"'
 ANNOTATION_FMT = 'DEFINE ANNOTATION {} AS URL "{}"'
 
@@ -84,46 +93,41 @@ def merge(output_path, *input_paths, merge_document_name=None, merge_document_co
                 print(line, file=f)
 
 
-def make_document_metadata(document_name, contact, description, version='1.0.0', copyright=None, authors=None,
-                           licenses=None):
+def make_document_metadata(name, contact, description, version=None, copyright=None, authors=None, licenses=None):
     """Builds a list of lines for the document metadata section of a BEL document
 
-    :param document_name: The unique name for this BEL document
+    :param name: The unique name for this BEL document
+    :type name: str
     :param contact: The email address of the maintainer
-    :param description: A description of the contents of this document
-    :param version: The version. Defaults to 1.0.0
-    :param copyright: Copyright information about this document
-    :param authors: The authors of this document
-    :param licenses: The license applied to this document
-    :type document_name: str
     :type contact: str
+    :param description: A description of the contents of this document
     :type description: str
+    :param version: The version. Defaults to 1.0.0
     :type version: str
+    :param copyright: Copyright information about this document
     :type copyright: str
+    :param authors: The authors of this document
     :type authors: str
+    :param licenses: The license applied to this document
     :type licenses: str
     :return: A list of lines for the document metadata section
     :rtype: list of str
     """
-    lines = []
-
-    lines.append('SET DOCUMENT Name = "{}'.format(document_name))
-    lines.append('SET DOCUMENT Version = "{}"'.format(version))
+    yield 'SET DOCUMENT Name = "{}"'.format(name)
+    yield 'SET DOCUMENT Version = "{}"'.format('1.0.0' if version is None else version)
 
     if licenses is not None:
-        lines.append('SET DOCUMENT License = "{}"'.format(licenses))
+        yield 'SET DOCUMENT License = "{}"'.format(licenses)
 
-    lines.append('SET DOCUMENT Description = "{}"'.format(description))
+    yield 'SET DOCUMENT Description = "{}"'.format(description)
 
     if authors is not None:
-        lines.append('SET DOCUMENT Authors = {}'.format(authors))
+        yield 'SET DOCUMENT Authors = {}'.format(authors)
 
-    lines.append('SET DOCUMENT ContactInfo = "{}"'.format(contact))
+    yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
 
     if copyright is not None:
-        lines.append('SET DOCUMENT Copyright = "{}"'.format(copyright))
-
-    return lines
+        yield 'SET DOCUMENT Copyright = "{}"'.format(copyright)
 
 
 def make_document_namespaces(namespace_dict=None):
@@ -134,10 +138,10 @@ def make_document_namespaces(namespace_dict=None):
     :return: List of lines for the namespace definitions
     :rtype: list of str
     """
-
     namespace_dict = default_namespaces if namespace_dict is None else namespace_dict
 
-    return [NAMESPACE_FMT.format(name, url) for name, url in sorted(namespace_dict.items(), key=itemgetter(1))]
+    for name, url in sorted(namespace_dict.items(), key=itemgetter(1)):
+        yield NAMESPACE_FMT.format(name, url)
 
 
 def make_document_annotations(annotation_dict=None):
@@ -148,29 +152,25 @@ def make_document_annotations(annotation_dict=None):
     :return: A list of lines for the annotation definitions
     :rtype: list of str
     """
-
     annotation_dict = default_annotations if annotation_dict is None else annotation_dict
 
-    return [ANNOTATION_FMT.format(name, url) for name, url in sorted(annotation_dict.items(), key=itemgetter(1))]
+    for name, url in sorted(annotation_dict.items(), key=itemgetter(1)):
+        yield ANNOTATION_FMT.format(name, url)
 
 
 def make_document_statement_group(pmids):
-    lines = []
-
     for i, pmid in enumerate(pmids, start=1):
-        lines.append('SET STATEMENT_GROUP = "Group {}"\n'.format(i))
+        yield 'SET STATEMENT_GROUP = "Group {}"\n'.format(i)
         res = requests.get(title_url_fmt.format(pmid))
         title = res.content.decode('utf-8').strip()
 
-        lines.append(citation_format.format(title, pmid))
+        yield citation_format.format(title, pmid)
 
         res = requests.get(abstract_url_fmt.format(pmid))
         abstract = res.content.decode('utf-8').strip()
 
-        lines.append(evidence_format.format(abstract))
-        lines.append('UNSET STATEMENT_GROUP')
-
-    return lines
+        yield evidence_format.format(abstract)
+        yield 'UNSET STATEMENT_GROUP'
 
 
 def write_boilerplate(document_name, contact, description, version=None, copyright=None, authors=None,
