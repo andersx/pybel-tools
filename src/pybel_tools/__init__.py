@@ -35,6 +35,7 @@ from . import ioutils
 from . import mutation
 from . import orthology
 from . import selection
+from . import serialization
 from . import summary
 from . import utils
 from . import visualization
