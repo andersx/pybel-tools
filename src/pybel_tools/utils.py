@@ -5,6 +5,8 @@
 import itertools as itt
 from collections import Counter, defaultdict
 
+import pandas as pd
+
 from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
     CITATION_AUTHORS, CITATION_COMMENTS, RELATION
 
@@ -118,6 +120,22 @@ def tanimoto_set_similarity(x, y):
     return len(a & b) / len(union)
 
 
+def calculate_single_tanimoto_set_distances(target, dict_of_sets):
+    """Returns a dictionary of distances keyed by the keys in the given dict. Distances are calculated
+    based on pairwise tanimoto similarity of the sets contained
+
+    :param target: A set
+    :type target: set
+    :param dict_of_sets: A dict of {x: set of y}
+    :type dict_of_sets: dict
+    :return: A similarity dicationary based on the set overlap (tanimoto) score between the target set and the sets in
+            dos
+    :rtype: dict
+    """
+    target_set = set(target)
+    return {k: tanimoto_set_similarity(target_set, s) for k, s in dict_of_sets.items()}
+
+
 def calculate_tanimoto_set_distances(dict_of_sets):
     """Returns a distance matrix keyed by the keys in the given dict. Distances are calculated
     based on pairwise tanimoto similarity of the sets contained
@@ -130,7 +148,7 @@ def calculate_tanimoto_set_distances(dict_of_sets):
     result = defaultdict(dict)
 
     for x, y in itt.combinations(dict_of_sets, 2):
-        result[x][y] = result[y][x] = len(dict_of_sets[x] & dict_of_sets[y]) / len(dict_of_sets[x] | dict_of_sets[y])
+        result[x][y] = result[y][x] = tanimoto_set_similarity(dict_of_sets[x], dict_of_sets[y])
 
     for x in dict_of_sets:
         result[x][x] = 1.0
@@ -258,3 +276,14 @@ def safe_add_edge(graph, u, v, key, attr_dict, **attr):
         graph.add_edge(u, v, key=key, attr_dict=attr_dict, **attr)
     else:
         graph.add_edge(u, v, attr_dict=attr_dict, **attr)
+
+
+def load_differential_gene_expression(data_path, gene_symbol_column='Gene.symbol', logfc_column='logFC'):
+    """Quick and dirty loader for differential gene expression data
+    
+    :return: A dictionary of {gene symbol: log fold change}
+    :rtype: dict
+    """
+    df = pd.read_csv(data_path)
+    df = df.loc[df[gene_symbol_column].notnull(), [gene_symbol_column, logfc_column]]
+    return {k: v for _, k, v in df.itertuples()}
