@@ -1,17 +1,20 @@
-pybel-tools
+PyBEL Tools
 ===========
 
-Cool tools for using BEL. Install with:
+Installation
+------------
+.. code-block:: sh
+
+    python3 -m pip install pybel_tools
+
 
 .. code-block:: sh
 
-    pip install git+https://github.com/pybel/pybel-tools.git@master
+    python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
 
-
-Sub-modules
------------
-1. :code:`pybel_tools.visualization` - Create interactive HTML visualizations
-2. :code:`pybel_tools.service` - the definitions that underpin the proposed PyBEL RESTful API
+Documentation
+-------------
+Documentation at http://pybel-tools.readthedocs.io/en/latest/.
 
 Setting up with Docker
 ----------------------

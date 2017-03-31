@@ -2,7 +2,8 @@
 
 """
 
-PyBEL Tools is tested on Python3 installations on Mac OS and Linux.
+PyBEL Tools is tested on Python3 installations on Mac OS and Linux on 
+`Travis CI <https://travis-ci.org/pybel/pybel-tools>`_.
 
 .. warning:: Python2 and Windows compatibility haven't been tested
 
