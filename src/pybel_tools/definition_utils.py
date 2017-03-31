@@ -5,13 +5,15 @@
 from __future__ import print_function
 
 import getpass
+import logging
 import os
 import sys
 import time
 
 from pybel.constants import NAMESPACE_DOMAIN_TYPES, belns_encodings, METADATA_AUTHORS, METADATA_CONTACT, METADATA_NAME
 from pybel.manager.utils import parse_owl
-from .summary.node_summary import get_names_with_errors
+from .summary.error_summary import get_incorrect_names
+from .summary.node_summary import get_names
 
 __all__ = [
     'make_namespace_header',
@@ -24,6 +26,8 @@ __all__ = [
     'write_annotation',
     'export_namespaces',
 ]
+
+log = logging.getLogger(__name__)
 
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'
 DATE_FMT = '%Y-%m-%d'
@@ -308,7 +312,16 @@ def export_namespaces(graph, namespaces, directory=None):
     directory = os.getcwd() if directory is None else directory
 
     for namespace in namespaces:
-        with open(os.path.join(directory, '{}.belns'.format(namespace)), 'w') as file:
+        path = os.path.join(directory, '{}.belns'.format(namespace))
+
+        with open(path, 'w') as file:
+            right_names, wrong_names = get_names(graph, namespace), get_incorrect_names(graph, namespace)
+            log.info('Outputting %d correct and %d wrong names to %s', len(right_names), len(wrong_names), path)
+            names = (right_names | wrong_names)
+
+            if 0 == len(names):
+                log.warning('%s is empty', namespace)
+
             write_namespace(
                 namespace_name=namespace,
                 namespace_keyword=namespace,
@@ -316,6 +329,6 @@ def export_namespaces(graph, namespaces, directory=None):
                 author_name=graph.document.get(METADATA_AUTHORS),
                 author_contact=graph.document.get(METADATA_CONTACT),
                 citation_name=graph.document.get(METADATA_NAME),
-                values=get_names_with_errors(graph, namespace),
+                values=names,
                 file=file
             )
