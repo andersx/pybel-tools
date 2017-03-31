@@ -3,7 +3,9 @@
 """This module contains functions useful throughout PyBEL Tools"""
 
 import itertools as itt
+import json
 from collections import Counter, defaultdict
+from operator import itemgetter
 
 import pandas as pd
 
@@ -287,3 +289,22 @@ def load_differential_gene_expression(data_path, gene_symbol_column='Gene.symbol
     df = pd.read_csv(data_path)
     df = df.loc[df[gene_symbol_column].notnull(), [gene_symbol_column, logfc_column]]
     return {k: v for _, k, v in df.itertuples()}
+
+
+def prepare_c3(data, y_axis_label='y', x_axis_label='x'):
+    """Prepares C3 JSON for making a bar chart from a Counter
+
+    :param data: A dictionary of {str: int} to display as bar chart
+    :type data: Counter or dict or defaultdict
+    :param y_axis_label: The Y axis label
+    :type y_axis_label: str
+    :param x_axis_label: X axis internal label. Should be left as default 'x')
+    :type x_axis_label: str
+    :return: A JSON dictionary for making a C3 bar chart
+    :rtype: dict
+    """
+    labels, values = [], []
+    for k, v in sorted(data.items(), key=itemgetter(1), reverse=True):
+        labels.append(k)
+        values.append(v)
+    return json.dumps([[x_axis_label] + list(labels), [y_axis_label] + list(values)])
