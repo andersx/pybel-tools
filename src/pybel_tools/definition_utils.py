@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Utilities for serializing OWL namespaces in the XML format from Protege to BEL Namespace File"""
+"""Utilities for serializing to BEL namespace and BEL annotation files"""
 
 from __future__ import print_function
 
@@ -35,7 +35,7 @@ DATE_FMT = '%Y-%m-%d'
 
 def make_namespace_header(name, keyword, domain, query_url=None, description=None, species=None, version=None,
                           created=None):
-    """Makes the [Namespace] section of a BELNS file
+    """Makes the ``[Namespace]`` section of a BELNS file
 
     :param name: The namespace name
     :param keyword: Preferred BEL Keyword, maximum length of 8
@@ -47,6 +47,8 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     :param version: Namespace version. Defaults to :code:`1.0.0`
     :param created: Namespace public timestamp, ISO 8601 datetime
     :type created: str
+    :return: An iterator over the lines of the ``[Namespace]`` section of a BELNS file
+    :rtype: iter
     """
     if domain not in NAMESPACE_DOMAIN_TYPES:
         raise ValueError('Invalid domain: {}. Should be one of: {}'.format(domain, NAMESPACE_DOMAIN_TYPES))
@@ -69,12 +71,13 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
 
 
 def make_author_header(name=None, contact=None, copyright_str=None):
-    """Makes the [Author] section of a BELNS file
+    """Makes the ``[Author]`` section of a BELNS file
 
     :param name: Namespace's authors
     :param contact: Namespace author's contact info/email address
     :param copyright_str: Namespace's copyright/license information. Defaults to :code:`Other/Proprietary`
-    :return:
+    :return: An iterable over the ``[Author]`` section of a BELNS file
+    :rtype: iter
     """
     yield '[Author]'
     yield 'NameString={}'.format(name if name is not None else getpass.getuser())
@@ -85,7 +88,7 @@ def make_author_header(name=None, contact=None, copyright_str=None):
 
 
 def make_citation_header(name, description=None, url=None, version=None, date=None):
-    """Makes the [Citation] section of a BELNS file
+    """Makes the ``[Citation]`` section of a BEL config file.
 
     :param name: Citation name
     :type name: str
@@ -93,7 +96,8 @@ def make_citation_header(name, description=None, url=None, version=None, date=No
     :param url: URL to more citation information
     :param version: Citation version
     :param date: Citation publish timestamp, ISO 8601 Date
-    :return:
+    :return: An iterable over the lines of the ``[Citation]`` section of a BEL config file
+    :rtype: iter
     """
     yield '[Citation]'
     yield 'NameString={}'.format(name)
@@ -111,19 +115,30 @@ def make_citation_header(name, description=None, url=None, version=None, date=No
         yield 'ReferenceURL={}'.format(url)
 
 
-def make_properties_header():
-    """Makes the [Processing] section of a BELNS file"""
+def make_properties_header(case_sensitive=True, delimiter='|', cacheable=True):
+    """Makes the ``[Processing]`` section of a BEL config file.
+    
+    :param case_sensitive: Should this config file be interpreted as case-sensitive?
+    :type case_sensitive: bool
+    :param delimiter: The delimiter between names and labels in this config file
+    :type delimiter: str
+    :param cacheable: Should this config file be cached?
+    :type cacheable: bool
+    :return: An iterable over the lines in the ``[Processing]`` section of a BEL config file
+    :rtype: iter
+    """
     yield '[Processing]'
-    yield 'CaseSensitiveFlag=yes'
-    yield 'DelimiterString=|'
-    yield 'CacheableFlag=yes'
+    yield 'CaseSensitiveFlag={}'.format('yes' if case_sensitive else 'no')
+    yield 'DelimiterString={}'.format(delimiter)
+    yield 'CacheableFlag={}'.format('yes' if cacheable else 'no')
 
 
 def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_name, citation_name, values,
                     namespace_description=None, namespace_species=None, namespace_version=None,
                     namespace_query_url=None, namespace_created=None, author_contact=None, author_copyright=None,
                     citation_description=None, citation_url=None, citation_version=None, citation_date=None,
-                    functions=None, file=None, value_prefix='', sort_key=None):
+                    case_sensitive=True, delimiter='|', cacheable=True, functions=None, file=None, value_prefix='',
+                    sort_key=None):
     """Writes a BEL namespace (BELNS) to a file
 
     :param namespace_name: The namespace name
@@ -161,6 +176,12 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
     :type citation_version: str
     :param citation_date: Citation publish timestamp, ISO 8601 Date
     :type citation_date: str
+    :param case_sensitive: Should this config file be interpreted as case-sensitive?
+    :type case_sensitive: bool
+    :param delimiter: The delimiter between names and labels in this config file
+    :type delimiter: str
+    :param cacheable: Should this config file be cached?
+    :type cacheable: bool
     :param functions: The encoding for the elements in this namespace
     :type functions: iterable of characters
     :param file: the stream to print to
@@ -186,7 +207,7 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
         print(line, file=file)
     print(file=file)
 
-    for line in make_properties_header():
+    for line in make_properties_header(case_sensitive=case_sensitive, delimiter=delimiter, cacheable=cacheable):
         print(line, file=file)
     print(file=file)
 
@@ -224,7 +245,7 @@ def write_namespace_from_owl(url, file=None):
 
 
 def make_annotation_header(keyword, description=None, usage=None, version=None, created=None):
-    """Makes the [AnnotationDefinition] section of a BELANNO file
+    """Makes the ``[AnnotationDefinition]`` section of a BELANNO file
 
     :param keyword: Preferred BEL Keyword, maximum length of 8
     :type keyword: str
@@ -236,8 +257,8 @@ def make_annotation_header(keyword, description=None, usage=None, version=None, 
     :type version: str
     :param created: Namespace public timestamp, ISO 8601 datetime
     :type created: str
-    :return: A list of lines for the annotation definition section
-    :rtype: list of str
+    :return: A iterator over the lines for the ``[AnnotationDefinition]`` section
+    :rtype: iter
     """
 
     yield '[AnnotationDefinition]'
@@ -254,21 +275,40 @@ def make_annotation_header(keyword, description=None, usage=None, version=None, 
 
 
 def write_annotation(keyword, values, citation_name, description=None, usage=None, version=None, created=None,
-                     author_name=None, author_copyright=None, author_contact=None, file=None, value_prefix=''):
+                     author_name=None, author_copyright=None, author_contact=None, case_sensitive=True, delimiter='|',
+                     cacheable=True, file=None, value_prefix=''):
     """Writes a BEL annotation (BELANNO) to a file
 
     :param keyword: The annotation keyword
+    :type keyword: str
+    :param values: A dictionary of {name: label}
+    :type values: dict
     :param citation_name: The citation name
-    :param values: A dictionary of {value: description}
+    :type citation_name: str
     :param description: A description of this annotation
+    :type description: str
     :param usage: How to use this annotation
-    :param version: The version of this annotation (defaults to 1.0.0)
+    :type usage: str
+    :param version: The version of this annotation (defaults to ``1.0.0``)
+    :type version: str
     :param created: The annotation's public timestamp, ISO 8601 datetime
+    :type created: str
     :param author_name: The author's name
-    :param author_copyright: The copyright information for this annotation. Defaults to 'Other/Proprietary'
+    :type author_name: str
+    :param author_copyright: The copyright information for this annotation. Defaults to ``Other/Proprietary``
+    :type author_copyright: str
     :param author_contact: The contact information for the author of this annotation.
+    :type author_contact: str
+    :param case_sensitive: Should this config file be interpreted as case-sensitive?
+    :type case_sensitive: bool
+    :param delimiter: The delimiter between names and labels in this config file
+    :type delimiter: str
+    :param cacheable: Should this config file be cached?
+    :type cacheable: bool
     :param file: A file or file-like
+    :type file: file
     :param value_prefix: An optional prefix for all values
+    :type value_prefix: str
     """
     file = sys.stdout if file is None else file
 
@@ -284,7 +324,7 @@ def write_annotation(keyword, values, citation_name, description=None, usage=Non
     print('NameString={}'.format(citation_name), file=file)
     print(file=file)
 
-    for line in make_properties_header():
+    for line in make_properties_header(case_sensitive=case_sensitive, delimiter=delimiter, cacheable=cacheable):
         print(line, file=file)
     print(file=file)
 
