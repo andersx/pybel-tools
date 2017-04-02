@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 from operator import itemgetter
 
 import pandas as pd
+from pkg_resources import get_distribution
 
 from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
     CITATION_AUTHORS, CITATION_COMMENTS, RELATION
@@ -308,3 +309,12 @@ def prepare_c3(data, y_axis_label='y', x_axis_label='x'):
         labels.append(k)
         values.append(v)
     return json.dumps([[x_axis_label] + list(labels), [y_axis_label] + list(values)])
+
+
+def get_version():
+    """Gets the current PyBEL Tools version
+
+    :return: The current PyBEL Tools version
+    :rtype: str
+    """
+    return get_distribution('pybel_tools').version
