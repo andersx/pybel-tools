@@ -12,6 +12,7 @@ Installation
 
 Easiest
 ~~~~~~~
+Download the latest stable code from `PyPI <https://pypi.python.org/pypi/pybel-tools>`_ with:
 
 .. code-block:: sh
 
@@ -19,6 +20,7 @@ Easiest
 
 Get the Latest
 ~~~~~~~~~~~~~~~
+Download the most recent code from `GitHub <https://github.com/pybel/pybel-tools>`_ with:
 
 .. code-block:: sh
 
@@ -42,6 +44,7 @@ from . import serialization
 from . import summary
 from . import utils
 from . import visualization
+from . import web
 
 __version__ = '0.1.5-dev'
 
