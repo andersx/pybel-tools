@@ -24,6 +24,7 @@ __all__ = [
     'write_namespace_from_owl',
     'make_annotation_header',
     'write_annotation',
+    'export_namespace',
     'export_namespaces',
 ]
 
@@ -335,11 +336,50 @@ def write_annotation(keyword, values, citation_name, description=None, usage=Non
         print('{}{}|{}'.format(value_prefix, key.strip(), value.strip()), file=file)
 
 
-def export_namespaces(graph, namespaces, directory=None):
-    """Exports all names and missing names from the given namespaces to their own BEL Namespace files in the given
+def export_namespace(graph, namespace, directory=None, cacheable=False):
+    """Exports all names and missing names from the given namespace to its own BEL Namespace files in the given
     directory.
-    
-    Could be useful during quick and dirty curation where planned namespace building is not a priority.
+
+    Could be useful during quick and dirty curation, where planned namespace building is not a priority.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param namespace: The namespace to process
+    :type namespace: str
+    :param directory: The path to the directory where to output the namespace. Defaults to the current working
+                      directory returned by :func:`os.getcwd`
+    :type directory: str
+    :param cacheable: Should the namespace be cacheable? Defaults to ``False`` because, in general, this operation 
+                        will probably be used for evil, and users won't want to reload their entire cache after each
+                        iteration of curation.
+    :type cacheable: bool
+    """
+    directory = os.getcwd() if directory is None else directory
+    path = os.path.join(directory, '{}.belns'.format(namespace))
+
+    with open(path, 'w') as file:
+        right_names, wrong_names = get_names(graph, namespace), get_incorrect_names(graph, namespace)
+        log.info('Outputting %d correct and %d wrong names to %s', len(right_names), len(wrong_names), path)
+        names = (right_names | wrong_names)
+
+        if 0 == len(names):
+            log.warning('%s is empty', namespace)
+
+        write_namespace(
+            namespace_name=namespace,
+            namespace_keyword=namespace,
+            namespace_domain='Other',
+            author_name=graph.document.get(METADATA_AUTHORS),
+            author_contact=graph.document.get(METADATA_CONTACT),
+            citation_name=graph.document.get(METADATA_NAME),
+            values=names,
+            cacheable=cacheable,
+            file=file
+        )
+
+
+def export_namespaces(graph, namespaces, directory=None, cacheable=False):
+    """Thinly wraps :func:`export_namespace` for an iterable of namespaces.
     
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -348,27 +388,11 @@ def export_namespaces(graph, namespaces, directory=None):
     :param directory: The path to the directory where to output the namespaces. Defaults to the current working
                       directory returned by :func:`os.getcwd`
     :type directory: str
+    :param cacheable: Should the namespaces be cacheable? Defaults to ``False`` because, in general, this operation 
+                        will probably be used for evil, and users won't want to reload their entire cache after each 
+                        iteration of curation.
+    :type cacheable: bool
     """
-    directory = os.getcwd() if directory is None else directory
-
+    directory = os.getcwd() if directory is None else directory  # avoid making multiple calls to os.getcwd later
     for namespace in namespaces:
-        path = os.path.join(directory, '{}.belns'.format(namespace))
-
-        with open(path, 'w') as file:
-            right_names, wrong_names = get_names(graph, namespace), get_incorrect_names(graph, namespace)
-            log.info('Outputting %d correct and %d wrong names to %s', len(right_names), len(wrong_names), path)
-            names = (right_names | wrong_names)
-
-            if 0 == len(names):
-                log.warning('%s is empty', namespace)
-
-            write_namespace(
-                namespace_name=namespace,
-                namespace_keyword=namespace,
-                namespace_domain='Other',
-                author_name=graph.document.get(METADATA_AUTHORS),
-                author_contact=graph.document.get(METADATA_CONTACT),
-                citation_name=graph.document.get(METADATA_NAME),
-                values=names,
-                file=file
-            )
+        export_namespace(graph, namespace, directory=directory, cacheable=cacheable)
