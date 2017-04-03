@@ -9,6 +9,8 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/inspire-tree/1.12.1/inspire-tree.css"/>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/d3-context-menu/css/d3-context-menu.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/graph.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tree.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/legend.css') }}">
@@ -37,6 +39,8 @@
             src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.4.2/d3-sankey.js"></script>
     <script type="text/javascript"
             src="{{ url_for('static', filename='js/graph_controller/graph_controller.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/d3-context-menu/js/d3-context-menu.js') }}"></script>
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/inspire-tree/1.12.1/inspire-tree-bundled.js"></script>
 
