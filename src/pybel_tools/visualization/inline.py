@@ -32,6 +32,9 @@ def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=None
     :type width: int
     :param height: The height of the visualization window to render
     :type height: int
+    :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
+                    to :data:`default_color_map`
+    :type color_map: dict
     :return: An IPython notebook Javascript object
     :rtype: :class:`IPython.display.Javascript`
     """
@@ -47,6 +50,9 @@ def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=
     :type width: int
     :param height: The height of the visualization window to render
     :type height: int
+    :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
+                    to :data:`default_color_map`
+    :type color_map: dict
     :return: The javascript string to turn into magic
     :rtype: str
     """
