@@ -323,6 +323,9 @@ function init_d3_force(graph) {
         .enter().append("line")
         .style("stroke-width", nominal_stroke)
         .style("stroke", default_link_color)
+        .on("mouseover", function (d) {
+            display_edge_info(d);
+        })
         .attr("class", function (d) {
             if (['decreases', 'directlyDecreases', 'increases', 'directlyIncreases', 'negativeCorrelation',
                     'positiveCorrelation'].indexOf(d.relation) >= 0) {
@@ -361,6 +364,10 @@ function init_d3_force(graph) {
         .attr("class", "node")
         // Next two lines -> Pin down functionality
         .on('dblclick', releasenode)
+        // Box info
+        .on("mouseover", function (d) {
+            display_node_info(d);
+        })
         .call(node_drag);
 
     var circle = node.append("path")
@@ -421,6 +428,35 @@ function init_d3_force(graph) {
                 return o.source.index == d.index || o.target.index == d.index ? highlighted_link_color : default_link_color;
             });
         }
+    }
+
+    // Box info in table
+
+    function display_node_info(node) {
+        $("#table-11").html("Node");
+        $("#table-12").html(node.cname);
+        $("#table-21").html("Function");
+        $("#table-22").html(node.function);
+        $("#table-31").html("Namespace");
+        $("#table-32").html(node.namespace);
+        $("#table-41").html("Name");
+        $("#table-42").html(node.name);
+    }
+
+
+    function display_edge_info(edge) {
+        console.log(edge)
+
+        $("#table-11").html("Evidence");
+        $("#table-12").html(edge.evidence);
+        $("#table-21").html("Citation");
+        $("#table-22").html("<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
+            "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>");
+        $("#table-31").html("Relation");
+        $("#table-32").html(edge.relation);
+        $("#table-41").html("Annotations");
+        // Objects to string represented as JSON {key-value pairs}
+        $("#table-42").html(JSON.stringify(edge.annotations));
     }
 
 
