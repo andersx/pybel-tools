@@ -48,9 +48,7 @@ td.bigger-rows {
 #graph-chart {
     display: block;
     margin: auto;
-    vertical-align: middle;
-    height: 70vh;
-    max-height: 70vh;
+    height: 550px;
 }
 
 svg {
