@@ -324,7 +324,9 @@ function init_d3_force(graph) {
         .style("stroke-width", nominal_stroke)
         .style("stroke", default_link_color)
         .on("mouseover", function (d) {
-            display_edge_info(d);
+            setTimeout(function () {
+                display_edge_info(d);
+            }, 1000);
         })
         .attr("class", function (d) {
             if (['decreases', 'directlyDecreases', 'increases', 'directlyIncreases', 'negativeCorrelation',
@@ -366,7 +368,9 @@ function init_d3_force(graph) {
         .on('dblclick', releasenode)
         // Box info
         .on("mouseover", function (d) {
-            display_node_info(d);
+            setTimeout(function () {
+                display_node_info(d);
+            }, 1000);
         })
         .call(node_drag);
 
@@ -445,7 +449,6 @@ function init_d3_force(graph) {
 
 
     function display_edge_info(edge) {
-        console.log(edge)
 
         $("#table-11").html("Evidence");
         $("#table-12").html(edge.evidence);

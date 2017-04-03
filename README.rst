@@ -28,11 +28,13 @@ Setting up with Docker
 Running the PyBEL Tool's service
 ----------------------
 Running the PyBEL Tools Flask application allows you to interact with your networks and apply filters/algorithms.
+
 .. code-block:: sh
 
      python3 -m pybel_tools service
 
 After previously having uploaded your BEL graphs
+
 .. code-block:: sh
 
      python3 -m pybel_tools upload "PATH_TO_YOUR_GRAPH_PICKLE"
