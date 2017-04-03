@@ -646,11 +646,66 @@
                 <h4>Export options</h4>
                 <hr>
                 <div>
-                    <button type="button" id="save-svg-graph" class="btn btn-primary" aria-label="Left Align">
-                        <i class="fa fa-file-image-o"></i></button>
-                    <button type="button" id="bel-button" class="btn btn-primary" aria-label="Left Align">
-                        <img alt="BEL-logo" id="bel-logo"
-                             src="{{ url_for('static', filename='img/bel300x.png') }}"></button>
+
+                    <table class="table table-responsive">
+                        <thead>
+                        <tr>
+                            <th><b>Export type</b></th>
+                            <th><b>Action Button</b></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Network to SVG</td>
+                            <td>
+                                <button type="button" id="save-svg-graph" class="btn btn-primary"
+                                        aria-label="Left Align">
+                                    <i class="fa fa-file-image-o"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to BEL</td>
+                            <td>
+                                <button type="button" id="bel-button" class="btn btn-primary" aria-label="Left Align">
+                                    <img alt="BEL-logo" id="bel-logo"
+                                         src="{{ url_for('static', filename='img/bel300x.png') }}"></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to GraphML</td>
+                            <td>
+                                <button type="button" id="graphml-button" class="btn btn-primary"
+                                        aria-label="Left Align">To GraphML
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to CSV</td>
+                            <td>
+                                <button type="button" id="csv-button" class="btn btn-primary"
+                                        aria-label="Left Align">To CSV
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to Bytes</td>
+                            <td>
+                                <button type="button" id="bytes-button" class="btn btn-primary"
+                                        aria-label="Left Align">To Bytes
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to CX</td>
+                            <td>
+                                <button type="button" id="cx-button" class="btn btn-primary"
+                                        aria-label="Left Align">To CX
+                                </button>
+                            </td>
+                        </tr>
+
+                        </tbody>
+                    </table>
                 </div>
 
             </div><!-- /.Modal body -->

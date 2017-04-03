@@ -69,7 +69,7 @@ $(document).ready(function () {
         document.body.removeChild(element);
     }
 
-
+    // Export to BEL
     $("#bel-button").click(function () {
         $.ajax({
             url: '/network/' + window.id,
@@ -79,6 +79,27 @@ $(document).ready(function () {
             download_text(response, 'MyGraph.bel')
         });
     });
+
+    // Export to GraphML
+    $("#graphml-button").click(function () {
+        window.location.href = '/network/' + window.id + '?' + get_selected_nodes(tree) + '&' + 'format=graphml';
+    });
+
+    // Export to bytes
+    $("#bytes-button").click(function () {
+        window.location.href = '/network/' + window.id + '?' + get_selected_nodes(tree) + '&' + 'format=bytes';
+    });
+
+    // Export to CX
+    $("#cx-button").click(function () {
+        window.location.href = '/network/' + window.id + '?' + get_selected_nodes(tree) + '&' + 'format=cx';
+    });
+
+    // Export to CSV
+    $("#csv-button").click(function () {
+        window.location.href = '/network/' + window.id + '?' + get_selected_nodes(tree) + '&' + 'format=csv';
+    });
+
 });
 
 function render_frame() {
