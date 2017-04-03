@@ -18,11 +18,13 @@ import sys
 from getpass import getuser
 
 import click
+from flask import Flask
 
 from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
+from .service.dict_service import get_dict_service, build_dictionary_service_app, get_app
 
 
 @click.group(help="PyBEL-Tools Command Line Utilities on {}".format(sys.executable))
@@ -42,24 +44,17 @@ def upload(path, connection, skip_check_version):
 
 
 @main.command()
-@click.option('--host', help='Flask host')
-@click.option('--debug', is_flag=True)
-def web(host, debug):
-    """Runs the PyBEL web tools"""
-    from .web.app import app
-    app.run(debug=debug, host=host)
-
-
-@main.command()
 @click.option('--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
-@click.option('--host', help='Flask host. Defaults to http://localhost:5000')
+@click.option('--host', help='Flask host. Defaults to localhost')
+@click.option('--port', help='Flask port. Defaults to 5000')
 @click.option('--debug', is_flag=True)
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-def service(connection, host, debug, skip_check_version):
+def service(connection, host, port, debug, skip_check_version):
     """Runs the PyBEL API RESTful web service"""
-    from .service.dict_service import app, get_dict_service
+    app = get_app()
+    build_dictionary_service_app(app)
     get_dict_service(app).load_networks(connection=connection, check_version=(not skip_check_version))
-    app.run(debug=debug, host=host)
+    app.run(debug=debug, host=host, port=port)
 
 
 @main.group()
