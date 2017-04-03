@@ -434,6 +434,18 @@ function init_d3_force(graph) {
         }
     }
 
+    // Highlight on mouseenter and back to normal on mouseout
+    link.on("mouseenter", function (d) {
+        link.style("stroke", function (o) {
+            return o.source.index == d.source.index && o.target.index == d.target.index ? highlighted_link_color : default_link_color;
+        });
+    })
+        .on("mousedown", function () {
+            d3.event.stopPropagation();
+        }).on("mouseout", function () {
+        link.style("stroke", default_link_color);
+    });
+
     // Box info in table
 
     function display_node_info(node) {
