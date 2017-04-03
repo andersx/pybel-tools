@@ -14,14 +14,7 @@ $(document).ready(function () {
 
             });
         });
-
-        var params = $.param(selection_hash_map, true);
-
-        $.getJSON("/network/" + window.id + '?' + params, function (data) {
-
-            init_d3_force(data);
-        });
-
+        return $.param(selection_hash_map, true);
     }
 
     var tree = new InspireTree({
@@ -41,13 +34,15 @@ $(document).ready(function () {
     render_frame();
 
     $("#submit-button").on("click", function () {
-        get_selected_nodes(tree);
+        $.getJSON("/network/" + window.id + '?' + get_selected_nodes(tree), function (data) {
+            init_d3_force(data);
+        });
     });
 
     d3.select("#save-svg-graph")
-        .on("click", writeDownloadLink);
+        .on("click", download_svg);
 
-    function writeDownloadLink() {
+    function download_svg() {
         try {
             var isFileSaverSupported = !!new Blob();
         } catch (e) {
@@ -61,13 +56,29 @@ $(document).ready(function () {
             .node().parentNode.innerHTML;
 
         var blob = new Blob([html], {type: "image/svg+xml"});
-        saveAs(blob, "myProfile.svg");
+        saveAs(blob, "MyGraph.svg");
     };
 
-    $("#bel-logo").click(function () {
+    function download_text(response, name) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(response));
+        element.setAttribute('download', name);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
 
+
+    $("#bel-button").click(function () {
+        $.ajax({
+            url: '/network/' + window.id,
+            dataType: "text",
+            data: get_selected_nodes(tree) + '&format=bel'
+        }).done(function (response) {
+            download_text(response, 'MyGraph.bel')
+        });
     });
-
 });
 
 function render_frame() {
