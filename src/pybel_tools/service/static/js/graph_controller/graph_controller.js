@@ -421,7 +421,6 @@ function init_d3_force(graph) {
         if (focus_node !== null) d = focus_node;
         highlight_node = d;
 
-
         if (highlight_node_boundering != color_circunferencia) {
             circle.style("stroke", function (o) {
                 return isConnected(d, o) ? highlight_node_boundering : color_circunferencia;
@@ -430,14 +429,16 @@ function init_d3_force(graph) {
                 return isConnected(d, o) ? highlight_text : "black";
             });
             link.style("stroke", function (o) {
+                // All links connected to the node you hover on
                 return o.source.index == d.index || o.target.index == d.index ? highlighted_link_color : default_link_color;
             });
         }
     }
 
-    // Highlight on mouseenter and back to normal on mouseout
+    // Highlight links on mouseenter and back to normal on mouseout
     link.on("mouseenter", function (d) {
         link.style("stroke", function (o) {
+            // Specifically the link you hover on
             return o.source.index == d.source.index && o.target.index == d.target.index ? highlighted_link_color : default_link_color;
         });
     })
