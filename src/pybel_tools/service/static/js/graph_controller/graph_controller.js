@@ -44,17 +44,25 @@ $(document).ready(function () {
         get_selected_nodes(tree);
     });
 
-    // Saves visualized network as image
-    $("#save-svg-graph").click(function () {
-        var html = d3.select("#force-svg")
-            .attr("title", "force-svg")
+    d3.select("#save-svg-graph")
+        .on("click", writeDownloadLink);
+
+    function writeDownloadLink() {
+        try {
+            var isFileSaverSupported = !!new Blob();
+        } catch (e) {
+            alert("blob not supported");
+        }
+
+        var html = d3.select("svg")
+            .attr("title", "test2")
             .attr("version", 1.1)
             .attr("xmlns", "http://www.w3.org/2000/svg")
             .node().parentNode.innerHTML;
 
         var blob = new Blob([html], {type: "image/svg+xml"});
-        saveAs(blob, "graph.svg");
-    });
+        saveAs(blob, "myProfile.svg");
+    };
 
     $("#bel-logo").click(function () {
 
