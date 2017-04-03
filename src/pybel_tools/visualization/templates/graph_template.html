@@ -14,7 +14,8 @@
             w = $("#graph-chart").width();
             g = document.getElementsByTagName('body')[0];
             h = w.innerHeight || document.documentElement.clientHeight || g.clientHeight;
-            init_d3_force(d3, graph_data, "#graph-chart", w, h);
+            color_map = {{ cmap }};
+            init_d3_force(d3, graph_data, "#graph-chart", w, h, color_map);
         });
     </script>
 </head>
