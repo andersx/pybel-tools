@@ -421,6 +421,7 @@ function init_d3_force(graph) {
         if (focus_node !== null) d = focus_node;
         highlight_node = d;
 
+
         if (highlight_node_boundering != color_circunferencia) {
             circle.style("stroke", function (o) {
                 return isConnected(d, o) ? highlight_node_boundering : color_circunferencia;
