@@ -78,6 +78,8 @@ class DictionaryService(PybelService):
         if network_id in self.networks:
             return
 
+        add_canonical_names(graph)
+
         self.networks[network_id] = graph
         self.update_node_indexes(graph)
 

@@ -46,9 +46,12 @@
 
 
     <script type="text/javascript">
-
+        // Filters to build tree
         window.filters = {{ filter_json|safe }};
-
+        // Arrays with selected nodes to expand/delete
+        window.delete_nodes = [];
+        window.expand_nodes = [];
+        // Global var with network_id
         window.id = {{ network_id }};
 
     </script>
@@ -123,23 +126,19 @@
                         data-target="#info-graph">
                     Info and design
                 </button>
-
-            </div>
-
-            <div class="col-lg-4 center">
-                <button type="button" id="submit-button" class="btn btn-primary button-padding">
-                    Submit
-                </button>
-            </div>
-        </div><!-- button row -->
-        <div class="row"><!-- button row -->
-            <div class="col-lg-8">
                 <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
                     Path search
                 </button>
                 <button type="button" class="btn btn-primary button-padding pull-right" data-toggle="modal"
                         data-target="#export">
                     Export
+                </button>
+
+            </div>
+
+            <div class="col-lg-4 center">
+                <button type="button" id="submit-button" class="btn btn-primary button-padding">
+                    Submit
                 </button>
             </div>
         </div><!-- button row -->
@@ -170,7 +169,7 @@
 </div>
 
 <div id="info-graph" class="modal fade"><!-- /.info-graph Modal -->
-    <div class="modal-dialog"><!-- /.Modal dialog -->
+    <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
         <div class="modal-content"><!-- /.Modal content -->
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
@@ -190,50 +189,53 @@
                     <button type="button" id="restore" class="btn btn-info button-padding">Restore ALL
                     </button>
                 </div>
-                <h4>Network Visualization Info</h4>
-                <div class="table-wrapper">
-                    <table class="table table-responsive">
-                        <thead>
-                        <tr>
-                            <th><b>Function</b></th>
-                            <th><b>Action</b></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>Expand/Delete node from the network</td>
-                            <td>Right click on node</td>
-                        </tr>
-                        <tr>
-                            <td>Freeze graph</td>
-                            <td>Press Space</td>
-                        </tr>
-                        <tr>
-                            <td>Pin a node down (fix it)</td>
-                            <td>Drag the node to the desire position</td>
-                        </tr>
-                        <tr>
-                            <td>Release node (unfix it)</td>
-                            <td>Doubleclick on the node</td>
-                        </tr>
-                        <tr>
-                            <td>Highlight node and its neighbourhood</td>
-                            <td>Mouseover node</td>
-                        </tr>
-                        <tr>
-                            <td>Zooming</td>
-                            <td>Zooming buttons</td>
-                        </tr>
-                        <tr>
-                            <td>Panning</td>
-                            <td>Mouse click and drag</td>
-                        </tr>
-                        <tr>
-                            <td>Undo changes</td>
-                            <td>Double click in the graph</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                <hr>
+                <div class="center-table">
+                    <h4 class="text-center">Network Visualization Info</h4>
+                    <div class="table-wrapper">
+                        <table class="table table-responsive">
+                            <thead>
+                            <tr>
+                                <th><b>Function</b></th>
+                                <th><b>Action</b></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Expand/Delete node from the network</td>
+                                <td>Right click on node</td>
+                            </tr>
+                            <tr>
+                                <td>Freeze graph</td>
+                                <td>Press Space</td>
+                            </tr>
+                            <tr>
+                                <td>Pin a node down (fix it)</td>
+                                <td>Drag the node to the desire position</td>
+                            </tr>
+                            <tr>
+                                <td>Release node (unfix it)</td>
+                                <td>Doubleclick on the node</td>
+                            </tr>
+                            <tr>
+                                <td>Highlight node and its neighbourhood</td>
+                                <td>Mouseover node</td>
+                            </tr>
+                            <tr>
+                                <td>Zooming</td>
+                                <td>Zooming buttons</td>
+                            </tr>
+                            <tr>
+                                <td>Panning</td>
+                                <td>Mouse click and drag</td>
+                            </tr>
+                            <tr>
+                                <td>Undo changes</td>
+                                <td>Double click in the graph</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div><!-- /.Modal body -->
 
@@ -248,7 +250,7 @@
 </div><!-- /.info-graph Modal -->
 
 <div aria-hidden="true" style="display: none;" id="legend" class="modal fade"><!-- /.Legend Modal -->
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -552,7 +554,7 @@
 
 
 <div id="paths" class="modal fade"><!-- /paths Modal -->
-    <div class="modal-dialog"><!-- /.Modal dialog -->
+    <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
         <div class="modal-content"><!-- /.Modal content -->
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
@@ -639,10 +641,9 @@
             </div>
 
             <div class="modal-body text-left"><!-- /.Modal body -->
-                <h4>Export options</h4>
+                <h4 class="text-center">Export options</h4>
                 <hr>
-                <div>
-
+                <div class="center-table">
                     <table class="table table-responsive">
                         <thead>
                         <tr>
