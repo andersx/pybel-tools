@@ -1,17 +1,4 @@
-function init_d3_force(d3, graph, chart, width, height) {
-    const function_colors = {
-        "Protein": "#1F77B4",
-        "Pathology": "#FF7F0E",
-        "BiologicalProcess": "#2CA02C",
-        "miRNA": "#D62728",
-        "Complex": "#9467bd",
-        "Composite": "#9467bd",
-        "Reaction": "#8c564b",
-        "Gene": "#e377c2",
-        "Abundance": "#bcbd22",
-        "RNA": "#17becf"
-    };
-
+function init_d3_force(d3, graph, chart, width, height, function_colors) {
     var focus_node = null;
     var highlight_node = null;
 

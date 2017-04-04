@@ -23,6 +23,7 @@ __all__ = [
     'node_exclusion_filter_builder',
     'function_inclusion_filter_builder',
     'function_exclusion_filter_builder',
+    'include_pathology_filter',
     'exclude_pathology_filter',
     'keep_molecularly_active',
     'concatenate_node_filters',
@@ -144,6 +145,7 @@ def function_inclusion_filter_builder(function):
 
     raise ValueError('Invalid type for argument: {}'.format(function))
 
+
 def function_exclusion_filter_builder(function):
     """Builds a filter that fails on nodes of the given function(s)
 
@@ -259,6 +261,10 @@ def concatenate_node_filters(filters):
 
 # Default Filters
 
+#: A filter that passes for nodes that are :data:`pybel.constants.PATHOLOGY`
+include_pathology_filter = function_inclusion_filter_builder(PATHOLOGY)
+
+#: A filter that fails for nodes that are :data:`pybel.constants.PATHOLOGY`
 exclude_pathology_filter = function_exclusion_filter_builder(PATHOLOGY)
 
 

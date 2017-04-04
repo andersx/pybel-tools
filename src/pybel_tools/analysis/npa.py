@@ -36,6 +36,8 @@ DEFAULT_SCORE = 0
 
 
 class NpaRunner:
+    """The NpaRunner class houses the data related to a single run of the NPA analysis"""
+
     def __init__(self, graph, target_node, key, tag=None, default_score=None):
         """Initializes the NPA runner class
 
@@ -379,6 +381,42 @@ def workflow_all_average(graph, key, tag=None, default_score=None, runs=None):
             log.exception('could not run on %', node)
     return results
 
+
+def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, default_score, runs):
+    """
+    
+    :param candidate_mechanisms: 
+    :param key: 
+    :param default_score: 
+    :param runs: 
+    :return: 
+    
+    Example usage:
+    
+    >>> import pandas as pd
+    >>> import pybel_tools as pbt
+    >>> # load graph and data
+    >>> key = ...
+    >>> graph = ...
+    >>> candidate_mechanisms = pbt.generation.generate_bioprocess_mechanisms(graph, key)
+    >>> calculate_average_npa_on_subgraphs(candidate_mechanisms)
+    >>> pd.DataFrame.from_items(scores.items(), orient='index', columns=['Average NPA Score','Number First Neighbors','Subgraph Size'])
+    """
+
+    scores = {}
+    for node, subgraph in candidate_mechanisms.items():
+
+        fneighbors = subgraph.in_degree(node)
+        fneighbors = 0 if isinstance(fneighbors, dict) else fneighbors
+        size = subgraph.number_of_nodes()
+
+        if size <= 1:  # Can't calculate a score for empty subgraphs
+            score = None
+        else:
+            score = multirun_average(subgraph, node, key=key, runs=runs, default_score=default_score)
+
+        scores[node] = (score, fneighbors, size)
+    return scores
 
 # TODO implement
 def calculate_average_npa_by_annotation(graph, key, annotation='Subgraph'):

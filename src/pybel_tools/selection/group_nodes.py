@@ -3,7 +3,7 @@
 from collections import defaultdict
 
 from pybel.constants import ANNOTATIONS
-from ..filters.node_filters import keep_node_permissive
+from ..filters.node_filters import keep_node_permissive, concatenate_node_filters
 from ..utils import check_has_annotation
 
 __all__ = [
@@ -62,17 +62,15 @@ def average_node_annotation(graph, key, annotation='Subgraph', aggregator=None):
     return result
 
 
-def group_nodes_by_annotation_filtered(graph, node_filter=None, annotation='Subgraph'):
+def group_nodes_by_annotation_filtered(graph, node_filters=None, annotation='Subgraph'):
     """Groups the nodes occurring in edges by the given annotation, with a node filter applied
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param node_filter: A predicate (graph, node) -> bool for passing nodes
+    :param node_filters: A predicate (graph, node) -> bool for passing nodes
     :param annotation: The annotation to use for grouping
     :return: A dictionary of {annotation value: set of nodes}
     :rtype: dict
     """
-    if node_filter is None:
-        node_filter = keep_node_permissive
-
+    node_filter = concatenate_node_filters(node_filters)
     return {k: {n for n in v if node_filter(graph, n)} for k, v in group_nodes_by_annotation(graph, annotation).items()}

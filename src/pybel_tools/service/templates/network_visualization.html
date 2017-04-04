@@ -9,6 +9,8 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/inspire-tree/1.12.1/inspire-tree.css"/>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/d3-context-menu/css/d3-context-menu.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/graph.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tree.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/legend.css') }}">
@@ -30,46 +32,45 @@
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.4.0/svg.min.js"></script>
     <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/blob-polyfill/1.0.20150320/Blob.min.js"></script>
+    <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js"></script>
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.4.2/d3-sankey.js"></script>
     <script type="text/javascript"
             src="{{ url_for('static', filename='js/graph_controller/graph_controller.js') }}"></script>
     <script type="text/javascript"
+            src="{{ url_for('static', filename='js/d3-context-menu/js/d3-context-menu.js') }}"></script>
+    <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/inspire-tree/1.12.1/inspire-tree-bundled.js"></script>
 
 
     <script type="text/javascript">
-
+        // Filters to build tree
         window.filters = {{ filter_json|safe }};
-
+        // Arrays with selected nodes to expand/delete
+        window.delete_nodes = [];
+        window.expand_nodes = [];
+        // Global var with network_id
         window.id = {{ network_id }};
 
     </script>
 
 </head>
 <body>
-
+<h1>Biological Network Explorer</h1>
 <div class="container">
     <div class="col-lg-12">
-        <div class="row justify-content-md-center "><!-- Title row -->
-
-            <h2 class="text-center"> Biological Network Explorer</h2>
-
-        </div><!-- Title row -->
 
         <div class="row justify-content-md-center"><!-- visualization row -->
-
-
-            <div class="col-lg-8" id="graph-chart"><!-- force -->
-            </div><!-- force -->
-            <div class="col-lg-4" style="max-height: 70vh;height: 70vh;overflow: auto;"><!-- filters and tools div -->
+            <div class="col-lg-8" id="graph-chart"></div>
+            <div class="col-lg-4" style="max-height: 550px;height: 550px;overflow: auto;"><!-- filters and tools div -->
 
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" data-toggle="tab" href="#tree-panel" role="tab"><i
-                                class="fa fa-filter" aria-hidden="true"></i> Annotation filter</a>
+                                class="fa fa-filter" aria-hidden="true"></i> Annotation</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link disabled" data-toggle="tab" href="#nodes-panel" role="tab"><i
@@ -125,6 +126,13 @@
                         data-target="#info-graph">
                     Info and design
                 </button>
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
+                    Path search
+                </button>
+                <button type="button" class="btn btn-primary button-padding pull-right" data-toggle="modal"
+                        data-target="#export">
+                    Export
+                </button>
 
             </div>
 
@@ -134,22 +142,34 @@
                 </button>
             </div>
         </div><!-- button row -->
-        <div class="row"><!-- button row -->
-            <div class="col-lg-8">
-                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
-                    Path search
-                </button>
-                <button type="button" class="btn btn-primary button-padding pull-right" data-toggle="modal"
-                        data-target="#export">
-                    Export
-                </button>
-            </div>
-        </div><!-- button row -->
+
+        <div class="container col-lg-8 pull-left">
+            <table class="table table-bordered table-hover">
+                <tbody>
+                <tr>
+                    <td id="table-11"></td>
+                    <td id="table-12"></td>
+                </tr>
+                <tr>
+                    <td id="table-21"></td>
+                    <td id="table-22"></td>
+                </tr>
+                <tr>
+                    <td id="table-31"></td>
+                    <td id="table-32"></td>
+                </tr>
+                <tr>
+                    <td id="table-41"></td>
+                    <td id="table-42"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <div id="info-graph" class="modal fade"><!-- /.info-graph Modal -->
-    <div class="modal-dialog"><!-- /.Modal dialog -->
+    <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
         <div class="modal-content"><!-- /.Modal content -->
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
@@ -169,50 +189,53 @@
                     <button type="button" id="restore" class="btn btn-info button-padding">Restore ALL
                     </button>
                 </div>
-                <h4>Network Visualization Info</h4>
-                <div class="table-wrapper">
-                    <table class="table table-responsive">
-                        <thead>
-                        <tr>
-                            <th><b>Function</b></th>
-                            <th><b>Action</b></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>Expand/Delete node from the network</td>
-                            <td>Right click on node</td>
-                        </tr>
-                        <tr>
-                            <td>Freeze graph</td>
-                            <td>Press Space</td>
-                        </tr>
-                        <tr>
-                            <td>Pin a node down (fix it)</td>
-                            <td>Drag the node to the desire position</td>
-                        </tr>
-                        <tr>
-                            <td>Release node (unfix it)</td>
-                            <td>Doubleclick on the node</td>
-                        </tr>
-                        <tr>
-                            <td>Highlight node and its neighbourhood</td>
-                            <td>Mouseover node</td>
-                        </tr>
-                        <tr>
-                            <td>Zooming</td>
-                            <td>Zooming buttons</td>
-                        </tr>
-                        <tr>
-                            <td>Panning</td>
-                            <td>Mouse click and drag</td>
-                        </tr>
-                        <tr>
-                            <td>Undo changes</td>
-                            <td>Double click in the graph</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                <hr>
+                <div class="center-table">
+                    <h4 class="text-center">Network Visualization Info</h4>
+                    <div class="table-wrapper">
+                        <table class="table table-responsive">
+                            <thead>
+                            <tr>
+                                <th><b>Function</b></th>
+                                <th><b>Action</b></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Expand/Delete node from the network</td>
+                                <td>Right click on node</td>
+                            </tr>
+                            <tr>
+                                <td>Freeze graph</td>
+                                <td>Press Space</td>
+                            </tr>
+                            <tr>
+                                <td>Pin a node down (fix it)</td>
+                                <td>Drag the node to the desire position</td>
+                            </tr>
+                            <tr>
+                                <td>Release node (unfix it)</td>
+                                <td>Doubleclick on the node</td>
+                            </tr>
+                            <tr>
+                                <td>Highlight node and its neighbourhood</td>
+                                <td>Mouseover node</td>
+                            </tr>
+                            <tr>
+                                <td>Zooming</td>
+                                <td>Zooming buttons</td>
+                            </tr>
+                            <tr>
+                                <td>Panning</td>
+                                <td>Mouse click and drag</td>
+                            </tr>
+                            <tr>
+                                <td>Undo changes</td>
+                                <td>Double click in the graph</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div><!-- /.Modal body -->
 
@@ -227,7 +250,7 @@
 </div><!-- /.info-graph Modal -->
 
 <div aria-hidden="true" style="display: none;" id="legend" class="modal fade"><!-- /.Legend Modal -->
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -531,7 +554,7 @@
 
 
 <div id="paths" class="modal fade"><!-- /paths Modal -->
-    <div class="modal-dialog"><!-- /.Modal dialog -->
+    <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
         <div class="modal-content"><!-- /.Modal content -->
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
@@ -618,14 +641,68 @@
             </div>
 
             <div class="modal-body text-left"><!-- /.Modal body -->
-                <h4>Export options</h4>
+                <h4 class="text-center">Export options</h4>
                 <hr>
-                <div>
-                    <button type="button" id="save-svg-graph" class="btn btn-primary" aria-label="Left Align">
-                        <i class="fa fa-file-image-o"></i></button>
-                    <button type="button" id="save-svg-graph" class="btn btn-primary" aria-label="Left Align">
-                        <img id="bel-logo" alt="BEL-logo"
-                             src="{{ url_for('static', filename='images/icons/bel300x.png') }}"></button>
+                <div class="center-table">
+                    <table class="table table-responsive">
+                        <thead>
+                        <tr>
+                            <th><b>Export type</b></th>
+                            <th><b>Action Button</b></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Network to SVG</td>
+                            <td>
+                                <button type="button" id="save-svg-graph" class="btn btn-primary"
+                                        aria-label="Left Align">
+                                    <i class="fa fa-file-image-o"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to BEL</td>
+                            <td>
+                                <button type="button" id="bel-button" class="btn btn-primary" aria-label="Left Align">
+                                    <img alt="BEL-logo" id="bel-logo"
+                                         src="{{ url_for('static', filename='img/bel300x.png') }}"></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to GraphML</td>
+                            <td>
+                                <button type="button" id="graphml-button" class="btn btn-primary"
+                                        aria-label="Left Align">To GraphML
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to CSV</td>
+                            <td>
+                                <button type="button" id="csv-button" class="btn btn-primary"
+                                        aria-label="Left Align">To CSV
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to Bytes</td>
+                            <td>
+                                <button type="button" id="bytes-button" class="btn btn-primary"
+                                        aria-label="Left Align">To Bytes
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to CX</td>
+                            <td>
+                                <button type="button" id="cx-button" class="btn btn-primary"
+                                        aria-label="Left Align">To CX
+                                </button>
+                            </td>
+                        </tr>
+
+                        </tbody>
+                    </table>
                 </div>
 
             </div><!-- /.Modal body -->

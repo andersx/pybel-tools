@@ -7,6 +7,7 @@ from ..filters.node_filters import function_inclusion_filter_builder, filter_nod
 
 __all__ = [
     'get_nodes_by_function',
+    'get_nodes_by_namespace',
     'get_nodes_by_function_namespace',
     'get_triangles',
     'get_leaves_by_type',
@@ -24,6 +25,21 @@ def get_nodes_by_function(graph, function):
     :rtype: iter
     """
     return filter_nodes(graph, function_inclusion_filter_builder(function))
+
+
+def get_nodes_by_namespace(graph, namespace):
+    """Returns an iterator over nodes with the given namespace
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param namespace: The namespace to filter
+    :type namespace: str
+    :return: An iterable over nodes with the given function and namspace
+    :rtype: iter
+    """
+    for node, data in graph.nodes(data=True):
+        if NAMESPACE in data and data[NAMESPACE] == namespace:
+            yield node
 
 
 def get_nodes_by_function_namespace(graph, function, namespace):

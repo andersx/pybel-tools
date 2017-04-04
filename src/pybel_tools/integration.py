@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-pybel_tools.integrate holds functions that help add more data to the network
-
-"""
+"""This module contains functions that help add more data to the network"""
 
 import logging
 
 from pybel.constants import FUNCTION, NAMESPACE, NAME
+
+__all__ = [
+    'overlay_data',
+    'overlay_type_data',
+]
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ def overlay_data(graph, data, label, overwrite=False):
         graph.node[node][label] = annotation
 
 
+# TODO switch label to be kwarg with default value DATA_WEIGHT
 def overlay_type_data(graph, data, label, function, namespace, overwrite=False, impute=None):
     """Overlays tabular data on the network for data that comes from an data set with identifiers that lack
     namespaces.
