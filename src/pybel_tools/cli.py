@@ -14,17 +14,21 @@ problems--the code will get executed twice:
 Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
+import logging
 import sys
 from getpass import getuser
 
 import click
-from flask import Flask
 
+import pybel_tools as pbt
 from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
+from pybel.utils import get_version as pybel_version
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 from .service.dict_service import get_dict_service, build_dictionary_service_app, get_app
+
+log = logging.getLogger(__name__)
 
 
 @click.group(help="PyBEL-Tools Command Line Utilities on {}".format(sys.executable))
@@ -48,13 +52,22 @@ def upload(path, connection, skip_check_version):
 @click.option('--host', help='Flask host. Defaults to localhost')
 @click.option('--port', help='Flask port. Defaults to 5000')
 @click.option('--debug', is_flag=True)
+@click.option('--flaks-debug', is_flag=True)
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-def service(connection, host, port, debug, skip_check_version):
+def service(connection, host, port, debug, flask_debug, skip_check_version):
     """Runs the PyBEL API RESTful web service"""
+    if debug:
+        logging.basicConfig(level=10)
+        logging.getLogger('pybel').setLevel(10)
+        logging.getLogger('pybel_tools').setLevel(10)
+        log.setLevel(10)
+        log.info('Running PyBEL v%s', pybel_version())
+        log.info('Running PyBEL Tools v%s', pbt.utils.get_version())
+
     app = get_app()
     build_dictionary_service_app(app)
     get_dict_service(app).load_networks(connection=connection, check_version=(not skip_check_version))
-    app.run(debug=debug, host=host, port=port)
+    app.run(debug=flask_debug, host=host, port=port)
 
 
 @main.group()
