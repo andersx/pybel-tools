@@ -49,8 +49,8 @@
         // Filters to build tree
         window.filters = {{ filter_json|safe }};
         // Arrays with selected nodes to expand/delete
-        window.delete_nodes = [];
-        window.expand_nodes = [];
+        window.deleteNodes = [];
+        window.expandNodes = [];
         // Global var with network_id
         window.id = {{ network_id }};
 
@@ -586,9 +586,7 @@
                         </div>
                     </form>
                     <div class="buttons">
-                        <input type="button" class="button-shortest-path" id="show-network-input" value="Show"/>
-                        <input type="button" class="button-shortest-path" id="get-shortest-path-bel-input"
-                               value="Extract to BEL"/>
+                        <input type="button" id="button-shortest-path" value="Submit"/>
                     </div>
                 </div>
                 <hr>
@@ -613,9 +611,7 @@
                         </div>
                     </form>
                     <div class="buttons">
-                        <input type="button" class="button-all-paths" id="all-paths-show-input" value="Show"/>
-                        <input type="button" class="button-all-paths" id="get-all-paths-bel-input"
-                               value="Extract to BEL"/>
+                        <input type="button" id="button-all-paths" value="Submit"/>
                     </div>
                 </div>
             </div><!-- /.Modal body -->
