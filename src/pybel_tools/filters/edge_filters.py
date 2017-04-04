@@ -21,6 +21,12 @@ from ..utils import check_has_annotation
 __all__ = [
     'keep_edge_permissive',
     'keep_causal_edges',
+    'build_inverse_filter',
+    'build_annotation_value_filter',
+    'build_citation_inclusion_filter',
+    'build_citation_exclusion_filter',
+    'build_author_inclusion_filter',
+    'build_relation_filter',
     'concatenate_edge_filters',
     'filter_edges',
     'count_passed_edge_filter',
@@ -66,23 +72,126 @@ def keep_causal_edges(graph, u, v, k, d):
     return graph.edge[u][v][k][RELATION] in CAUSAL_RELATIONS
 
 
-def build_annotation_value_filter(annotation, value):
-    def annotation_value_filter(graph, u, v, k, attr_dict):
-        if not check_has_annotation(graph.edge[u][v][k], annotation):
-            return False
-        return graph.edge[u][v][k][ANNOTATIONS][annotation] == value
+def build_inverse_filter(f):
+    """Builds a filter that is the inverse of the given filter
+    
+    :param f: An edge filter function (graph, node, node, key, data) -> bool
+    :type f: lambda
+    :return: An edge filter function (graph, node, node, key, data) -> bool
+    :rtype: lambda 
+    """
 
-    return annotation_value_filter
+    def inverse_filter(graph, u, v, k, d):
+        return not f(graph, u, v, k, d)
+
+    return inverse_filter
+
+
+def build_annotation_value_filter(annotation, value):
+    """Builds a filter that only passes for edges that contain the given annotation and have the given value(s)
+    
+    :param annotation: The annotation to filter on
+    :type annotation: str
+    :param value: The value for the annotation to filter on
+    :type value: str or list or tuple or set
+    :return: An edge filter function (graph, node, node, key, data) -> bool
+    :rtype: lambda
+    """
+
+    if isinstance(value, str):
+        def annotation_value_filter(graph, u, v, k, attr_dict):
+            """Only passes for edges that contain the given annotation and have the given value
+    
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has the contained annotation with the contained value
+            :rtype: bool
+            """
+            if not check_has_annotation(graph.edge[u][v][k], annotation):
+                return False
+            return graph.edge[u][v][k][ANNOTATIONS][annotation] == value
+
+        return annotation_value_filter
+    elif isinstance(value, (list, set, tuple)):
+        values = set(value)
+
+        def annotation_values_filter(graph, u, v, k, attr_dict):
+            """Only passes for edges that contain the given annotation and have one of the given values
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has the contained annotation and one of the contained values
+            :rtype: bool
+            """
+            if not check_has_annotation(graph.edge[u][v][k], annotation):
+                return False
+            return graph.edge[u][v][k][ANNOTATIONS][annotation] in values
+
+        return annotation_values_filter
 
 
 def build_relation_filter(relations):
+    """Builds a filter that passes only for edges with the given relation
+    
+    :param relations: A relation or iterable of relations
+    :type relations: str or list or tuple or set
+    :return: An edge filter function (graph, node, node, key, data) -> bool
+    :rtype: lambda
+    """
+
     if isinstance(relations, str):
         def relation_filter(graph, u, v, k, attr_dict):
+            """Only passes for edges with the contained relation
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has the contained relation
+            :rtype: bool
+            """
             return graph.edge[u][v][k][RELATION] == relations
 
         return relation_filter
     elif isinstance(relations, (list, tuple, set)):
         def relation_filter(graph, u, v, k, attr_dict):
+            """Only passes for edges with one of the contained relations
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has one of the contained relations
+            :rtype: bool
+            """
             return graph.edge[u][v][k][RELATION] in relations
 
         return relation_filter
@@ -91,10 +200,31 @@ def build_relation_filter(relations):
 
 
 def build_citation_inclusion_filter(pmids):
-    """Only passes for edges with citations whose references are one of the given PubMed identifiers"""
+    """Only passes for edges with citations whose references are one of the given PubMed identifiers
+    
+    :param pmids: A PubMed identifier or list of PubMed identifiers to filter for
+    :type pmids: str or list or set or tuple
+    :return: An edge filter function (graph, node, node, key, data) -> bool
+    :rtype: lambda
+    """
 
     if isinstance(pmids, str):
         def citation_inclusion_filter(graph, u, v, k, d):
+            """Only passes for edges with PubMed citations matching the contained PubMed identifier
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has a PubMed citation with the contained PubMed identifier
+            :rtype: bool
+            """
             return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] == pmids
 
         return citation_inclusion_filter
@@ -102,17 +232,102 @@ def build_citation_inclusion_filter(pmids):
     else:
         pmids = set(pmids)
 
-        def citation_inclusion_filter(graph, u, v, k, d):
+        def citations_inclusion_filter(graph, u, v, k, d):
+            """Only passes for edges with PubMed citations matching one of the contained PubMed identifiers
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has a PubMed citation with one of the contained PubMed identifiers
+            :rtype: bool
+            """
             return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] in pmids
 
-        return citation_inclusion_filter
+        return citations_inclusion_filter
+
+
+def build_citation_exclusion_filter(pmids):
+    """Fails for edges with citations whose references are one of the given PubMed identifiers
+
+    :param pmids: A PubMed identifier or list of PubMed identifiers to filter against
+    :type pmids: str or list or set or tuple
+    :return: An edge filter function (graph, node, node, key, data) -> bool
+    :rtype: lambda
+    """
+
+    if isinstance(pmids, str):
+        def citation_exclusion_filter(graph, u, v, k, d):
+            """Fails for edges with PubMed citations matching the contained PubMed identifier
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has a PubMed citation with the contained PubMed identifier
+            :rtype: bool
+            """
+            return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] != pmids
+
+        return citation_exclusion_filter
+
+    else:
+        pmids = set(pmids)
+
+        def citations_exclusion_filter(graph, u, v, k, d):
+            """Only passes for edges with PubMed citations matching one of the contained PubMed identifiers
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has a PubMed citation with one of the contained PubMed identifiers
+            :rtype: bool
+            """
+            return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][
+                                                                                  CITATION_REFERENCE] not in pmids
+
+        return citations_exclusion_filter
 
 
 def build_author_inclusion_filter(authors):
     """Only passes for edges with author information that matches one of the given authors"""
     if isinstance(authors, str):
         def author_filter(graph, u, v, k, d):
-            return CITATION in d and CITATION_AUTHORS in d[CITATION] and d[CITATION][CITATION_AUTHORS] == authors
+            """Only passes for edges with citations with an author that matches the contained author
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has a citation with an author that matches the the contained author
+            :rtype: bool
+            """
+            return CITATION in d and CITATION_AUTHORS in d[CITATION] and authors in d[CITATION][CITATION_AUTHORS]
 
         return author_filter
 
@@ -120,7 +335,23 @@ def build_author_inclusion_filter(authors):
         author_set = set(authors)
 
         def author_filter(graph, u, v, k, d):
-            return CITATION in d and CITATION_AUTHORS in d[CITATION] and d[CITATION][CITATION_AUTHORS] in author_set
+            """Only passes for edges with citations with an author that matches one or more of the contained authors
+
+            :param graph: A BEL Graph
+            :type graph: pybel.BELGraph
+            :param u: A BEL node
+            :type u: tuple
+            :param v: A BEL node
+            :type v: tuple
+            :param k: The edge key between the given nodes
+            :type k: int
+            :param d: The edge data dictionary
+            :type d: dict
+            :return: True if the edge has a citation with an author that matches one or more of the contained authors
+            :rtype: bool
+            """
+            return CITATION in d and CITATION_AUTHORS in d[CITATION] and any(
+                author in d[CITATION][CITATION_AUTHORS] for author in author_set)
 
         return author_filter
 
