@@ -2,6 +2,8 @@
 
 """This module has tools for downloading and structuring gene orthology data from HGNC, RGD, and MGI"""
 
+from __future__ import print_function
+
 import pandas as pd
 import requests
 

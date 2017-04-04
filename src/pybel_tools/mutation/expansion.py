@@ -460,7 +460,7 @@ def expand_node_neighborhood(graph, subgraph, node):
     for predecessor, _, k, d in graph.in_edges_iter(node, data=True, keys=True):
         if predecessor in skip_predecessors:
             continue
-        safe_add_edge(graph, predecessor, node, k, d)
+        safe_add_edge(subgraph, predecessor, node, k, d)
 
     skip_successors = set()
     for successor in graph.successors_iter(node):
@@ -472,7 +472,7 @@ def expand_node_neighborhood(graph, subgraph, node):
     for _, successor, k, d in graph.out_edges_iter(node, data=True, keys=True):
         if successor in skip_successors:
             continue
-        safe_add_edge(graph, node, successor, k, d)
+        safe_add_edge(subgraph, node, successor, k, d)
 
 
 def expand_upstream_causal_subgraph(graph, subgraph):

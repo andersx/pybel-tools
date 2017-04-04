@@ -96,3 +96,4 @@ evidence_format = 'SET Evidence = "{}"\n\n\n'
 
 CNAME = 'cname'
 PUBMED = 'PubMed'
+DATA_WEIGHT = 'weight'

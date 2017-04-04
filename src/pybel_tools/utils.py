@@ -3,7 +3,14 @@
 """This module contains functions useful throughout PyBEL Tools"""
 
 import itertools as itt
+import json
+import os
 from collections import Counter, defaultdict
+from operator import itemgetter
+
+import jinja2
+import pandas as pd
+from pkg_resources import get_distribution
 
 from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
     CITATION_AUTHORS, CITATION_COMMENTS, RELATION
@@ -118,6 +125,22 @@ def tanimoto_set_similarity(x, y):
     return len(a & b) / len(union)
 
 
+def calculate_single_tanimoto_set_distances(target, dict_of_sets):
+    """Returns a dictionary of distances keyed by the keys in the given dict. Distances are calculated
+    based on pairwise tanimoto similarity of the sets contained
+
+    :param target: A set
+    :type target: set
+    :param dict_of_sets: A dict of {x: set of y}
+    :type dict_of_sets: dict
+    :return: A similarity dicationary based on the set overlap (tanimoto) score between the target set and the sets in
+            dos
+    :rtype: dict
+    """
+    target_set = set(target)
+    return {k: tanimoto_set_similarity(target_set, s) for k, s in dict_of_sets.items()}
+
+
 def calculate_tanimoto_set_distances(dict_of_sets):
     """Returns a distance matrix keyed by the keys in the given dict. Distances are calculated
     based on pairwise tanimoto similarity of the sets contained
@@ -130,7 +153,7 @@ def calculate_tanimoto_set_distances(dict_of_sets):
     result = defaultdict(dict)
 
     for x, y in itt.combinations(dict_of_sets, 2):
-        result[x][y] = result[y][x] = len(dict_of_sets[x] & dict_of_sets[y]) / len(dict_of_sets[x] | dict_of_sets[y])
+        result[x][y] = result[y][x] = tanimoto_set_similarity(dict_of_sets[x], dict_of_sets[y])
 
     for x in dict_of_sets:
         result[x][x] = 1.0
@@ -258,3 +281,74 @@ def safe_add_edge(graph, u, v, key, attr_dict, **attr):
         graph.add_edge(u, v, key=key, attr_dict=attr_dict, **attr)
     else:
         graph.add_edge(u, v, attr_dict=attr_dict, **attr)
+
+
+def load_differential_gene_expression(data_path, gene_symbol_column='Gene.symbol', logfc_column='logFC'):
+    """Quick and dirty loader for differential gene expression data
+    
+    :return: A dictionary of {gene symbol: log fold change}
+    :rtype: dict
+    """
+    df = pd.read_csv(data_path)
+    df = df.loc[df[gene_symbol_column].notnull(), [gene_symbol_column, logfc_column]]
+    return {k: v for _, k, v in df.itertuples()}
+
+
+def prepare_c3(data, y_axis_label='y', x_axis_label='x'):
+    """Prepares C3 JSON for making a bar chart from a Counter
+
+    :param data: A dictionary of {str: int} to display as bar chart
+    :type data: Counter or dict or defaultdict
+    :param y_axis_label: The Y axis label
+    :type y_axis_label: str
+    :param x_axis_label: X axis internal label. Should be left as default 'x')
+    :type x_axis_label: str
+    :return: A JSON dictionary for making a C3 bar chart
+    :rtype: dict
+    """
+    labels, values = [], []
+    for k, v in sorted(data.items(), key=itemgetter(1), reverse=True):
+        labels.append(k)
+        values.append(v)
+    return json.dumps([[x_axis_label] + list(labels), [y_axis_label] + list(values)])
+
+
+def get_version():
+    """Gets the current PyBEL Tools version
+
+    :return: The current PyBEL Tools version
+    :rtype: str
+    """
+    return get_distribution('pybel_tools').version
+
+
+def build_template_environment(here):
+    """Builds a custom templating enviroment so Flask apps can get data from lots of different places
+    
+    :param here: Give this the result of :code:`os.path.dirname(os.path.abspath(__file__))`
+    :type here: str
+    """
+    template_environment = jinja2.Environment(
+        autoescape=False,
+        loader=jinja2.FileSystemLoader(os.path.join(here, 'templates')),
+        trim_blocks=False
+    )
+
+    template_environment.globals['STATIC_PREFIX'] = here + '/static/'
+
+    return template_environment
+
+
+def render_template_by_env(template_environment, template_filename, context=None):
+    """Runs the template engine with custom settings
+    
+    :param template_environment: Give this the output of :func:`build_template_environment`
+    :param template_filename: The name of the file to render in the template directory
+    :type template_filename: str
+    :param context: The variables to template
+    :type context: dict
+    :return: 
+    """
+    if context is None:
+        context = {}
+    return template_environment.get_template(template_filename).render(context)

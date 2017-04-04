@@ -16,6 +16,11 @@
     width: 20px
 }
 
+.inspire-tree {
+    font: 400 12px Helvetica Nueue, Verdana, sans-serif;
+    width: 100%;
+}
+
 .inspire-tree .btn:hover {
     box-shadow: 0 2px 3px rgba(0, 0, 0, .1)
 }
@@ -397,12 +402,7 @@ section {
     overflow: hidden
 }
 
-.inspire-tree {
-    font: 400 12px Helvetica Nueue, Verdana, sans-serif;
-    border: 1px solid;
-    margin: 1em;
-    width: 100%;
-}
+
 
 header, p {
     font-family: Slabo\ 27px, serif

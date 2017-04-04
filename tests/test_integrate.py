@@ -1,10 +1,13 @@
+# -*- coding: utf-8 -*-
+
+import json
 import unittest
 
 from pybel import BELGraph
 from pybel.constants import *
 from pybel_tools.integration import overlay_type_data
 from pybel_tools.mutation import left_merge
-import json
+
 HGNC = 'HGNC'
 
 
@@ -120,6 +123,3 @@ class TestIntegrate(unittest.TestCase):
         self.assertEqual(3, g.number_of_edges(), msg="G edges:\n{}".format(json.dumps(g.edges(data=True), indent=2)))
         self.assertEqual(3, h.number_of_nodes())
         self.assertEqual(3, h.number_of_edges())
-
-
-

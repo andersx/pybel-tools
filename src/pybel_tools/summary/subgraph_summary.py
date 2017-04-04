@@ -114,12 +114,11 @@ def rank_subgraph_by_node_filter(graph, node_filter, annotation='Subgraph', reve
     return sorted(r2.items(), key=itemgetter(1), reverse=reverse)
 
 
-def summarize_subgraph_node_overlap(graph, node_filter=None, annotation='Subgraph'):
+def summarize_subgraph_node_overlap(graph, node_filters=None, annotation='Subgraph'):
     """Calculates the subgraph similarity tanimoto similarity in nodes passing the given filter
 
     Provides an alternate view on subgraph similarity, from a more node-centric view
-
     """
-    r1 = group_nodes_by_annotation_filtered(graph, node_filter=node_filter, annotation=annotation)
+    r1 = group_nodes_by_annotation_filtered(graph, node_filters=node_filters, annotation=annotation)
     r2 = calculate_tanimoto_set_distances(r1)
     return r2

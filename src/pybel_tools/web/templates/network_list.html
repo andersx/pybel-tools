@@ -8,7 +8,7 @@
 <h1>Networks</h1>
 <ul>
 {% for nid, name, vers in data %}
-    <li><a href="/network/filter/{{ nid }}">{{ name }} v{{ vers }}</a></li>
+    <li><a href="{{ prefix }}{{ nid }}">{{ name }} v{{ vers }}</a></li>
 {% endfor %}
 </ul>
 </body>

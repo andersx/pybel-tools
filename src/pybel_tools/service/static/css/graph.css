@@ -1,10 +1,15 @@
-.button-padding{
-    margin:10px;}
+.button-padding {
+    margin: 10px;
+}
 
 .not-rounded2 {
     border-radius: 0 !important;
 }
 
+.center-table {
+    margin: 0 auto;
+    width: 80%;
+}
 
 .not-rounded {
     border-radius: 0 !important;
@@ -48,9 +53,7 @@ td.bigger-rows {
 #graph-chart {
     display: block;
     margin: auto;
-    vertical-align: middle;
-    height: 70vh;
-    max-height: 70vh;
+    height: 550px;
 }
 
 svg {

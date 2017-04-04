@@ -7,7 +7,7 @@ from random import sample
 from IPython.display import Javascript
 
 from pybel.io import to_jsons
-from .utils import render_template
+from .utils import render_template, default_color_map
 from ..mutation import add_canonical_names
 
 __all__ = ['to_jupyter', 'to_jupyter_str']
@@ -21,7 +21,7 @@ def generate_id():
     return "".join(sample('abcdefghjkmopqrstuvqxyz', 16))
 
 
-def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
+def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=None):
     """Displays the BEL graph inline in a Jupyter notebook.
 
     To use successfully, make run as the last statement in a cell inside a Jupyter notebook.
@@ -32,13 +32,16 @@ def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
     :type width: int
     :param height: The height of the visualization window to render
     :type height: int
+    :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
+                    to :data:`default_color_map`
+    :type color_map: dict
     :return: An IPython notebook Javascript object
     :rtype: :class:`IPython.display.Javascript`
     """
-    return Javascript(to_jupyter_str(graph, width=width, height=height))
+    return Javascript(to_jupyter_str(graph, width=width, height=height, color_map=color_map))
 
 
-def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
+def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=None):
     """Returns the string to be javascript-ified by the Jupyter notebook function :class:`IPython.display.Javascript`
 
     :param graph: A BEL graph
@@ -47,6 +50,9 @@ def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
     :type width: int
     :param height: The height of the visualization window to render
     :type height: int
+    :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
+                    to :data:`default_color_map`
+    :type color_map: dict
     :return: The javascript string to turn into magic
     :rtype: str
     """
@@ -56,12 +62,15 @@ def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
     d3_code = render_template('pybel_vis.js')
     chart_id = generate_id()
 
+    color_map = default_color_map if color_map is None else color_map
+
     javascript_vars = """
         var chart = "{}";
         var width = {};
         var height = {};
         var graph = {};
-    """.format(chart_id, width, height, gjson)
+        const color_map = {};
+    """.format(chart_id, width, height, gjson, color_map)
 
     require_code = """
         require.config({
@@ -77,7 +86,7 @@ def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
         var chartQualified = "#" + chart;
 
         require(['d3'], function(d3) {
-            return init_d3_force(d3, graph, chartQualified, width, height);
+            return init_d3_force(d3, graph, chartQualified, width, height, color_map);
         });
     """
 

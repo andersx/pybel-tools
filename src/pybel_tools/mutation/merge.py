@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""This module contains utilities to help merge data"""
+
 from pybel.constants import RELATION
 from ..summary.edge_summary import get_consistent_edges
 from ..utils import all_edges_iter
@@ -18,7 +20,6 @@ def left_merge(g, h):
     :param h: A BEL Graph
     :type h: pybel.BELGraph
     """
-
     for node, data in h.nodes_iter(data=True):
         if node not in g:
             g.add_node(node, data)
@@ -43,7 +44,6 @@ def collapse_consistent_edges(graph):
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     """
-
     for u, v in get_consistent_edges(graph):
         rel = [d[RELATION] for d in graph.edge[u][v].values()][0]
         edges = list(all_edges_iter(graph, u, v))
