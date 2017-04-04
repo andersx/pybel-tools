@@ -228,13 +228,14 @@ $(document).ready(function () {
                     // Push selected node to expand node list
                     window.expand_nodes.push(d.id);
                     var args = tree_selected_nodes_param(tree);
-                    args["append"] = window.expand_nodes;
+                    args["append"] = window.expand_nodes.join();
+                    args["remove"] = window.delete_nodes.join();
 
                     // Ajax to update the cypher query. Three list are sent to the server. pks of the subgraphs, list of nodes to delete and list of nodes to expand
                     $.ajax({
                         url: "/network/" + window.id,
                         dataType: "json",
-                        data: $.param(args)
+                        data: $.param(args, true)
                     }).done(function (response) {
 
                         // Load new data, first empty all created divs and clear the current network
@@ -254,15 +255,16 @@ $(document).ready(function () {
 
                     var positions = save_previous_positioning();
 
-                    // Push selected node to expand node list
+                    // Push selected node to delete node list
                     window.delete_nodes.push(d.id);
                     var args = tree_selected_nodes_param(tree);
-                    args["delete"] = window.expand_nodes;
+                    args["remove"] = window.delete_nodes.join();
+                    args["append"] = window.expand_nodes.join();
 
                     $.ajax({
                         url: "/network/" + window.id,
                         dataType: "json",
-                        data: $.param(args)
+                        data: $.param(args, true)
                     }).done(function (response) {
 
                         // Load new data, first empty all created divs and clear the current network
@@ -483,7 +485,7 @@ $(document).ready(function () {
             .on("mouseover", function (d) {
                 setTimeout(function () {
                     display_edge_info(d);
-                }, 1000);
+                }, 3000);
             })
             .attr("class", function (d) {
                 if (['decreases', 'directlyDecreases', 'increases', 'directlyIncreases', 'negativeCorrelation',

@@ -78,10 +78,19 @@ def build_dictionary_service_app(app):
     @app.route('/network/<int:network_id>', methods=['GET'])
     def get_network_by_id_filtered(network_id):
         # Convert from list of hashes (as integers) to node tuples
-        expand_nodes = [api.nid_node[int(h)] for h in flask.request.args.getlist(APPEND_PARAM)]
-        remove_nodes = [api.nid_node[int(h)] for h in flask.request.args.getlist(REMOVE_PARAM)]
+        expand_nodes = flask.request.args.get(APPEND_PARAM)
+        remove_nodes = flask.request.args.get(REMOVE_PARAM)
+        if expand_nodes:
+            expand_nodes = [api.nid_node[int(h)] for h in expand_nodes.split(',')]
+            log.info(expand_nodes)
+
+        if remove_nodes:
+            remove_nodes = [api.nid_node[int(h)] for h in remove_nodes.split(',')]
+            log.info(remove_nodes)
+
         annotations = {k: flask.request.args.getlist(k) for k in flask.request.args if
                        k not in {APPEND_PARAM, REMOVE_PARAM}}
+
 
         graph = api.query_filtered_builder(network_id, expand_nodes, remove_nodes, **annotations)
 
