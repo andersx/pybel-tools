@@ -22,17 +22,17 @@ def build_definition_endpoint(app):
     dcm = get_definition_manager(app)
     mdp = get_metadata_parser(app)
 
-    @app.route('/database/namespaces/')
+    @app.route('/api/database/namespaces/')
     def list_stored_namespaces():
         """Returns JSON of the namespaces stored in the database"""
         return jsonify(dcm.get_namespace_urls() + dcm.get_namespace_owl_urls())
 
-    @app.route('/memory/namespaces/bel/')
+    @app.route('/api/memory/namespaces/bel/')
     def list_cached_bel_namespaces():
         """Returns JSON of the BEL namespaces stored in memory"""
         return jsonify(mdp.namespace_url_dict)
 
-    @app.route('/memory/namespaces/owl/')
+    @app.route('/api/memory/namespaces/owl/')
     def list_cached_owl_namespaces():
         """Returns JSON of the OWL namespaces stored in memory"""
         return jsonify(mdp.namespace_owl_dict)

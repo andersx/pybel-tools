@@ -4,7 +4,7 @@ import logging
 import time
 
 import flask
-from flask import request
+from flask import request, jsonify
 
 from pybel import BELGraph, to_bytes
 from pybel.parser import BelParser
@@ -18,14 +18,16 @@ log = logging.getLogger(__name__)
 
 def build_parser_app(app):
     """Builds parser app for sending and receiving BEL statements
-
+    
+    :param app: A Flask app
     :type app: flask.Flask
     """
     bg = BELGraph()
     parser = BelParser(bg)
 
-    @app.route('/parser/parse/<statement>', methods=['GET', 'POST'])
+    @app.route('/api/parser/parse/<statement>', methods=['GET', 'POST'])
     def parse_bel(statement):
+        """Parses a URL-encoded BEL statement"""
         parser.control_parser.clear()
         parser.control_parser.annotations.update({
             'added': str(time.asctime()),
@@ -36,16 +38,17 @@ def build_parser_app(app):
         parser.control_parser.annotations.update(request.args)
         try:
             res = parser.statement.parseString(statement)
-            return flask.jsonify(**res.asDict())
+            return jsonify(**res.asDict())
         except Exception as e:
             return "Exception: {}".format(e)
 
-    @app.route('/parser/dump/bytes')
+    @app.route('/api/parser/dump/bytes')
     def dump_bytes():
+        """Dumps the internal graph as a gpickle"""
         return flask.Response(to_bytes(bg), mimetype='text/plain')
 
-    @app.route('/parser/clear')
+    @app.route('/api/parser/clear')
     def clear():
-        """Clears the content of the current graph"""
+        """Clears the content of the internal graph"""
         parser.clear()
-        return "cleared"
+        return jsonify({'status': 'ok'})

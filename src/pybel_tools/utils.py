@@ -4,9 +4,11 @@
 
 import itertools as itt
 import json
+import os
 from collections import Counter, defaultdict
 from operator import itemgetter
 
+import jinja2
 import pandas as pd
 from pkg_resources import get_distribution
 
@@ -318,3 +320,35 @@ def get_version():
     :rtype: str
     """
     return get_distribution('pybel_tools').version
+
+
+def build_template_environment(here):
+    """Builds a custom templating enviroment so Flask apps can get data from lots of different places
+    
+    :param here: Give this the result of :code:`os.path.dirname(os.path.abspath(__file__))`
+    :type here: str
+    """
+    template_environment = jinja2.Environment(
+        autoescape=False,
+        loader=jinja2.FileSystemLoader(os.path.join(here, 'templates')),
+        trim_blocks=False
+    )
+
+    template_environment.globals['STATIC_PREFIX'] = here + '/static/'
+
+    return template_environment
+
+
+def render_template_by_env(template_environment, template_filename, context=None):
+    """Runs the template engine with custom settings
+    
+    :param template_environment: Give this the output of :func:`build_template_environment`
+    :param template_filename: The name of the file to render in the template directory
+    :type template_filename: str
+    :param context: The variables to template
+    :type context: dict
+    :return: 
+    """
+    if context is None:
+        context = {}
+    return template_environment.get_template(template_filename).render(context)
