@@ -37,6 +37,7 @@ PyBEL Tools Documentation
    :caption: Other Utilities
    :name: utilities
 
+   cookbook
    definitions
    documentutils
    utilities

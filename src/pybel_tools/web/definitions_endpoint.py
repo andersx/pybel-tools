@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 
 def build_definition_endpoint(app):
     """Adds common access to definitions cache
-
+    
+    :param app: A Flask application
     :type app: flask.Flask
     """
     dcm = get_definition_manager(app)
