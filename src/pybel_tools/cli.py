@@ -52,7 +52,7 @@ def upload(path, connection, skip_check_version):
 @click.option('--host', help='Flask host. Defaults to localhost')
 @click.option('--port', help='Flask port. Defaults to 5000')
 @click.option('--debug', is_flag=True)
-@click.option('--flaks-debug', is_flag=True)
+@click.option('--flask-debug', is_flag=True)
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
 def service(connection, host, port, debug, flask_debug, skip_check_version):
     """Runs the PyBEL API RESTful web service"""
