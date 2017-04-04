@@ -19,13 +19,14 @@ import sys
 from getpass import getuser
 
 import click
-
-import pybel_tools as pbt
 from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
 from pybel.utils import get_version as pybel_version
+
+import pybel_tools as pbt
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
+from .service.db_service import build_database_service_app, get_db_app
 from .service.dict_service import get_dict_service, build_dictionary_service_app, get_app
 
 log = logging.getLogger(__name__)
@@ -54,7 +55,8 @@ def upload(path, connection, skip_check_version):
 @click.option('--debug', is_flag=True)
 @click.option('--flask-debug', is_flag=True)
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-def service(connection, host, port, debug, flask_debug, skip_check_version):
+@click.option('--database', help='Use the database service')
+def service(connection, host, port, debug, flask_debug, skip_check_version, database):
     """Runs the PyBEL API RESTful web service"""
     if debug:
         logging.basicConfig(level=10)
@@ -64,9 +66,14 @@ def service(connection, host, port, debug, flask_debug, skip_check_version):
         log.info('Running PyBEL v%s', pybel_version())
         log.info('Running PyBEL Tools v%s', pbt.utils.get_version())
 
-    app = get_app()
-    build_dictionary_service_app(app)
-    get_dict_service(app).load_networks(connection=connection, check_version=(not skip_check_version))
+    if database:
+        app = get_db_app()
+        build_database_service_app(app, database)
+    else:
+        app = get_app()
+        build_dictionary_service_app(app)
+        get_dict_service(app).load_networks(connection=connection, check_version=(not skip_check_version))
+
     app.run(debug=flask_debug, host=host, port=port)
 
 
