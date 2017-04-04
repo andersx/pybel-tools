@@ -8,12 +8,8 @@ $(document).ready(function () {
         e = d.documentElement;
         g = d.getElementsByTagName('body')[0];
 
-        var border = 1, bordercolor = 'black';
-
-        var graph_div = $('#graph-chart');
-        var w = graph_div.width(), h = graph_div.height();
-
-        var div_graph = d3.select("#graph-chart");
+        var graphDiv = $('#graph-chart');
+        var w = graphDiv.width(), h = graphDiv.height();
 
         var svg = d3.select("#graph-chart").append("svg")
             .attr("width", w)
