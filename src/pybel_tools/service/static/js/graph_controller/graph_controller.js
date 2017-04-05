@@ -92,6 +92,29 @@ $(document).ready(function () {
         return {json: jsonData, new_nodes: newNodesArray}
     }
 
+    function findDuplicates(data) {
+
+        var result = [];
+
+        data.forEach(function (element, index) {
+
+            // Find if there is a duplicate or not
+            if (data.indexOf(element, index + 1) > -1) {
+
+                // Find if the element is already in the result array or not
+                if (result.indexOf(element) === -1) {
+                    result.push(element);
+                }
+            }
+        });
+
+        return result;
+    }
+
+    // Required for multiple autocompletion
+    function split(val) {
+        return val.split(/,\s*/);
+    }
 
     /////////////////////////////
     // Filter tree annotations //
@@ -136,6 +159,7 @@ $(document).ready(function () {
             initD3Force(data);
         });
     });
+
 
     ////////////////////////
     // Exporting funtions //
@@ -899,23 +923,41 @@ $(document).ready(function () {
             document.body.removeChild(element);
         }
 
-        ///////////////////////////////////////
-        // Build the node selection toggle
-        ///////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////
+        // Build the node selection toggle and creates hashmap nodeNames to IDs /
+        /////////////////////////////////////////////////////////////////////////
 
         // Build the node unordered list
         node_panel.append("<ul id='node-list-ul' class='list-group checked-list-box not-rounded'></ul>");
 
-        // Variable with all node names for autocompletion input
+        // Variable with all node names
         var nodeNames = [];
 
-        $.each(graph.nodes, function (key, value_array) {
+        // Create node list and create an array with duplicates
+        $.each(graph.nodes, function (key, value) {
 
-            nodeNames.push(value_array.cname);
+            nodeNames.push(value.cname);
 
-            $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='node-checkbox " + value_array.function + "'></div><span class>" + value_array.cname + "</span></li>");
+            $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='node-checkbox " + value.function + "'></div><span class>" + value.cname + "</span></li>");
         });
 
+        var duplicates = findDuplicates(nodeNames);
+
+        var nodeNamesToId = {};
+
+        // Check over duplicate cnames and create hashmap to id
+        $.each(graph.nodes, function (key, value) {
+            // if the node has no duplicate show it in autocompletion with its cname
+            if (duplicates.indexOf(value.cname) < 0) {
+                nodeNamesToId[value.cname] = value.id;
+            }
+            // if it has a duplicate show also the function after the cname
+            else {
+                nodeNamesToId[value.cname + ' (' + value.function + ')'] = value.id;
+            }
+        });
+
+        // Highlight only selected nodes in the graph
         $('#get-checked-nodes').on('click', function (event) {
             event.preventDefault();
             var checkedItems = [];
@@ -924,7 +966,6 @@ $(document).ready(function () {
             });
 
             resetAttributes();
-
             highlightNodes(checkedItems);
             resetAttributesDoubleClick();
 
@@ -967,20 +1008,20 @@ $(document).ready(function () {
         $('#button-shortest-path').on('click', function () {
             if (shortestPathForm.valid()) {
 
-                console.log(shortestPathForm.find('input[name="visualization-options"]').is(":checked"));
+                var checkbox = shortestPathForm.find('input[name="visualization-options"]').is(":checked");
+
+                var args = getSelectedNodesFromTree(tree);
+                args["remove"] = window.deleteNodes.join();
+                args["append"] = window.expandNodes.join();
+                args["source"] = nodeNamesToId[shortestPathForm.find('input[name="source"]').val()];
+                args["target"] = nodeNamesToId[shortestPathForm.find('input[name="target"]').val()];
 
                 $.ajax({
                     url: '/paths/' + window.id,
                     type: shortestPathForm.attr('method'),
                     dataType: 'json',
-                    data: {
-                        'source': shortestPathForm.find('input[name="source"]').val(),
-                        'target': shortestPathForm.find('input[name="target"]').val(),
-                    },
-                    success: function (data) {
-
-                        var shortestPathNodes = data['shortestPathNodes'];
-                        var checkbox = data['checkbox'];
+                    data: $.param(args, true),
+                    success: function (shortestPathNodes) {
 
                         // Change style in force
                         resetAttributes();
@@ -1031,7 +1072,10 @@ $(document).ready(function () {
 
 
         // Shortest path autocompletion input
-        nodeNames = nodeNames.sort();
+        var nodeNames = Object.keys(nodeNamesToId).sort();
+
+        console.log('Unique names');
+        console.log(nodeNames);
 
         $("#source-node").autocomplete({
             source: nodeNames,
@@ -1042,12 +1086,6 @@ $(document).ready(function () {
             source: nodeNames,
             appendTo: "#paths"
         });
-
-
-        // Required for multiple autocompletion
-        function split(val) {
-            return val.split(/,\s*/);
-        }
 
         // Update Node Dropdown
         $("#node-search").on("keyup", function () {

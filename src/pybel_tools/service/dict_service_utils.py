@@ -166,11 +166,16 @@ class DictionaryService(PybelService):
         """Returns the node tuple based on the node id
 
         :param node_id: The node's id
-        :type node_id: int
+        :type node_id: int or str
         :return: the node tuple
         :rtype: tuple
         """
-        return self.nid_node[node_id]
+        if isinstance(node_id, str):
+            return self.nid_node[int(node_id)]
+        elif isinstance(node_id, int):
+            return self.nid_node[node_id]
+        else:
+            raise TypeError('{} is wrong type'.format(h))
 
     def get_namespaces_in_network(self, network_id):
         """Returns the namespaces in a given network
