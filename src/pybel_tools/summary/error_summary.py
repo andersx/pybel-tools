@@ -17,6 +17,7 @@ __all__ = [
     'calculate_incorrect_name_dict',
     'calculate_suggestions',
     'calculate_error_by_annotation',
+    'group_errors',
 ]
 
 
@@ -123,3 +124,19 @@ def calculate_error_by_annotation(graph, annotation):
                 results[value].append(e.__class__.__name__)
 
     return results
+
+
+def group_errors(graph):
+    """Groups the errors together for analysis of the most frequent error
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :return: A dictionary of {error string: list of line numbers}
+    :rtype: dict
+    """
+    warning_summary = defaultdict(list)
+
+    for ln, _, e, _ in graph.warnings:
+        warning_summary[str(e)].append(ln)
+
+    return dict(warning_summary)
