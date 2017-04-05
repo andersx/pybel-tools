@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 
 import pybel
 from pybel.constants import *
-from pybel_tools.mutation import remove_leaves_by_type, prune_central_dogma, infer_missing_inverse_edge, infer_central_dogma
+from pybel_tools.mutation import remove_leaves_by_type, prune_central_dogma, infer_missing_inverse_edge, \
+    infer_central_dogma
 
 
 class TestProcessing(unittest.TestCase):

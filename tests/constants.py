@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 
 from pybel.constants import FUNCTION, NAMESPACE, NAME

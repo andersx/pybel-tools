@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import jinja2
-
 from pybel.constants import *
+from ..utils import build_template_environment, render_template_by_env
 
 __all__ = [
     'render_template',
@@ -10,20 +9,11 @@ __all__ = [
 ]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-
-TEMPLATE_ENVIRONMENT = jinja2.Environment(
-    autoescape=False,
-    loader=jinja2.FileSystemLoader(os.path.join(HERE, 'templates')),
-    trim_blocks=False
-)
-
-TEMPLATE_ENVIRONMENT.globals['STATIC_PREFIX'] = HERE + '/static/'
+TEMPLATE_ENVIRONMENT = build_template_environment(HERE)
 
 
 def render_template(template_filename, context=None):
-    if context is None:
-        context = {}
-    return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
+    return render_template_by_env(TEMPLATE_ENVIRONMENT, template_filename, context=context)
 
 
 #: The color map defining the node colors in visualization

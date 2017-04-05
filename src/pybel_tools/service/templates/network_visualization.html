@@ -49,8 +49,8 @@
         // Filters to build tree
         window.filters = {{ filter_json|safe }};
         // Arrays with selected nodes to expand/delete
-        window.delete_nodes = [];
-        window.expand_nodes = [];
+        window.deleteNodes = [];
+        window.expandNodes = [];
         // Global var with network_id
         window.id = {{ network_id }};
 
@@ -128,6 +128,9 @@
                 </button>
                 <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
                     Path search
+                </button>
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#algorithms">
+                    Algorithms
                 </button>
                 <button type="button" class="btn btn-primary button-padding pull-right" data-toggle="modal"
                         data-target="#export">
@@ -572,6 +575,10 @@
                             <input class="text-left" type="checkbox" name="visualization-options" value="hide">
                             Hide other nodes
                         </label>
+                        <label>
+                            <input class="text-left" type="checkbox" name="undirectionalize" value="undirected">
+                            Remove directionality
+                        </label>
                         <div class="input-group">
                         <span class="input-group-addon" id="sizing-addon"><i class="fa fa-arrow-circle-o-right"
                                                                              aria-hidden="true"></i></span>
@@ -586,9 +593,7 @@
                         </div>
                     </form>
                     <div class="buttons">
-                        <input type="button" class="button-shortest-path" id="show-network-input" value="Show"/>
-                        <input type="button" class="button-shortest-path" id="get-shortest-path-bel-input"
-                               value="Extract to BEL"/>
+                        <input type="button" id="button-shortest-path" value="Submit"/>
                     </div>
                 </div>
                 <hr>
@@ -598,6 +603,10 @@
                         <label>
                             <input class="text-left" type="checkbox" name="visualization-options" value="hide">
                             Hide other nodes
+                        </label>
+                        <label>
+                            <input class="text-left" type="checkbox" name="undirectionalize" value="undirected">
+                            Remove directionality
                         </label>
                         <div class="input-group">
                         <span class="input-group-addon" id="sizing-addon"><i class="fa fa-arrow-circle-o-right"
@@ -613,9 +622,7 @@
                         </div>
                     </form>
                     <div class="buttons">
-                        <input type="button" class="button-all-paths" id="all-paths-show-input" value="Show"/>
-                        <input type="button" class="button-all-paths" id="get-all-paths-bel-input"
-                               value="Extract to BEL"/>
+                        <input type="button" id="button-all-paths" value="Submit"/>
                     </div>
                 </div>
             </div><!-- /.Modal body -->
@@ -629,6 +636,38 @@
         </div><!-- /.Modal content -->
     </div><!-- /.Modal dialog -->
 </div><!-- /.paths Modal -->
+
+
+
+<div id="algorithms" class="modal fade"><!-- /Algorithms Modal -->
+    <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
+        <div class="modal-content"><!-- /.Modal content -->
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body text-left"><!-- /.Modal body -->
+                <h4>Algorithms</h4>
+                <hr>
+                <div>
+
+                </div>
+                <hr>
+                <div>
+                </div>
+            </div><!-- /.Modal body -->
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" type="button">
+                    Close
+                </button>
+            </div>
+
+        </div><!-- /.Modal content -->
+    </div><!-- /.Modal dialog -->
+</div><!-- /.Algorithms Modal -->
 
 
 <div id="export" class="modal fade"><!-- /.export-graph Modal -->

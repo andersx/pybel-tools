@@ -1,19 +1,15 @@
 $(document).ready(function () {
 
 
-    function render_frame() {
+    function renderEmptyFrame() {
         // Render empty rectangle
 
         d = document;
         e = d.documentElement;
         g = d.getElementsByTagName('body')[0];
 
-        var border = 1, bordercolor = 'black';
-
-        var graph_div = $('#graph-chart');
-        var w = graph_div.width(), h = graph_div.height();
-
-        var div_graph = d3.select("#graph-chart");
+        var graphDiv = $('#graph-chart');
+        var w = graphDiv.width(), h = graphDiv.height();
 
         var svg = d3.select("#graph-chart").append("svg")
             .attr("width", w)
@@ -34,7 +30,7 @@ $(document).ready(function () {
             .text("Please filter the graph by annotation and press submit");
     }
 
-    function clear_divs() {
+    function clearUsedDivs() {
         // Force div
         var graph_div = $('#graph-chart');
         // Node search div
@@ -52,7 +48,7 @@ $(document).ready(function () {
     /// Functions for updating the graph //
     ///////////////////////////////////////
 
-    function save_previous_positioning() {
+    function savePreviousPositions() {
         // Save current positions into prevLoc 'object;
         var prevPos = {};
 
@@ -68,12 +64,12 @@ $(document).ready(function () {
         return prevPos
     }
 
-    function update_position(json_data, prevPos) {
+    function updateNodePosition(jsonData, prevPos) {
 
-        var new_nodes = [];
+        var newNodesArray = [];
 
         // Set old locations back into the original nodes
-        $.each(json_data.nodes, function (index, value) {
+        $.each(jsonData.nodes, function (index, value) {
 
             if (prevPos[value.id]) {
 
@@ -85,7 +81,7 @@ $(document).ready(function () {
                 // If no previous coordinate... Start from off screen for a fun zoom-in effect
                 oldX = -100;
                 oldY = -100;
-                new_nodes.push(value.id);
+                newNodesArray.push(value.id);
             }
 
             value.x = oldX;
@@ -93,30 +89,64 @@ $(document).ready(function () {
 
         });
 
-        return {json: json_data, new_nodes: new_nodes}
+        return {json: jsonData, new_nodes: newNodesArray}
     }
 
+    function findDuplicates(data) {
+
+        var hashMap = {};
+
+        data.forEach(function (element, index) {
+
+            if (!(element in hashMap)) {
+                hashMap[element] = 0;
+            }
+            hashMap[element] += 1;
+        });
+
+        var duplicates = [];
+
+        $.each(hashMap, function (key, value) {
+            if (value > 1) {
+                duplicates.push(key);
+            }
+        });
+
+        return duplicates;
+    }
+
+    // Required for multiple autocompletion
+    function split(val) {
+        return val.split(/,\s*/);
+    }
 
     /////////////////////////////
     // Filter tree annotations //
     /////////////////////////////
 
-    function tree_selected_nodes_param(tree) {
-        var selected_nodes = tree.selected(true);
+    function getSelectedNodesFromTree(tree) {
+        var selectedNodes = tree.selected(true);
 
-        var selection_hash_map = {};
+        var selectionHashMap = {};
 
-        selected_nodes.forEach(function (node_object) {
+        selectedNodes.forEach(function (node_object) {
 
             var key = node_object.text.toString();
 
-            selection_hash_map[key] = node_object.children.map(function (child) {
+            selectionHashMap[key] = node_object.children.map(function (child) {
                 return child.text
 
             });
         });
 
-        return selection_hash_map;
+        return selectionHashMap;
+    }
+
+    function parameterFilters() {
+        var args = getSelectedNodesFromTree(tree);
+        args["remove"] = window.deleteNodes.join();
+        args["append"] = window.expandNodes.join();
+        return args
     }
 
     var tree = new InspireTree({
@@ -133,22 +163,23 @@ $(document).ready(function () {
     });
 
     // Render the empty frame
-    render_frame();
+    renderEmptyFrame();
 
     $("#submit-button").on("click", function () {
-        $.getJSON("/network/" + window.id + '?' + $.param(tree_selected_nodes_param(tree), true), function (data) {
-            init_d3_force(data);
+        $.getJSON("/network/" + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true), function (data) {
+            initD3Force(data);
         });
     });
+
 
     ////////////////////////
     // Exporting funtions //
     ////////////////////////
 
     d3.select("#save-svg-graph")
-        .on("click", download_svg);
+        .on("click", downloadSvg);
 
-    function download_svg() {
+    function downloadSvg() {
         try {
             var isFileSaverSupported = !!new Blob();
         } catch (e) {
@@ -165,7 +196,7 @@ $(document).ready(function () {
         saveAs(blob, "MyGraph.svg");
     };
 
-    function download_text(response, name) {
+    function downloadText(response, name) {
         var element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(response));
         element.setAttribute('download', name);
@@ -180,36 +211,36 @@ $(document).ready(function () {
         $.ajax({
             url: '/network/' + window.id,
             dataType: "text",
-            data: $.param(tree_selected_nodes_param(tree), true) + '&format=bel'
+            data: $.param(getSelectedNodesFromTree(tree), true) + '&format=bel'
         }).done(function (response) {
-            download_text(response, 'MyGraph.bel')
+            downloadText(response, 'MyGraph.bel')
         });
     });
 
     // Export to GraphML
     $("#graphml-button").click(function () {
-        window.location.href = '/network/' + window.id + '?' + $.param(tree_selected_nodes_param(tree), true) + '&' + 'format=graphml';
+        window.location.href = '/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=graphml';
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
-        window.location.href = '/network/' + window.id + '?' + $.param(tree_selected_nodes_param(tree), true) + '&' + 'format=bytes';
+        window.location.href = '/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=bytes';
 
     });
 
     // Export to CX
     $("#cx-button").click(function () {
-        window.location.href = '/network/' + window.id + '?' + $.param(tree_selected_nodes_param(tree), true) + '&' + 'format=cx';
+        window.location.href = '/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=cx';
     });
 
     // Export to CSV
     $("#csv-button").click(function () {
-        window.location.href = '/network/' + window.id + '?' + $.param(tree_selected_nodes_param(tree), true) + '&' + 'format=csv';
+        window.location.href = '/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=csv';
     });
 
 
     // Initialize d3.js force to plot the networks from neo4j json
-    function init_d3_force(graph) {
+    function initD3Force(graph) {
 
         /////////////////////
         // d3-context-menu //
@@ -223,13 +254,11 @@ $(document).ready(function () {
                     // Variables explanation:
                     // elm: [object SVGGElement] d: [object Object] i: (#Number)
 
-                    var positions = save_previous_positioning();
+                    var positions = savePreviousPositions();
 
                     // Push selected node to expand node list
-                    window.expand_nodes.push(d.id);
-                    var args = tree_selected_nodes_param(tree);
-                    args["append"] = window.expand_nodes.join();
-                    args["remove"] = window.delete_nodes.join();
+                    window.expandNodes.push(d.id);
+                    var args = parameterFilters();
 
                     // Ajax to update the cypher query. Three list are sent to the server. pks of the subgraphs, list of nodes to delete and list of nodes to expand
                     $.ajax({
@@ -239,11 +268,11 @@ $(document).ready(function () {
                     }).done(function (response) {
 
                         // Load new data, first empty all created divs and clear the current network
-                        var data = update_position(response, positions);
+                        var data = updateNodePosition(response, positions);
 
-                        clear_divs();
+                        clearUsedDivs();
 
-                        init_d3_force(data['json']);
+                        initD3Force(data['json']);
 
                     });
                 },
@@ -253,13 +282,12 @@ $(document).ready(function () {
                 title: 'Delete node',
                 action: function (elm, d, i) {
 
-                    var positions = save_previous_positioning();
+                    var positions = savePreviousPositions();
 
                     // Push selected node to delete node list
-                    window.delete_nodes.push(d.id);
-                    var args = tree_selected_nodes_param(tree);
-                    args["remove"] = window.delete_nodes.join();
-                    args["append"] = window.expand_nodes.join();
+                    window.deleteNodes.push(d.id);
+                    var args = parameterFilters();
+
 
                     $.ajax({
                         url: "/network/" + window.id,
@@ -268,11 +296,11 @@ $(document).ready(function () {
                     }).done(function (response) {
 
                         // Load new data, first empty all created divs and clear the current network
-                        var data = update_position(response, positions);
+                        var data = updateNodePosition(response, positions);
 
-                        clear_divs();
+                        clearUsedDivs();
 
-                        init_d3_force(data['json']);
+                        initD3Force(data['json']);
                     });
 
                 }
@@ -287,32 +315,32 @@ $(document).ready(function () {
         $(".disabled").attr('class', 'nav-link ');
 
         // Force div
-        var graph_div = $('#graph-chart');
+        var graphDiv = $('#graph-chart');
         // Node search div
         var node_panel = $('#node-list');
         // Edge search div
         var edge_panel = $('#edge-list');
 
-        clear_divs();
+        clearUsedDivs();
 
         d = document;
         e = d.documentElement;
         g = d.getElementsByTagName('body')[0];
 
-        var w = graph_div.width(), h = graph_div.height();
+        var w = graphDiv.width(), h = graphDiv.height();
 
-        var focus_node = null, highlight_node = null;
+        var focusNode = null, highlightNode = null;
 
         // Highlight color variables
 
         // Highlight color of the node boundering
-        var highlight_node_boundering = "#4EB2D4";
+        var highlightNodeBoundering = "#4EB2D4";
 
         // Highlight color of the edge
-        var highlighted_link_color = "#4EB2D4";
+        var highlightedLinkColor = "#4EB2D4";
 
         // Text highlight color
-        var highlight_text = "#4EB2D4";
+        var highlightText = "#4EB2D4";
 
         // Size when zooming scale
         var size = d3.scalePow().exponent(1)
@@ -342,12 +370,12 @@ $(document).ready(function () {
             .force("x", d3.forceX(0));
 
         // Pin down functionality
-        var node_drag = d3.drag()
-            .on("start", dragstarted)
+        var nodeDrag = d3.drag()
+            .on("start", dragStarted)
             .on("drag", dragged)
-            .on("end", dragended);
+            .on("end", dragEnded);
 
-        function dragstarted(d) {
+        function dragStarted(d) {
             if (!d3.event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
             d.fy = d.y;
@@ -358,25 +386,25 @@ $(document).ready(function () {
             d.fy = d3.event.y;
         }
 
-        function dragended(d) {
+        function dragEnded(d) {
             if (!d3.event.active) simulation.alphaTarget(0);
         }
 
-        function releasenode(d) {
+        function releaseNode(d) {
             d.fx = null;
             d.fy = null;
         }
 
         //END Pin down functionality
 
-        var color_circunferencia = "black";
-        var default_link_color = "#888";
+        var circleColor = "black";
+        var defaultLinkColor = "#888";
 
-        var nominal_base_node_size = 8;
+        var nominalBaseNodeSize = 8;
 
-        var nominal_stroke = 1.5;
+        var nominalStroke = 1.5;
         // Zoom variables
-        var min_zoom = 0.1, max_zoom = 10;
+        var minZoom = 0.1, maxZoom = 10;
         var border = 1, bordercolor = 'black';
 
         var svg = d3.select("#graph-chart").append("svg")
@@ -417,7 +445,7 @@ $(document).ready(function () {
             .style("pointer-events", "all")
             // Zoom + panning functionality
             .call(d3.zoom()
-                .scaleExtent([min_zoom, max_zoom])
+                .scaleExtent([minZoom, maxZoom])
                 .on("zoom", zoomed))
             .on("dblclick.zoom", null);
 
@@ -480,11 +508,11 @@ $(document).ready(function () {
         var link = g.selectAll(".link")
             .data(graph.links)
             .enter().append("line")
-            .style("stroke-width", nominal_stroke)
-            .style("stroke", default_link_color)
+            .style("stroke-width", nominalStroke)
+            .style("stroke", defaultLinkColor)
             .on("mouseover", function (d) {
                 setTimeout(function () {
-                    display_edge_info(d);
+                    displayEdgeInfo(d);
                 }, 3000);
             })
             .attr("class", function (d) {
@@ -524,29 +552,29 @@ $(document).ready(function () {
             .enter().append("g")
             .attr("class", "node")
             // Next two lines -> Pin down functionality
-            .on('dblclick', releasenode)
+            .on('dblclick', releaseNode)
             // Box info
             .on("mouseover", function (d) {
                 setTimeout(function () {
-                    display_node_info(d);
+                    displayNodeInfo(d);
                 }, 1000);
             })
             // context-menu on right click
             .on('contextmenu', d3.contextMenu(menu)) // Attach context menu to node's circle
             // Dragging
-            .call(node_drag);
+            .call(nodeDrag);
 
         var circle = node.append("path")
             .attr("d", d3.symbol()
                 .size(function (d) {
-                    return Math.PI * Math.pow(size(d.size) || nominal_base_node_size, 2);
+                    return Math.PI * Math.pow(size(d.size) || nominalBaseNodeSize, 2);
                 })
             )
             .attr("class", function (d) {
                 return d.function
             })
-            .style("stroke-width", nominal_stroke)
-            .style("stroke", color_circunferencia);
+            .style("stroke-width", nominalStroke)
+            .style("stroke", circleColor);
 
         var text = node.append("text")
             .attr("class", "node-name")
@@ -560,39 +588,39 @@ $(document).ready(function () {
 
         // Highlight on mouseenter and back to normal on mouseout
         node.on("mouseenter", function (d) {
-            set_highlight(d);
+            setHighlight(d);
         })
             .on("mousedown", function () {
                 d3.event.stopPropagation();
             }).on("mouseout", function () {
-            exit_highlight();
+            exitHighlight();
         });
 
-        function exit_highlight() {
-            highlight_node = null;
-            if (focus_node === null) {
-                if (highlight_node_boundering != color_circunferencia) {
-                    circle.style("stroke", color_circunferencia);
+        function exitHighlight() {
+            highlightNode = null;
+            if (focusNode === null) {
+                if (highlightNodeBoundering != circleColor) {
+                    circle.style("stroke", circleColor);
                     text.style("fill", "black");
-                    link.style("stroke", default_link_color);
+                    link.style("stroke", defaultLinkColor);
                 }
             }
         }
 
-        function set_highlight(d) {
-            if (focus_node !== null) d = focus_node;
-            highlight_node = d;
+        function setHighlight(d) {
+            if (focusNode !== null) d = focusNode;
+            highlightNode = d;
 
-            if (highlight_node_boundering != color_circunferencia) {
+            if (highlightNodeBoundering != circleColor) {
                 circle.style("stroke", function (o) {
-                    return isConnected(d, o) ? highlight_node_boundering : color_circunferencia;
+                    return isConnected(d, o) ? highlightNodeBoundering : circleColor;
                 });
                 text.style("fill", function (o) {
-                    return isConnected(d, o) ? highlight_text : "black";
+                    return isConnected(d, o) ? highlightText : "black";
                 });
                 link.style("stroke", function (o) {
                     // All links connected to the node you hover on
-                    return o.source.index == d.index || o.target.index == d.index ? highlighted_link_color : default_link_color;
+                    return o.source.index == d.index || o.target.index == d.index ? highlightedLinkColor : defaultLinkColor;
                 });
             }
         }
@@ -601,18 +629,18 @@ $(document).ready(function () {
         link.on("mouseenter", function (d) {
             link.style("stroke", function (o) {
                 // Specifically the link you hover on
-                return o.source.index == d.source.index && o.target.index == d.target.index ? highlighted_link_color : default_link_color;
+                return o.source.index == d.source.index && o.target.index == d.target.index ? highlightedLinkColor : defaultLinkColor;
             });
         })
             .on("mousedown", function () {
                 d3.event.stopPropagation();
             }).on("mouseout", function () {
-            link.style("stroke", default_link_color);
+            link.style("stroke", defaultLinkColor);
         });
 
         // Box info in table
 
-        function display_node_info(node) {
+        function displayNodeInfo(node) {
             $("#table-11").html("Node");
             $("#table-12").html(node.cname);
             $("#table-21").html("Function");
@@ -624,7 +652,7 @@ $(document).ready(function () {
         }
 
 
-        function display_edge_info(edge) {
+        function displayEdgeInfo(edge) {
 
             $("#table-11").html("Evidence");
             $("#table-12").html(edge.evidence);
@@ -661,12 +689,21 @@ $(document).ready(function () {
             return -1;
         }
 
-        function reset_attributes_on_double_click() {
+        // Filter nodes in list
+        function nodesNotInArray(node_list) {
+            var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
+                return node_list.indexOf(el.id) < 0;
+            });
+            return nodesNotInArray
+        }
+
+
+        function resetAttributesDoubleClick() {
 
             // On double click reset attributes (Important disabling the zoom behavior of dbl click because it interferes with this)
             svg.on("dblclick", function () {
                 // SET default color
-                svg.selectAll(".link").style("stroke", default_link_color);
+                svg.selectAll(".link").style("stroke", defaultLinkColor);
                 // SET default attributes //
                 svg.selectAll(".link, .node").style("visibility", "visible")
                     .style("opacity", "1");
@@ -676,7 +713,7 @@ $(document).ready(function () {
 
         }
 
-        function reset_attributes() {
+        function resetAttributes() {
             // Reset visibility and opacity
             svg.selectAll(".link, .node").style("visibility", "visible").style("opacity", "1");
             // Show node names
@@ -685,104 +722,104 @@ $(document).ready(function () {
 
         }
 
-        function hide_select_nodes_text(node_list, visualization) {
+        function hideNodesText(nodeList, visualization) {
             // Filter the text to those not belonging to the list of node names
 
-            var not_selected_names = g.selectAll(".node-name").filter(function (d) {
-                return node_list.indexOf(d.cname) < 0;
+            var nodesNotInList = g.selectAll(".node-name").filter(function (d) {
+                return nodeList.indexOf(d.id) < 0;
             });
 
             if (visualization != true) {
                 //noinspection JSDuplicatedDeclaration
-                var visualization_option = "opacity", on = "1", off = "0.1";
+                var visualizationOption = "opacity", on = "1", off = "0.1";
             } else {
                 //noinspection JSDuplicatedDeclaration
-                var visualization_option = "visibility", on = "visible", off = "hidden";
+                var visualizationOption = "visibility", on = "visible", off = "hidden";
             }
 
             // Change display property to 'none'
-            $.each(not_selected_names._groups[0], function (index, value) {
-                value.style.setProperty(visualization_option, off);
+            $.each(nodesNotInList._groups[0], function (index, value) {
+                value.style.setProperty(visualizationOption, off);
             });
         }
 
-        function hide_select_nodes_text_paths(data, visualization) {
+        function hideNodesTextInPaths(data, visualization) {
 
             // Array with all nodes in all paths
-            var nodes_in_paths = [];
+            var nodesInPaths = [];
 
             $.each(data, function (index, value) {
                 $.each(value, function (index, value) {
-                    nodes_in_paths.push(value);
+                    nodesInPaths.push(value);
                 });
             });
 
             // Filter the text whose innerHTML is not belonging to the list of nodeIDs
-            var not_selected_names = g.selectAll(".node-name").filter(function (d) {
-                return nodes_in_paths.indexOf(d.id) < 0;
+            var textNotInPaths = g.selectAll(".node-name").filter(function (d) {
+                return nodesInPaths.indexOf(d.id) < 0;
             });
 
             if (visualization != true) {
                 //noinspection JSDuplicatedDeclaration
-                var visualization_option = "opacity", on = "1", off = "0.1";
+                var visualizationOption = "opacity", on = "1", off = "0.1";
             } else {
                 //noinspection JSDuplicatedDeclaration
-                var visualization_option = "visibility", on = "visible", off = "hidden";
+                var visualizationOption = "visibility", on = "visible", off = "hidden";
             }
 
             // Change display property to 'none'
-            $.each(not_selected_names._groups[0], function (index, value) {
-                value.style.setProperty(visualization_option, off);
+            $.each(textNotInPaths._groups[0], function (index, value) {
+                value.style.setProperty(visualizationOption, off);
             });
         }
 
-        function selected_edge_highlight(edge_array) {
+        function highlightEdges(edge_array) {
 
             // Array with names of the nodes in the selected edge
-            var mapped_nodes_names = [];
+            var nodesInEdges = [];
 
             // Filtered not selected links
-            var links_not_mapped = g.selectAll(".link").filter(function (edge_object) {
+            var edgesNotInArray = g.selectAll(".link").filter(function (edgeObject) {
 
-                if (edge_array.indexOf(edge_object.source.cname + " " + edge_object.relation + " " + edge_object.target.cname) >= 0) {
-                    mapped_nodes_names.push(edge_object.source.cname);
-                    mapped_nodes_names.push(edge_object.target.cname);
+                if (edge_array.indexOf(edgeObject.source.cname + " " + edgeObject.relation + " " + edgeObject.target.cname) >= 0) {
+                    nodesInEdges.push(edgeObject.source.cname);
+                    nodesInEdges.push(edgeObject.target.cname);
                 }
-                else return edge_object;
+                else return edgeObject;
             });
 
-            hide_select_nodes_text(mapped_nodes_names, false);
+            hideNodesText(nodesInEdges, false);
 
-            var not_mapped_nodes_objects = node.filter(function (node_object) {
-                return mapped_nodes_names.indexOf(node_object.cname) < 0;
+            var nodesNotInEdges = node.filter(function (node_object) {
+                return nodesInEdges.indexOf(node_object.cname) < 0;
             });
 
-            not_mapped_nodes_objects.style("opacity", "0.1");
-            links_not_mapped.style("opacity", "0.1");
+            nodesNotInEdges.style("opacity", "0.1");
+            edgesNotInArray.style("opacity", "0.1");
 
         }
 
         // Highlight nodes from array of ids and change the opacity of the rest of nodes
-        function selected_nodes_highlight(node_list) {
+        function highlightNodes(nodeArray) {
 
-            hide_select_nodes_text(node_list, false);
+            hideNodesText(nodeArray, false);
 
             // Filter not mapped nodes to change opacity
-            var not_mapped_nodes_objects = svg.selectAll(".node").filter(function (el) {
-                return searchForArray(node_list, el.cname) < 0;
+            var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
+                return searchForArray(nodeArray, el.cname) < 0;
             });
 
             // Not mapped links
-            var links_not_mapped = g.selectAll(".link").filter(function (el) {
+            var notMappedEdges = g.selectAll(".link").filter(function (el) {
                 // Source and target should be present in the edge
-                return !((searchForArray(node_list, el.source.cname) >= 0 || searchForArray(node_list, el.target.cname) >= 0));
+                return !((searchForArray(nodeArray, el.source.cname) >= 0 || searchForArray(nodeArray, el.target.cname) >= 0));
             });
 
-            not_mapped_nodes_objects.style("opacity", "0.1");
-            links_not_mapped.style("opacity", "0.1");
+            nodesNotInArray.style("opacity", "0.1");
+            notMappedEdges.style("opacity", "0.1");
         }
 
-        function color_all_paths(data, visualization) {
+        function colorPaths(data, visualization) {
 
             /**
              * Returns a random integer between min (inclusive) and max (inclusive)
@@ -800,27 +837,27 @@ $(document).ready(function () {
             ///////// Filter the nodes ////////
 
             // Array with all nodes in all paths
-            var nodes_in_paths = [];
+            var nodesInPaths = [];
 
             $.each(data, function (index, value) {
                 $.each(value, function (index, value) {
-                    nodes_in_paths.push(value);
+                    nodesInPaths.push(value);
                 });
             });
 
             // Filtering the nodes that are not in any of the paths
-            var not_mapped_nodes_objects = svg.selectAll(".node").filter(function (el) {
-                return nodes_in_paths.indexOf(el.id) < 0;
+            var nodesNotInPaths = svg.selectAll(".node").filter(function (el) {
+                return nodesInPaths.indexOf(el.id) < 0;
             });
 
             if (visualization != true) {
                 //noinspection JSDuplicatedDeclaration
-                var visualization_option = "opacity", on = "1", off = "0.1";
+                var visualizationOption = "opacity", on = "1", off = "0.1";
             } else {
                 //noinspection JSDuplicatedDeclaration
-                var visualization_option = "visibility", on = "visible", off = "hidden";
+                var visualizationOption = "visibility", on = "visible", off = "hidden";
             }
-            not_mapped_nodes_objects.style(visualization_option, off);
+            nodesNotInPaths.style(visualizationOption, off);
 
             ///////// Colour links in each path differently and hide others ////////
 
@@ -841,10 +878,10 @@ $(document).ready(function () {
             }
 
             // First hide or set to opacity 0.1 all links
-            link.style(visualization_option, off);
+            link.style(visualizationOption, off);
 
             // Make visible again all the edges that are in any of the paths
-            var links_in_paths = [];
+            var edgesInPaths = [];
 
             for (var x = 0; x < iter; x++) {
 
@@ -855,24 +892,24 @@ $(document).ready(function () {
                     && (Math.abs(data[x].indexOf(el.source.id) - data[x].indexOf(el.target.id)) == 1));
                 });
 
-                links_in_paths.push(path);
+                edgesInPaths.push(path);
             }
 
             // Only the links that are in any of the paths are visible
-            for (var j = 0, len = links_in_paths.length; j < len; j++) {
-                links_in_paths[j].style(visualization_option, on);
+            for (var j = 0, len = edgesInPaths.length; j < len; j++) {
+                edgesInPaths[j].style(visualizationOption, on);
             }
 
             // For each path give a different color
             for (var i = 0; i < iter; i++) {
-                var links_in_this_path = link.filter(function (el) {
+                var edgesInPath = link.filter(function (el) {
                     // Source and target should be present in the edge and the distance in the array should be one
                     return ((data[i].indexOf(el.source.id) >= 0 && data[i].indexOf(el.target.id) >= 0)
                     && (Math.abs(data[i].indexOf(el.source.id) - data[i].indexOf(el.target.id)) == 1));
                 });
 
                 // Select randomly a color and apply to this path
-                links_in_this_path.style("stroke", color_list[getRandomInt(0, 21)]);
+                edgesInPath.style("stroke", color_list[getRandomInt(0, 21)]);
             }
 
         }
@@ -884,7 +921,7 @@ $(document).ready(function () {
         // Additional features //
         /////////////////////////
 
-        function download_link(response, name) {
+        function downloadLink(response, name) {
             var element = document.createElement('a');
             element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(response));
             element.setAttribute('download', name);
@@ -894,23 +931,41 @@ $(document).ready(function () {
             document.body.removeChild(element);
         }
 
-        ///////////////////////////////////////
-        // Build the node selection toggle
-        ///////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////
+        // Build the node selection toggle and creates hashmap nodeNames to IDs /
+        /////////////////////////////////////////////////////////////////////////
 
         // Build the node unordered list
         node_panel.append("<ul id='node-list-ul' class='list-group checked-list-box not-rounded'></ul>");
 
-        // Variable with all node names for autocompletion input
-        var node_names = [];
+        // Variable with all node names
+        var nodeNames = [];
 
-        $.each(graph.nodes, function (key, value_array) {
+        // Create node list and create an array with duplicates
+        $.each(graph.nodes, function (key, value) {
 
-            node_names.push(value_array.cname);
+            nodeNames.push(value.cname);
 
-            $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='node-checkbox " + value_array.function + "'></div><span class>" + value_array.cname + "</span></li>");
+            $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='node-checkbox " + value.function + "'></div><span class>" + value.cname + "</span></li>");
         });
 
+        var duplicates = findDuplicates(nodeNames);
+
+        var nodeNamesToId = {};
+
+        // Check over duplicate cnames and create hashmap to id
+        $.each(graph.nodes, function (key, value) {
+            // if the node has no duplicate show it in autocompletion with its cname
+            if (duplicates.indexOf(value.cname) < 0) {
+                nodeNamesToId[value.cname] = value.id;
+            }
+            // if it has a duplicate show also the function after the cname
+            else {
+                nodeNamesToId[value.cname + ' (' + value.function + ')'] = value.id;
+            }
+        });
+
+        // Highlight only selected nodes in the graph
         $('#get-checked-nodes').on('click', function (event) {
             event.preventDefault();
             var checkedItems = [];
@@ -918,10 +973,9 @@ $(document).ready(function () {
                 checkedItems.push(li.parentElement.childNodes[2].innerHTML);
             });
 
-            reset_attributes();
-
-            selected_nodes_highlight(checkedItems);
-            reset_attributes_on_double_click();
+            resetAttributes();
+            highlightNodes(checkedItems);
+            resetAttributesDoubleClick();
 
         });
 
@@ -949,32 +1003,173 @@ $(document).ready(function () {
                 checkedItems.push(li.parentElement.childNodes[1].innerHTML);
             });
 
-            reset_attributes();
+            resetAttributes();
 
-            selected_edge_highlight(checkedItems);
+            highlightEdges(checkedItems);
 
-            reset_attributes_on_double_click()
+            resetAttributesDoubleClick()
         });
+
+        var shortestPathForm = $("#shortest-path-form");
+
+        // Get the shortest path between two nodes via Ajax or get the BEL for the shortest path
+        $('#button-shortest-path').on('click', function () {
+            if (shortestPathForm.valid()) {
+
+                var checkbox = shortestPathForm.find('input[name="visualization-options"]').is(":checked");
+
+                var args = parameterFilters();
+                args["source"] = nodeNamesToId[shortestPathForm.find('input[name="source"]').val()];
+                args["target"] = nodeNamesToId[shortestPathForm.find('input[name="target"]').val()];
+
+                var undirected = shortestPathForm.find('input[name="undirectionalize"]').is(":checked");
+
+                if (undirected) {
+                    args["undirected"] = undirected;
+                }
+
+                $.ajax({
+                    url: '/paths/shortest/' + window.id,
+                    type: shortestPathForm.attr('method'),
+                    dataType: 'json',
+                    data: $.param(args, true),
+                    success: function (shortestPathNodes) {
+
+                        // Change style in force
+                        resetAttributes();
+
+                        var nodesNotInPath = nodesNotInArray(shortestPathNodes);
+
+                        var edgesNotInPath = g.selectAll(".link").filter(function (el) {
+                            // Source and target should be present in the edge and the distance in the array should be one
+                            return !((shortestPathNodes.indexOf(el.source.id) >= 0 && shortestPathNodes.indexOf(el.target.id) >= 0)
+                            && (Math.abs(shortestPathNodes.indexOf(el.source.id) - shortestPathNodes.indexOf(el.target.id)) == 1));
+                        });
+
+                        // If checkbox is True -> Hide all, Else -> Opacity 0.1
+                        if (checkbox == true) {
+                            nodesNotInPath.style("visibility", "hidden");
+                            edgesNotInPath.style("visibility", "hidden");
+                        } else {
+                            nodesNotInPath.style("opacity", "0.1");
+                            edgesNotInPath.style("opacity", "0.05");
+                        }
+                        hideNodesText(shortestPathNodes, checkbox);
+                        resetAttributesDoubleClick();
+                    }, error: function (request) {
+                        alert(request.responseText);
+                    }
+                })
+            }
+        });
+
+        // Shortest path validation form
+        shortestPathForm.validate(
+            {
+                rules: {
+                    source: {
+                        required: true,
+                        minlength: 2
+                    },
+                    target: {
+                        required: true,
+                        minlength: 2
+                    }
+                },
+                messages: {
+                    source: "Please enter a valid source",
+                    target: "Please enter a valid target"
+                }
+            }
+        );
+
+        // Get or show all paths between two nodes via Ajax
+
+        var all_path_form = $("#all-paths-form");
+
+        $('#button-all-paths').on('click', function () {
+            if (all_path_form.valid()) {
+
+                var checkbox = all_path_form.find('input[name="visualization-options"]').is(":checked");
+
+                var args = parameterFilters();
+                args["source"] = nodeNamesToId[all_path_form.find('input[name="source"]').val()];
+                args["target"] = nodeNamesToId[all_path_form.find('input[name="target"]').val()];
+
+                var undirected = all_path_form.find('input[name="undirectionalize"]').is(":checked");
+
+                if (undirected) {
+                    args["undirected"] = undirected;
+                }
+
+                $.ajax({
+                    url: '/paths/all/' + window.id,
+                    type: all_path_form.attr('method'),
+                    dataType: 'json',
+                    data: $.param(args, true),
+                    success: function (data) {
+
+                        if (data.length == 0) {
+                            alert('No paths between the selected nodes');
+                        }
+
+                        resetAttributes();
+
+                        // Apply changes in style for select paths
+                        hideNodesTextInPaths(data, false);
+                        colorPaths(data, checkbox);
+                        resetAttributesDoubleClick()
+                    },
+                    error: function (request) {
+                        alert(request.responseText);
+                    }
+                })
+            }
+        });
+
+        all_path_form.validate(
+            {
+                rules: {
+                    source: {
+                        required: true,
+                        minlength: 2
+                    },
+                    target: {
+                        required: true,
+                        minlength: 2
+                    }
+                },
+                messages: {
+                    source: "Please enter a valid source",
+                    target: "Please enter a valid target"
+                }
+            }
+        );
 
 
         // Shortest path autocompletion input
-        node_names = node_names.sort();
+        var nodeNames = Object.keys(nodeNamesToId).sort();
 
         $("#source-node").autocomplete({
-            source: node_names,
+            source: nodeNames,
             appendTo: "#paths"
         });
 
         $("#target-node").autocomplete({
-            source: node_names,
+            source: nodeNames,
             appendTo: "#paths"
         });
 
+        // All paths form autocompletion
+        $("#source-node2").autocomplete({
+            source: nodeNames,
+            appendTo: "#paths"
+        });
 
-        // Required for multiple autocompletion
-        function split(val) {
-            return val.split(/,\s*/);
-        }
+        $("#target-node2").autocomplete({
+            source: nodeNames,
+            appendTo: "#paths"
+        });
 
         // Update Node Dropdown
         $("#node-search").on("keyup", function () {
@@ -983,8 +1178,8 @@ $(document).ready(function () {
             searchText = searchText.toLowerCase();
             searchText = searchText.replace(/\s+/g, '');
 
-            $.each($('#node-list-ul')[0].childNodes, node_list_update);
-            function node_list_update() {
+            $.each($('#node-list-ul')[0].childNodes, updateNodeArray);
+            function updateNodeArray() {
                 var currentLiText = $(this).find("span")[0].innerHTML,
                     showCurrentLi = ((currentLiText.toLowerCase()).replace(/\s+/g, '')).indexOf(searchText) !== -1;
                 $(this).toggle(showCurrentLi);
@@ -998,8 +1193,8 @@ $(document).ready(function () {
             searchText = searchText.toLowerCase();
             searchText = searchText.replace(/\s+/g, '');
 
-            $.each($('#edge-list-ul')[0].childNodes, edge_list_update);
-            function edge_list_update() {
+            $.each($('#edge-list-ul')[0].childNodes, updateEdgeArray);
+            function updateEdgeArray() {
 
                 var currentLiText = $(this).find("span")[0].innerHTML,
                     showCurrentLi = ((currentLiText.toLowerCase()).replace(/\s+/g, '')).indexOf(searchText) !== -1;
@@ -1019,7 +1214,7 @@ $(document).ready(function () {
 
         // Hide text in graph
         $("#restore").on("click", function () {
-            reset_attributes();
+            resetAttributes();
         });
     }
 

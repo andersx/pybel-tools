@@ -6,6 +6,7 @@ import logging
 
 import flask
 from flask import Flask
+import networkx as nx
 
 from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
@@ -21,8 +22,12 @@ log = logging.getLogger(__name__)
 
 APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
+SOURCE_NODE = 'source'
+TARGET_NODE = 'target'
+UNDIRECTED = 'undirected'
 SUPER_NETWORK = 'supernetwork'
 DICTIONARY_SERVICE = 'dictionary_service'
+BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE, UNDIRECTED}
 
 
 def get_dict_service(dsa):
@@ -59,6 +64,28 @@ def build_dictionary_service_app(app):
 
     set_dict_service(app, api)
 
+    def process_request(network_id, args):
+        """
+        Process the GET request returning the filtered graph
+        :param network_id: id of the network
+        :param args: flask.request.args
+        :return:
+        """
+        # Convert from list of hashes (as integers) to node tuples
+        expand_nodes = args.get(APPEND_PARAM)
+        remove_nodes = args.get(REMOVE_PARAM)
+        if expand_nodes:
+            expand_nodes = [api.get_node_by_id(h) for h in expand_nodes.split(',')]
+
+        if remove_nodes:
+            remove_nodes = [api.get_node_by_id(h) for h in remove_nodes.split(',')]
+
+        annotations = {k: args.getlist(k) for k in args if k not in BLACK_LIST}
+
+        graph = api.query_filtered_builder(network_id, expand_nodes, remove_nodes, **annotations)
+
+        return graph
+
     @app.route('/')
     def list_networks():
         data = [(nid, n.name, n.version) for nid, n in api.networks.items()]
@@ -77,22 +104,8 @@ def build_dictionary_service_app(app):
 
     @app.route('/network/<int:network_id>', methods=['GET'])
     def get_network_by_id_filtered(network_id):
-        # Convert from list of hashes (as integers) to node tuples
-        expand_nodes = flask.request.args.get(APPEND_PARAM)
-        remove_nodes = flask.request.args.get(REMOVE_PARAM)
-        if expand_nodes:
-            expand_nodes = [api.nid_node[int(h)] for h in expand_nodes.split(',')]
-            log.info(expand_nodes)
 
-        if remove_nodes:
-            remove_nodes = [api.nid_node[int(h)] for h in remove_nodes.split(',')]
-            log.info(remove_nodes)
-
-        annotations = {k: flask.request.args.getlist(k) for k in flask.request.args if
-                       k not in {APPEND_PARAM, REMOVE_PARAM}}
-
-
-        graph = api.query_filtered_builder(network_id, expand_nodes, remove_nodes, **annotations)
+        graph = process_request(network_id, flask.request.args)
 
         serve_format = flask.request.args.get('format')
 
@@ -126,10 +139,10 @@ def build_dictionary_service_app(app):
 
     @app.route('/supernetwork/', methods=['GET'])
     def get_network_filtered():
-        expand_nodes = [api.nid_node[int(h)] for h in flask.request.args.getlist(APPEND_PARAM)]
-        remove_nodes = [api.nid_node[int(h)] for h in flask.request.args.getlist(REMOVE_PARAM)]
+        expand_nodes = [api.get_node_by_id(h) for h in flask.request.args.getlist(APPEND_PARAM)]
+        remove_nodes = [api.get_node_by_id(h) for h in flask.request.args.getlist(REMOVE_PARAM)]
         annotations = {k: flask.request.args.getlist(k) for k in flask.request.args if
-                       k not in {APPEND_PARAM, REMOVE_PARAM}}
+                       k not in BLACK_LIST}
 
         graph = api.query_all_builder(expand_nodes, remove_nodes, **annotations)
 
@@ -141,6 +154,51 @@ def build_dictionary_service_app(app):
     def get_edges(network_id, node_id):
         res = api.get_incident_edges(network_id, node_id)
         return flask.jsonify(res)
+
+    @app.route('/paths/shortest/<int:network_id>', methods=['GET'])
+    def get_shortest_path(network_id):
+        graph = process_request(network_id, flask.request.args)
+        source = int(flask.request.args.get(SOURCE_NODE))
+        target = int(flask.request.args.get(TARGET_NODE))
+        undirected = UNDIRECTED in flask.request.args
+
+        log.info('Source: %s, target: %s', source, target)
+
+        if source not in graph or target not in graph:
+            log.info('Source/target node not in graph')
+            log.info('Nodes in graph: %s', graph.nodes())
+            return flask.abort(500)
+
+        if undirected:
+            graph = graph.to_undirected()
+
+        try:
+            shortest_path = nx.shortest_path(graph, source=source, target=target)
+        except nx.NetworkXNoPath:
+            log.debug('No paths between: {} and {}'.format(source, target))
+            return 500, 'No paths between the selected nodes'
+
+        return flask.jsonify(shortest_path)
+
+    @app.route('/paths/all/<int:network_id>', methods=['GET'])
+    def get_all_path(network_id):
+        graph = process_request(network_id, flask.request.args)
+        source = int(flask.request.args.get(SOURCE_NODE))
+        target = int(flask.request.args.get(TARGET_NODE))
+        undirected = UNDIRECTED in flask.request.args
+
+        if source not in graph or target not in graph:
+            log.info('Source/target node not in graph')
+            log.info('Nodes in graph: %s', graph.nodes())
+            return flask.abort(500)
+
+        if undirected:
+            graph = graph.to_undirected()
+
+        all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
+
+        # all_paths is a generator -> convert to list and create a list of lists (paths)
+        return flask.jsonify([path for path in list(all_paths)])
 
     @app.route('/nid/')
     def get_node_hashes():

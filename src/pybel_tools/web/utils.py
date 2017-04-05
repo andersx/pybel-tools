@@ -1,15 +1,30 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 import flask
 
 from pybel.manager.cache import CacheManager
 from pybel.manager.graph_cache import GraphCacheManager
 from pybel.parser.parse_metadata import MetadataParser
+from .constants import PYBEL_CACHE_CONNECTION, PYBEL_DEFINITION_MANAGER, PYBEL_METADATA_PARSER, PYBEL_GRAPH_MANAGER
+from ..utils import build_template_environment, render_template_by_env
 
-PYBEL_CACHE_CONNECTION = 'pybel_cache_connection'
-PYBEL_DEFINITION_MANAGER = 'pybel_definition_manager'
-PYBEL_METADATA_PARSER = 'pybel_metadata_parser'
-PYBEL_GRAPH_MANAGER = 'pybel_graph_manager'
+__all__ = [
+    'set_definition_manager',
+    'get_definition_manager',
+    'set_graph_manager',
+    'get_graph_manager',
+    'set_metadata_parser',
+    'get_metadata_parser',
+]
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_ENVIRONMENT = build_template_environment(HERE)
+
+
+def render_template(template_filename, **context):
+    return render_template_by_env(TEMPLATE_ENVIRONMENT, template_filename, context=context)
 
 
 def set_definition_manager(app, definition_manager):
