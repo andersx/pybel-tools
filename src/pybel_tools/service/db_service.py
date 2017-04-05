@@ -58,11 +58,6 @@ def build_database_service_app(dsa, connection):
         network_namespaces = api.get_namespaces(network_id=network_id)
         return jsonify(network_namespaces)
 
-    # @dsa.route('/api/namespaces/by_network/<int:network_id>/offset/<int:offset_start>/<int:offset_end>', methods=['GET'])
-    # def namespaces_by_network_offset(network_id, offset_start, offset_end):
-    #    network_namespaces = api.get_namespaces(network_id=network_id, offset_start=offset_start, offset_end=offset_end)
-    #    return jsonify(network_namespaces)
-
     @dsa.route('/api/namespace/<definition_key>', methods=['GET'])
     def list_names(definition_key):
         names = api.get_namespaces(name_list=True, namespace_key=definition_key)
@@ -181,6 +176,3 @@ def build_database_service_app(dsa, connection):
 
 def get_db_app():
     return Flask(__name__)
-
-# app = Flask(__name__)
-# build_database_service_app(app)
