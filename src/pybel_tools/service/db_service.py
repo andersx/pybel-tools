@@ -58,6 +58,11 @@ def build_database_service_app(dsa, connection):
         network_namespaces = api.get_namespaces(network_id=network_id)
         return jsonify(network_namespaces)
 
+    # @dsa.route('/api/namespaces/by_network/<int:network_id>/offset/<int:offset_start>/<int:offset_end>', methods=['GET'])
+    # def namespaces_by_network_offset(network_id, offset_start, offset_end):
+    #    network_namespaces = api.get_namespaces(network_id=network_id, offset_start=offset_start, offset_end=offset_end)
+    #    return jsonify(network_namespaces)
+
     @dsa.route('/api/namespace/<definition_key>', methods=['GET'])
     def list_names(definition_key):
         names = api.get_namespaces(name_list=True, namespace_key=definition_key)
@@ -113,6 +118,11 @@ def build_database_service_app(dsa, connection):
         edges = api.get_edges(network_id=network_id)
         return jsonify(edges)
 
+    @dsa.route('/api/edges/by_network/<int:network_id>/offset/<int:offset_start>/<int:offset_end>', methods=['GET'])
+    def edges_by_network_offset(network_id, offset_start, offset_end):
+        edges = api.get_edges(network_id=network_id, offset_start=offset_start, offset_end=offset_end)
+        return jsonify(edges)
+
     @dsa.route('/api/edges/by_pmid/<int:pmid_id>', methods=['GET'])
     def edges_by_pmid(pmid_id):
         edges = api.get_edges(pmid_id=pmid_id)
@@ -123,25 +133,9 @@ def build_database_service_app(dsa, connection):
         edges = api.get_edges(author=author)
         return jsonify(edges)
 
-    @dsa.route('/api/edges/by_network_and_author/<int:network_id>/<author>', methods=['GET'])
-    def edges_by_network_and_author(network_id, author):
-        edges = api.get_edges(network_id=network_id, author=author)
-        return jsonify(edges)
-
-    @dsa.route('/api/edges/by_network_and_pmid/<int:network_id>/<int:pmid_id>', methods=['GET'])
-    def edges_by_network_and_pmid(network_id, pmid_id):
-        edges = api.get_edges(network_id=network_id, pmid_id=pmid_id)
-        return jsonify(edges)
-
     @dsa.route('/api/edges/by_annotation/<annotation_name>/<annotation_value>', methods=['GET'])
     def edges_by_annotation(annotation_name, annotation_value):
         edges = api.get_edges(annotations={annotation_name: annotation_value})
-        return jsonify(edges)
-
-    @dsa.route('/api/edges/by_network_and_annotation/<int:network_id>/<annotation_name>/<annotation_value>',
-               methods=['GET'])
-    def edges_by_network_and_annotation(network_id, annotation_name, annotation_value):
-        edges = api.get_edges(network_id=network_id, annotations={annotation_name: annotation_value})
         return jsonify(edges)
 
     @dsa.route('/api/nodes/by_bel/<node_bel>', methods=['GET'])
