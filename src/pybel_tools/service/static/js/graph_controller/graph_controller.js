@@ -94,21 +94,25 @@ $(document).ready(function () {
 
     function findDuplicates(data) {
 
-        var result = [];
+        var hashMap = {};
 
         data.forEach(function (element, index) {
 
-            // Find if there is a duplicate or not
-            if (data.indexOf(element, index + 1) > -1) {
+            if (!(element in hashMap)) {
+                hashMap[element] = 0;
+            }
+            hashMap[element] += 1;
+        });
 
-                // Find if the element is already in the result array or not
-                if (result.indexOf(element) === -1) {
-                    result.push(element);
-                }
+        var duplicates = [];
+
+        $.each(hashMap, function (key, value) {
+            if (value > 1) {
+                duplicates.push(key);
             }
         });
 
-        return result;
+        return duplicates;
     }
 
     // Required for multiple autocompletion
@@ -1016,6 +1020,12 @@ $(document).ready(function () {
                 args["source"] = nodeNamesToId[shortestPathForm.find('input[name="source"]').val()];
                 args["target"] = nodeNamesToId[shortestPathForm.find('input[name="target"]').val()];
 
+                var undirected = shortestPathForm.find('input[name="undirectionalize"]').is(":checked");
+
+                if (undirected) {
+                    args["undirected"] = undirected;
+                }
+
                 $.ajax({
                     url: '/paths/' + window.id,
                     type: shortestPathForm.attr('method'),
@@ -1073,9 +1083,6 @@ $(document).ready(function () {
 
         // Shortest path autocompletion input
         var nodeNames = Object.keys(nodeNamesToId).sort();
-
-        console.log('Unique names');
-        console.log(nodeNames);
 
         $("#source-node").autocomplete({
             source: nodeNames,

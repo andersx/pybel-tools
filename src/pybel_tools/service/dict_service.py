@@ -24,9 +24,10 @@ APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
 SOURCE_NODE = 'source'
 TARGET_NODE = 'target'
+UNDIRECTED = 'undirected'
 SUPER_NETWORK = 'supernetwork'
 DICTIONARY_SERVICE = 'dictionary_service'
-BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE}
+BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE, UNDIRECTED}
 
 
 def get_dict_service(dsa):
@@ -159,6 +160,7 @@ def build_dictionary_service_app(app):
         graph = process_request(network_id, flask.request.args)
         source = int(flask.request.args.get(SOURCE_NODE))
         target = int(flask.request.args.get(TARGET_NODE))
+        undirected = UNDIRECTED in flask.request.args
 
         log.info('Source: %s, target: %s', source, target)
 
@@ -167,12 +169,14 @@ def build_dictionary_service_app(app):
             log.info('Nodes in graph: %s', graph.nodes())
             return flask.abort(500)
 
+        if undirected:
+            graph = graph.to_undirected()
+
         try:
-            shortest_path = nx.shortest_path(graph, source=source,
-                                             target=target)
+            shortest_path = nx.shortest_path(graph, source=source, target=target)
         except nx.NetworkXNoPath:
-            log.debug('No shortest path between: {} and {}'.format(source, target))
-            return flask.jsonify([])
+            log.debug('No paths between: {} and {}'.format(source, target))
+            return 500, 'No paths between the selected nodes'
 
         log.debug(shortest_path)
 
@@ -181,14 +185,16 @@ def build_dictionary_service_app(app):
     @app.route('/paths/<int:network_id>', methods=['GET'])
     def get_all_path(network_id):
         graph = process_request(network_id, flask.request.args)
-        source = flask.request.args.get(SOURCE_NODE)
-        target = flask.request.args.get(TARGET_NODE)
+        source = int(flask.request.args.get(SOURCE_NODE))
+        target = int(flask.request.args.get(TARGET_NODE))
+        undirected = UNDIRECTED in flask.request.args
 
-        # TODO: set a 'good' cutoff
-        all_paths = nx.all_simple_paths(graph, source=source,
-                                        target=target, cutoff=15)
+        if undirected:
+            graph = graph.to_undirected()
 
-        return all_paths
+        all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
+
+        return flask.jsonify(all_paths)
 
     @app.route('/nid/')
     def get_node_hashes():
