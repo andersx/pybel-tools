@@ -155,7 +155,7 @@ def build_dictionary_service_app(app):
         res = api.get_incident_edges(network_id, node_id)
         return flask.jsonify(res)
 
-    @app.route('/paths/<int:network_id>', methods=['GET'])
+    @app.route('/paths/shortest/<int:network_id>', methods=['GET'])
     def get_shortest_path(network_id):
         graph = process_request(network_id, flask.request.args)
         source = int(flask.request.args.get(SOURCE_NODE))
@@ -178,23 +178,27 @@ def build_dictionary_service_app(app):
             log.debug('No paths between: {} and {}'.format(source, target))
             return 500, 'No paths between the selected nodes'
 
-        log.debug(shortest_path)
-
         return flask.jsonify(shortest_path)
 
-    @app.route('/paths/<int:network_id>', methods=['GET'])
+    @app.route('/paths/all/<int:network_id>', methods=['GET'])
     def get_all_path(network_id):
         graph = process_request(network_id, flask.request.args)
         source = int(flask.request.args.get(SOURCE_NODE))
         target = int(flask.request.args.get(TARGET_NODE))
         undirected = UNDIRECTED in flask.request.args
 
+        if source not in graph or target not in graph:
+            log.info('Source/target node not in graph')
+            log.info('Nodes in graph: %s', graph.nodes())
+            return flask.abort(500)
+
         if undirected:
             graph = graph.to_undirected()
 
         all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
 
-        return flask.jsonify(all_paths)
+        # all_paths is a generator -> convert to list and create a list of lists (paths)
+        return flask.jsonify([path for path in list(all_paths)])
 
     @app.route('/nid/')
     def get_node_hashes():

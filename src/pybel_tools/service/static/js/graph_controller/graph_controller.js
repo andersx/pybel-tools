@@ -142,6 +142,13 @@ $(document).ready(function () {
         return selectionHashMap;
     }
 
+    function parameterFilters() {
+        var args = getSelectedNodesFromTree(tree);
+        args["remove"] = window.deleteNodes.join();
+        args["append"] = window.expandNodes.join();
+        return args
+    }
+
     var tree = new InspireTree({
         target: '#tree',
         selection: {
@@ -251,9 +258,7 @@ $(document).ready(function () {
 
                     // Push selected node to expand node list
                     window.expandNodes.push(d.id);
-                    var args = getSelectedNodesFromTree(tree);
-                    args["append"] = window.expandNodes.join();
-                    args["remove"] = window.deleteNodes.join();
+                    var args = parameterFilters();
 
                     // Ajax to update the cypher query. Three list are sent to the server. pks of the subgraphs, list of nodes to delete and list of nodes to expand
                     $.ajax({
@@ -281,9 +286,8 @@ $(document).ready(function () {
 
                     // Push selected node to delete node list
                     window.deleteNodes.push(d.id);
-                    var args = getSelectedNodesFromTree(tree);
-                    args["remove"] = window.deleteNodes.join();
-                    args["append"] = window.expandNodes.join();
+                    var args = parameterFilters();
+
 
                     $.ajax({
                         url: "/network/" + window.id,
@@ -1014,9 +1018,7 @@ $(document).ready(function () {
 
                 var checkbox = shortestPathForm.find('input[name="visualization-options"]').is(":checked");
 
-                var args = getSelectedNodesFromTree(tree);
-                args["remove"] = window.deleteNodes.join();
-                args["append"] = window.expandNodes.join();
+                var args = parameterFilters();
                 args["source"] = nodeNamesToId[shortestPathForm.find('input[name="source"]').val()];
                 args["target"] = nodeNamesToId[shortestPathForm.find('input[name="target"]').val()];
 
@@ -1027,7 +1029,7 @@ $(document).ready(function () {
                 }
 
                 $.ajax({
-                    url: '/paths/' + window.id,
+                    url: '/paths/shortest/' + window.id,
                     type: shortestPathForm.attr('method'),
                     dataType: 'json',
                     data: $.param(args, true),
@@ -1067,18 +1069,82 @@ $(document).ready(function () {
                 rules: {
                     source: {
                         required: true,
-                        minlength: 3
+                        minlength: 2
                     },
                     target: {
                         required: true,
-                        minlength: 3
+                        minlength: 2
                     }
                 },
                 messages: {
                     source: "Please enter a valid source",
                     target: "Please enter a valid target"
                 }
-            });
+            }
+        );
+
+        // Get or show all paths between two nodes via Ajax
+
+        var all_path_form = $("#all-paths-form");
+
+        $('#button-all-paths').on('click', function () {
+            if (all_path_form.valid()) {
+
+                var checkbox = all_path_form.find('input[name="visualization-options"]').is(":checked");
+
+                var args = parameterFilters();
+                args["source"] = nodeNamesToId[all_path_form.find('input[name="source"]').val()];
+                args["target"] = nodeNamesToId[all_path_form.find('input[name="target"]').val()];
+
+                var undirected = all_path_form.find('input[name="undirectionalize"]').is(":checked");
+
+                if (undirected) {
+                    args["undirected"] = undirected;
+                }
+
+                $.ajax({
+                    url: '/paths/all/' + window.id,
+                    type: all_path_form.attr('method'),
+                    dataType: 'json',
+                    data: $.param(args, true),
+                    success: function (data) {
+
+                        if (data.length == 0) {
+                            alert('No paths between the selected nodes');
+                        }
+
+                        resetAttributes();
+
+                        // Apply changes in style for select paths
+                        hideNodesTextInPaths(data, false);
+                        colorPaths(data, checkbox);
+                        resetAttributesDoubleClick()
+                    },
+                    error: function (request) {
+                        alert(request.responseText);
+                    }
+                })
+            }
+        });
+
+        all_path_form.validate(
+            {
+                rules: {
+                    source: {
+                        required: true,
+                        minlength: 2
+                    },
+                    target: {
+                        required: true,
+                        minlength: 2
+                    }
+                },
+                messages: {
+                    source: "Please enter a valid source",
+                    target: "Please enter a valid target"
+                }
+            }
+        );
 
 
         // Shortest path autocompletion input
@@ -1090,6 +1156,17 @@ $(document).ready(function () {
         });
 
         $("#target-node").autocomplete({
+            source: nodeNames,
+            appendTo: "#paths"
+        });
+
+        // All paths form autocompletion
+        $("#source-node2").autocomplete({
+            source: nodeNames,
+            appendTo: "#paths"
+        });
+
+        $("#target-node2").autocomplete({
             source: nodeNames,
             appendTo: "#paths"
         });
