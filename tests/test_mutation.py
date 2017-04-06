@@ -7,7 +7,6 @@ from pybel.constants import *
 from pybel.constants import unqualified_edge_code
 from pybel_tools.mutation import collapse_by_central_dogma, collapse_nodes
 from pybel_tools.mutation.inference import infer_central_dogmatic_transcriptions, infer_central_dogmatic_translations
-from tests.constants import add_simple
 
 HGNC = 'HGNC'
 
@@ -31,9 +30,9 @@ class TestCollapseDownstream(unittest.TestCase):
     def test_collapse_1(self):
         graph = BELGraph()
 
-        add_simple(graph, *p1)
-        add_simple(graph, *p2)
-        add_simple(graph, *p3)
+        graph.add_simple_node(*p1)
+        graph.add_simple_node(*p2)
+        graph.add_simple_node(*p3)
 
         graph.add_edge(p1, p3, **{RELATION: INCREASES})
         graph.add_edge(p2, p3, **{RELATION: DIRECTLY_INCREASES})
@@ -53,8 +52,8 @@ class TestCollapseDownstream(unittest.TestCase):
     def test_collapse_dogma_1(self):
         graph = BELGraph()
 
-        add_simple(graph, *p1)
-        add_simple(graph, *r1)
+        graph.add_simple_node(*p1)
+        graph.add_simple_node(*r1)
 
         graph.add_edge(r1, p1, key=unqualified_edge_code[TRANSLATED_TO], **{RELATION: TRANSLATED_TO})
 
@@ -67,28 +66,28 @@ class TestCollapseDownstream(unittest.TestCase):
         self.assertEqual(0, graph.number_of_edges())
 
     def test_collapse_dogma_2(self):
-        g = BELGraph()
+        graph = BELGraph()
 
-        add_simple(g, *p1)
-        add_simple(g, *r1)
-        add_simple(g, *g1)
+        graph.add_simple_node(*p1)
+        graph.add_simple_node(*r1)
+        graph.add_simple_node(*g1)
 
-        g.add_edge(r1, p1, key=unqualified_edge_code[TRANSLATED_TO], **{RELATION: TRANSLATED_TO})
-        g.add_edge(g1, r1, key=unqualified_edge_code[TRANSCRIBED_TO], **{RELATION: TRANSCRIBED_TO})
+        graph.add_edge(r1, p1, key=unqualified_edge_code[TRANSLATED_TO], **{RELATION: TRANSLATED_TO})
+        graph.add_edge(g1, r1, key=unqualified_edge_code[TRANSCRIBED_TO], **{RELATION: TRANSCRIBED_TO})
 
-        self.assertEqual(3, g.number_of_nodes())
-        self.assertEqual(2, g.number_of_edges())
+        self.assertEqual(3, graph.number_of_nodes())
+        self.assertEqual(2, graph.number_of_edges())
 
-        collapse_by_central_dogma(g)
+        collapse_by_central_dogma(graph)
 
-        self.assertEqual(1, g.number_of_nodes())
-        self.assertEqual(0, g.number_of_edges())
+        self.assertEqual(1, graph.number_of_nodes())
+        self.assertEqual(0, graph.number_of_edges())
 
     def test_collapse_dogma_3(self):
         graph = BELGraph()
 
-        add_simple(graph, *r1)
-        add_simple(graph, *g1)
+        graph.add_simple_node(*r1)
+        graph.add_simple_node(*g1)
 
         graph.add_edge(g1, r1, key=unqualified_edge_code[TRANSCRIBED_TO], **{RELATION: TRANSCRIBED_TO})
 
@@ -105,11 +104,11 @@ class TestInference(unittest.TestCase):
     def test_infer_1(self):
         graph = BELGraph()
 
-        add_simple(graph, *p1)
-        add_simple(graph, *g1)
-        add_simple(graph, *p2)
-        add_simple(graph, *g3)
-        add_simple(graph, *m4)
+        graph.add_simple_node(*p1)
+        graph.add_simple_node(*g1)
+        graph.add_simple_node(*p2)
+        graph.add_simple_node(*g3)
+        graph.add_simple_node(*m4)
 
         graph.add_edge(p1, p2, **{RELATION: INCREASES})
         graph.add_edge(g1, g3, **{RELATION: POSITIVE_CORRELATION})
