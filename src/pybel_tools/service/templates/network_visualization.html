@@ -119,21 +119,21 @@
         </div><!-- visualization row -->
         <div class="row"><!-- button row -->
             <div class="col-lg-8">
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
+                        data-target="#info-graph">
+                    Help
+                </button>
                 <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#legend">
                     Legend
                 </button>
-                <button type="button" class="btn btn-primary pull-right button-padding" data-toggle="modal"
-                        data-target="#info-graph">
-                    Info and design
-                </button>
                 <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
-                    Path search
+                    Path Search
                 </button>
                 <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
                         data-target="#algorithms">
                     Algorithms
                 </button>
-                <button type="button" class="btn btn-primary button-padding pull-right" data-toggle="modal"
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
                         data-target="#export">
                     Export
                 </button>
@@ -179,7 +179,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                     ×
                 </button>
-                <h4 class="modal-title">Info and design</h4>
+                <h4 class="modal-title">Help</h4>
             </div>
 
             <div class="modal-body text-left"><!-- /.Modal body -->
@@ -543,17 +543,16 @@
                 <!-- .panel.panel-default -->
             </div>
             <!-- #accordian.panel-group -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Close
+                </button>
+            </div><!-- .modal-footer -->
         </div>
         <!-- .modal-body -->
 
-        <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">
-                Close
-            </button>
-        </div>
-        <!-- .modal-footer -->
-    </div>
-    <!-- .modal-content -->
+
+    </div><!-- .modal-content -->
 </div>
 
 
@@ -570,7 +569,7 @@
                 <h4>Path mining tools</h4>
                 <hr>
                 <div>
-                    <p class="color_red text-left">Shortest path between two nodes </p>
+                    <p class="color_red text-left">Highlight the shortest path between two nodes </p>
                     <form id="shortest-path-form" method="get">
                         <label>
                             <input class="text-left" type="checkbox" name="visualization-options" value="hide">
@@ -599,7 +598,7 @@
                 </div>
                 <hr>
                 <div>
-                    <p class="color_red text-left">All paths between two nodes </p>
+                    <p class="color_red text-left">Highlight all paths between two nodes </p>
                     <form id="all-paths-form" method="get">
                         <label>
                             <input class="text-left" type="checkbox" name="visualization-options" value="hide">
@@ -652,7 +651,7 @@
                 <h4>Algorithms</h4>
                 <hr>
                 <div>
-                    <p class="color_red text-left"> Calculate top nodes according to betweenness centrality</p>
+                    <p class="color_red text-left"> Visualize top nodes according to betweenness centrality</p>
                     <form id="betweenness-centrality" method="get">
                         <div class="input-group">
                             <input placeholder="Number of nodes" name="betweenness" id="betweenness" class="text-left"

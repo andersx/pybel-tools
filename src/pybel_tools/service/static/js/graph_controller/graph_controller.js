@@ -32,16 +32,16 @@ $(document).ready(function () {
 
     function clearUsedDivs() {
         // Force div
-        var graph_div = $('#graph-chart');
+        var graphDiv = $('#graph-chart');
         // Node search div
-        var node_panel = $('#node-list');
+        var nodePanel = $('#node-list');
         // Edge search div
-        var edge_panel = $('#edge-list');
+        var edgePanel = $('#edge-list');
 
         // Clean the current frame
-        graph_div.empty();
-        node_panel.empty();
-        edge_panel.empty();
+        graphDiv.empty();
+        nodePanel.empty();
+        edgePanel.empty();
     }
 
     ///////////////////////////////////////
@@ -129,11 +129,11 @@ $(document).ready(function () {
 
         var selectionHashMap = {};
 
-        selectedNodes.forEach(function (node_object) {
+        selectedNodes.forEach(function (nodeObject) {
 
-            var key = node_object.text.toString();
+            var key = nodeObject.text.toString();
 
-            selectionHashMap[key] = node_object.children.map(function (child) {
+            selectionHashMap[key] = nodeObject.children.map(function (child) {
                 return child.text
 
             });
@@ -246,8 +246,8 @@ $(document).ready(function () {
         // d3-context-menu //
         /////////////////////
 
-        // Definition of context menu
-        var menu = [
+        // Definition of context menu for nodes
+        var nodeMenu = [
             {
                 title: 'Expand node',
                 action: function (elm, d, i) {
@@ -307,6 +307,27 @@ $(document).ready(function () {
             },
         ];
 
+        // Definition of context menu for nodes
+        var edgeMenu = [
+            {
+                title: 'Log evidences to console',
+                action: function (elm, d, i) {
+
+                    console.log(d.source);
+                    console.log(d.target);
+
+
+                    $.ajax({
+                        url: "/api/edges/" + d.source.id + "/" + d.target.id,
+                        dataType: "json",
+                    }).done(function (response) {
+                        console.log(response)
+                    });
+                },
+                disabled: false // optional, defaults to false
+            },
+        ];
+
         //////////////////////////////
         // Main graph visualization //
         //////////////////////////////
@@ -317,9 +338,9 @@ $(document).ready(function () {
         // Force div
         var graphDiv = $('#graph-chart');
         // Node search div
-        var node_panel = $('#node-list');
+        var nodePanel = $('#node-list');
         // Edge search div
-        var edge_panel = $('#edge-list');
+        var edgePanel = $('#edge-list');
 
         clearUsedDivs();
 
@@ -402,7 +423,7 @@ $(document).ready(function () {
 
         var nominalBaseNodeSize = 8;
 
-        var nominalStroke = 1.5;
+        var nominalStroke = 2.5;
         // Zoom variables
         var minZoom = 0.1, maxZoom = 10;
         var border = 1, bordercolor = 'black';
@@ -515,6 +536,7 @@ $(document).ready(function () {
                     displayEdgeInfo(d);
                 }, 3000);
             })
+            .on('contextmenu', d3.contextMenu(edgeMenu)) // Attach context menu to edge link
             .attr("class", function (d) {
                 if (['decreases', 'directlyDecreases', 'increases', 'directlyIncreases', 'negativeCorrelation',
                         'positiveCorrelation'].indexOf(d.relation) >= 0) {
@@ -560,16 +582,12 @@ $(document).ready(function () {
                 }, 1000);
             })
             // context-menu on right click
-            .on('contextmenu', d3.contextMenu(menu)) // Attach context menu to node's circle
+            .on('contextmenu', d3.contextMenu(nodeMenu)) // Attach context menu to node's circle
             // Dragging
             .call(nodeDrag);
 
-        var circle = node.append("path")
-            .attr("d", d3.symbol()
-                .size(function (d) {
-                    return Math.PI * Math.pow(size(d.size) || nominalBaseNodeSize, 2);
-                })
-            )
+        var circle = node.append("circle")
+            .attr("r", "8")
             .attr("class", function (d) {
                 return d.function
             })
@@ -690,11 +708,19 @@ $(document).ready(function () {
         }
 
         // Filter nodes in list
-        function nodesNotInArray(node_list) {
+        function nodesNotInArray(nodeArray) {
             var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
-                return node_list.indexOf(el.id) < 0;
+                return nodeArray.indexOf(el.id) < 0;
             });
             return nodesNotInArray
+        }
+
+        // Filter nodes in list
+        function nodesInArray(nodeArray) {
+            var nodesInArray = svg.selectAll(".node").filter(function (el) {
+                return nodeArray.indexOf(el.id) >= 0;
+            });
+            return nodesInArray
         }
 
 
@@ -773,7 +799,7 @@ $(document).ready(function () {
             });
         }
 
-        function highlightEdges(edge_array) {
+        function highlightEdges(edgeArray) {
 
             // Array with names of the nodes in the selected edge
             var nodesInEdges = [];
@@ -781,7 +807,7 @@ $(document).ready(function () {
             // Filtered not selected links
             var edgesNotInArray = g.selectAll(".link").filter(function (edgeObject) {
 
-                if (edge_array.indexOf(edgeObject.source.cname + " " + edgeObject.relation + " " + edgeObject.target.cname) >= 0) {
+                if (edgeArray.indexOf(edgeObject.source.cname + " " + edgeObject.relation + " " + edgeObject.target.cname) >= 0) {
                     nodesInEdges.push(edgeObject.source.cname);
                     nodesInEdges.push(edgeObject.target.cname);
                 }
@@ -790,8 +816,8 @@ $(document).ready(function () {
 
             hideNodesText(nodesInEdges, false);
 
-            var nodesNotInEdges = node.filter(function (node_object) {
-                return nodesInEdges.indexOf(node_object.cname) < 0;
+            var nodesNotInEdges = node.filter(function (nodeObject) {
+                return nodesInEdges.indexOf(nodeObject.cname) < 0;
             });
 
             nodesNotInEdges.style("opacity", "0.1");
@@ -862,16 +888,16 @@ $(document).ready(function () {
             ///////// Colour links in each path differently and hide others ////////
 
             // Colour the links ( Max 21 paths )
-            var color_list = ['#ff2200', ' #282040', ' #a68d7c', ' #332b1a', ' #435916', ' #00add9', ' #bfd0ff', ' #f200c2',
+            var colorArray = ['#ff2200', ' #282040', ' #a68d7c', ' #332b1a', ' #435916', ' #00add9', ' #bfd0ff', ' #f200c2',
                 ' #990014', ' #d97b6c', ' #ff8800', ' #f2ffbf', ' #e5c339', ' #5ba629', ' #005947', ' #005580', ' #090040',
                 ' #8d36d9', ' #e5005c', ' #733941', ' #993d00', ' #80ffb2', ' #66421a', ' #e2f200', ' #20f200', ' #80fff6',
                 ' #002b40', ' #6e698c', ' #802079', ' #330014', ' #331400', ' #ffc480', ' #7ca682', ' #264a4d', ' #0074d9',
                 ' #220080', ' #d9a3d5', ' #f279aa'];
 
             // iter = number of paths ( Max 21 paths )
-            if (data.length > color_list.length) {
+            if (data.length > colorArray.length) {
                 //noinspection JSDuplicatedDeclaration
-                var iter = color_list.length;
+                var iter = colorArray.length;
             } else {
                 //noinspection JSDuplicatedDeclaration
                 var iter = data.length;
@@ -909,7 +935,7 @@ $(document).ready(function () {
                 });
 
                 // Select randomly a color and apply to this path
-                edgesInPath.style("stroke", color_list[getRandomInt(0, 21)]);
+                edgesInPath.style("stroke", colorArray[getRandomInt(0, 21)]);
             }
 
         }
@@ -936,7 +962,7 @@ $(document).ready(function () {
         /////////////////////////////////////////////////////////////////////////
 
         // Build the node unordered list
-        node_panel.append("<ul id='node-list-ul' class='list-group checked-list-box not-rounded'></ul>");
+        nodePanel.append("<ul id='node-list-ul' class='list-group checked-list-box not-rounded'></ul>");
 
         // Variable with all node names
         var nodeNames = [];
@@ -985,13 +1011,13 @@ $(document).ready(function () {
 
 
         // Build the node unordered list
-        edge_panel.append("<ul id='edge-list-ul' class='list-group checked-list-box not-rounded'></ul>");
+        edgePanel.append("<ul id='edge-list-ul' class='list-group checked-list-box not-rounded'></ul>");
 
 
-        $.each(graph.links, function (key, value_array) {
+        $.each(graph.links, function (key, value) {
 
             $("#edge-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><span class>" +
-                value_array.source.cname + ' ' + value_array.relation + ' ' + value_array.target.cname + "</span></li>");
+                value.source.cname + ' ' + value.relation + ' ' + value.target.cname + "</span></li>");
 
         });
 
@@ -1085,18 +1111,18 @@ $(document).ready(function () {
 
         // Get or show all paths between two nodes via Ajax
 
-        var all_path_form = $("#all-paths-form");
+        var allPathForm = $("#all-paths-form");
 
         $('#button-all-paths').on('click', function () {
-            if (all_path_form.valid()) {
+            if (allPathForm.valid()) {
 
-                var checkbox = all_path_form.find('input[name="visualization-options"]').is(":checked");
+                var checkbox = allPathForm.find('input[name="visualization-options"]').is(":checked");
 
                 var args = parameterFilters();
-                args["source"] = nodeNamesToId[all_path_form.find('input[name="source"]').val()];
-                args["target"] = nodeNamesToId[all_path_form.find('input[name="target"]').val()];
+                args["source"] = nodeNamesToId[allPathForm.find('input[name="source"]').val()];
+                args["target"] = nodeNamesToId[allPathForm.find('input[name="target"]').val()];
 
-                var undirected = all_path_form.find('input[name="undirectionalize"]').is(":checked");
+                var undirected = allPathForm.find('input[name="undirectionalize"]').is(":checked");
 
                 if (undirected) {
                     args["undirected"] = undirected;
@@ -1104,7 +1130,7 @@ $(document).ready(function () {
 
                 $.ajax({
                     url: '/paths/all/' + window.id,
-                    type: all_path_form.attr('method'),
+                    type: allPathForm.attr('method'),
                     dataType: 'json',
                     data: $.param(args, true),
                     success: function (data) {
@@ -1127,7 +1153,7 @@ $(document).ready(function () {
             }
         });
 
-        all_path_form.validate(
+        allPathForm.validate(
             {
                 rules: {
                     source: {
@@ -1204,40 +1230,42 @@ $(document).ready(function () {
 
         // Get or show all paths between two nodes via Ajax
 
-        var betwenness_form = $("#betweenness-centrality");
+        var betwennessForm = $("#betweenness-centrality");
 
         $('#betweenness-button').on('click', function () {
-            if (betwenness_form.valid()) {
-
-                var checkbox = all_path_form.find('input[name="visualization-options"]').is(":checked");
+            if (betwennessForm.valid()) {
 
                 var args = parameterFilters();
-                args["source"] = nodeNamesToId[all_path_form.find('input[name="source"]').val()];
-                args["target"] = nodeNamesToId[all_path_form.find('input[name="target"]').val()];
-
-                var undirected = all_path_form.find('input[name="undirectionalize"]').is(":checked");
-
-                if (undirected) {
-                    args["undirected"] = undirected;
-                }
+                args["node_number"] = betwennessForm.find('input[name="betweenness"]').val();
 
                 $.ajax({
-                    url: '/paths/all/' + window.id,
-                    type: all_path_form.attr('method'),
+                    url: '/centrality/' + window.id,
+                    type: betwennessForm.attr('method'),
                     dataType: 'json',
                     data: $.param(args, true),
                     success: function (data) {
 
-                        if (data.length == 0) {
-                            alert('No paths between the selected nodes');
-                        }
+                        var topNodes = nodesInArray(data);
 
-                        resetAttributes();
+                        console.log(topNodes);
 
-                        // Apply changes in style for select paths
-                        hideNodesTextInPaths(data, false);
-                        colorPaths(data, checkbox);
-                        resetAttributesDoubleClick()
+                        // Change display property to 'none'
+                        $.each(topNodes._groups[0], function (index, value) {
+                            value.childNodes[0].attributes[0] = d3.symbol().size(function (d) {
+                                return Math.PI * Math.pow(size(d.size) || 15, 2);
+                            });
+                            console.log(value.childNodes[0].attributes[0]);
+
+                            console.log(d3.symbol().size(Math.PI * Math.pow(size(d.size) || 15, 2)));
+
+                        });
+
+
+                        //             .attr("d", d3.symbol()
+                        //     .size(function (d) {
+                        //         return Math.PI * Math.pow(size(d.size) || nominalBaseNodeSize, 2);
+                        //     })
+                        // )
                     },
                     error: function (request) {
                         alert(request.responseText);
@@ -1246,7 +1274,7 @@ $(document).ready(function () {
             }
         });
 
-        betwenness_form.validate(
+        betwennessForm.validate(
             {
                 rules: {
                     betweenness: {
@@ -1255,7 +1283,7 @@ $(document).ready(function () {
                     }
                 },
                 messages: {
-                    betweenness: "Please enter a valid source",
+                    betweenness: "Please enter a number",
                 }
             }
         );

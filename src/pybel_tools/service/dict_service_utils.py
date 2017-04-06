@@ -45,7 +45,8 @@ class DictionaryService(PybelService):
         #: dictionary of {int id: tuple node}
         self.nid_node = {}
 
-        self.full_network = None
+        self.full_network = BELGraph()
+        self.full_network_loaded = False
 
     def _validate_network_id(self, network_id):
         if network_id not in self.networks:
@@ -99,7 +100,6 @@ class DictionaryService(PybelService):
             self.add_network(nid, graph)
             log.info('loaded network: [%s] %s ', nid, graph.document.get(METADATA_NAME, 'UNNAMED'))
 
-        self.full_network = None
 
     def update_node_indexes(self, graph):
         """Updates identifiers for nodes based on addition order
@@ -145,20 +145,23 @@ class DictionaryService(PybelService):
         """
         return self.networks[network_id]
 
-    def get_super_network(self):
+    def get_super_network(self, force=False):
         """Gets all networks and merges them together. Caches in self.full_network.
 
         :return: A BEL Graph
         :rtype: pybel.BELGraph
         """
 
-        if self.full_network is not None:
+        if not force and self.full_network_loaded:
             return self.full_network
 
         self.full_network = BELGraph()
 
         for network_id in self.get_network_ids():
             left_merge(self.full_network, self.get_network_by_id(network_id))
+
+        log.info('Loaded super network')
+        self.full_network_loaded = True
 
         return self.full_network
 
@@ -247,3 +250,21 @@ class DictionaryService(PybelService):
         })
         original_graph = self.get_network_by_id(network_id)
         return self._query_helper(original_graph, expand_nodes, remove_nodes, **annotations)
+
+    def get_edges(self, u, v, both_ways=True):
+        """Gets the data dictionaries of all edges between the given nodes"""
+        if u not in self.get_super_network() or v not in self.full_network:
+            raise ValueError('Network doesnt have node')
+
+        result = []
+
+        if u in self.full_network.edge and v in self.full_network.edge[u]:
+            result.extend(self.full_network.edge[u][v].values())
+
+        if both_ways and v in self.full_network.edge and u in self.full_network.edge[v]:
+            result.extend(self.full_network.edge[v][u].values())
+
+        return result
+
+
+

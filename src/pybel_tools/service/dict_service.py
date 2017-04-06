@@ -7,6 +7,7 @@ import logging
 import flask
 from flask import Flask
 import networkx as nx
+from operator import itemgetter
 
 from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
@@ -25,9 +26,25 @@ REMOVE_PARAM = 'remove'
 SOURCE_NODE = 'source'
 TARGET_NODE = 'target'
 UNDIRECTED = 'undirected'
+NODE_NUMBER = 'node_number'
 SUPER_NETWORK = 'supernetwork'
 DICTIONARY_SERVICE = 'dictionary_service'
-BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE, UNDIRECTED}
+BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE, UNDIRECTED, NODE_NUMBER}
+
+
+def raise_invalid_source_target():
+    if SOURCE_NODE not in flask.request.args:
+        raise ValueError('Not source node in request')
+    if TARGET_NODE not in flask.request.args:
+        raise ValueError('Not taget node in request')
+    try:
+        int(flask.request.args.get(SOURCE_NODE))
+    except ValueError:
+        raise ValueError('{} is not valid node'.format(flask.request.args.get(SOURCE_NODE)))
+    try:
+        int(flask.request.args.get(TARGET_NODE))
+    except ValueError:
+        raise ValueError('{} is not valid node'.format(flask.request.args.get(TARGET_NODE)))
 
 
 def get_dict_service(dsa):
@@ -151,7 +168,7 @@ def build_dictionary_service_app(app):
         return flask.jsonify(graph_json)
 
     @app.route('/edges/<int:network_id>/<int:node_id>')
-    def get_edges(network_id, node_id):
+    def get_incident_edges(network_id, node_id):
         res = api.get_incident_edges(network_id, node_id)
         return flask.jsonify(res)
 
@@ -160,15 +177,12 @@ def build_dictionary_service_app(app):
         graph = process_request(network_id, flask.request.args)
 
         try:
-            source = int(flask.request.args.get(SOURCE_NODE))
+            raise_invalid_source_target()
+        except ValueError as e:
+            return str(e)
 
-        except ValueError:
-            return 'Not valid node'
-
-        try:
-            target = int(flask.request.args.get(TARGET_NODE))
-        except ValueError:
-            return 'Not valid node'
+        source = int(flask.request.args.get(SOURCE_NODE))
+        target = int(flask.request.args.get(TARGET_NODE))
 
         undirected = UNDIRECTED in flask.request.args
 
@@ -186,7 +200,7 @@ def build_dictionary_service_app(app):
             shortest_path = nx.shortest_path(graph, source=source, target=target)
         except nx.NetworkXNoPath:
             log.debug('No paths between: {} and {}'.format(source, target))
-            return 500, 'No paths between the selected nodes'
+            return 'No paths between the selected nodes'
 
         return flask.jsonify(shortest_path)
 
@@ -195,15 +209,12 @@ def build_dictionary_service_app(app):
         graph = process_request(network_id, flask.request.args)
 
         try:
-            source = int(flask.request.args.get(SOURCE_NODE))
+            raise_invalid_source_target()
+        except ValueError as e:
+            return str(e)
 
-        except ValueError:
-            return 'Not valid node'
-
-        try:
-            target = int(flask.request.args.get(TARGET_NODE))
-        except ValueError:
-            return 'Not valid node'
+        source = int(flask.request.args.get(SOURCE_NODE))
+        target = int(flask.request.args.get(TARGET_NODE))
 
         undirected = UNDIRECTED in flask.request.args
 
@@ -220,6 +231,25 @@ def build_dictionary_service_app(app):
         # all_paths is a generator -> convert to list and create a list of lists (paths)
         return flask.jsonify([path for path in list(all_paths)])
 
+    @app.route('/centrality/<int:network_id>', methods=['GET'])
+    def get_nodes_by_betweenness_centrality(network_id):
+        graph = process_request(network_id, flask.request.args)
+
+        try:
+            node_numbers = int(flask.request.args.get(NODE_NUMBER))
+
+        except ValueError:
+            return 'Please enter a number'
+
+        if node_numbers > nx.number_of_nodes(graph):
+            return 'The number introduced is bigger than the nodes in the network'
+
+        bw_dict = nx.betweenness_centrality(graph)
+
+        node_list = [i[0] for i in sorted(bw_dict.items(), key=itemgetter(1), reverse=True)[0:node_numbers]]
+
+        return flask.jsonify(node_list)
+
     @app.route('/nid/')
     def get_node_hashes():
         return flask.jsonify(api.nid_node)
@@ -228,9 +258,15 @@ def build_dictionary_service_app(app):
     def get_node_hash(nid):
         return api.get_node_by_id(nid)
 
+    @app.route('/api/edges/<int:sid>/<int:tid>')
+    def get_edges(sid, tid):
+        return flask.jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
+
     @app.route('/reload')
     def reload():
         api.load_networks()
+        api.get_super_network(force=True)
+        return flask.jsonify({'status':200})
 
 
 def get_app():
