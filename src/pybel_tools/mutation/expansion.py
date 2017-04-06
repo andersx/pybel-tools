@@ -25,6 +25,7 @@ __all__ = [
     'get_subgraph_peripheral_nodes',
     'expand_periphery',
     'expand_node_neighborhood',
+    'expand_all_node_neighborhoods',
     'expand_upstream_causal_subgraph',
     'enrich_grouping',
     'enrich_complexes',
@@ -164,7 +165,7 @@ def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filte
 
     >>> import pybel_tools as pbt
     >>> sgn = 'Blood vessel dilation subgraph'
-    >>> sg = pbt.selection.get_subgraph_by_annotation(graph, value=sgn, annotation='Subgraph')
+    >>> sg = pbt.selection.get_subgraph_by_annotation_value(graph, value=sgn, annotation='Subgraph')
     >>> p = pbt.mutation.get_subgraph_peripheral_nodes(graph, sg, node_filters=pbt.filters.exclude_pathology_filter)
     >>> for node in sorted(p, key=lambda node: len(set(p[node]['successor']) | set(p[node]['predecessor'])), reverse=True):
     >>>     if 1 == len(p[sgn][node]['successor']) or 1 == len(p[sgn][node]['predecessor']):
@@ -473,6 +474,18 @@ def expand_node_neighborhood(graph, subgraph, node):
         if successor in skip_successors:
             continue
         safe_add_edge(subgraph, node, successor, k, d)
+
+
+def expand_all_node_neighborhoods(graph, subgraph):
+    """Expands the neighborhoods of all nodes in the given subgraph
+    
+    :param graph: The graph containing the stuff to add
+    :type graph: pybel.BELGraph
+    :param subgraph: The graph to add stuff to
+    :type subgraph: pybel.BELGraph 
+    """
+    for node in subgraph.nodes_iter():
+        expand_node_neighborhood(graph, subgraph, node)
 
 
 def expand_upstream_causal_subgraph(graph, subgraph):

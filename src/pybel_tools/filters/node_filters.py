@@ -307,46 +307,46 @@ def upstream_leaf_predicate(graph, node):
 
 # Appliers
 
-def filter_nodes(graph, filters):
+def filter_nodes(graph, node_filters):
     """Applies a set of filters to the nodes iterator of a BEL graph
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param filters: A node filter or list/tuple of node filters
-    :type filters: list or tuple or lambda
+    :param node_filters: A node filter or list/tuple of node filters
+    :type node_filters: list or tuple or lambda
     :return: An iterable of nodes that pass all filters
     :rtype: iter
     """
 
     # If no filters are given, return the standard node iterator
-    if not filters:
+    if not node_filters:
         for node in graph.nodes_iter():
             yield node
     else:
-        concatenated_filter = concatenate_node_filters(filters)
+        concatenated_filter = concatenate_node_filters(node_filters)
         for node in graph.nodes_iter():
             if concatenated_filter(graph, node):
                 yield node
 
 
-def count_passed_node_filter(graph, filters):
+def count_passed_node_filter(graph, node_filters):
     """Counts how many nodes pass a given set of filters
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param filters: A node filter or list/tuple of node filters
-    :type filters: list
+    :param node_filters: A node filter or list/tuple of node filters
+    :type node_filters: list or tuple or lambda
     """
-    return sum(1 for _ in filter_nodes(graph, filters))
+    return sum(1 for _ in filter_nodes(graph, node_filters))
 
 
-def summarize_node_filter(graph, filters):
+def summarize_node_filter(graph, node_filters):
     """Prints a summary of the number of nodes passing a given set of filters
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param filters: A node filter or list/tuple of node filters
-    :type filters: list or tuple or lambda
+    :param node_filters: A node filter or list/tuple of node filters
+    :type node_filters: list or tuple or lambda
     """
-    passed = count_passed_node_filter(graph, filters)
-    print('{}/{} nodes passed {}'.format(passed, graph.number_of_nodes(), ', '.join(f.__name__ for f in filters)))
+    passed = count_passed_node_filter(graph, node_filters)
+    print('{}/{} nodes passed {}'.format(passed, graph.number_of_nodes(), ', '.join(f.__name__ for f in node_filters)))

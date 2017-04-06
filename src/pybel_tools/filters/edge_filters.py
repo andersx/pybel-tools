@@ -15,6 +15,7 @@ A general use for an edge filter function is to use the built-in :func:`filter` 
 
 from pybel.constants import CITATION_AUTHORS
 from pybel.constants import RELATION, CAUSAL_RELATIONS, ANNOTATIONS, CITATION, CITATION_REFERENCE, CITATION_TYPE
+from pybel.utils import subdict_matches
 from ..constants import PUBMED
 from ..utils import check_has_annotation
 
@@ -23,6 +24,7 @@ __all__ = [
     'keep_causal_edges',
     'build_inverse_filter',
     'build_annotation_value_filter',
+    'build_annotation_dict_filter',
     'build_citation_inclusion_filter',
     'build_citation_exclusion_filter',
     'build_author_inclusion_filter',
@@ -92,8 +94,8 @@ def build_annotation_value_filter(annotation, value):
     
     :param annotation: The annotation to filter on
     :type annotation: str
-    :param value: The value for the annotation to filter on
-    :type value: str or list or tuple or set
+    :param value: The value or values for the annotation to filter on
+    :type value: str or iter[str]
     :return: An edge filter function (graph, node, node, key, data) -> bool
     :rtype: lambda
     """
@@ -144,6 +146,16 @@ def build_annotation_value_filter(annotation, value):
             return graph.edge[u][v][k][ANNOTATIONS][annotation] in values
 
         return annotation_values_filter
+
+
+def build_annotation_dict_filter(annotations, partial_match=True):
+    """Builds a filter that keeps edges whose data dictionaries are superdictionaries to the given dictionary"""
+
+    def annotation_dict_filter(graph, u, v, k, d):
+        """A filter that matches edges with the given dictionary as a subdictionary"""
+        return subdict_matches(d, annotations, partial_match=partial_match)
+
+    return annotation_dict_filter
 
 
 def build_relation_filter(relations):
@@ -309,7 +321,13 @@ def build_citation_exclusion_filter(pmids):
 
 
 def build_author_inclusion_filter(authors):
-    """Only passes for edges with author information that matches one of the given authors"""
+    """Only passes for edges with author information that matches one of the given authors
+    
+    :param authors: The author or list of authors to filter by
+    :type authors: str or list[str]
+    :return: An edge filter
+    :rtype: lambda
+    """
     if isinstance(authors, str):
         def author_filter(graph, u, v, k, d):
             """Only passes for edges with citations with an author that matches the contained author

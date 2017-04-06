@@ -4,37 +4,46 @@ import logging
 import os
 
 from pybel import BELGraph, to_pickle
-from pybel.constants import ANNOTATIONS, RELATION, CAUSAL_RELATIONS, METADATA_NAME, GRAPH_METADATA
+from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
+from ..filters.edge_filters import filter_edges, build_citation_inclusion_filter, build_author_inclusion_filter, \
+    keep_causal_edges, build_annotation_value_filter, build_annotation_dict_filter
 from ..filters.node_filters import filter_nodes
-from ..mutation.expansion import expand_node_neighborhood
+from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
+from ..mutation.merge import left_merge
 from ..summary.edge_summary import get_annotation_values
-from ..utils import check_has_annotation
+from ..utils import check_has_annotation, graph_edge_data_iter
 
 log = logging.getLogger(__name__)
 
 __all__ = [
+    'get_subgraph_by_edge_filter',
     'get_subgraph_by_node_filter',
     'get_subgraph_by_neighborhood',
     'get_subgraph_by_shortest_paths',
-    'get_subgraph_by_annotation',
+    'get_subgraph_by_annotation_value',
+    'get_subgraph_by_data',
     'get_subgraphs_by_annotation',
+    'get_subgraph_by_pubmed',
+    'get_subgraph_by_authors',
+    'get_subgraph_by_provenance_periphery',
     'get_causal_subgraph',
     'get_filtered_subgraph',
     'subgraphs_to_pickles',
 ]
 
 
-def get_subgraph_by_node_filter(graph, filters):
+def get_subgraph_by_node_filter(graph, node_filters):
     """Induces a graph on the nodes that pass all filters
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param filters: A node filter (graph, node) -> bool or list of node filters (graph, node) -> bool
+    :param node_filters: A node filter (graph, node) -> bool or list of node filters (graph, node) -> bool
+    :type node_filters: list or lambda
     :return: An induced BEL subgraph
     :rtype: pybel.BELGraph
     """
-    return graph.subgraph(filter_nodes(graph, filters))
+    return graph.subgraph(filter_nodes(graph, node_filters))
 
 
 def get_subgraph_by_neighborhood(graph, nodes):
@@ -42,7 +51,8 @@ def get_subgraph_by_neighborhood(graph, nodes):
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param nodes:
+    :param nodes: An iterable of BEL nodes
+    :type nodes: iter
     :return: A BEL graph induced around the neighborhoods of the given nodes
     :rtype: pybel.BELGraph
     """
@@ -86,7 +96,28 @@ def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
         return graph.subgraph(get_nodes_in_dijkstra_paths(graph, nodes, cutoff=cutoff, weight=weight))
 
 
-def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
+def get_subgraph_by_edge_filter(graph, edge_filters):
+    """Induces a subgraph on all edges that pass the given filters
+    
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph 
+    :param edge_filters: A predicate or list of predicates (graph, node, node, key, data) -> bool
+    :type edge_filters: list or tuple or lambda
+    :return: A BEL subgraph induced over the edges passing the given filters
+    :rtype: pybel.BELGraph
+    """
+    result = BELGraph()
+
+    for u, v, k, d in filter_edges(graph, edge_filters):
+        result.add_edge(u, v, key=k, attr_dict=d)
+
+    for node in result.nodes_iter():
+        result.node[node].update(graph.node[node])
+
+    return result
+
+
+def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
     """Builds a new subgraph induced over all edges whose annotations match the given key and value
 
     :param graph: A BEL graph
@@ -98,20 +129,22 @@ def get_subgraph_by_annotation(graph, value, annotation='Subgraph'):
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    bg = BELGraph()
-    bg.graph[GRAPH_METADATA][METADATA_NAME] = '{} - ({}: {})'.format(graph.document[METADATA_NAME], annotation, value)
+    g = get_subgraph_by_edge_filter(graph, build_annotation_value_filter(annotation, value))
+    g.graph[GRAPH_METADATA][METADATA_NAME] = '{} - ({}: {})'.format(graph.name, annotation, value)
+    return g
 
-    for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
-        if not check_has_annotation(attr_dict, annotation):
-            continue
 
-        if attr_dict[ANNOTATIONS][annotation] == value:
-            bg.add_edge(u, v, key=key, attr_dict=attr_dict)
-
-    for node in bg.nodes_iter():
-        bg.node[node].update(graph.node[node])
-
-    return bg
+def get_subgraph_by_data(graph, annotations):
+    """
+    
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
+    :type annotations: dict
+    :return: A subgraph of the original BEL graph
+    :rtype: pybel.BELGraph
+    """
+    return get_subgraph_by_edge_filter(graph, build_annotation_dict_filter(annotations))
 
 
 # TODO this is currently O(M^2) and can be easily done in O(M)
@@ -126,7 +159,7 @@ def get_subgraphs_by_annotation(graph, annotation='Subgraph'):
     :rtype: dict
     """
     values = get_annotation_values(graph, annotation)
-    return {value: get_subgraph_by_annotation(graph, value, annotation=annotation) for value in values}
+    return {value: get_subgraph_by_annotation_value(graph, value, annotation=annotation) for value in values}
 
 
 def get_causal_subgraph(graph):
@@ -137,17 +170,9 @@ def get_causal_subgraph(graph):
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    bg = BELGraph()
-    bg.graph[GRAPH_METADATA][METADATA_NAME] = '{} - Induced Causal Subgraph'.format(graph.document[METADATA_NAME])
-
-    for u, v, key, attr_dict in graph.edges_iter(keys=True, data=True):
-        if attr_dict[RELATION] in CAUSAL_RELATIONS:
-            bg.add_edge(u, v, key=key, attr_dict=attr_dict)
-
-    for node in bg.nodes_iter():
-        bg.node[node].update(graph.node[node])
-
-    return bg
+    result = get_subgraph_by_edge_filter(graph, keep_causal_edges)
+    result.graph[GRAPH_METADATA][METADATA_NAME] = '{} - Induced Causal Subgraph'.format(graph.name)
+    return result
 
 
 def get_filtered_subgraph(graph, expand_nodes=None, remove_nodes=None, **annotations):
@@ -169,29 +194,35 @@ def get_filtered_subgraph(graph, expand_nodes=None, remove_nodes=None, **annotat
     :return: A BEL Graph
     :rtype: pybel.BELGraph
     """
+    subgraph = get_subgraph_by_data(graph, {ANNOTATIONS: annotations})
+    # subgraph = BELGraph()
+    # for u, v, k, d in graph.edges_iter(keys=True, data=True, **{ANNOTATIONS: annotations}):
+    #    subgraph.add_edge(u, v, key=k, attr_dict=d)
+    # for node in subgraph.nodes_iter():
+    #    subgraph.node[node] = graph.node[node]
 
-    expand_nodes = [] if expand_nodes is None else expand_nodes
-    remove_nodes = [] if remove_nodes is None else remove_nodes
+    if expand_nodes:
+        for node in expand_nodes:
+            expand_node_neighborhood(graph, subgraph, node)
 
-    subgraph = BELGraph()
-
-    for u, v, k, d in graph.edges_iter(keys=True, data=True, **{ANNOTATIONS: annotations}):
-        subgraph.add_edge(u, v, key=k, attr_dict=d)
-
-    for node in subgraph.nodes_iter():
-        subgraph.node[node] = graph.node[node]
-
-    for node in expand_nodes:
-        expand_node_neighborhood(graph, subgraph, node)
-
-    for node in remove_nodes:
-        if node not in subgraph:
-            log.warning('%s is not in graph %s', node, graph.name)
-            continue
-
-        subgraph.remove_node(node)
+    if remove_nodes:
+        for node in remove_nodes:
+            if node not in subgraph:
+                log.warning('%s is not in graph %s', node, graph.name)
+                continue
+            subgraph.remove_node(node)
 
     return subgraph
+
+
+def get_subgraph_by_pubmed(graph, pmids):
+    """Induces a subgraph over the edges retrieved from the given PubMed identifier(s)"""
+    return get_subgraph_by_edge_filter(graph, build_citation_inclusion_filter(pmids))
+
+
+def get_subgraph_by_authors(graph, authors):
+    """Induces a subgraph over the edges retrieved publications by the given author(s)"""
+    return get_subgraph_by_edge_filter(graph, build_author_inclusion_filter(authors))
 
 
 def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
@@ -202,16 +233,46 @@ def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
     :type graph: pybel.BELGraph
     :param directory: A directory to output the pickles
     :type directory: str
-    :param annotation: An annotation to split by. Suggestion: 'Subgraph'
+    :param annotation: An annotation to split by. Suggestion: ``Subgraph``
     :type annotation: str
     """
-
-    vs = {d[ANNOTATIONS][annotation] for _, _, d in graph.edges_iter(data=True) if check_has_annotation(d, annotation)}
+    vs = {d[ANNOTATIONS][annotation] for d in graph_edge_data_iter(graph) if check_has_annotation(d, annotation)}
 
     for value in vs:
-        sg = get_subgraph_by_annotation(graph, annotation, value)
+        sg = get_subgraph_by_annotation_value(graph, annotation, value)
         sg.document.update(graph.document)
 
         file_name = '{}_{}.gpickle'.format(annotation, value.replace(' ', '_'))
         path = os.path.join(directory, file_name)
         to_pickle(sg, path)
+
+
+def get_subgraph_by_provenance_periphery(graph, pmids=None, authors=None, expand_neighborhoods=True):
+    """Gets all edges of given provenance and expands around their nodes' neighborhoods
+    
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param pmids: A PubMed identifier or list of PubMed identifiers
+    :type pmids: str or list[str]
+    :param authors: An author or list of authors
+    :type authors: str or list[str]
+    :param expand_neighborhoods: Should the neighborhoods around all nodes be expanded? Defaults to ``True``
+    :type expand_neighborhoods: bool
+    :return: An induced graph
+    :rtype: pybel.BELGraph
+    """
+    if not pmids and not authors:
+        raise ValueError('No citations nor authors given')
+
+    result = BELGraph()
+
+    if pmids:
+        left_merge(result, get_subgraph_by_pubmed(graph, pmids))
+
+    if authors:
+        left_merge(result, get_subgraph_by_authors(graph, authors))
+
+    if expand_neighborhoods:
+        expand_all_node_neighborhoods(graph, result)
+
+    return result
