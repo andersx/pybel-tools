@@ -129,7 +129,8 @@
                 <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
                     Path search
                 </button>
-                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#algorithms">
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
+                        data-target="#algorithms">
                     Algorithms
                 </button>
                 <button type="button" class="btn btn-primary button-padding pull-right" data-toggle="modal"
@@ -638,7 +639,6 @@
 </div><!-- /.paths Modal -->
 
 
-
 <div id="algorithms" class="modal fade"><!-- /Algorithms Modal -->
     <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
         <div class="modal-content"><!-- /.Modal content -->
@@ -652,7 +652,16 @@
                 <h4>Algorithms</h4>
                 <hr>
                 <div>
-
+                    <p class="color_red text-left"> Calculate top nodes according to betweenness centrality</p>
+                    <form id="betweenness-centrality" method="get">
+                        <div class="input-group">
+                            <input placeholder="Number of nodes" name="betweenness" id="betweenness" class="text-left"
+                                   type="text"/>
+                        </div>
+                        <div class="buttons">
+                            <input type="button" id="betweenness-button" value="Submit"/>
+                        </div>
+                    </form>
                 </div>
                 <hr>
                 <div>

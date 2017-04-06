@@ -1146,7 +1146,6 @@ $(document).ready(function () {
             }
         );
 
-
         // Shortest path autocompletion input
         var nodeNames = Object.keys(nodeNamesToId).sort();
 
@@ -1201,6 +1200,65 @@ $(document).ready(function () {
                 $(this).toggle(showCurrentLi);
             }
         });
+
+
+        // Get or show all paths between two nodes via Ajax
+
+        var betwenness_form = $("#betweenness-centrality");
+
+        $('#betweenness-button').on('click', function () {
+            if (betwenness_form.valid()) {
+
+                var checkbox = all_path_form.find('input[name="visualization-options"]').is(":checked");
+
+                var args = parameterFilters();
+                args["source"] = nodeNamesToId[all_path_form.find('input[name="source"]').val()];
+                args["target"] = nodeNamesToId[all_path_form.find('input[name="target"]').val()];
+
+                var undirected = all_path_form.find('input[name="undirectionalize"]').is(":checked");
+
+                if (undirected) {
+                    args["undirected"] = undirected;
+                }
+
+                $.ajax({
+                    url: '/paths/all/' + window.id,
+                    type: all_path_form.attr('method'),
+                    dataType: 'json',
+                    data: $.param(args, true),
+                    success: function (data) {
+
+                        if (data.length == 0) {
+                            alert('No paths between the selected nodes');
+                        }
+
+                        resetAttributes();
+
+                        // Apply changes in style for select paths
+                        hideNodesTextInPaths(data, false);
+                        colorPaths(data, checkbox);
+                        resetAttributesDoubleClick()
+                    },
+                    error: function (request) {
+                        alert(request.responseText);
+                    }
+                })
+            }
+        });
+
+        betwenness_form.validate(
+            {
+                rules: {
+                    betweenness: {
+                        required: true,
+                        digits: true
+                    }
+                },
+                messages: {
+                    betweenness: "Please enter a valid source",
+                }
+            }
+        );
 
         // Hide text in graph
         $("#hide_node_names").on("click", function () {

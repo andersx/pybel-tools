@@ -158,8 +158,18 @@ def build_dictionary_service_app(app):
     @app.route('/paths/shortest/<int:network_id>', methods=['GET'])
     def get_shortest_path(network_id):
         graph = process_request(network_id, flask.request.args)
-        source = int(flask.request.args.get(SOURCE_NODE))
-        target = int(flask.request.args.get(TARGET_NODE))
+
+        try:
+            source = int(flask.request.args.get(SOURCE_NODE))
+
+        except ValueError:
+            return 'Not valid node'
+
+        try:
+            target = int(flask.request.args.get(TARGET_NODE))
+        except ValueError:
+            return 'Not valid node'
+
         undirected = UNDIRECTED in flask.request.args
 
         log.info('Source: %s, target: %s', source, target)
@@ -183,8 +193,18 @@ def build_dictionary_service_app(app):
     @app.route('/paths/all/<int:network_id>', methods=['GET'])
     def get_all_path(network_id):
         graph = process_request(network_id, flask.request.args)
-        source = int(flask.request.args.get(SOURCE_NODE))
-        target = int(flask.request.args.get(TARGET_NODE))
+
+        try:
+            source = int(flask.request.args.get(SOURCE_NODE))
+
+        except ValueError:
+            return 'Not valid node'
+
+        try:
+            target = int(flask.request.args.get(TARGET_NODE))
+        except ValueError:
+            return 'Not valid node'
+
         undirected = UNDIRECTED in flask.request.args
 
         if source not in graph or target not in graph:
