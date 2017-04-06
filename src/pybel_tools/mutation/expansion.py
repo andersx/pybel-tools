@@ -25,6 +25,7 @@ __all__ = [
     'get_subgraph_peripheral_nodes',
     'expand_periphery',
     'expand_node_neighborhood',
+    'expand_all_node_neighborhoods',
     'expand_upstream_causal_subgraph',
     'enrich_grouping',
     'enrich_complexes',
@@ -473,6 +474,18 @@ def expand_node_neighborhood(graph, subgraph, node):
         if successor in skip_successors:
             continue
         safe_add_edge(subgraph, node, successor, k, d)
+
+
+def expand_all_node_neighborhoods(graph, subgraph):
+    """Expands the neighborhoods of all nodes in the given subgraph
+    
+    :param graph: The graph containing the stuff to add
+    :type graph: pybel.BELGraph
+    :param subgraph: The graph to add stuff to
+    :type subgraph: pybel.BELGraph 
+    """
+    for node in subgraph.nodes_iter():
+        expand_node_neighborhood(graph, subgraph, node)
 
 
 def expand_upstream_causal_subgraph(graph, subgraph):
