@@ -418,8 +418,6 @@ def get_merged_namespace_names(locations, check_keywords=True):
     >>> value_dict = get_merged_namespace_names([original_ns_url, 'MBS.belns'])
     >>> with open('merged_namespace.belns', 'w') as f:
     >>> ...  write_namespace('MyBrokenNamespace', 'MBS', 'Other', 'Charles Hoyt', 'PyBEL Citation', value_dict, file=f)
-    
-    
     """
     resources = {location: get_bel_resource(location) for location in locations}
 
