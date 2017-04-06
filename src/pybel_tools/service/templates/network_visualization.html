@@ -58,14 +58,12 @@
 
 </head>
 <body>
-<h1>Biological Network Explorer</h1>
+<h1>{{ network_name }}</h1>
 <div class="container">
     <div class="col-lg-12">
-
         <div class="row justify-content-md-center"><!-- visualization row -->
             <div class="col-lg-8" id="graph-chart"></div>
             <div class="col-lg-4" style="max-height: 550px;height: 550px;overflow: auto;"><!-- filters and tools div -->
-
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item">
@@ -726,7 +724,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to GraphML</td>
+                            <td>Network to <a href="http://graphml.graphdrawing.org/">GraphML</a></td>
                             <td>
                                 <button type="button" id="graphml-button" class="btn btn-primary"
                                         aria-label="Left Align">To GraphML
@@ -750,7 +748,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to CX</td>
+                            <td>Network to <a href="http://www.home.ndexbio.org/data-model/">CX</a></td>
                             <td>
                                 <button type="button" id="cx-button" class="btn btn-primary"
                                         aria-label="Left Align">To CX

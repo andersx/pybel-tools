@@ -3,11 +3,11 @@
 """This module runs the dictionary-backed PyBEL API"""
 
 import logging
+from operator import itemgetter
 
 import flask
-from flask import Flask
 import networkx as nx
-from operator import itemgetter
+from flask import Flask
 
 from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
@@ -25,11 +25,13 @@ APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
 SOURCE_NODE = 'source'
 TARGET_NODE = 'target'
+FORMAT = 'format'
 UNDIRECTED = 'undirected'
 NODE_NUMBER = 'node_number'
 SUPER_NETWORK = 'supernetwork'
 DICTIONARY_SERVICE = 'dictionary_service'
-BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE, UNDIRECTED, NODE_NUMBER}
+DEFAULT_TITLE = 'Biological Network Explorer'
+BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE, UNDIRECTED, NODE_NUMBER, FORMAT}
 
 
 def raise_invalid_source_target():
@@ -111,46 +113,55 @@ def build_dictionary_service_app(app):
     @app.route('/network/filter/<int:network_id>', methods=['GET'])
     def get_filter(network_id):
         graph = api.get_network_by_id(network_id)
+        name = graph.name or DEFAULT_TITLE
 
         unique_annotation_dict = get_annotation_values_by_annotation(graph)
 
         json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in
                      unique_annotation_dict.items()]
 
-        return flask.render_template('network_visualization.html', filter_json=json_dict, network_id=network_id)
+        return flask.render_template('network_visualization.html',
+                                     filter_json=json_dict,
+                                     network_id=network_id,
+                                     network_name=name)
 
     @app.route('/network/<int:network_id>', methods=['GET'])
     def get_network_by_id_filtered(network_id):
 
         graph = process_request(network_id, flask.request.args)
 
-        serve_format = flask.request.args.get('format')
+        serve_format = flask.request.args.get(FORMAT)
 
         if serve_format is None:
-            return flask.jsonify(to_json_dict(graph))
+            data = to_json_dict(graph)
+            return flask.jsonify(data)
 
         if serve_format == 'cx':
-            return flask.jsonify(to_cx_json(graph))
+            data = to_cx_json(graph)
+            return flask.jsonify(data)
 
         if serve_format == 'bytes':
-            g_bytes = to_bytes(graph)
-            return flask.Response(g_bytes, mimetype='application/octet-stream')
+            data = to_bytes(graph)
+            return flask.send_file(data, mimetype='application/octet-stream', as_attachment=True,
+                                   attachment_filename='graph.gpickle')
 
         if serve_format == 'bel':
-            return flask.Response('\n'.join(to_bel_lines(graph)), mimetype='text/plain')
+            data = '\n'.join(to_bel_lines(graph))
+            return flask.Response(data, mimetype='text/plain')
 
         if serve_format == 'graphml':
             bio = BytesIO()
             to_graphml(graph, bio)
             bio.seek(0)
-            s = bio.read().decode('utf-8')
-            return flask.Response(s, mimetype='text/xml')
+            data = StringIO(bio.read().decode('utf-8'))
+            return flask.send_file(data, mimetype='text/xml', attachment_filename='graph.graphml', as_attachment=True)
 
         if serve_format == 'csv':
-            sio = StringIO()
-            to_csv(graph, sio)
-            sio.seek(0)
-            return flask.send_file(sio, attachment_filename="testing.txt", as_attachment=True)
+            bio = BytesIO()
+            to_csv(graph, bio)
+            bio.seek(0)
+            data = StringIO(bio.read().decode('utf-8'))
+            return flask.send_file(data, attachment_filename="graph.tsv", as_attachment=True)
 
         return flask.abort(404)
 
@@ -266,7 +277,7 @@ def build_dictionary_service_app(app):
     def reload():
         api.load_networks()
         api.get_super_network(force=True)
-        return flask.jsonify({'status':200})
+        return flask.jsonify({'status': 200})
 
 
 def get_app():
