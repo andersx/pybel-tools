@@ -5,7 +5,7 @@ import logging
 import flask
 from flask import jsonify
 
-from .utils import get_definition_manager, get_metadata_parser
+from .utils import get_cache_manager, get_metadata_parser
 
 __all__ = [
     'build_definition_endpoint',
@@ -20,7 +20,7 @@ def build_definition_endpoint(app):
     :param app: A Flask application
     :type app: flask.Flask
     """
-    dcm = get_definition_manager(app)
+    dcm = get_cache_manager(app)
     mdp = get_metadata_parser(app)
 
     @app.route('/api/database/namespaces/')

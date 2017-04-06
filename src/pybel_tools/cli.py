@@ -71,8 +71,8 @@ def service(connection, host, port, debug, flask_debug, skip_check_version, data
         build_database_service_app(app, database)
     else:
         app = get_app()
-        build_dictionary_service_app(app)
-        get_dict_service(app).load_networks(connection=connection, check_version=(not skip_check_version))
+        build_dictionary_service_app(app, connection=connection)
+        get_dict_service(app).load_networks(check_version=(not skip_check_version))
 
     app.run(debug=flask_debug, host=host, port=port)
 

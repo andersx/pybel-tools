@@ -3,21 +3,21 @@
 """
 This module contains all of the services necessary through the PyBEL API Definition, backed by the PyBEL cache manager.
 """
-from pybel.manager.cache import CacheManager
-from pybel.manager.graph_cache import GraphCacheManager
+
+from pybel.manager.cache import build_manager
 
 from .base_service import PybelService
 
 
 class DatabaseService(PybelService):
+    """Provides queries to access data stored in the PyBEL edge store"""
+
     def __init__(self, connection=None):
         """
-
         :param connection: custom database connection string
         :type connection: str
         """
-        self.cm = CacheManager(connection)
-        self.gcm = GraphCacheManager(connection)
+        self.manager = build_manager(connection=connection)
 
     def get_networks(self):
         """Provides a list of all networks stored in the PyBEL database.
@@ -26,7 +26,7 @@ class DatabaseService(PybelService):
         :rtype: list
         """
 
-        network_ls = self.gcm.get_network(as_dict_list=True)
+        network_ls = self.manager.get_network(as_dict_list=True)
         return [(n['id'], n['name'], n['version']) for n in network_ls]
 
     def get_namespaces(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
@@ -49,22 +49,22 @@ class DatabaseService(PybelService):
         result = []
 
         if network_id:
-            network = self.gcm.get_network(db_id=network_id)[0]
+            network = self.manager.get_network(db_id=network_id)[0]
             result = [namespace.data for namespace in network.namespaces[offset_start:offset_end]]
 
         if name_list and keyword:
-            keyword_url_dict = self.cm.get_namespace_urls(keyword_url_dict=True)
+            keyword_url_dict = self.manager.get_namespace_urls(keyword_url_dict=True)
             namespace_url = keyword_url_dict[keyword]
-            self.cm.ensure_namespace(url=namespace_url)
-            namespace_data = self.cm.get_namespace_data(url=namespace_url)
+            self.manager.ensure_namespace(url=namespace_url)
+            namespace_data = self.manager.get_namespace_data(url=namespace_url)
 
             result = {
                 'namespace_definition': namespace_data,
-                'names': self.cm.namespace_cache[namespace_url]
+                'names': self.manager.namespace_cache[namespace_url]
             }
 
         if not result:
-            result = self.cm.get_namespace_data()
+            result = self.manager.get_namespace_data()
 
         return result
 
@@ -88,23 +88,23 @@ class DatabaseService(PybelService):
         result = []
 
         if network_id:
-            network = self.gcm.get_network(db_id=network_id)
+            network = self.manager.get_network(db_id=network_id)
             result = [annotation.data for annotation in network.annotations[offset_start:offset_end]]
 
         if name_list:
             if name_list and keyword:
-                keyword_url_dict = self.cm.get_annotation_urls(keyword_url_dict=True)
+                keyword_url_dict = self.manager.get_annotation_urls(keyword_url_dict=True)
                 annotation_url = keyword_url_dict[keyword]
-                self.cm.ensure_annotation(url=annotation_url)
-                annotation_data = self.cm.get_annotation_data(url=annotation_url)
+                self.manager.ensure_annotation(url=annotation_url)
+                annotation_data = self.manager.get_annotation_data(url=annotation_url)
 
                 result = {
                     'annotation_definition': annotation_data,
-                    'annotations': self.cm.annotation_cache[annotation_url]
+                    'annotations': self.manager.annotation_cache[annotation_url]
                 }
 
         if len(result) == 0:
-            result = self.cm.get_annotation_data()
+            result = self.manager.get_annotation_data()
 
         return result
 
@@ -125,14 +125,14 @@ class DatabaseService(PybelService):
         result = []
 
         if network_id:
-            network = self.gcm.query_network(db_id=network_id)[0]
+            network = self.manager.query_network(db_id=network_id)[0]
             result = [citation.data for citation in network.citations[offset_start:offset_end]]
 
         if author:
-            result = self.gcm.query_citation(author=author, as_dict_list=True)
+            result = self.manager.query_citation(author=author, as_dict_list=True)
 
         if len(result) == 0:
-            result = self.gcm.query_citation(as_dict_list=True)
+            result = self.manager.query_citation(as_dict_list=True)
 
         return result
 
@@ -169,7 +169,7 @@ class DatabaseService(PybelService):
         result = []
 
         if network_id:
-            network = self.gcm.get_network(db_id=network_id)[0]
+            network = self.manager.get_network(db_id=network_id)[0]
 
             result = {
                 'network': network.data,
@@ -188,13 +188,13 @@ class DatabaseService(PybelService):
             return result
 
         if author and citation is None and pmid_id is None:
-            citation = self.gcm.get_citation(author=author)
+            citation = self.manager.get_citation(author=author)
 
         elif pmid_id:
             citation = str(pmid_id)
 
-        edges = self.gcm.get_edge(bel=statement, source=source, target=target,
-                                  relation=relation, citation=citation, annotation=annotations)
+        edges = self.manager.get_edge(bel=statement, source=source, target=target,
+                                      relation=relation, citation=citation, annotation=annotations)
 
         result = {
             'number_of_edges': len(edges),
@@ -220,11 +220,11 @@ class DatabaseService(PybelService):
         :return:
         """
         if db_id:
-            result = self.gcm.get_node(db_id=db_id)
+            result = self.manager.get_node(db_id=db_id)
         elif network_id:
-            network = self.gcm.get_network(db_id=network_id)
+            network = self.manager.get_network(db_id=network_id)
             result = [node.data for node in network.nodes[offset_start:offset_end]]
         else:
-            result = self.gcm.get_node(bel=bel, namespace=namespace, name=name, as_dict_list=True)
+            result = self.manager.get_node(bel=bel, namespace=namespace, name=name, as_dict_list=True)
 
         return result
