@@ -10,9 +10,14 @@ from .base_service import PybelService
 
 
 class DatabaseService(PybelService):
-    def __init__(self, mySQLConnection):
-        self.cm = CacheManager(mySQLConnection)
-        self.gcm = GraphCacheManager(mySQLConnection)
+    def __init__(self, connection=None):
+        """
+
+        :param connection: custom database connection string
+        :type connection: str
+        """
+        self.cm = CacheManager(connection)
+        self.gcm = GraphCacheManager(connection)
 
     def get_networks(self):
         """Provides a list of all networks stored in the PyBEL database.
@@ -21,76 +26,75 @@ class DatabaseService(PybelService):
         :rtype: list
         """
 
-        network_ls = self.gcm.query_network(as_dict_list=True)
+        network_ls = self.gcm.get_network(as_dict_list=True)
         return [(n['id'], n['name'], n['version']) for n in network_ls]
 
-    def get_namespaces(self, network_id=None, offset_start=0, offset_end=500, **kwargs):
+    def get_namespaces(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
         """Provides a list of namespaces filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
                            get_networks function.
         :type network_id: int
-        :param \**kwargs: See below.
-
-        :Keyword Arguments:
-        * *name_list* (``bool``) --
-          Flag that indicates if a names list is required.
-        * *namespace_key* (``str``) --
-          Keyword that identifies the namespace of which the names should be shown. Only valid in combination with
-          :code:`name_list = True`.
+        :param offset_start: The startingpoint of the offset (position in database)
+        :type offset_start: int
+        :param offset_end: The end point of the offset (position in database)
+        :type offset_end: int
+        :param name_list: Flag that identifies if a list of all names in a namespace should be created.
+        :type name_list: bool
+        :param keyword: The keyword used to identify a specific namespace. This is only used if name_list is True.
+        :type keyword: str
 
         :return: List of dictionaries that describe all namespaces.
         """
         result = []
 
         if network_id:
-            network = self.gcm.query_network(db_id=network_id)[0]
+            network = self.gcm.get_network(db_id=network_id)[0]
             result = [namespace.data for namespace in network.namespaces[offset_start:offset_end]]
 
-        if 'name_list' in kwargs:
-            if kwargs['name_list'] == True and 'namespace_key' in kwargs:
-                keyword_url_dict = self.cm.get_namespace_urls(keyword_url_dict=True)
-                namespace_url = keyword_url_dict[kwargs['namespace_key']]
-                self.cm.ensure_namespace(url=namespace_url)
-                namespace_data = self.cm.get_namespace_data(url=namespace_url)
+        if name_list and keyword:
+            keyword_url_dict = self.cm.get_namespace_urls(keyword_url_dict=True)
+            namespace_url = keyword_url_dict[keyword]
+            self.cm.ensure_namespace(url=namespace_url)
+            namespace_data = self.cm.get_namespace_data(url=namespace_url)
 
-                result = {
-                    'namespace_definition': namespace_data,
-                    'names': self.cm.namespace_cache[namespace_url]
-                }
+            result = {
+                'namespace_definition': namespace_data,
+                'names': self.cm.namespace_cache[namespace_url]
+            }
 
-        if len(result) == 0:
+        if not result:
             result = self.cm.get_namespace_data()
 
         return result
 
-    def get_annotations(self, network_id=None, offset_start=0, offset_end=500, **kwargs):
+    def get_annotations(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
         """Provides a list of annotations filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
                            get_networks function.
         :type network_id: int
-        :param \**kwargs: See below.
-
-        :Keyword Arguments:
-        * *name_list* (``bool``) --
-          Flag that indicates if a annotations list is required.
-        * *annotation_key* (``str``) --
-          Keyword that identifies the annotation definition of which the annotations should be shown.
-          Only valid in combination with :code:`name_list = True`.
+        :param offset_start: The startingpoint of the offset (position in database)
+        :type offset_start: int
+        :param offset_end: The end point of the offset (position in database)
+        :type offset_end: int
+        :param name_list: Flag that identifies if a list of all names in a namespace should be created.
+        :type name_list: bool
+        :param keyword: The keyword used to identify a specific namespace. This is only used if name_list is True.
+        :type keyword: str
 
         :return: List of dictionaries that describe all namespaces.
         """
         result = []
 
         if network_id:
-            network = self.gcm.query_network(db_id=network_id)
-            result = [annotation.data for annotation in network.annotations]
+            network = self.gcm.get_network(db_id=network_id)
+            result = [annotation.data for annotation in network.annotations[offset_start:offset_end]]
 
-        if 'name_list' in kwargs:
-            if kwargs['name_list'] == True and 'annotation_key' in kwargs:
+        if name_list:
+            if name_list and keyword:
                 keyword_url_dict = self.cm.get_annotation_urls(keyword_url_dict=True)
-                annotation_url = keyword_url_dict[kwargs['annotation_key']]
+                annotation_url = keyword_url_dict[keyword]
                 self.cm.ensure_annotation(url=annotation_url)
                 annotation_data = self.cm.get_annotation_data(url=annotation_url)
 
@@ -112,13 +116,17 @@ class DatabaseService(PybelService):
         :type network_id: int
         :param author: The name of an author that participated in creation of the citation.
         :type author: str
+        :param offset_start: The starting point of the offset (position in database)
+        :type offset_start: int
+        :param offset_end: The end point of the offset (position in database)
+        :type offset_end: int
         :return:
         """
         result = []
 
         if network_id:
             network = self.gcm.query_network(db_id=network_id)[0]
-            result = [citation.data for citation in network.citations]
+            result = [citation.data for citation in network.citations[offset_start:offset_end]]
 
         if author:
             result = self.gcm.query_citation(author=author, as_dict_list=True)
@@ -151,13 +159,17 @@ class DatabaseService(PybelService):
         :type citation: str or pybel.models.Citation
         :param annotations: A dictionary that describes an annotation that is the context of the seeked relationship.
         :type annotations: dict
+        :param offset_start: The starting point of the offset (position in database)
+        :type offset_start: int
+        :param offset_end: The end point of the offset (position in database)
+        :type offset_end: int
         :return:
         """
 
         result = []
 
         if network_id:
-            network = self.gcm.query_network(db_id=network_id)[0]
+            network = self.gcm.get_network(db_id=network_id)[0]
 
             result = {
                 'network': network.data,
@@ -172,22 +184,22 @@ class DatabaseService(PybelService):
                 offset_end = offset_end + 1
 
             result['edges'] = [edge.data_min for edge in network.edges[offset_start:offset_end]]
-
+            result['number_of_edges'] = len(result['edges'])
+            return result
 
         if author and citation is None and pmid_id is None:
-            citation = self.gcm.query_citation(author=author)
+            citation = self.gcm.get_citation(author=author)
 
         elif pmid_id:
             citation = str(pmid_id)
 
-        if len(result) == 0:
-            edges = self.gcm.query_edge(bel=statement, source=source, target=target,
-                                        relation=relation, citation=citation, annotation=annotations)
+        edges = self.gcm.get_edge(bel=statement, source=source, target=target,
+                                  relation=relation, citation=citation, annotation=annotations)
 
-            result_edges = {
-                'number_of_edges': len(edges),
-                'edges': [edge.data_min for edge in edges],
-            }
+        result = {
+            'number_of_edges': len(edges),
+            'edges': [edge.data_min for edge in edges],
+        }
 
         return result
 
@@ -196,7 +208,7 @@ class DatabaseService(PybelService):
         """Provides a list of nodes filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
-                           get_networks function.
+                           :func:`get_networks` function.
         :type network_id: int
         :param bel: A BEL term that describes the seeked node.
         :type bel: str
@@ -204,17 +216,15 @@ class DatabaseService(PybelService):
         :type namespace: str
         :param name: The name of the node (biological entity).
         :type name: str
+
         :return:
         """
         if db_id:
-            result = self.gcm.query_node(db_id=db_id)
+            result = self.gcm.get_node(db_id=db_id)
         elif network_id:
-            network = self.gcm.query_network(db_id=network_id)
+            network = self.gcm.get_network(db_id=network_id)
             result = [node.data for node in network.nodes[offset_start:offset_end]]
         else:
-            result = self.gcm.query_node(bel=bel, namespace=namespace, name=name, as_dict_list=True)
+            result = self.gcm.get_node(bel=bel, namespace=namespace, name=name, as_dict_list=True)
 
         return result
-
-    def get_paths(self, **kwargs):
-        pass
