@@ -12,6 +12,7 @@ import time
 
 from pybel.constants import NAMESPACE_DOMAIN_TYPES, belns_encodings, METADATA_AUTHORS, METADATA_CONTACT, METADATA_NAME
 from pybel.manager.utils import parse_owl
+from pybel.utils import get_bel_resource
 from .summary.error_summary import get_incorrect_names
 from .summary.node_summary import get_names
 
@@ -26,6 +27,7 @@ __all__ = [
     'write_annotation',
     'export_namespace',
     'export_namespaces',
+    'get_merged_namespace_names',
 ]
 
 log = logging.getLogger(__name__)
@@ -396,3 +398,18 @@ def export_namespaces(graph, namespaces, directory=None, cacheable=False):
     directory = os.getcwd() if directory is None else directory  # avoid making multiple calls to os.getcwd later
     for namespace in namespaces:
         export_namespace(graph, namespace, directory=directory, cacheable=cacheable)
+
+
+def get_merged_namespace_names(locations):
+    """Loads many namespaces and combines their names
+    
+    :param locations: An iterable of URLs or file paths pointing to BEL namespaces.
+    :type locations: iter
+    :return:
+    :rtype: set
+    """
+    resources = {location: get_bel_resource(location) for location in locations}
+    result = {}
+    for resource in resources:
+        result.update(resource['Values'])
+    return result
