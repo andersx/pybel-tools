@@ -421,7 +421,7 @@ $(document).ready(function () {
         var circleColor = "black";
         var defaultLinkColor = "#888";
 
-        var nominalBaseNodeSize = 8;
+        const nominalBaseNodeSize = 10;
 
         var nominalStroke = 2.5;
         // Zoom variables
@@ -531,10 +531,8 @@ $(document).ready(function () {
             .enter().append("line")
             .style("stroke-width", nominalStroke)
             .style("stroke", defaultLinkColor)
-            .on("mouseover", function (d) {
-                setTimeout(function () {
-                    displayEdgeInfo(d);
-                }, 3000);
+            .on("click", function (d) {
+                displayEdgeInfo(d);
             })
             .on('contextmenu', d3.contextMenu(edgeMenu)) // Attach context menu to edge link
             .attr("class", function (d) {
@@ -576,10 +574,8 @@ $(document).ready(function () {
             // Next two lines -> Pin down functionality
             .on('dblclick', releaseNode)
             // Box info
-            .on("mouseover", function (d) {
-                setTimeout(function () {
-                    displayNodeInfo(d);
-                }, 1000);
+            .on("click", function (d) {
+                displayNodeInfo(d);
             })
             // context-menu on right click
             .on('contextmenu', d3.contextMenu(nodeMenu)) // Attach context menu to node's circle
@@ -587,7 +583,7 @@ $(document).ready(function () {
             .call(nodeDrag);
 
         var circle = node.append("circle")
-            .attr("r", "8")
+            .attr("r", nominalBaseNodeSize)
             .attr("class", function (d) {
                 return d.function
             })
