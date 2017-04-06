@@ -92,8 +92,8 @@ def build_annotation_value_filter(annotation, value):
     
     :param annotation: The annotation to filter on
     :type annotation: str
-    :param value: The value for the annotation to filter on
-    :type value: str or list or tuple or set
+    :param value: The value or values for the annotation to filter on
+    :type value: str or iter[str]
     :return: An edge filter function (graph, node, node, key, data) -> bool
     :rtype: lambda
     """
@@ -309,7 +309,13 @@ def build_citation_exclusion_filter(pmids):
 
 
 def build_author_inclusion_filter(authors):
-    """Only passes for edges with author information that matches one of the given authors"""
+    """Only passes for edges with author information that matches one of the given authors
+    
+    :param authors: The author or list of authors to filter by
+    :type authors: str or list[str]
+    :return: An edge filter
+    :rtype: lambda
+    """
     if isinstance(authors, str):
         def author_filter(graph, u, v, k, d):
             """Only passes for edges with citations with an author that matches the contained author
