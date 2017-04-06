@@ -116,8 +116,8 @@ def build_database_service_app(app, connection=None):
         return jsonify(edges)
 
     @app.route('/api/edges/by_pmid/<int:pmid>', methods=['GET'])
-    def edges_by_pmid(pmid_id):
-        edges = api.get_edges(pmid_id=pmid_id)
+    def edges_by_pmid(pmid):
+        edges = api.get_edges(pmid=pmid)
         return jsonify(edges)
 
     @app.route('/api/edges/by_author/<author>', methods=['GET'])

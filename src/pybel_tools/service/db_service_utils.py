@@ -49,7 +49,7 @@ class DatabaseService(PybelService):
         result = []
 
         if network_id:
-            network = self.manager.get_network(db_id=network_id)[0]
+            network = self.manager.get_network(network_id=network_id)[0]
             result = [namespace.data for namespace in network.namespaces[offset_start:offset_end]]
 
         if name_list and keyword:
@@ -88,7 +88,7 @@ class DatabaseService(PybelService):
         result = []
 
         if network_id:
-            network = self.manager.get_network(db_id=network_id)
+            network = self.manager.get_network(network_id=network_id)[0]
             result = [annotation.data for annotation in network.annotations[offset_start:offset_end]]
 
         if name_list:
@@ -125,26 +125,26 @@ class DatabaseService(PybelService):
         result = []
 
         if network_id:
-            network = self.manager.query_network(db_id=network_id)[0]
+            network = self.manager.get_network(network_id=network_id)[0]
             result = [citation.data for citation in network.citations[offset_start:offset_end]]
 
         if author:
-            result = self.manager.query_citation(author=author, as_dict_list=True)
+            result = self.manager.get_citation(author=author, as_dict_list=True)
 
         if len(result) == 0:
-            result = self.manager.query_citation(as_dict_list=True)
+            result = self.manager.get_citation(as_dict_list=True)
 
         return result
 
-    def get_edges(self, network_id=None, pmid_id=None, statement=None, source=None, target=None, relation=None,
+    def get_edges(self, network_id=None, pmid=None, statement=None, source=None, target=None, relation=None,
                   author=None, citation=None, annotations=None, offset_start=0, offset_end=500):
         """Provides a list of edges (nanopubs) filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
                            get_networks function.
         :type network_id: int
-        :param pmid_id: Pubmed identifier of a specific citation.
-        :type pmid_id: str
+        :param pmid: Pubmed identifier of a specific citation.
+        :type pmid: str
         :param statement: A BEL statement that represents the needed edge.
         :type statement: str
         :param source: A BEL term that describes the SUBJECT of the seeked relation.
@@ -164,12 +164,10 @@ class DatabaseService(PybelService):
         :param offset_end: The end point of the offset (position in database)
         :type offset_end: int
         :return:
+        :rtype:
         """
-
-        result = []
-
         if network_id:
-            network = self.manager.get_network(db_id=network_id)[0]
+            network = self.manager.get_network(network_id=network_id)[0]
 
             result = {
                 'network': network.data,
@@ -179,19 +177,19 @@ class DatabaseService(PybelService):
                 }
             }
             if offset_start > 0:
-                offset_start = offset_start - 1
+                offset_start -= 1
             if offset_start == offset_end:
-                offset_end = offset_end + 1
+                offset_end += 1
 
             result['edges'] = [edge.data_min for edge in network.edges[offset_start:offset_end]]
             result['number_of_edges'] = len(result['edges'])
             return result
 
-        if author and citation is None and pmid_id is None:
+        if author and citation is None and pmid is None:
             citation = self.manager.get_citation(author=author)
 
-        elif pmid_id:
-            citation = str(pmid_id)
+        elif pmid:
+            citation = str(pmid)
 
         edges = self.manager.get_edge(bel=statement, source=source, target=target,
                                       relation=relation, citation=citation, annotation=annotations)
@@ -203,26 +201,32 @@ class DatabaseService(PybelService):
 
         return result
 
-    def get_nodes(self, network_id=None, db_id=None, bel=None, namespace=None, name=None, offset_start=0,
+    def get_nodes(self, network_id=None, node_id=None, bel=None, namespace=None, name=None, offset_start=0,
                   offset_end=500):
         """Provides a list of nodes filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
                            :func:`get_networks` function.
         :type network_id: int
+        :param node_id: A node's database identifier
+        :type node_id: int
         :param bel: A BEL term that describes the seeked node.
         :type bel: str
         :param namespace: A namespace keyword (e.g. HGNC) that represents a namespace that describes the nodes name.
         :type namespace: str
         :param name: The name of the node (biological entity).
         :type name: str
-
+        :param offset_start: The starting point of the offset (position in database)
+        :type offset_start: int
+        :param offset_end: The end point of the offset (position in database)
+        :type offset_end: int
         :return:
+        :rtype:
         """
-        if db_id:
-            result = self.manager.get_node(db_id=db_id)
+        if node_id:
+            result = self.manager.get_node(node_id=node_id)
         elif network_id:
-            network = self.manager.get_network(db_id=network_id)
+            network = self.manager.get_network(network_id=network_id)[0]
             result = [node.data for node in network.nodes[offset_start:offset_end]]
         else:
             result = self.manager.get_node(bel=bel, namespace=namespace, name=name, as_dict_list=True)
