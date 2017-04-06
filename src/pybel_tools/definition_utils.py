@@ -11,7 +11,6 @@ import sys
 import time
 
 from pybel.constants import NAMESPACE_DOMAIN_TYPES, belns_encodings, METADATA_AUTHORS, METADATA_CONTACT, METADATA_NAME
-from pybel.manager.utils import parse_owl
 from pybel.utils import get_bel_resource
 from .summary.error_summary import get_incorrect_names
 from .summary.node_summary import get_names
@@ -223,28 +222,6 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
         if not value.strip():
             continue
         print('{}{}|{}'.format(value_prefix, value.strip(), function_values), file=file)
-
-
-def write_namespace_from_owl(url, file=None):
-    """
-
-    :param url: Path to OWL file or filelike object
-    :type url: str
-    :param file: output stream. Defaults to :code:`sys.stdout` if None
-    :type file: file or file-like
-    """
-
-    owl = parse_owl(url)
-
-    write_namespace(owl['title'],
-                    owl['subject'],
-                    owl['description'],
-                    'Other',
-                    owl['creator'],
-                    owl['email'],
-                    url,
-                    owl.graph.nodes(),
-                    file=file)
 
 
 def make_annotation_header(keyword, description=None, usage=None, version=None, created=None):
