@@ -429,6 +429,6 @@ def check_cacheable(config):
         elif 'no' == flag:
             return False
         else:
-            return ValueError('Invalid value for CacheableFlag: {}'.format(flag)
+            return ValueError('Invalid value for CacheableFlag: {}'.format(flag))
 
     return False
