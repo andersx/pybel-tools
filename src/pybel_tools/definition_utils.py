@@ -27,6 +27,7 @@ __all__ = [
     'export_namespace',
     'export_namespaces',
     'get_merged_namespace_names',
+    'check_cacheable',
 ]
 
 log = logging.getLogger(__name__)
@@ -407,3 +408,27 @@ def get_merged_namespace_names(locations, check_keywords=True):
     for resource in resources:
         result.update(resource['Values'])
     return result
+
+
+def check_cacheable(config):
+    """Checks the config returned by :func:`pybel.utils.get_bel_resource` to determine if the resource should be cached.
+
+    If cannot be determined, returns ``False``
+
+    :param config: A configuration dictionary representing a BEL resource
+    :type config: dict
+    :return: Should this resource be cached
+    :rtype: bool
+    """
+
+    if 'Processing' in config and 'CacheableFlag' in config['Processing']:
+        flag = config['Processing']['CacheableFlag']
+
+        if 'yes' == flag:
+            return True
+        elif 'no' == flag:
+            return False
+        else:
+            return ValueError('Invalid value for CacheableFlag: {}'.format(flag)
+
+    return False
