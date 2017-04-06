@@ -40,7 +40,7 @@ def main():
 
 @main.command()
 @click.argument('path')
-@click.option('--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
 def upload(path, connection, skip_check_version):
     """Sketchy uploader that doesn't respect database edge store"""
@@ -49,7 +49,7 @@ def upload(path, connection, skip_check_version):
 
 
 @main.command()
-@click.option('--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('--host', help='Flask host. Defaults to localhost')
 @click.option('--port', help='Flask port. Defaults to 5000')
 @click.option('--debug', is_flag=True)
