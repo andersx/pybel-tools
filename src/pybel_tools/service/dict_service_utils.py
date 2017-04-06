@@ -11,7 +11,7 @@ import networkx as nx
 
 from pybel import from_bytes, BELGraph
 from pybel.constants import *
-from pybel.manager.graph_cache import GraphCacheManager
+from pybel.manager.graph_cache import build_graph_cache_manager
 from pybel.manager.models import Network
 from pybel.utils import hash_tuple
 from .base_service import PybelService
@@ -93,13 +93,12 @@ class DictionaryService(PybelService):
         :param check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
         :type check_version: bool
         """
-        gcm = GraphCacheManager(connection=connection)
+        gcm = build_graph_cache_manager(connection=connection)
 
         for nid, blob in gcm.session.query(Network.id, Network.blob).all():
             graph = from_bytes(blob, check_version=check_version)
             self.add_network(nid, graph)
             log.info('loaded network: [%s] %s ', nid, graph.document.get(METADATA_NAME, 'UNNAMED'))
-
 
     def update_node_indexes(self, graph):
         """Updates identifiers for nodes based on addition order
@@ -265,6 +264,3 @@ class DictionaryService(PybelService):
             result.extend(self.full_network.edge[v][u].values())
 
         return result
-
-
-

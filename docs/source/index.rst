@@ -32,7 +32,7 @@ PyBEL Tools Documentation
    :name: services
 
    dictservice
-       dbservice
+   dbservice
 
 .. toctree::
    :caption: Other Utilities
