@@ -400,15 +400,34 @@ def export_namespaces(graph, namespaces, directory=None, cacheable=False):
         export_namespace(graph, namespace, directory=directory, cacheable=cacheable)
 
 
-def get_merged_namespace_names(locations):
-    """Loads many namespaces and combines their names
+def get_merged_namespace_names(locations, check_keywords=True):
+    """Loads many namespaces and combines their names.
     
     :param locations: An iterable of URLs or file paths pointing to BEL namespaces.
     :type locations: iter
-    :return:
-    :rtype: set
+    :param check_keywords: Should all the keywords be the same? Defaults to ``True``
+    :type check_keywords: bool
+    :return: A dictionary of {names: labels}
+    :rtype: dict
+    
+    Example Usage
+    
+    >>> graph = ...
+    >>> original_ns_url = ...
+    >>> export_namespace(graph, 'MBS') # Outputs in current directory to MBS.belns
+    >>> value_dict = get_merged_namespace_names([original_ns_url, 'MBS.belns'])
+    >>> with open('merged_namespace.belns', 'w') as f:
+    >>> ...  write_namespace('MyBrokenNamespace', 'MBS', 'Other', 'Charles Hoyt', 'PyBEL Citation', value_dict, file=f)
+    
+    
     """
     resources = {location: get_bel_resource(location) for location in locations}
+
+    if check_keywords:
+        resource_keywords = set(config['Namespace']['Keyword'] for config in resources.values())
+        if 1 != len(resource_keywords):
+            raise ValueError('Tried merging namespaces with different keywords: {}'.format(resource_keywords))
+
     result = {}
     for resource in resources:
         result.update(resource['Values'])
