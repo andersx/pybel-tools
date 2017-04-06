@@ -17,12 +17,11 @@ from .summary.node_summary import get_names
 
 __all__ = [
     'make_namespace_header',
+    'make_annotation_header',
     'make_author_header',
     'make_citation_header',
     'make_properties_header',
     'write_namespace',
-    'write_namespace_from_owl',
-    'make_annotation_header',
     'write_annotation',
     'export_namespace',
     'export_namespaces',
