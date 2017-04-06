@@ -15,6 +15,7 @@ A general use for an edge filter function is to use the built-in :func:`filter` 
 
 from pybel.constants import CITATION_AUTHORS
 from pybel.constants import RELATION, CAUSAL_RELATIONS, ANNOTATIONS, CITATION, CITATION_REFERENCE, CITATION_TYPE
+from pybel.utils import subdict_matches
 from ..constants import PUBMED
 from ..utils import check_has_annotation
 
@@ -23,6 +24,7 @@ __all__ = [
     'keep_causal_edges',
     'build_inverse_filter',
     'build_annotation_value_filter',
+    'build_annotation_dict_filter',
     'build_citation_inclusion_filter',
     'build_citation_exclusion_filter',
     'build_author_inclusion_filter',
@@ -144,6 +146,16 @@ def build_annotation_value_filter(annotation, value):
             return graph.edge[u][v][k][ANNOTATIONS][annotation] in values
 
         return annotation_values_filter
+
+
+def build_annotation_dict_filter(annotations, partial_match=True):
+    """Builds a filter that keeps edges whose data dictionaries are superdictionaries to the given dictionary"""
+
+    def annotation_dict_filter(graph, u, v, k, d):
+        """A filter that matches edges with the given dictionary as a subdictionary"""
+        return subdict_matches(d, annotations, partial_match=partial_match)
+
+    return annotation_dict_filter
 
 
 def build_relation_filter(relations):

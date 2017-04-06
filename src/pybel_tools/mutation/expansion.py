@@ -165,7 +165,7 @@ def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filte
 
     >>> import pybel_tools as pbt
     >>> sgn = 'Blood vessel dilation subgraph'
-    >>> sg = pbt.selection.get_subgraph_by_annotation(graph, value=sgn, annotation='Subgraph')
+    >>> sg = pbt.selection.get_subgraph_by_annotation_value(graph, value=sgn, annotation='Subgraph')
     >>> p = pbt.mutation.get_subgraph_peripheral_nodes(graph, sg, node_filters=pbt.filters.exclude_pathology_filter)
     >>> for node in sorted(p, key=lambda node: len(set(p[node]['successor']) | set(p[node]['predecessor'])), reverse=True):
     >>>     if 1 == len(p[sgn][node]['successor']) or 1 == len(p[sgn][node]['predecessor']):
