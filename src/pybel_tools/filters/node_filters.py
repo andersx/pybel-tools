@@ -15,7 +15,7 @@ A general use for a node filter function is to use the built-in :func:`filter` i
 
 from __future__ import print_function
 
-from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY
+from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY, NAMESPACE
 from ..constants import CNAME
 
 __all__ = [
@@ -191,7 +191,47 @@ def function_exclusion_filter_builder(function):
     raise ValueError('Invalid type for argument: {}'.format(function))
 
 
-def data_does_not_contain_key_builder(key):
+def function_namespace_inclusion_builder(function, namespace):
+    def function_namespace_filter(graph, node):
+        if function != graph.node[node][FUNCTION]:
+            return False
+        return NAMESPACE in graph.node[node] and graph.node[node][NAMESPACE] == namespace
+
+    return function_namespace_filter
+
+
+def namespace_inclusion_builder(namespace):
+    def namespace_filter(graph, node):
+        return NAMESPACE in graph.node[node] and graph.node[node][NAMESPACE] == namespace
+
+    return namespace_filter
+
+
+def data_contains_key_builder(key):
+    """Builds a filter that passes only on nodes that have the given key in their data dictionary
+
+        :param key: A key for the node's data dictionary
+        :type key: str
+        :return: A node filter (graph, node) -> bool
+        :rtype: lambda
+        """
+
+    def data_contains_key(graph, node):
+        """Passes only for a node that contains the enclosed key in its data dictionary
+
+        :param graph: A BEL Graph
+        :type graph: pybel.BELGraph
+        :param node: A BEL node
+        :type node: tuple
+        :return: If the node contains the enclosed key in its data dictionary
+        :rtype: bool
+        """
+        return key in graph.node[node]
+
+    return data_contains_key
+
+
+def data_missing_key_builder(key):
     """Builds a filter that passes only on nodes that don't have the given key in their data dictionary
 
     :param key: A key for the node's data dictionary
@@ -215,13 +255,11 @@ def data_does_not_contain_key_builder(key):
     return data_does_not_contain_key
 
 
-def keep_has_cname(graph, node):
-    """Passes for nodes that have been annotated with a canonical name"""
-    return CNAME in graph.node[node]
-
+#: Passes for nodes that have been annotated with a canonical name
+keep_contains_cname = data_contains_key_builder(CNAME)
 
 #: Fails for nodes that have been annotated with a canonical name
-keep_missing_cname = data_does_not_contain_key_builder(CNAME)
+keep_missing_cname = data_missing_key_builder(CNAME)
 
 
 # Filter Builders

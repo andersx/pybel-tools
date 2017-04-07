@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from pybel.constants import GENE, RELATION, TRANSCRIBED_TO, RNA, TRANSLATED_TO
-from ..filters.node_filters import data_does_not_contain_key_builder, upstream_leaf_predicate
+from ..filters.node_filters import data_missing_key_builder, upstream_leaf_predicate
 from ..selection.utils import get_nodes_by_function
 
 __all__ = [
@@ -40,7 +40,7 @@ def get_unweighted_upstream_leaves(graph, key):
     :return: An iterable over leaves (nodes with an in-degree of 0) that don't have the given annotation
     :rtype: iter
     """
-    data_does_not_contain_key = data_does_not_contain_key_builder(key)
+    data_does_not_contain_key = data_missing_key_builder(key)
 
     for node in get_upstream_leaves(graph):
         if data_does_not_contain_key(graph, node):

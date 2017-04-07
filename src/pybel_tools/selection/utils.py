@@ -2,8 +2,9 @@
 
 from itertools import combinations
 
-from pybel.constants import FUNCTION, NAMESPACE
-from ..filters.node_filters import function_inclusion_filter_builder, filter_nodes
+from pybel.constants import FUNCTION
+from ..filters.node_filters import function_inclusion_filter_builder, filter_nodes, \
+    function_namespace_inclusion_builder, namespace_inclusion_builder
 
 __all__ = [
     'get_nodes_by_function',
@@ -37,9 +38,7 @@ def get_nodes_by_namespace(graph, namespace):
     :return: An iterable over nodes with the given function and namspace
     :rtype: iter
     """
-    for node, data in graph.nodes(data=True):
-        if NAMESPACE in data and data[NAMESPACE] == namespace:
-            yield node
+    return filter_nodes(graph, namespace_inclusion_builder(namespace))
 
 
 def get_nodes_by_function_namespace(graph, function, namespace):
@@ -54,9 +53,7 @@ def get_nodes_by_function_namespace(graph, function, namespace):
     :return: An iterable over nodes with the given function and namspace
     :rtype: iter
     """
-    for node, data in graph.nodes(data=True):
-        if function == data[FUNCTION] and NAMESPACE in data and data[NAMESPACE] == namespace:
-            yield node
+    return filter_nodes(graph, function_namespace_inclusion_builder(function, namespace))
 
 
 def get_triangles(graph, node):
