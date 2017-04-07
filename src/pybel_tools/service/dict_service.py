@@ -146,8 +146,8 @@ def build_dictionary_service_app(app, connection=None):
     def get_graph_from_request(network_id=None):
         """Process the GET request returning the filtered graph
         
-        :param network_id: id of the network
-        :param args: request.args
+        :param network_id: The database id of a network. If none, uses the entire network database, merged.
+        :type network_id: int
         :return: A BEL graph
         :rtype: pybel.BELGraph
         """

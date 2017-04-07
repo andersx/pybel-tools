@@ -213,29 +213,35 @@ class DictionaryService(BaseService):
     def query(self, network_id=None, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None,
               **annotations):
         """Filters a dictionary from the module level cache.
+        
+        0. Gets network by ID or uses merged network store
+        1. Thin wrapper around :code:`pybel_tools.selection.get_subgraph`:
+            1. Apply seed function
+            2. Filter edges by annotations
+            3. Add nodes
+            4. Remove nodes
+        2. Add canonical names
+        3. Relabel nodes to identifiers
 
-                1. Thin wrapper around :code:`pybel_tools.selection.get_subgraph`:
-                    1. Apply seed function
-                    2. Filter edges by annotations
-                    3. Add nodes
-                    4. Remove nodes
-                2. Add canonical names
-                3. Relabel nodes to identifiers
-
-                :param network_id: The identifier of the network in the database. If none, gets all networks merged with
-                                    :func:`get_super_network`
-                :type network_id: int
-                :param expand_nodes: Add the neighborhoods around all of these nodes
-                :type expand_nodes: list
-                :param remove_nodes: Remove these nodes and all of their in/out edges
-                :type remove_nodes: list
-                :param annotations: Annotation filters (match all with :code:`pybel.utils.subdict_matches`)
-                :type annotations: dict
-                :return: A BEL Graph
-                :rtype: BELGraph
-                """
+        :param network_id: The identifier of the network in the database. If none, gets all networks merged with
+                            :func:`get_super_network`
+        :type network_id: int
+        :param seed_method: The name of the get_subgraph_by_* function to use
+        :type seed_method: str
+        :param seed_data: The argument to pass to the get_subgraph function
+        :param expand_nodes: Add the neighborhoods around all of these nodes
+        :type expand_nodes: list
+        :param remove_nodes: Remove these nodes and all of their in/out edges
+        :type remove_nodes: list
+        :param annotations: Annotation filters (match all with :code:`pybel.utils.subdict_matches`)
+        :type annotations: dict
+        :return: A BEL Graph
+        :rtype: BELGraph
+        """
         log.debug('Requested: %s', {
             'network_id': network_id,
+            'seed_method': seed_method,
+            'seed_data': seed_data,
             'expand': expand_nodes,
             'delete': remove_nodes,
             'annotations': annotations
