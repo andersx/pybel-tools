@@ -3,13 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>Networks</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
+    <script type="text/javascript"
+            src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/home_controller/home_controller.js') }}"></script>
 </head>
 <body>
-<h1>Networks</h1>
-<ul>
-{% for nid, name, vers in data %}
-    <li><a href="/network/filter/{{ nid }}">{{ name }} v{{ vers }}</a></li>
-{% endfor %}
-</ul>
+<div class="container">
+    <h1>Loaded Networks</h1>
+
+    <ul>
+        {% for nid, name, vers in data %}
+            <li><a href="/network/filter/{{ nid }}">{{ name }} v{{ vers }}</a></li>
+        {% endfor %}
+    </ul>
+    <h4>Inspect nodes in your networks</h4>
+
+    <input placeholder="Type here your nodes" name="node-list" id="node-input" type="text"/>
+</div>
 </body>
 </html>

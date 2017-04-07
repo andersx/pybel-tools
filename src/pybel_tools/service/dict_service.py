@@ -8,7 +8,6 @@ from operator import itemgetter
 import flask
 import networkx as nx
 from flask import Flask
-
 from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
 from ..summary import get_annotation_values_by_annotation
@@ -269,6 +268,15 @@ def build_dictionary_service_app(app, connection=None):
     @app.route('/nid/<nid>')
     def get_node_hash(nid):
         return api.get_node_by_id(nid)
+
+    @app.route('/api/nodes/suggestion/<node>')
+    def get_node_suggestion(node):
+
+        keywords = [entry.strip() for entry in node.split(',')]
+
+        autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
+
+        return flask.jsonify(list(autocompletion_set))
 
     @app.route('/api/edges/<int:sid>/<int:tid>')
     def get_edges(sid, tid):

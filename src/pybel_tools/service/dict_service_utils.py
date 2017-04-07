@@ -11,6 +11,7 @@ import networkx as nx
 
 from pybel import from_bytes, BELGraph
 from pybel.constants import *
+from ..constants import CNAME
 from pybel.manager.cache import build_manager
 from pybel.manager.models import Network
 from pybel.utils import hash_tuple
@@ -18,6 +19,7 @@ from .base_service import PybelService
 from ..mutation import add_canonical_names, left_merge
 from ..selection import get_filtered_subgraph
 from ..utils import citation_to_tuple
+from collections import Counter
 
 log = logging.getLogger(__name__)
 
@@ -264,3 +266,27 @@ class DictionaryService(PybelService):
             result.extend(self.full_network.edge[v][u].values())
 
         return result
+
+    def get_nodes_containing_keyword(self, keyword):
+        """Gets a list with all cnames that contain a certain keyword adding to the duplicates their function"""
+
+        super_network = self.get_super_network()
+
+        node_list = [data[CNAME] for n, data in super_network.nodes_iter(data=True)]
+
+        # Case insensitive comparison
+        nodes_with_keyword = [cname for cname in node_list if keyword.lower() in cname.lower()]
+
+        duplicates_cnames = set(x for x, count in Counter(nodes_with_keyword).items() if count > 1)
+
+        if not duplicates_cnames:
+            return set(nodes_with_keyword)
+
+        unique_cnames = set(x for x, count in Counter(nodes_with_keyword).items() if count == 1)
+
+        duplicates_with_function = {'{}|{}'.format(data[CNAME], data[FUNCTION]) for n, data in
+                                    super_network.nodes_iter(data=True) if data[CNAME] in duplicates_cnames}
+
+        nodes_with_keyword = unique_cnames.union(duplicates_with_function)
+
+        return nodes_with_keyword
