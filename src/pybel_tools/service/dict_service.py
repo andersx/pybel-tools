@@ -169,7 +169,7 @@ def build_dictionary_service_app(app, connection=None):
             if pmids:
                 seed_data['pmids'] = pmids.split(',')
         else:
-            seed_data = request.args.get(SEED_DATA_NODES)
+            seed_data = request.args.get(SEED_DATA_NODES).split('|')
 
         expand_nodes = request.args.get(APPEND_PARAM)
         remove_nodes = request.args.get(REMOVE_PARAM)
