@@ -4,20 +4,11 @@
 This module contains all of the services necessary through the PyBEL API Definition, backed by the PyBEL cache manager.
 """
 
-from pybel.manager.cache import build_manager
-
-from .base_service import PybelService
+from .base_service import BaseService
 
 
-class DatabaseService(PybelService):
+class DatabaseService(BaseService):
     """Provides queries to access data stored in the PyBEL edge store"""
-
-    def __init__(self, connection=None):
-        """
-        :param connection: custom database connection string
-        :type connection: str
-        """
-        self.manager = build_manager(connection=connection)
 
     def get_networks(self):
         """Provides a list of all networks stored in the PyBEL database.

@@ -22,6 +22,7 @@ from ..utils import check_has_annotation
 __all__ = [
     'keep_edge_permissive',
     'keep_causal_edges',
+    'keep_has_author',
     'build_inverse_filter',
     'build_annotation_value_filter',
     'build_annotation_dict_filter',
@@ -72,6 +73,16 @@ def keep_causal_edges(graph, u, v, k, d):
     :rtype: bool
     """
     return graph.edge[u][v][k][RELATION] in CAUSAL_RELATIONS
+
+
+def keep_has_author(graph, u, v, k, d):
+    """Passes for edges that have citations with authors"""
+    return CITATION in d and CITATION_AUTHORS in d[CITATION]
+
+
+def keep_has_pubmed_citation(graph, u, v, k, d):
+    """Passes for edges that have PubMed citations"""
+    return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE]
 
 
 def build_inverse_filter(f):

@@ -16,6 +16,7 @@ A general use for a node filter function is to use the built-in :func:`filter` i
 from __future__ import print_function
 
 from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY
+from ..constants import CNAME
 
 __all__ = [
     'keep_node_permissive',
@@ -212,6 +213,15 @@ def data_does_not_contain_key_builder(key):
         return key not in graph.node[node]
 
     return data_does_not_contain_key
+
+
+def keep_has_cname(graph, node):
+    """Passes for nodes that have been annotated with a canonical name"""
+    return CNAME in graph.node[node]
+
+
+#: Fails for nodes that have been annotated with a canonical name
+keep_missing_cname = data_does_not_contain_key_builder(CNAME)
 
 
 # Filter Builders

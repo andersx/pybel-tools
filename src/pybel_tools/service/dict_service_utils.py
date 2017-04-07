@@ -6,22 +6,21 @@ dictionary
 """
 
 import logging
+from collections import Counter
 
 import networkx as nx
 
 from pybel import from_bytes, BELGraph
 from pybel.constants import *
-from ..constants import CNAME
-from pybel.manager.cache import build_manager
 from pybel.manager.models import Network
 from pybel.utils import hash_tuple
-from .base_service import PybelService
+from .base_service import BaseService
+from ..constants import CNAME
 from ..mutation import add_canonical_names, left_merge
-from ..selection import get_filtered_subgraph
-from ..utils import citation_to_tuple
-from collections import Counter
-from ..summary import get_authors, get_pmids
 from ..mutation.metadata import parse_authors
+from ..selection import get_filtered_subgraph
+from ..summary import get_authors, get_pmids
+from ..utils import citation_to_tuple
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ def _node_to_identifier(node, graph):
     return hash_tuple(graph.nodes[node])
 
 
-class DictionaryService(PybelService):
+class DictionaryService(BaseService):
     """The dictionary service contains functions that implement the PyBEL API with a in-memory backend using 
     dictionaries.
     """
@@ -41,7 +40,7 @@ class DictionaryService(PybelService):
                            :code:`pybel.manager.cache.BaseCacheManager`
         :type connection: str
         """
-        super(DictionaryService, self).__init__()
+        super(DictionaryService, self).__init__(connection=connection)
 
         #: dictionary of {int id: BELGraph graph}
         self.networks = {}
@@ -54,8 +53,6 @@ class DictionaryService(PybelService):
 
         self.full_network = BELGraph()
         self.full_network_loaded = False
-
-        self.manager = build_manager(connection=connection)
 
     def _validate_network_id(self, network_id):
         if network_id not in self.networks:
@@ -78,9 +75,9 @@ class DictionaryService(PybelService):
         }
 
     def add_network(self, network_id, graph):
-        """Adds a network to the module-level cache
+        """Adds a network to the module-level cache from the underlying database
 
-        :param network_id: The ID (from the database) to use
+        :param network_id: The database identifier for the network
         :type network_id: int
         :param graph: A BEL Graph
         :type graph: pybel.BELGraph
@@ -93,16 +90,17 @@ class DictionaryService(PybelService):
         self.networks[network_id] = graph
         self.update_node_indexes(graph)
 
+        log.info('loaded network: [%s] %s ', network_id, graph.document.get(METADATA_NAME, 'UNNAMED'))
+
     def load_networks(self, check_version=True):
         """This function needs to get all networks from the graph cache manager and make a dictionary
 
         :param check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
         :type check_version: bool
         """
-        for nid, blob in self.manager.session.query(Network.id, Network.blob).all():
+        for network_id, blob in self.manager.session.query(Network.id, Network.blob).all():
             graph = from_bytes(blob, check_version=check_version)
-            self.add_network(nid, graph)
-            log.info('loaded network: [%s] %s ', nid, graph.document.get(METADATA_NAME, 'UNNAMED'))
+            self.add_network(network_id, graph)
 
     def update_node_indexes(self, graph):
         """Updates identifiers for nodes based on addition order
@@ -157,8 +155,6 @@ class DictionaryService(PybelService):
 
         if not force and self.full_network_loaded:
             return self.full_network
-
-        self.full_network = BELGraph()
 
         for network_id in self.get_network_ids():
             left_merge(self.full_network, self.get_network_by_id(network_id))
@@ -215,16 +211,19 @@ class DictionaryService(PybelService):
 
         return successors + predecessors
 
-    def _query_helper(self, original_graph, expand_nodes=None, remove_nodes=None, **annotations):
-        result = get_filtered_subgraph(original_graph, expand_nodes=expand_nodes, remove_nodes=remove_nodes,
-                                       **annotations)
+    def _query_helper(self, graph, expand_nodes=None, remove_nodes=None, **annotations):
+        result = get_filtered_subgraph(
+            graph,
+            expand_nodes=expand_nodes,
+            remove_nodes=remove_nodes,
+            **annotations
+        )
         add_canonical_names(result)
         self.relabel_nodes_to_identifiers(result)
         return result
 
     def query_all_builder(self, expand_nodes=None, remove_nodes=None, **annotations):
-        original_graph = self.get_super_network()
-        return self._query_helper(original_graph, expand_nodes, remove_nodes, **annotations)
+        return self._query_helper(self.get_super_network(), expand_nodes, remove_nodes, **annotations)
 
     def query_filtered_builder(self, network_id, expand_nodes=None, remove_nodes=None, **annotations):
         """Filters a dictionary from the module level cache.
@@ -253,18 +252,21 @@ class DictionaryService(PybelService):
             'delete': remove_nodes,
             'annotations': annotations
         })
-        original_graph = self.get_network_by_id(network_id)
-        return self._query_helper(original_graph, expand_nodes, remove_nodes, **annotations)
+        graph = self.get_network_by_id(network_id)
+        return self._query_helper(graph, expand_nodes, remove_nodes, **annotations)
 
     def get_edges(self, u, v, both_ways=True):
         """Gets the data dictionaries of all edges between the given nodes"""
-        if u not in self.get_super_network() or v not in self.full_network:
-            raise ValueError('Network doesnt have node')
+        if u not in self.get_super_network():
+            raise ValueError("Network doesnt have node: {}".format(u))
 
-        result = []
+        if v not in self.full_network:
+            raise ValueError("Network doesnt have node: {}".format(v))
 
-        if u in self.full_network.edge and v in self.full_network.edge[u]:
-            result.extend(self.full_network.edge[u][v].values())
+        if v not in self.full_network.edge[u]:
+            raise ValueError('No edges between {} and {}'.format(u, v))
+
+        result = list(self.full_network.edge[u][v].values())
 
         if both_ways and v in self.full_network.edge and u in self.full_network.edge[v]:
             result.extend(self.full_network.edge[v][u].values())
