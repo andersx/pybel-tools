@@ -175,11 +175,7 @@ def build_dictionary_service_app(app, connection=None):
         graph = get_graph_from_request()
         return jsonify(to_json_dict(graph))
 
-    @app.route('/network/<int:network_id>', methods=['GET'])
-    def download_network(network_id):
-        """Builds a graph and sends it in the given format"""
-        graph = get_graph_from_request(network_id)
-
+    def serve_network(graph):
         serve_format = request.args.get(FORMAT)
 
         if serve_format is None:
@@ -215,6 +211,18 @@ def build_dictionary_service_app(app, connection=None):
 
         return flask.abort(404)
 
+    @app.route('/network/', methods=['GET'])
+    def download_network():
+        """Builds a graph and sends it in the given format"""
+        graph = get_graph_from_request()
+        serve_network(graph)
+
+    @app.route('/network/<int:network_id>', methods=['GET'])
+    def download_network_by_id(network_id):
+        """Builds a graph from the given network id and sends it in the given format"""
+        graph = get_graph_from_request(network_id=network_id)
+        serve_network(graph)
+
     @app.route('/edges/<int:network_id>/<int:node_id>')
     def get_incident_edges(network_id, node_id):
         res = api.get_incident_edges(network_id, node_id)
@@ -222,7 +230,7 @@ def build_dictionary_service_app(app, connection=None):
 
     @app.route('/paths/shortest/<int:network_id>', methods=['GET'])
     def get_shortest_path(network_id):
-        graph = get_graph_from_request(network_id)
+        graph = get_graph_from_request(network_id=network_id)
 
         try:
             raise_invalid_source_target()
@@ -281,11 +289,10 @@ def build_dictionary_service_app(app, connection=None):
 
     @app.route('/centrality/<int:network_id>', methods=['GET'])
     def get_nodes_by_betweenness_centrality(network_id):
-        graph = get_graph_from_request(network_id)
+        graph = get_graph_from_request(network_id=network_id)
 
         try:
             node_numbers = int(request.args.get(NODE_NUMBER))
-
         except ValueError:
             return 'Please enter a number'
 
