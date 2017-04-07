@@ -213,7 +213,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param seed_method: The name of the get_subgraph_by_* function to use
-    :type seed_method: str
+    :type seed_method: str or None
     :param seed_data: The argument to pass to the get_subgraph function
     :param expand_nodes: Add the neighborhoods around all of these nodes
     :type expand_nodes: list

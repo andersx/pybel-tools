@@ -115,10 +115,6 @@ $(document).ready(function () {
         return duplicates;
     }
 
-    // Required for multiple autocompletion
-    function split(val) {
-        return val.split(/,\s*/);
-    }
 
     /////////////////////////////
     // Filter tree annotations //
@@ -166,7 +162,7 @@ $(document).ready(function () {
     renderEmptyFrame();
 
     $("#submit-button").on("click", function () {
-        $.getJSON("/network/" + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true), function (data) {
+        $.getJSON("/api/network/" + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true), function (data) {
             initD3Force(data);
         });
     });
@@ -209,7 +205,7 @@ $(document).ready(function () {
     // Export to BEL
     $("#bel-button").click(function () {
         $.ajax({
-            url: '/network/' + window.id,
+            url: '/api/network/' + window.id,
             dataType: "text",
             data: $.param(getSelectedNodesFromTree(tree), true) + '&format=bel'
         }).done(function (response) {
@@ -219,12 +215,12 @@ $(document).ready(function () {
 
     // Export to GraphML
     $("#graphml-button").click(function () {
-        window.location.href = '/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=graphml';
+        window.location.href = '/api/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=graphml';
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
-        window.location.href = '/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=bytes';
+        window.location.href = '/api/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=bytes';
 
     });
 

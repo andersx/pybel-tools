@@ -136,7 +136,7 @@ class DictionaryService(BaseService):
         """
         return list(self.networks)
 
-    def get_network_by_id(self, network_id):
+    def get_network_by_id(self, network_id=None):
         """Gets a network by its ID
 
         :param network_id: The internal ID of the network to get
@@ -144,7 +144,7 @@ class DictionaryService(BaseService):
         :return: A BEL Graph
         :rtype: BELGraph
         """
-        return self.networks[network_id]
+        return self.networks[network_id] if network_id else self.get_super_network()
 
     def get_super_network(self, force=False):
         """Gets all networks and merges them together. Caches in self.full_network.
@@ -227,7 +227,7 @@ class DictionaryService(BaseService):
                             :func:`get_super_network`
         :type network_id: int
         :param seed_method: The name of the get_subgraph_by_* function to use
-        :type seed_method: str
+        :type seed_method: str or None
         :param seed_data: The argument to pass to the get_subgraph function
         :param expand_nodes: Add the neighborhoods around all of these nodes
         :type expand_nodes: list

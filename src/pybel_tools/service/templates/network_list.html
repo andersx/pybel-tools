@@ -26,7 +26,7 @@
 
     <ul>
         {% for nid, name, vers in data %}
-            <li><a href="/network/filter/{{ nid }}">{{ name }} v{{ vers }}</a></li>
+            <li><a href="/network/{{ nid }}">{{ name }} v{{ vers }}</a></li>
         {% endfor %}
     </ul>
     <h4>Inspect nodes/papers/authors in your networks</h4>

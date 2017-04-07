@@ -107,6 +107,19 @@ def serve_network(graph):
 
     return flask.abort(404)
 
+def render_network(graph, network_id):
+    name = graph.name or DEFAULT_TITLE
+
+    unique_annotation_dict = get_annotation_values_by_annotation(graph)
+
+    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in unique_annotation_dict.items()]
+
+    return flask.render_template(
+        'network_visualization.html',
+        filter_json=json_dict,
+        network_id=network_id,
+        network_name=name
+    )
 
 def get_dict_service(dsa):
     """Gets the latent PyBEL Dictionary Service from a Flask app
@@ -169,7 +182,8 @@ def build_dictionary_service_app(app, connection=None):
             if pmids:
                 seed_data['pmids'] = pmids.split(',')
         else:
-            seed_data = request.args.get(SEED_DATA_NODES).split('|')
+            seed_data = request.args.get(SEED_DATA_NODES).split(',')
+            seed_data = [api.get_node_by_id(h) for h in seed_data]
 
         expand_nodes = request.args.get(APPEND_PARAM)
         remove_nodes = request.args.get(REMOVE_PARAM)
@@ -198,47 +212,44 @@ def build_dictionary_service_app(app, connection=None):
         data = [(nid, n.name, n.version) for nid, n in api.networks.items()]
         return flask.render_template('network_list.html', data=data)
 
-    @app.route('/network/filter/<int:network_id>', methods=['GET'])
+    @app.route('/network/<int:network_id>', methods=['GET'])
     def view_network(network_id):
         """Renders a page for the user to explore a network"""
+        if network_id == 0:
+            network_id = ''
+
         graph = api.get_network_by_id(network_id)
-        name = graph.name or DEFAULT_TITLE
+        return render_network(graph, network_id)
 
-        unique_annotation_dict = get_annotation_values_by_annotation(graph)
-
-        json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in
-                     unique_annotation_dict.items()]
-
-        return flask.render_template(
-            'network_visualization.html',
-            filter_json=json_dict,
-            network_id=network_id,
-            network_name=name
-        )
+    @app.route('/network/', methods=['GET'])
+    def view_supernetwork():
+        """Renders a page for the user to explore a network"""
+        graph = api.get_network_by_id()
+        return render_network(graph, '')
 
     @app.route('/api/query/network/', methods=['GET'])
     def ultimate_network_query():
         graph = get_graph_from_request()
         return jsonify(to_json_dict(graph))
 
-    @app.route('/network/', methods=['GET'])
+    @app.route('/api/network/', methods=['GET'])
     def download_network():
         """Builds a graph and sends it in the given format"""
         graph = get_graph_from_request()
-        serve_network(graph)
+        return serve_network(graph)
 
-    @app.route('/network/<int:network_id>', methods=['GET'])
+    @app.route('/api/network/<int:network_id>', methods=['GET'])
     def download_network_by_id(network_id):
         """Builds a graph from the given network id and sends it in the given format"""
         graph = get_graph_from_request(network_id=network_id)
-        serve_network(graph)
+        return serve_network(graph)
 
-    @app.route('/edges/<int:network_id>/<int:node_id>')
+    @app.route('/api/edges/<int:network_id>/<int:node_id>')
     def get_incident_edges(network_id, node_id):
         res = api.get_incident_edges(network_id, node_id)
         return jsonify(res)
 
-    @app.route('/paths/shortest/<int:network_id>', methods=['GET'])
+    @app.route('/api/paths/shortest/<int:network_id>', methods=['GET'])
     def get_shortest_path(network_id):
         graph = get_graph_from_request(network_id=network_id)
 
@@ -270,7 +281,7 @@ def build_dictionary_service_app(app, connection=None):
 
         return jsonify(shortest_path)
 
-    @app.route('/paths/all/<int:network_id>', methods=['GET'])
+    @app.route('/api/paths/all/<int:network_id>', methods=['GET'])
     def get_all_path(network_id):
         graph = get_graph_from_request(network_id=network_id)
 
@@ -297,7 +308,7 @@ def build_dictionary_service_app(app, connection=None):
         # all_paths is a generator -> convert to list and create a list of lists (paths)
         return jsonify([path for path in list(all_paths)])
 
-    @app.route('/centrality/<int:network_id>', methods=['GET'])
+    @app.route('/api/centrality/<int:network_id>', methods=['GET'])
     def get_nodes_by_betweenness_centrality(network_id):
         graph = get_graph_from_request(network_id=network_id)
 
@@ -315,13 +326,13 @@ def build_dictionary_service_app(app, connection=None):
 
         return jsonify(node_list)
 
-    @app.route('/nid/')
+    @app.route('/api/nid/')
     def get_node_hashes():
         return jsonify(api.nid_node)
 
-    @app.route('/nid/<nid>')
+    @app.route('/api/nid/<nid>')
     def get_node_hash(nid):
-        return api.get_node_by_id(nid)
+        return jsonify(api.get_node_by_id(nid))
 
     @app.route('/api/suggestion/nodes/<node>')
     def get_node_suggestion(node):
