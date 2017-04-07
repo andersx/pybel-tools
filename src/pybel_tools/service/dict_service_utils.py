@@ -284,7 +284,7 @@ class DictionaryService(PybelService):
 
         unique_cnames = set(x for x, count in Counter(nodes_with_keyword).items() if count == 1)
 
-        duplicates_with_function = {'{}|{}'.format(data[CNAME], data[FUNCTION]) for n, data in
+        duplicates_with_function = {'{}({})'.format(data[CNAME], data[FUNCTION]) for n, data in
                                     super_network.nodes_iter(data=True) if data[CNAME] in duplicates_cnames}
 
         nodes_with_keyword = unique_cnames.union(duplicates_with_function)

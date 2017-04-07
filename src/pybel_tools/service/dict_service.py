@@ -39,6 +39,7 @@ ANALYSIS_TYPE = 'analysis'
 ANALYSIS_TYPE_SUBGRAPH = 'induce_subgraph'
 ANALYSIS_TYPE_EXPAND = 'expand_neighbors'
 ANALYSIS_TYPE_PATHS = 'shortest_paths'
+DELIMITER = '|'
 
 BLACK_LIST = {
     APPEND_PARAM,
@@ -291,7 +292,7 @@ def build_dictionary_service_app(app, connection=None):
     @app.route('/api/nodes/suggestion/<node>')
     def get_node_suggestion(node):
 
-        keywords = [entry.strip() for entry in node.split(',')]
+        keywords = [entry.strip() for entry in node.split(DELIMITER)]
 
         autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
 
