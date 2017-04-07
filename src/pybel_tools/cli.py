@@ -19,15 +19,15 @@ import sys
 from getpass import getuser
 
 import click
+
+import pybel.utils
 from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
-from pybel.utils import get_version as pybel_version
-
-import pybel_tools as pbt
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 from .service.db_service import build_database_service_app, get_db_app
 from .service.dict_service import get_dict_service, build_dictionary_service_app, get_app
+from .utils import get_version
 
 log = logging.getLogger(__name__)
 
@@ -63,8 +63,8 @@ def service(connection, host, port, debug, flask_debug, skip_check_version, data
         logging.getLogger('pybel').setLevel(10)
         logging.getLogger('pybel_tools').setLevel(10)
         log.setLevel(10)
-        log.info('Running PyBEL v%s', pybel_version())
-        log.info('Running PyBEL Tools v%s', pbt.utils.get_version())
+        log.info('Running PyBEL v%s', pybel.utils.get_version())
+        log.info('Running PyBEL Tools v%s', get_version())
 
     if database:
         app = get_db_app()
