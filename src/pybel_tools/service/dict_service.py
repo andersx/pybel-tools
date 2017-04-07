@@ -33,10 +33,6 @@ TARGET_NODE = 'target'
 FORMAT = 'format'
 UNDIRECTED = 'undirected'
 NODE_NUMBER = 'node_number'
-NODE_LIST = 'node_list'
-PUBMED_IDS = 'pubmed_list'
-AUTHORS = 'author_list'
-SUPER_NETWORK = 'supernetwork'
 GRAPH_ID = 'graphid'
 SEED_TYPE = 'analysis'
 SEED_DATA_AUTHORS = 'authors'
@@ -72,6 +68,44 @@ def raise_invalid_source_target():
         int(request.args.get(TARGET_NODE))
     except ValueError:
         raise ValueError('{} is not valid node'.format(request.args.get(TARGET_NODE)))
+
+
+def serve_network(graph):
+    """A helper function to serialize a graph and download as a file"""
+    serve_format = request.args.get(FORMAT)
+
+    if serve_format is None or serve_format == 'json':
+        data = to_json_dict(graph)
+        return jsonify(data)
+
+    if serve_format == 'cx':
+        data = to_cx_json(graph)
+        return jsonify(data)
+
+    if serve_format == 'bytes':
+        data = to_bytes(graph)
+        return flask.send_file(data, mimetype='application/octet-stream', as_attachment=True,
+                               attachment_filename='graph.gpickle')
+
+    if serve_format == 'bel':
+        data = '\n'.join(to_bel_lines(graph))
+        return flask.Response(data, mimetype='text/plain')
+
+    if serve_format == 'graphml':
+        bio = BytesIO()
+        to_graphml(graph, bio)
+        bio.seek(0)
+        data = StringIO(bio.read().decode('utf-8'))
+        return flask.send_file(data, mimetype='text/xml', attachment_filename='graph.graphml', as_attachment=True)
+
+    if serve_format == 'csv':
+        bio = BytesIO()
+        to_csv(graph, bio)
+        bio.seek(0)
+        data = StringIO(bio.read().decode('utf-8'))
+        return flask.send_file(data, attachment_filename="graph.tsv", as_attachment=True)
+
+    return flask.abort(404)
 
 
 def get_dict_service(dsa):
@@ -174,42 +208,6 @@ def build_dictionary_service_app(app, connection=None):
     def ultimate_network_query():
         graph = get_graph_from_request()
         return jsonify(to_json_dict(graph))
-
-    def serve_network(graph):
-        serve_format = request.args.get(FORMAT)
-
-        if serve_format is None:
-            data = to_json_dict(graph)
-            return jsonify(data)
-
-        if serve_format == 'cx':
-            data = to_cx_json(graph)
-            return jsonify(data)
-
-        if serve_format == 'bytes':
-            data = to_bytes(graph)
-            return flask.send_file(data, mimetype='application/octet-stream', as_attachment=True,
-                                   attachment_filename='graph.gpickle')
-
-        if serve_format == 'bel':
-            data = '\n'.join(to_bel_lines(graph))
-            return flask.Response(data, mimetype='text/plain')
-
-        if serve_format == 'graphml':
-            bio = BytesIO()
-            to_graphml(graph, bio)
-            bio.seek(0)
-            data = StringIO(bio.read().decode('utf-8'))
-            return flask.send_file(data, mimetype='text/xml', attachment_filename='graph.graphml', as_attachment=True)
-
-        if serve_format == 'csv':
-            bio = BytesIO()
-            to_csv(graph, bio)
-            bio.seek(0)
-            data = StringIO(bio.read().decode('utf-8'))
-            return flask.send_file(data, attachment_filename="graph.tsv", as_attachment=True)
-
-        return flask.abort(404)
 
     @app.route('/network/', methods=['GET'])
     def download_network():
