@@ -29,7 +29,7 @@ def load_paths(paths, connection=None):
     :rtype: pybel.BELGraph
     """
     cm = CacheManager(connection=connection)
-    mp = MetadataParser(cache_manager=cm)
+    mp = MetadataParser(manager=cm)
     result_graph = BELGraph()
 
     for path in paths:

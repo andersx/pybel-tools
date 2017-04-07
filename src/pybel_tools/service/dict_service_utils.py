@@ -11,7 +11,7 @@ import networkx as nx
 
 from pybel import from_bytes, BELGraph
 from pybel.constants import *
-from pybel.manager.graph_cache import GraphCacheManager
+from pybel.manager.cache import build_manager
 from pybel.manager.models import Network
 from pybel.utils import hash_tuple
 from .base_service import PybelService
@@ -27,13 +27,16 @@ def _node_to_identifier(node, graph):
 
 
 class DictionaryService(PybelService):
+    """The dictionary service contains functions that implement the PyBEL API with a in-memory backend using 
+    dictionaries.
     """
 
-    The dictionary service contains functions that implement the PyBEL API with a in-memory backend using dictionaries.
-
-    """
-
-    def __init__(self):
+    def __init__(self, connection=None):
+        """
+        :param connection: The database connection string. Default location described in
+                           :code:`pybel.manager.cache.BaseCacheManager`
+        :type connection: str
+        """
         super(DictionaryService, self).__init__()
 
         #: dictionary of {int id: BELGraph graph}
@@ -47,6 +50,8 @@ class DictionaryService(PybelService):
 
         self.full_network = BELGraph()
         self.full_network_loaded = False
+
+        self.manager = build_manager(connection=connection)
 
     def _validate_network_id(self, network_id):
         if network_id not in self.networks:
@@ -84,18 +89,13 @@ class DictionaryService(PybelService):
         self.networks[network_id] = graph
         self.update_node_indexes(graph)
 
-    def load_networks(self, connection=None, check_version=True):
+    def load_networks(self, check_version=True):
         """This function needs to get all networks from the graph cache manager and make a dictionary
 
-        :param connection: The database connection string. Default location described in
-                           :code:`pybel.manager.cache.BaseCacheManager`
-        :type connection: str
         :param check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
         :type check_version: bool
         """
-        gcm = GraphCacheManager(connection=connection)
-
-        for nid, blob in gcm.session.query(Network.id, Network.blob).all():
+        for nid, blob in self.manager.session.query(Network.id, Network.blob).all():
             graph = from_bytes(blob, check_version=check_version)
             self.add_network(nid, graph)
             log.info('loaded network: [%s] %s ', nid, graph.document.get(METADATA_NAME, 'UNNAMED'))
@@ -176,8 +176,8 @@ class DictionaryService(PybelService):
             return self.nid_node[int(node_id)]
         elif isinstance(node_id, int):
             return self.nid_node[node_id]
-        else:
-            raise TypeError('{} is wrong type'.format(node_id))
+
+        raise TypeError('{} is wrong type'.format(node_id))
 
     def get_namespaces_in_network(self, network_id):
         """Returns the namespaces in a given network
