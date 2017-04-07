@@ -44,6 +44,7 @@ SEED_DATA_PMIDS = 'pmids'
 SEED_DATA_NODES = 'nodes'
 
 BLACK_LIST = {
+    GRAPH_ID,
     APPEND_PARAM,
     REMOVE_PARAM,
     SOURCE_NODE,
@@ -52,7 +53,9 @@ BLACK_LIST = {
     NODE_NUMBER,
     FORMAT,
     SEED_TYPE,
-    GRAPH_ID
+    SEED_DATA_AUTHORS,
+    SEED_DATA_PMIDS,
+    SEED_DATA_NODES
 }
 
 
@@ -106,26 +109,37 @@ def build_dictionary_service_app(app, connection=None):
     api = DictionaryService(connection=connection)
     set_dict_service(app, api)
 
-    def process_request(network_id, args):
-        """
-        Process the GET request returning the filtered graph
+    def get_graph_from_request(network_id=None):
+        """Process the GET request returning the filtered graph
+        
         :param network_id: id of the network
         :param args: request.args
-        :return:
+        :return: A BEL graph
+        :rtype: pybel.BELGraph
         """
         # Convert from list of hashes (as integers) to node tuples
-        expand_nodes = args.get(APPEND_PARAM)
-        remove_nodes = args.get(REMOVE_PARAM)
-        if expand_nodes:
-            expand_nodes = [api.get_node_by_id(h) for h in expand_nodes.split(',')]
+        network_id = request.args.get(GRAPH_ID, network_id)
 
-        if remove_nodes:
-            remove_nodes = [api.get_node_by_id(h) for h in remove_nodes.split(',')]
+        seed_method = request.args.get(SEED_TYPE)
+        if seed_method is not None and seed_method not in SEED_TYPES:
+            raise ValueError('Invalid seed method: {}'.format(seed_method))
 
-        annotations = {k: args.getlist(k) for k in args if k not in BLACK_LIST}
+        if seed_method == SEED_TYPE_PROVENANCE:
+            seed_data = {
+                'authors': request.args.get(SEED_DATA_AUTHORS),
+                'pmids': request.args.get(SEED_DATA_PMIDS)
+            }
+        else:
+            seed_data = request.args.get(SEED_DATA_NODES)
+
+        expand_nodes = [api.get_node_by_id(h) for h in request.args.getlist(APPEND_PARAM)]
+        remove_nodes = [api.get_node_by_id(h) for h in request.args.getlist(REMOVE_PARAM)]
+        annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
 
         graph = api.query(
             network_id=network_id,
+            seed_method=seed_method,
+            seed_data=seed_data,
             expand_nodes=expand_nodes,
             remove_nodes=remove_nodes,
             **annotations
@@ -153,10 +167,14 @@ def build_dictionary_service_app(app, connection=None):
                                      network_id=network_id,
                                      network_name=name)
 
-    @app.route('/network/<int:network_id>', methods=['GET'])
-    def get_network_by_id_filtered(network_id):
+    @app.route('/api/query/network/', methods=['GET'])
+    def ultimate_network_query():
+        graph = get_graph_from_request()
+        return jsonify(to_json_dict(graph))
 
-        graph = process_request(network_id, request.args)
+    @app.route('/network/<int:network_id>', methods=['GET'])
+    def download_network(network_id):
+        graph = get_graph_from_request(network_id)
 
         serve_format = request.args.get(FORMAT)
 
@@ -193,37 +211,6 @@ def build_dictionary_service_app(app, connection=None):
 
         return flask.abort(404)
 
-    @app.route('/api/query/network/', methods=['GET'])
-    def ultimate_network_query():
-        network_id = request.args.get(GRAPH_ID)
-
-        seed_method = request.args.get(SEED_TYPE)
-        if seed_method is not None and seed_method not in SEED_TYPES:
-            raise ValueError('Invalid seed method: {}'.format(seed_method))
-
-        if seed_method == SEED_TYPE_PROVENANCE:
-            seed_data = {
-                'authors': request.args.get(SEED_DATA_AUTHORS),
-                'pmids': request.args.get(SEED_DATA_PMIDS)
-            }
-        else:
-            seed_data = request.args.get(SEED_DATA_NODES)
-
-        expand_nodes = [api.get_node_by_id(h) for h in request.args.getlist(APPEND_PARAM)]
-        remove_nodes = [api.get_node_by_id(h) for h in request.args.getlist(REMOVE_PARAM)]
-        annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
-
-        graph = api.query(
-            network_id=network_id,
-            seed_method=seed_method,
-            seed_data=seed_data,
-            expand_nodes=expand_nodes,
-            remove_nodes=remove_nodes,
-            **annotations
-        )
-
-        return jsonify(to_json_dict(graph))
-
     @app.route('/edges/<int:network_id>/<int:node_id>')
     def get_incident_edges(network_id, node_id):
         res = api.get_incident_edges(network_id, node_id)
@@ -231,7 +218,7 @@ def build_dictionary_service_app(app, connection=None):
 
     @app.route('/paths/shortest/<int:network_id>', methods=['GET'])
     def get_shortest_path(network_id):
-        graph = process_request(network_id, request.args)
+        graph = get_graph_from_request(network_id)
 
         try:
             raise_invalid_source_target()
@@ -263,7 +250,7 @@ def build_dictionary_service_app(app, connection=None):
 
     @app.route('/paths/all/<int:network_id>', methods=['GET'])
     def get_all_path(network_id):
-        graph = process_request(network_id, request.args)
+        graph = get_graph_from_request(network_id=network_id)
 
         try:
             raise_invalid_source_target()
@@ -290,7 +277,7 @@ def build_dictionary_service_app(app, connection=None):
 
     @app.route('/centrality/<int:network_id>', methods=['GET'])
     def get_nodes_by_betweenness_centrality(network_id):
-        graph = process_request(network_id, request.args)
+        graph = get_graph_from_request(network_id)
 
         try:
             node_numbers = int(request.args.get(NODE_NUMBER))
