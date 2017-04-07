@@ -8,6 +8,7 @@ from operator import itemgetter
 import flask
 import networkx as nx
 from flask import Flask
+
 from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
 from ..summary import get_annotation_values_by_annotation
@@ -20,6 +21,9 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+DICTIONARY_SERVICE = 'dictionary_service'
+DEFAULT_TITLE = 'Biological Network Explorer'
+
 APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
 SOURCE_NODE = 'source'
@@ -30,12 +34,22 @@ NODE_NUMBER = 'node_number'
 NODE_LIST = 'node_list'
 PUBMED_IDS = 'pubmed_list'
 AUTHORS = 'author_list'
-ANALYSIS_TYPE = 'analysis'
 SUPER_NETWORK = 'supernetwork'
-""
-DICTIONARY_SERVICE = 'dictionary_service'
-DEFAULT_TITLE = 'Biological Network Explorer'
-BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE, UNDIRECTED, NODE_NUMBER, FORMAT}
+ANALYSIS_TYPE = 'analysis'
+ANALYSIS_TYPE_SUBGRAPH = 'induce_subgraph'
+ANALYSIS_TYPE_EXPAND = 'expand_neighbors'
+ANALYSIS_TYPE_PATHS = 'shortest_paths'
+
+BLACK_LIST = {
+    APPEND_PARAM,
+    REMOVE_PARAM,
+    SOURCE_NODE,
+    TARGET_NODE,
+    UNDIRECTED,
+    NODE_NUMBER,
+    FORMAT,
+    ANALYSIS_TYPE,
+}
 
 
 def raise_invalid_source_target():
