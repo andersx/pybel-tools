@@ -171,7 +171,7 @@ def build_dictionary_service_app(app, connection=None):
         if seed_method is not None and seed_method not in SEED_TYPES:
             raise ValueError('Invalid seed method: {}'.format(seed_method))
 
-        if seed_method == SEED_TYPE_PROVENANCE:
+        if seed_method and seed_method == SEED_TYPE_PROVENANCE:
             seed_data = {}
 
             authors = request.args.get(SEED_DATA_AUTHORS)
@@ -181,9 +181,11 @@ def build_dictionary_service_app(app, connection=None):
             pmids = request.args.get(SEED_DATA_PMIDS)
             if pmids:
                 seed_data['pmids'] = pmids.split(',')
-        else:
+        elif seed_method:
             seed_data = request.args.get(SEED_DATA_NODES).split(',')
             seed_data = [api.get_node_by_id(h) for h in seed_data]
+        else:
+            seed_data = None
 
         expand_nodes = request.args.get(APPEND_PARAM)
         remove_nodes = request.args.get(REMOVE_PARAM)
@@ -227,11 +229,6 @@ def build_dictionary_service_app(app, connection=None):
         graph = api.get_network_by_id()
         return render_network(graph, '')
 
-    @app.route('/api/query/network/', methods=['GET'])
-    def ultimate_network_query():
-        graph = get_graph_from_request()
-        return jsonify(to_json_dict(graph))
-
     @app.route('/api/network/', methods=['GET'])
     def download_network():
         """Builds a graph and sends it in the given format"""
@@ -244,7 +241,7 @@ def build_dictionary_service_app(app, connection=None):
         graph = get_graph_from_request(network_id=network_id)
         return serve_network(graph)
 
-    @app.route('/api/edges/<int:network_id>/<int:node_id>')
+    @app.route('/api/edges/incident/<int:network_id>/<int:node_id>')
     def get_incident_edges(network_id, node_id):
         res = api.get_incident_edges(network_id, node_id)
         return jsonify(res)
@@ -361,7 +358,7 @@ def build_dictionary_service_app(app, connection=None):
 
         return jsonify(list(autocompletion_set))
 
-    @app.route('/api/edges/<int:sid>/<int:tid>')
+    @app.route('/api/edges/provenance/<int:sid>/<int:tid>')
     def get_edges(sid, tid):
         return jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
 
