@@ -14,7 +14,6 @@ $(document).ready(function () {
         return split(term).pop();
     }
 
-
     $("#node-input").autocomplete({
 
         source: function (request, response) {
