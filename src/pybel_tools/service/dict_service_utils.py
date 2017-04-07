@@ -176,6 +176,7 @@ class DictionaryService(PybelService):
             return self.nid_node[int(node_id)]
         elif isinstance(node_id, int):
             return self.nid_node[node_id]
+
         raise TypeError('{} is wrong type'.format(node_id))
 
     def get_namespaces_in_network(self, network_id):
