@@ -261,15 +261,6 @@ class DictionaryService(BaseService):
         self.relabel_nodes_to_identifiers(result)
         return result
 
-    def query_builder(self, network_id=None, expand_nodes=None, remove_nodes=None, **annotations):
-
-        return self.query(
-            network_id=network_id,
-            expand_nodes=expand_nodes,
-            remove_nodes=remove_nodes,
-            **annotations
-        )
-
     def get_edges(self, u, v, both_ways=True):
         """Gets the data dictionaries of all edges between the given nodes"""
         if u not in self.get_super_network():
