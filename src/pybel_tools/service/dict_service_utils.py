@@ -100,7 +100,6 @@ class DictionaryService(PybelService):
             self.add_network(nid, graph)
             log.info('loaded network: [%s] %s ', nid, graph.document.get(METADATA_NAME, 'UNNAMED'))
 
-
     def update_node_indexes(self, graph):
         """Updates identifiers for nodes based on addition order
 
@@ -178,7 +177,7 @@ class DictionaryService(PybelService):
         elif isinstance(node_id, int):
             return self.nid_node[node_id]
         else:
-            raise TypeError('{} is wrong type'.format(h))
+            raise TypeError('{} is wrong type'.format(node_id))
 
     def get_namespaces_in_network(self, network_id):
         """Returns the namespaces in a given network
@@ -265,6 +264,3 @@ class DictionaryService(PybelService):
             result.extend(self.full_network.edge[v][u].values())
 
         return result
-
-
-
