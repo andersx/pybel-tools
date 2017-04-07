@@ -159,15 +159,27 @@ def build_dictionary_service_app(app, connection=None):
             raise ValueError('Invalid seed method: {}'.format(seed_method))
 
         if seed_method == SEED_TYPE_PROVENANCE:
-            seed_data = {
-                'authors': request.args.get(SEED_DATA_AUTHORS),
-                'pmids': request.args.get(SEED_DATA_PMIDS)
-            }
+            seed_data = {}
+
+            authors = request.args.get(SEED_DATA_AUTHORS)
+            if authors:
+                seed_data['authors'] = authors.split('|')
+
+            pmids = request.args.get(SEED_DATA_PMIDS)
+            if pmids:
+                seed_data['pmids'] = pmids.split(',')
         else:
             seed_data = request.args.get(SEED_DATA_NODES)
 
-        expand_nodes = [api.get_node_by_id(h) for h in request.args.getlist(APPEND_PARAM)]
-        remove_nodes = [api.get_node_by_id(h) for h in request.args.getlist(REMOVE_PARAM)]
+        expand_nodes = request.args.get(APPEND_PARAM)
+        remove_nodes = request.args.get(REMOVE_PARAM)
+
+        if expand_nodes:
+            expand_nodes = [api.get_node_by_id(h) for h in expand_nodes.split(',')]
+
+        if remove_nodes:
+            remove_nodes = [api.get_node_by_id(h) for h in remove_nodes.split(',')]
+
         annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
 
         graph = api.query(
