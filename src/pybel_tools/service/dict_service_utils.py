@@ -18,7 +18,7 @@ from .base_service import BaseService
 from ..constants import CNAME
 from ..mutation import add_canonical_names, left_merge
 from ..mutation.metadata import parse_authors
-from ..selection import get_filtered_subgraph
+from ..selection import get_subgraph
 from ..summary import get_authors, get_pmids
 from ..utils import citation_to_tuple
 
@@ -152,7 +152,6 @@ class DictionaryService(BaseService):
         :return: A BEL Graph
         :rtype: pybel.BELGraph
         """
-
         if not force and self.full_network_loaded:
             return self.full_network
 
@@ -211,9 +210,43 @@ class DictionaryService(BaseService):
 
         return successors + predecessors
 
-    def _query_helper(self, graph, expand_nodes=None, remove_nodes=None, **annotations):
-        result = get_filtered_subgraph(
+    def query(self, network_id=None, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None,
+              **annotations):
+        """Filters a dictionary from the module level cache.
+
+                1. Thin wrapper around :code:`pybel_tools.selection.get_subgraph`:
+                    1. Apply seed function
+                    2. Filter edges by annotations
+                    3. Add nodes
+                    4. Remove nodes
+                2. Add canonical names
+                3. Relabel nodes to identifiers
+
+                :param network_id: The identifier of the network in the database. If none, gets all networks merged with
+                                    :func:`get_super_network`
+                :type network_id: int
+                :param expand_nodes: Add the neighborhoods around all of these nodes
+                :type expand_nodes: list
+                :param remove_nodes: Remove these nodes and all of their in/out edges
+                :type remove_nodes: list
+                :param annotations: Annotation filters (match all with :code:`pybel.utils.subdict_matches`)
+                :type annotations: dict
+                :return: A BEL Graph
+                :rtype: BELGraph
+                """
+        log.debug('Requested: %s', {
+            'network_id': network_id,
+            'expand': expand_nodes,
+            'delete': remove_nodes,
+            'annotations': annotations
+        })
+
+        graph = self.get_network_by_id(network_id) if network_id is not None else self.get_super_network()
+
+        result = get_subgraph(
             graph,
+            seed_method=seed_method,
+            seed_data=seed_data,
             expand_nodes=expand_nodes,
             remove_nodes=remove_nodes,
             **annotations
@@ -222,38 +255,14 @@ class DictionaryService(BaseService):
         self.relabel_nodes_to_identifiers(result)
         return result
 
-    def query_all_builder(self, expand_nodes=None, remove_nodes=None, **annotations):
-        return self._query_helper(self.get_super_network(), expand_nodes, remove_nodes, **annotations)
+    def query_builder(self, network_id=None, expand_nodes=None, remove_nodes=None, **annotations):
 
-    def query_filtered_builder(self, network_id, expand_nodes=None, remove_nodes=None, **annotations):
-        """Filters a dictionary from the module level cache.
-
-        1. Thin wrapper around :code:`pybel_tools.selection.filter_graph`:
-            1. Filter edges by annotations
-            2. Add nodes
-            3. Remove nodes
-        2. Add canonical names
-        3. Relabel nodes to identifiers
-
-        :param network_id: The identifier of the network in the database
-        :type network_id: int
-        :param expand_nodes: Add the neighborhoods around all of these nodes
-        :type expand_nodes: list
-        :param remove_nodes: Remove these nodes and all of their in/out edges
-        :type remove_nodes: list
-        :param annotations: Annotation filters (match all with :code:`pybel.utils.subdict_matches`)
-        :type annotations: dict
-        :return: A BEL Graph
-        :rtype: BELGraph
-        """
-        log.debug('Requested: %s', {
-            'network_id': network_id,
-            'expand': expand_nodes,
-            'delete': remove_nodes,
-            'annotations': annotations
-        })
-        graph = self.get_network_by_id(network_id)
-        return self._query_helper(graph, expand_nodes, remove_nodes, **annotations)
+        return self.query(
+            network_id=network_id,
+            expand_nodes=expand_nodes,
+            remove_nodes=remove_nodes,
+            **annotations
+        )
 
     def get_edges(self, u, v, both_ways=True):
         """Gets the data dictionaries of all edges between the given nodes"""

@@ -17,20 +17,46 @@ from ..utils import check_has_annotation, graph_edge_data_iter
 log = logging.getLogger(__name__)
 
 __all__ = [
+    'get_subgraph_by_induction',
     'get_subgraph_by_edge_filter',
     'get_subgraph_by_node_filter',
     'get_subgraph_by_neighborhood',
     'get_subgraph_by_shortest_paths',
     'get_subgraph_by_annotation_value',
     'get_subgraph_by_data',
-    'get_subgraphs_by_annotation',
     'get_subgraph_by_pubmed',
     'get_subgraph_by_authors',
-    'get_subgraph_by_provenance_periphery',
+    'get_subgraph_by_provenance',
+    'get_subgraph_by_provenance_helper',
     'get_causal_subgraph',
-    'get_filtered_subgraph',
+    'get_subgraph',
+    'get_subgraphs_by_annotation',
     'subgraphs_to_pickles',
 ]
+
+SEED_TYPE_INDUCTION = 'induction'
+SEED_TYPE_NEIGHBORS = 'neighbors'
+SEED_TYPE_PATHS = 'shortest_paths'
+SEED_TYPE_PROVENANCE = 'provenance'
+
+SEED_TYPES = {
+    SEED_TYPE_INDUCTION,
+    SEED_TYPE_NEIGHBORS,
+    SEED_TYPE_PATHS,
+    SEED_TYPE_PROVENANCE,
+}
+
+def get_subgraph_by_induction(graph, nodes):
+    """Induces a graph on the given nodes
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param nodes: A list of nodes in the graph
+    :type nodes: iter
+    :return: An induced BEL subgraph
+    :rtype: pybel.BELGraph
+    """
+    return graph.subgraph(nodes)
 
 
 def get_subgraph_by_node_filter(graph, node_filters):
@@ -43,7 +69,7 @@ def get_subgraph_by_node_filter(graph, node_filters):
     :return: An induced BEL subgraph
     :rtype: pybel.BELGraph
     """
-    return graph.subgraph(filter_nodes(graph, node_filters))
+    return get_subgraph_by_induction(graph, filter_nodes(graph, node_filters))
 
 
 def get_subgraph_by_neighborhood(graph, nodes):
@@ -175,16 +201,21 @@ def get_causal_subgraph(graph):
     return result
 
 
-def get_filtered_subgraph(graph, expand_nodes=None, remove_nodes=None, **annotations):
-    """Queries graph's edges with multiple filters
+def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None, **annotations):
+    """Runs pipeline query on graph with multiple subgraph filters and expanders
 
     Order of operations:
-    1. Match by annotations
-    2. Add nodes
-    3. Remove nodes
+    1. Seeding by given function name and data
+    2. Filter by annotations
+    3. Add nodes
+    4. Remove nodes
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
+    :param seed_method: The method to use.
+    :type seed_method: str
+    :param seed_data: The variable to pass as the arguments to the get_subgraph_by_* function
+    :type seed_data: ???
     :param expand_nodes: Add the neighborhoods around all of these nodes
     :type expand_nodes: list
     :param remove_nodes: Remove these nodes and all of their in/out edges
@@ -194,17 +225,27 @@ def get_filtered_subgraph(graph, expand_nodes=None, remove_nodes=None, **annotat
     :return: A BEL Graph
     :rtype: pybel.BELGraph
     """
-    subgraph = get_subgraph_by_data(graph, {ANNOTATIONS: annotations})
-    # subgraph = BELGraph()
-    # for u, v, k, d in graph.edges_iter(keys=True, data=True, **{ANNOTATIONS: annotations}):
-    #    subgraph.add_edge(u, v, key=k, attr_dict=d)
-    # for node in subgraph.nodes_iter():
-    #    subgraph.node[node] = graph.node[node]
 
+    if seed_method == SEED_TYPE_INDUCTION:
+        seed_graph = get_subgraph_by_induction(graph, seed_data)
+    elif seed_method == SEED_TYPE_PATHS:
+        seed_graph = get_subgraph_by_shortest_paths(graph, seed_data)
+    elif seed_method == SEED_TYPE_NEIGHBORS:
+        seed_graph = get_subgraph_by_neighborhood(graph, seed_data)
+    elif seed_method == SEED_TYPE_PROVENANCE:
+        seed_graph = get_subgraph_by_provenance(graph, seed_data)
+    else:  # Otherwise, don't seed a subgraph
+        seed_graph = graph
+
+    # Filter by the given annotations
+    subgraph = get_subgraph_by_data(seed_graph, {ANNOTATIONS: annotations})
+
+    # Expand around the given nodes
     if expand_nodes:
         for node in expand_nodes:
             expand_node_neighborhood(graph, subgraph, node)
 
+    # Delete the given nodes
     if remove_nodes:
         for node in remove_nodes:
             if node not in subgraph:
@@ -247,7 +288,12 @@ def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
         to_pickle(sg, path)
 
 
-def get_subgraph_by_provenance_periphery(graph, pmids=None, authors=None, expand_neighborhoods=True):
+def get_subgraph_by_provenance(graph, kwargs):
+    """Thin wrapper around :func:`get_subgraph_by_provenance_helper` by splatting keyword arguments"""
+    return get_subgraph_by_provenance_helper(graph, **kwargs)
+
+
+def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_neighborhoods=True):
     """Gets all edges of given provenance and expands around their nodes' neighborhoods
     
     :param graph: A BEL graph

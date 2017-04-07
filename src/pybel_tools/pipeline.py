@@ -65,3 +65,40 @@ def summarize_operation_list(graph, graph_function):
         result.append((k, after - before))
 
     return result
+
+
+class PipelineRunner:
+    """Builds and runs analytical pipelines on BEL graphs"""
+
+    def __init__(self, universe):
+        self.universe = universe
+        self.protocol = []
+
+    def wrap_universe_protocol(self, func):
+        """Takes a function that needs a universe graph as the first argument and returns a wrapped one"""
+
+        def universe_protocol(graph, argument):
+            """Applys the function with the contained universe graph"""
+            return func(self.universe, graph, argument)
+
+        universe_protocol.__doc__ = func.__doc__
+
+        return universe_protocol
+
+    def add_universe_protocol(self, func, *attrs, **kwargs):
+        """Adds a function that takes the universe as its first argument to the protocol"""
+        self._add_protocol(True, self.wrap_universe_protocol(func), *attrs, **kwargs)
+
+    def add_mutation_protocol(self, func, *attrs, **kwargs):
+        """Adds a function that mutates a graph to the protocol"""
+        self._add_protocol(False, func, *attrs, **kwargs)
+
+    def _add_protocol(self, wrapped, func, *attrs, **kwargs):
+        self.protocol.append((wrapped, func, attrs, kwargs))
+
+    def run_protocol(self, graph):
+        """Runs the protocol on a seed graph"""
+        result = graph
+        for _, func, attrs, kwargs in self.protocol:
+            result = func(graph, *attrs, **kwargs)
+        return result

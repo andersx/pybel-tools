@@ -16,7 +16,6 @@ class DatabaseService(BaseService):
         :return: A list of all networks in the PyBEL database.
         :rtype: list
         """
-
         network_ls = self.manager.get_network(as_dict_list=True)
         return [(n['id'], n['name'], n['version']) for n in network_ls]
 
@@ -26,7 +25,7 @@ class DatabaseService(BaseService):
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
                            get_networks function.
         :type network_id: int
-        :param offset_start: The startingpoint of the offset (position in database)
+        :param offset_start: The starting point of the offset (position in database)
         :type offset_start: int
         :param offset_end: The end point of the offset (position in database)
         :type offset_end: int

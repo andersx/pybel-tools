@@ -7,10 +7,11 @@ from operator import itemgetter
 
 import flask
 import networkx as nx
-from flask import Flask
+from flask import Flask, request, jsonify
 
 from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
+from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary import get_annotation_values_by_annotation
 
 try:
@@ -23,6 +24,7 @@ log = logging.getLogger(__name__)
 
 DICTIONARY_SERVICE = 'dictionary_service'
 DEFAULT_TITLE = 'Biological Network Explorer'
+DELIMITER = '|'
 
 APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
@@ -35,11 +37,11 @@ NODE_LIST = 'node_list'
 PUBMED_IDS = 'pubmed_list'
 AUTHORS = 'author_list'
 SUPER_NETWORK = 'supernetwork'
-ANALYSIS_TYPE = 'analysis'
-ANALYSIS_TYPE_SUBGRAPH = 'induce_subgraph'
-ANALYSIS_TYPE_EXPAND = 'expand_neighbors'
-ANALYSIS_TYPE_PATHS = 'shortest_paths'
-DELIMITER = '|'
+GRAPH_ID = 'graphid'
+SEED_TYPE = 'analysis'
+SEED_DATA_AUTHORS = 'authors'
+SEED_DATA_PMIDS = 'pmids'
+SEED_DATA_NODES = 'nodes'
 
 BLACK_LIST = {
     APPEND_PARAM,
@@ -49,23 +51,24 @@ BLACK_LIST = {
     UNDIRECTED,
     NODE_NUMBER,
     FORMAT,
-    ANALYSIS_TYPE,
+    SEED_TYPE,
+    GRAPH_ID
 }
 
 
 def raise_invalid_source_target():
-    if SOURCE_NODE not in flask.request.args:
+    if SOURCE_NODE not in request.args:
         raise ValueError('Not source node in request')
-    if TARGET_NODE not in flask.request.args:
+    if TARGET_NODE not in request.args:
         raise ValueError('Not taget node in request')
     try:
-        int(flask.request.args.get(SOURCE_NODE))
+        int(request.args.get(SOURCE_NODE))
     except ValueError:
-        raise ValueError('{} is not valid node'.format(flask.request.args.get(SOURCE_NODE)))
+        raise ValueError('{} is not valid node'.format(request.args.get(SOURCE_NODE)))
     try:
-        int(flask.request.args.get(TARGET_NODE))
+        int(request.args.get(TARGET_NODE))
     except ValueError:
-        raise ValueError('{} is not valid node'.format(flask.request.args.get(TARGET_NODE)))
+        raise ValueError('{} is not valid node'.format(request.args.get(TARGET_NODE)))
 
 
 def get_dict_service(dsa):
@@ -107,7 +110,7 @@ def build_dictionary_service_app(app, connection=None):
         """
         Process the GET request returning the filtered graph
         :param network_id: id of the network
-        :param args: flask.request.args
+        :param args: request.args
         :return:
         """
         # Convert from list of hashes (as integers) to node tuples
@@ -121,7 +124,12 @@ def build_dictionary_service_app(app, connection=None):
 
         annotations = {k: args.getlist(k) for k in args if k not in BLACK_LIST}
 
-        graph = api.query_filtered_builder(network_id, expand_nodes, remove_nodes, **annotations)
+        graph = api.query(
+            network_id=network_id,
+            expand_nodes=expand_nodes,
+            remove_nodes=remove_nodes,
+            **annotations
+        )
 
         return graph
 
@@ -148,17 +156,17 @@ def build_dictionary_service_app(app, connection=None):
     @app.route('/network/<int:network_id>', methods=['GET'])
     def get_network_by_id_filtered(network_id):
 
-        graph = process_request(network_id, flask.request.args)
+        graph = process_request(network_id, request.args)
 
-        serve_format = flask.request.args.get(FORMAT)
+        serve_format = request.args.get(FORMAT)
 
         if serve_format is None:
             data = to_json_dict(graph)
-            return flask.jsonify(data)
+            return jsonify(data)
 
         if serve_format == 'cx':
             data = to_cx_json(graph)
-            return flask.jsonify(data)
+            return jsonify(data)
 
         if serve_format == 'bytes':
             data = to_bytes(graph)
@@ -185,37 +193,55 @@ def build_dictionary_service_app(app, connection=None):
 
         return flask.abort(404)
 
-    @app.route('/supernetwork/', methods=['GET'])
-    def get_network_filtered():
-        expand_nodes = [api.get_node_by_id(h) for h in flask.request.args.getlist(APPEND_PARAM)]
-        remove_nodes = [api.get_node_by_id(h) for h in flask.request.args.getlist(REMOVE_PARAM)]
-        annotations = {k: flask.request.args.getlist(k) for k in flask.request.args if
-                       k not in BLACK_LIST}
+    @app.route('/api/query/network/', methods=['GET'])
+    def ultimate_network_query():
+        network_id = request.args.get(GRAPH_ID)
 
-        graph = api.query_all_builder(expand_nodes, remove_nodes, **annotations)
+        seed_method = request.args.get(SEED_TYPE)
+        if seed_method is not None and seed_method not in SEED_TYPES:
+            raise ValueError('Invalid seed method: {}'.format(seed_method))
 
-        graph_json = to_json_dict(graph)
+        if seed_method == SEED_TYPE_PROVENANCE:
+            seed_data = {
+                'authors': request.args.get(SEED_DATA_AUTHORS),
+                'pmids': request.args.get(SEED_DATA_PMIDS)
+            }
+        else:
+            seed_data = request.args.get(SEED_DATA_NODES)
 
-        return flask.jsonify(graph_json)
+        expand_nodes = [api.get_node_by_id(h) for h in request.args.getlist(APPEND_PARAM)]
+        remove_nodes = [api.get_node_by_id(h) for h in request.args.getlist(REMOVE_PARAM)]
+        annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
+
+        graph = api.query(
+            network_id=network_id,
+            seed_method=seed_method,
+            seed_data=seed_data,
+            expand_nodes=expand_nodes,
+            remove_nodes=remove_nodes,
+            **annotations
+        )
+
+        return jsonify(to_json_dict(graph))
 
     @app.route('/edges/<int:network_id>/<int:node_id>')
     def get_incident_edges(network_id, node_id):
         res = api.get_incident_edges(network_id, node_id)
-        return flask.jsonify(res)
+        return jsonify(res)
 
     @app.route('/paths/shortest/<int:network_id>', methods=['GET'])
     def get_shortest_path(network_id):
-        graph = process_request(network_id, flask.request.args)
+        graph = process_request(network_id, request.args)
 
         try:
             raise_invalid_source_target()
         except ValueError as e:
             return str(e)
 
-        source = int(flask.request.args.get(SOURCE_NODE))
-        target = int(flask.request.args.get(TARGET_NODE))
+        source = int(request.args.get(SOURCE_NODE))
+        target = int(request.args.get(TARGET_NODE))
 
-        undirected = UNDIRECTED in flask.request.args
+        undirected = UNDIRECTED in request.args
 
         log.info('Source: %s, target: %s', source, target)
 
@@ -233,21 +259,21 @@ def build_dictionary_service_app(app, connection=None):
             log.debug('No paths between: {} and {}'.format(source, target))
             return 'No paths between the selected nodes'
 
-        return flask.jsonify(shortest_path)
+        return jsonify(shortest_path)
 
     @app.route('/paths/all/<int:network_id>', methods=['GET'])
     def get_all_path(network_id):
-        graph = process_request(network_id, flask.request.args)
+        graph = process_request(network_id, request.args)
 
         try:
             raise_invalid_source_target()
         except ValueError as e:
             return str(e)
 
-        source = int(flask.request.args.get(SOURCE_NODE))
-        target = int(flask.request.args.get(TARGET_NODE))
+        source = int(request.args.get(SOURCE_NODE))
+        target = int(request.args.get(TARGET_NODE))
 
-        undirected = UNDIRECTED in flask.request.args
+        undirected = UNDIRECTED in request.args
 
         if source not in graph or target not in graph:
             log.info('Source/target node not in graph')
@@ -260,14 +286,14 @@ def build_dictionary_service_app(app, connection=None):
         all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
 
         # all_paths is a generator -> convert to list and create a list of lists (paths)
-        return flask.jsonify([path for path in list(all_paths)])
+        return jsonify([path for path in list(all_paths)])
 
     @app.route('/centrality/<int:network_id>', methods=['GET'])
     def get_nodes_by_betweenness_centrality(network_id):
-        graph = process_request(network_id, flask.request.args)
+        graph = process_request(network_id, request.args)
 
         try:
-            node_numbers = int(flask.request.args.get(NODE_NUMBER))
+            node_numbers = int(request.args.get(NODE_NUMBER))
 
         except ValueError:
             return 'Please enter a number'
@@ -279,11 +305,11 @@ def build_dictionary_service_app(app, connection=None):
 
         node_list = [i[0] for i in sorted(bw_dict.items(), key=itemgetter(1), reverse=True)[0:node_numbers]]
 
-        return flask.jsonify(node_list)
+        return jsonify(node_list)
 
     @app.route('/nid/')
     def get_node_hashes():
-        return flask.jsonify(api.nid_node)
+        return jsonify(api.nid_node)
 
     @app.route('/nid/<nid>')
     def get_node_hash(nid):
@@ -296,7 +322,7 @@ def build_dictionary_service_app(app, connection=None):
 
         autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
 
-        return flask.jsonify(list(autocompletion_set))
+        return jsonify(list(autocompletion_set))
 
     @app.route('/api/suggestion/authors/<author>')
     def get_author_suggestion(author):
@@ -305,7 +331,7 @@ def build_dictionary_service_app(app, connection=None):
 
         autocompletion_set = api.get_authors_containing_keyword(keywords[-1])
 
-        return flask.jsonify(list(autocompletion_set))
+        return jsonify(list(autocompletion_set))
 
     @app.route('/api/suggestion/pubmed/<pubmed>')
     def get_pubmed_suggestion(pubmed):
@@ -314,17 +340,17 @@ def build_dictionary_service_app(app, connection=None):
 
         autocompletion_set = api.get_pubmed_containing_keyword(keywords[-1])
 
-        return flask.jsonify(list(autocompletion_set))
+        return jsonify(list(autocompletion_set))
 
     @app.route('/api/edges/<int:sid>/<int:tid>')
     def get_edges(sid, tid):
-        return flask.jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
+        return jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
 
     @app.route('/reload')
     def reload():
         api.load_networks()
         api.get_super_network(force=True)
-        return flask.jsonify({'status': 200})
+        return jsonify({'status': 200})
 
 
 def get_app():
