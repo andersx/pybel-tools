@@ -13,11 +13,13 @@ from ..utils import graph_edge_data_iter, count_defaultdict, check_has_annotatio
 __all__ = [
     'count_pmids',
     'get_pmids',
+    'get_pmid_by_keyword',
     'count_citations',
     'count_citations_by_annotation',
     'count_authors',
     'count_author_publications',
     'get_authors',
+    'get_authors_by_keyword',
     'count_authors_by_annotation',
     'get_evidences_by_pmid',
     'get_evidences_by_pmids',
@@ -61,7 +63,7 @@ def get_pmids(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A set of all PubMed identifiers cited in the construction of this graph
-    :rtype: set
+    :rtype: set[str]
     """
     return {d[CITATION][CITATION_REFERENCE].strip() for d in graph_edge_data_iter(graph) if has_pubmed_citation(d)}
 
@@ -69,9 +71,14 @@ def get_pmids(graph):
 def get_pmid_by_keyword(graph, keyword, pmids=None):
     """Gets the set of PubMed identifiers beginning with the given keyword string
     
-    :param graph: 
-    :param keyword: 
-    :return: 
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param keyword: The beginning of a PubMed identifier
+    :type keyword: str
+    :param pmids: A set of pre-cached PubMed identifiers
+    :type pmids: set
+    :return: A set of PMIDs starting with the given string
+    :rtype: set[str]
     """
     pmids = pmids if pmids is not None else get_pmids(graph)
     return {pmid for pmid in pmids if pmid.startswith(keyword)}
@@ -188,13 +195,24 @@ def get_authors(graph):
         if CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
             continue
         if isinstance(d[CITATION][CITATION_AUTHORS], str):
-            raise ValueError('Graph should be converyed with pbt.mutation.parse_authors first')
+            raise ValueError('Graph should be converted with ``pbt.mutation.parse_authors`` first')
         for author in d[CITATION][CITATION_AUTHORS]:
             authors.add(author)
     return authors
 
 
 def get_authors_by_keyword(graph, keyword, authors=None):
+    """Gets authors for whom the search term is a substring
+    
+    :param graph: A BEL graph
+    :type graph:
+    :param keyword: The keyword to search the author strings for
+    :type keyword: str
+    :param authors: An optional set of pre-cached authors calculated from the graph
+    :type authors: set[str]
+    :return: A set of authors with the keyword as a substring
+    :rtype: set[str]
+    """
     authors = get_authors(graph) if authors is None else authors
     keyword_lower = keyword.lower()
     return {author for author in authors if keyword_lower in author.lower()}
