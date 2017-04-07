@@ -20,6 +20,8 @@ from ..mutation import add_canonical_names, left_merge
 from ..selection import get_filtered_subgraph
 from ..utils import citation_to_tuple
 from collections import Counter
+from ..summary import get_authors, get_pmids
+from ..mutation.metadata import parse_authors
 
 log = logging.getLogger(__name__)
 
@@ -161,6 +163,8 @@ class DictionaryService(PybelService):
         for network_id in self.get_network_ids():
             left_merge(self.full_network, self.get_network_by_id(network_id))
 
+        parse_authors(self.full_network)
+
         log.info('Loaded super network')
         self.full_network_loaded = True
 
@@ -290,3 +294,22 @@ class DictionaryService(PybelService):
         nodes_with_keyword = unique_cnames.union(duplicates_with_function)
 
         return nodes_with_keyword
+
+    def get_pubmed_containing_keyword(self, keyword):
+        """Gets a list with pubmed_ids that contain a certain keyword"""
+
+        super_network = self.get_super_network()
+
+        pubmed_id_with_keyword = [pubmed_id for pubmed_id in get_pmids(super_network) if pubmed_id.startswith(keyword)]
+
+        return pubmed_id_with_keyword
+
+    def get_authors_containing_keyword(self, keyword):
+        """Gets a list with authors that contain a certain keyword"""
+
+        super_network = self.get_super_network()
+
+        # Case insensitive comparison
+        authors_with_keyword = [author for author in get_authors(super_network) if keyword.lower() in author.lower()]
+
+        return authors_with_keyword

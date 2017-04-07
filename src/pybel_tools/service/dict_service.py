@@ -289,12 +289,30 @@ def build_dictionary_service_app(app, connection=None):
     def get_node_hash(nid):
         return api.get_node_by_id(nid)
 
-    @app.route('/api/nodes/suggestion/<node>')
+    @app.route('/api/suggestion/nodes/<node>')
     def get_node_suggestion(node):
 
         keywords = [entry.strip() for entry in node.split(DELIMITER)]
 
         autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
+
+        return flask.jsonify(list(autocompletion_set))
+
+    @app.route('/api/suggestion/authors/<author>')
+    def get_author_suggestion(author):
+
+        keywords = [entry.strip() for entry in author.split(DELIMITER)]
+
+        autocompletion_set = api.get_authors_containing_keyword(keywords[-1])
+
+        return flask.jsonify(list(autocompletion_set))
+
+    @app.route('/api/suggestion/pubmed/<pubmed>')
+    def get_pubmed_suggestion(pubmed):
+
+        keywords = [entry.strip() for entry in pubmed.split(DELIMITER)]
+
+        autocompletion_set = api.get_pubmed_containing_keyword(keywords[-1])
 
         return flask.jsonify(list(autocompletion_set))
 
