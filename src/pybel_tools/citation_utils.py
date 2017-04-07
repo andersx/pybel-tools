@@ -31,8 +31,11 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1, return_errors=Fa
     :rtype: dict
     """
     pmids = [str(pmid).strip() for pmid in sorted(pmids)]
+    log.info('Querying %d PubMed identifiers', len(pmids))
+
     result = defaultdict(dict)
     errors = set()
+
     for pmidList in [','.join(pmids[i:i + group_size]) for i in range(0, len(pmids), group_size)]:
         url = EUTILS_URL_FMT.format(pmidList)
         res = requests.get(url)

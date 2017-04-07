@@ -100,6 +100,8 @@ class DictionaryService(BaseService):
         """
         for network_id, blob in self.manager.session.query(Network.id, Network.blob).all():
             graph = from_bytes(blob, check_version=check_version)
+            parse_authors(graph)
+            add_canonical_names(graph)
             self.add_network(network_id, graph)
 
     def update_node_indexes(self, graph):
@@ -144,7 +146,7 @@ class DictionaryService(BaseService):
         :return: A BEL Graph
         :rtype: BELGraph
         """
-        return self.networks[network_id] if network_id else self.get_super_network()
+        return self.networks[network_id] if network_id is not None else self.get_super_network()
 
     def get_super_network(self, force=False):
         """Gets all networks and merges them together. Caches in self.full_network.

@@ -13,7 +13,8 @@ from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, 
 from .dict_service_utils import DictionaryService
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary import get_annotation_values_by_annotation
-
+from ..summary import get_authors, get_pmids
+from ..mutation.metadata import fix_pubmed_citations
 try:
     from StringIO import StringIO
     from BytesIO import BytesIO
@@ -107,19 +108,22 @@ def serve_network(graph):
 
     return flask.abort(404)
 
-def render_network(graph, network_id):
+
+def render_network(graph, network_id=None):
     name = graph.name or DEFAULT_TITLE
 
     unique_annotation_dict = get_annotation_values_by_annotation(graph)
 
-    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in unique_annotation_dict.items()]
+    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in
+                 unique_annotation_dict.items()]
 
     return flask.render_template(
         'network_visualization.html',
         filter_json=json_dict,
-        network_id=network_id,
+        network_id=network_id if network_id is not None else "0",
         network_name=name
     )
+
 
 def get_dict_service(dsa):
     """Gets the latent PyBEL Dictionary Service from a Flask app
@@ -164,8 +168,10 @@ def build_dictionary_service_app(app, connection=None):
         :return: A BEL graph
         :rtype: pybel.BELGraph
         """
-        # Convert from list of hashes (as integers) to node tuples
         network_id = request.args.get(GRAPH_ID, network_id)
+
+        if network_id == 0:
+            network_id = None
 
         seed_method = request.args.get(SEED_TYPE)
         if seed_method is not None and seed_method not in SEED_TYPES:
@@ -218,16 +224,16 @@ def build_dictionary_service_app(app, connection=None):
     def view_network(network_id):
         """Renders a page for the user to explore a network"""
         if network_id == 0:
-            network_id = ''
-
-        graph = api.get_network_by_id(network_id)
+            network_id = None
+        #graph = api.get_network_by_id(network_id)
+        graph = get_graph_from_request(network_id=network_id)
         return render_network(graph, network_id)
 
     @app.route('/network/', methods=['GET'])
     def view_supernetwork():
         """Renders a page for the user to explore a network"""
         graph = api.get_network_by_id()
-        return render_network(graph, '')
+        return render_network(graph)
 
     @app.route('/api/network/', methods=['GET'])
     def download_network():
@@ -323,6 +329,16 @@ def build_dictionary_service_app(app, connection=None):
 
         return jsonify(node_list)
 
+    @app.route('/api/authors')
+    def get_all_authors():
+        graph = get_graph_from_request()
+        return jsonify(sorted(get_authors(graph)))
+
+    @app.route('/api/pmids')
+    def get_all_pmids():
+        graph = get_graph_from_request()
+        return jsonify(sorted(get_pmids(graph)))
+
     @app.route('/api/nid/')
     def get_node_hashes():
         return jsonify(api.nid_node)
@@ -368,6 +384,11 @@ def build_dictionary_service_app(app, connection=None):
         api.get_super_network(force=True)
         return jsonify({'status': 200})
 
+    @app.route('/enrich')
+    def enrich_authors():
+        """Enriches information in network. Be patient"""
+        fix_pubmed_citations(api.full_network)
+        return jsonify({'status': 200})
 
 def get_app():
     return Flask(__name__)

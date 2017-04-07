@@ -89,7 +89,6 @@ def fix_pubmed_citations(graph, stringify_authors=False):
     pmids = get_pmids(graph)
     pmid_data, errors = get_citations_by_pmids(pmids, return_errors=True)
 
-
     for u,v,k,d in filter_edges(graph, keep_has_pubmed_citation):
         pmid = d[CITATION][CITATION_REFERENCE].strip()
 
