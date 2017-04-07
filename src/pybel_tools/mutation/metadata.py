@@ -24,6 +24,10 @@ def parse_authors(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     """
+    if hasattr(graph, 'parsed_authors') and getattr(graph, 'parsed_authors'):
+        log.debug('No need to parse authors again')
+        return
+
     for u, v, k in graph.edges_iter(keys=True):
         if CITATION not in graph.edge[u][v][k]:
             continue
@@ -38,6 +42,8 @@ def parse_authors(graph):
 
         graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = list(authors.split('|'))
 
+    graph.parsed_authors = True
+
 
 def serialize_authors(graph):
     """Recombines all authors with the pipe character "|"
@@ -45,6 +51,10 @@ def serialize_authors(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     """
+    if hasattr(graph, 'parsed_authors') and not getattr(graph, 'parsed_authors'):
+        log.debug('No need to serialize authors again')
+        return
+
     for u, v, k in graph.edges_iter(keys=True):
         if CITATION not in graph.edge[u][v][k]:
             continue
@@ -58,6 +68,8 @@ def serialize_authors(graph):
             continue
 
         graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = '|'.join(authors)
+
+    graph.parsed_authors = False
 
 
 def add_canonical_names(graph):

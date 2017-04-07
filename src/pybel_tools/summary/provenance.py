@@ -66,6 +66,17 @@ def get_pmids(graph):
     return {d[CITATION][CITATION_REFERENCE].strip() for d in graph_edge_data_iter(graph) if has_pubmed_citation(d)}
 
 
+def get_pmid_by_keyword(graph, keyword, pmids=None):
+    """Gets the set of PubMed identifiers beginning with the given keyword string
+    
+    :param graph: 
+    :param keyword: 
+    :return: 
+    """
+    pmids = pmids if pmids is not None else get_pmids(graph)
+    return {pmid for pmid in pmids if pmid.startswith(keyword)}
+
+
 def count_pmids(graph):
     """Counts the frequency of PubMed documents in a graph
 
@@ -170,7 +181,7 @@ def get_authors(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A set of author names
-    :rtype: set
+    :rtype: set[str]
     """
     authors = set()
     for d in graph_edge_data_iter(graph):
@@ -181,6 +192,12 @@ def get_authors(graph):
         for author in d[CITATION][CITATION_AUTHORS]:
             authors.add(author)
     return authors
+
+
+def get_authors_by_keyword(graph, keyword, authors=None):
+    authors = get_authors(graph) if authors is None else authors
+    keyword_lower = keyword.lower()
+    return {author for author in authors if keyword_lower in author.lower()}
 
 
 def count_authors_by_annotation(graph, annotation='Subgraph'):
@@ -230,6 +247,7 @@ def get_evidences_by_pmid(graph, pmid):
         result.add(d[EVIDENCE])
 
     return result
+
 
 # TODO replace with edge_filter
 def get_evidences_by_pmids(graph, pmids):
