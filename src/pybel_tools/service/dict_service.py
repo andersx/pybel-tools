@@ -153,7 +153,8 @@ def build_dictionary_service_app(app, connection=None):
         return flask.render_template('network_list.html', data=data)
 
     @app.route('/network/filter/<int:network_id>', methods=['GET'])
-    def get_filter(network_id):
+    def view_network(network_id):
+        """Renders a page for the user to explore a network"""
         graph = api.get_network_by_id(network_id)
         name = graph.name or DEFAULT_TITLE
 
@@ -162,10 +163,12 @@ def build_dictionary_service_app(app, connection=None):
         json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in
                      unique_annotation_dict.items()]
 
-        return flask.render_template('network_visualization.html',
-                                     filter_json=json_dict,
-                                     network_id=network_id,
-                                     network_name=name)
+        return flask.render_template(
+            'network_visualization.html',
+            filter_json=json_dict,
+            network_id=network_id,
+            network_name=name
+        )
 
     @app.route('/api/query/network/', methods=['GET'])
     def ultimate_network_query():
@@ -174,6 +177,7 @@ def build_dictionary_service_app(app, connection=None):
 
     @app.route('/network/<int:network_id>', methods=['GET'])
     def download_network(network_id):
+        """Builds a graph and sends it in the given format"""
         graph = get_graph_from_request(network_id)
 
         serve_format = request.args.get(FORMAT)
