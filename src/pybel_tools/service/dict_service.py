@@ -27,7 +27,12 @@ TARGET_NODE = 'target'
 FORMAT = 'format'
 UNDIRECTED = 'undirected'
 NODE_NUMBER = 'node_number'
+NODE_LIST = 'node_list'
+PUBMED_IDS = 'pubmed_list'
+AUTHORS = 'author_list'
+ANALYSIS_TYPE = 'analysis'
 SUPER_NETWORK = 'supernetwork'
+""
 DICTIONARY_SERVICE = 'dictionary_service'
 DEFAULT_TITLE = 'Biological Network Explorer'
 BLACK_LIST = {APPEND_PARAM, REMOVE_PARAM, SOURCE_NODE, TARGET_NODE, UNDIRECTED, NODE_NUMBER, FORMAT}

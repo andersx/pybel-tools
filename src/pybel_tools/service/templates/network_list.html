@@ -29,9 +29,28 @@
             <li><a href="/network/filter/{{ nid }}">{{ name }} v{{ vers }}</a></li>
         {% endfor %}
     </ul>
-    <h4>Inspect nodes in your networks</h4>
+    <h4>Inspect nodes/papers/authors in your networks</h4>
 
-    <input placeholder="Type here your nodes" name="node-list" id="node-input" type="text"/>
+    Please type the nodes you want to inspect
+    <form id="node-inspection" method="get">
+        <input placeholder="Type here your nodes" name="node_list" id="node-input" type="text"/><br>
+        <input type="radio" name="analysis" value="induce_subgraph" checked> Induce subnetwork<br>
+        <input type="radio" name="analysis" value="shortest_paths"> Find shortest paths between nodes<br>
+        <input type="radio" name="analysis" value="expand_neighbors"> Expand around nodes<br>
+        <input type="button" id="submit-nodes" value="Submit"/>
+    </form>
+    <hr>
+    Please type the PubMed IDs you want to inspect
+    <form id="citation-inspection" method="get">
+        <input placeholder="Type here your PubMed IDs" name="pubmed_list" id="pubmed-input" type="text"/>
+    </form>
+    <hr>
+
+    Please type the authors you want to inspect
+    <form id="author-inspection" method="get">
+        <input placeholder="Type here your authors" name="author_list" id="author-input" type="text"/>
+    </form>
+
 </div>
 </body>
 </html>
