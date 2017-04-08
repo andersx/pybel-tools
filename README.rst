@@ -42,11 +42,11 @@ After previously having uploaded your BEL graphs
     :target: https://travis-ci.org/pybel/pybel-tools
     :alt: Development Build Status
 
-.. |develop_coverage| image:: https://codecov.io/gh/pybel/pybel/coverage.svg?branch=develop
+.. |develop_coverage| image:: https://codecov.io/gh/pybel/pybel-tools/coverage.svg?branch=develop
     :target: https://codecov.io/gh/pybel/pybel-tools?branch=develop
     :alt: Development Coverage Status
 
-.. |develop_documentation| image:: https://readthedocs.org/projects/pybel/badge/?version=latest
+.. |develop_documentation| image:: https://readthedocs.org/projects/pybel-tools/badge/?version=latest
     :target: http://pybel-tools.readthedocs.io/en/latest/
     :alt: Development Documentation Status
 
