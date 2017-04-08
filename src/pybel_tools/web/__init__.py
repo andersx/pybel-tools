@@ -6,6 +6,11 @@ Each python module in the web submodule should have functions that take a Flask 
 These endpoints should expose data as JSON, and not rely on templates, since they should be usable by apps in other
 packages and locations
 
+Setting up with Docker
+----------------------
+- http://phusion.github.io/baseimage-docker/
+- https://penandpants.com/2014/03/09/docker-via-homebrew/
+
 """
 
 from . import definitions_endpoint
