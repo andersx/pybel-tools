@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import os
 
-from pybel import BELGraph, to_pickle
+from pybel import BELGraph
 from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from .. import pipeline
@@ -13,7 +12,6 @@ from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
 from ..mutation.merge import left_merge
 from ..summary.edge_summary import get_annotation_values
-from ..utils import check_has_annotation, graph_edge_data_iter
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +30,6 @@ __all__ = [
     'get_causal_subgraph',
     'get_subgraph',
     'get_subgraphs_by_annotation',
-    'subgraphs_to_pickles',
 ]
 
 SEED_TYPE_INDUCTION = 'induction'
@@ -276,28 +273,6 @@ def get_subgraph_by_pubmed(graph, pmids):
 def get_subgraph_by_authors(graph, authors):
     """Induces a subgraph over the edges retrieved publications by the given author(s)"""
     return get_subgraph_by_edge_filter(graph, build_author_inclusion_filter(authors))
-
-
-def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
-    """Groups the given graph into subgraphs by the given annotation with :func:`get_subgraph_by_annotation` and
-    outputs them as gpickle files to the given directory with :func:`pybel.to_pickle`
-
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param directory: A directory to output the pickles
-    :type directory: str
-    :param annotation: An annotation to split by. Suggestion: ``Subgraph``
-    :type annotation: str
-    """
-    vs = {d[ANNOTATIONS][annotation] for d in graph_edge_data_iter(graph) if check_has_annotation(d, annotation)}
-
-    for value in vs:
-        sg = get_subgraph_by_annotation_value(graph, annotation, value)
-        sg.document.update(graph.document)
-
-        file_name = '{}_{}.gpickle'.format(annotation, value.replace(' ', '_'))
-        path = os.path.join(directory, file_name)
-        to_pickle(sg, path)
 
 
 @pipeline.mutator
