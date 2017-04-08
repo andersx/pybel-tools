@@ -33,7 +33,7 @@ def group_nodes_by_annotation(graph, annotation='Subgraph'):
         result[d[ANNOTATIONS][annotation]].add(u)
         result[d[ANNOTATIONS][annotation]].add(v)
 
-    return result
+    return dict(result)
 
 
 def average_node_annotation(graph, key, annotation='Subgraph', aggregator=None):

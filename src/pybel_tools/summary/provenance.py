@@ -43,7 +43,7 @@ def _generate_citation_dict(graph):
             continue
         results[d[CITATION][CITATION_TYPE]][u, v].add(d[CITATION][CITATION_REFERENCE].strip())
 
-    return results
+    return dict(results)
 
 
 def has_pubmed_citation(edge_data_dictionary):
@@ -117,7 +117,6 @@ def count_citations(graph, **annotations):
         citations[u, v].add((c[CITATION_TYPE], c[CITATION_REFERENCE].strip()))
 
     counter = Counter(itt.chain.from_iterable(citations.values()))
-
     return counter
 
 
@@ -295,4 +294,4 @@ def get_evidences_by_pmids(graph, pmids):
 
         result[d[CITATION][CITATION_REFERENCE]].add(d[EVIDENCE])
 
-    return result
+    return dict(result)

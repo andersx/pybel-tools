@@ -72,7 +72,7 @@ def calculate_incorrect_name_dict(graph):
             continue
         missing[e.namespace].append(e.name)
 
-    return missing
+    return dict(missing)
 
 
 def calculate_suggestions(incorrect_name_dict, namespace_dict):
@@ -96,7 +96,7 @@ def calculate_suggestions(incorrect_name_dict, namespace_dict):
                                                    scorer=fuzz.partial_token_set_ratio):
                 suggestions_cache[namespace, name].append((putative, score))
 
-    return suggestions_cache
+    return dict(suggestions_cache)
 
 
 def calculate_error_by_annotation(graph, annotation):
@@ -123,7 +123,7 @@ def calculate_error_by_annotation(graph, annotation):
             for value in values:
                 results[value].append(e.__class__.__name__)
 
-    return results
+    return dict(results)
 
 
 def group_errors(graph):
