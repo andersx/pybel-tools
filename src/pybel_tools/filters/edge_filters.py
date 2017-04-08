@@ -89,9 +89,9 @@ def build_inverse_filter(f):
     """Builds a filter that is the inverse of the given filter
     
     :param f: An edge filter function (graph, node, node, key, data) -> bool
-    :type f: lambda
+    :type f: types.FunctionType
     :return: An edge filter function (graph, node, node, key, data) -> bool
-    :rtype: lambda 
+    :rtype: types.FunctionType
     """
 
     def inverse_filter(graph, u, v, k, d):
@@ -108,11 +108,11 @@ def build_annotation_value_filter(annotation, value):
     :param value: The value or values for the annotation to filter on
     :type value: str or iter[str]
     :return: An edge filter function (graph, node, node, key, data) -> bool
-    :rtype: lambda
+    :rtype: types.FunctionType
     """
 
     if isinstance(value, str):
-        def annotation_value_filter(graph, u, v, k, attr_dict):
+        def annotation_value_filter(graph, u, v, k, d):
             """Only passes for edges that contain the given annotation and have the given value
     
             :param graph: A BEL Graph
@@ -136,7 +136,7 @@ def build_annotation_value_filter(annotation, value):
     elif isinstance(value, (list, set, tuple)):
         values = set(value)
 
-        def annotation_values_filter(graph, u, v, k, attr_dict):
+        def annotation_values_filter(graph, u, v, k, d):
             """Only passes for edges that contain the given annotation and have one of the given values
 
             :param graph: A BEL Graph
@@ -173,13 +173,13 @@ def build_relation_filter(relations):
     """Builds a filter that passes only for edges with the given relation
     
     :param relations: A relation or iterable of relations
-    :type relations: str or list or tuple or set
+    :type relations: str or iter[str]
     :return: An edge filter function (graph, node, node, key, data) -> bool
-    :rtype: lambda
+    :rtype: types.FunctionType
     """
 
     if isinstance(relations, str):
-        def relation_filter(graph, u, v, k, attr_dict):
+        def relation_filter(graph, u, v, k, d):
             """Only passes for edges with the contained relation
 
             :param graph: A BEL Graph
@@ -199,7 +199,8 @@ def build_relation_filter(relations):
 
         return relation_filter
     elif isinstance(relations, (list, tuple, set)):
-        def relation_filter(graph, u, v, k, attr_dict):
+        relation_set = set(relations)
+        def relation_filter(graph, u, v, k, d):
             """Only passes for edges with one of the contained relations
 
             :param graph: A BEL Graph
@@ -215,7 +216,7 @@ def build_relation_filter(relations):
             :return: True if the edge has one of the contained relations
             :rtype: bool
             """
-            return graph.edge[u][v][k][RELATION] in relations
+            return graph.edge[u][v][k][RELATION] in relation_set
 
         return relation_filter
     else:
@@ -226,9 +227,9 @@ def build_citation_inclusion_filter(pmids):
     """Only passes for edges with citations whose references are one of the given PubMed identifiers
     
     :param pmids: A PubMed identifier or list of PubMed identifiers to filter for
-    :type pmids: str or list or set or tuple
+    :type pmids: str or iter[str]
     :return: An edge filter function (graph, node, node, key, data) -> bool
-    :rtype: lambda
+    :rtype: types.FunctionType
     """
 
     if isinstance(pmids, str):
@@ -280,9 +281,9 @@ def build_citation_exclusion_filter(pmids):
     """Fails for edges with citations whose references are one of the given PubMed identifiers
 
     :param pmids: A PubMed identifier or list of PubMed identifiers to filter against
-    :type pmids: str or list or set or tuple
+    :type pmids: str or iter[str]
     :return: An edge filter function (graph, node, node, key, data) -> bool
-    :rtype: lambda
+    :rtype: types.FunctionType
     """
 
     if isinstance(pmids, str):
@@ -335,9 +336,9 @@ def build_author_inclusion_filter(authors):
     """Only passes for edges with author information that matches one of the given authors
     
     :param authors: The author or list of authors to filter by
-    :type authors: str or list[str]
+    :type authors: str or iter[str]
     :return: An edge filter
-    :rtype: lambda
+    :rtype: types.FunctionType
     """
     if isinstance(authors, str):
         def author_filter(graph, u, v, k, d):
@@ -389,9 +390,9 @@ def concatenate_edge_filters(filters):
     """Concatenates multiple edge filters to a new filter that requires all filters to be met.
 
     :param filters: a list of predicates (graph, node, node, key, data) -> bool
-    :type filters: list or tuple or lambda
+    :type filters: types.FunctionType or list[types.FunctionType] or tuple[types.FunctionType]
     :return: A combine filter (graph, node, node, key, data) -> bool
-    :rtype: lambda
+    :rtype: types.FunctionType
     """
 
     # If no filters are given, then return the trivially permissive filter
@@ -433,7 +434,7 @@ def filter_edges(graph, filters):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param filters: A filter or list of filters
-    :type filters: list or tuple or lambda
+    :type filters: list or tuple or types.FunctionType
     :return: An iterable of edges that pass all filters
     :rtype: iter
     """
@@ -455,7 +456,7 @@ def count_passed_edge_filter(graph, filters):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param filters: A filter or list of filters
-    :type filters: list or tuple or lambda
+    :type filters: iter[types.FunctionType]
     :return: The number of edges passing a given set of filters
     :rtype: int
     """
@@ -468,7 +469,7 @@ def summarize_edge_filter(graph, filters):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :param filters: A filter or list of filters
-    :type filters: list or tuple or lamba
+    :type filters: types.FunctionType or list[types.FunctionType]
     """
     passed = count_passed_edge_filter(graph, filters)
     print('{}/{} edges passed {}'.format(passed, graph.number_of_edges(), ', '.join(f.__name__ for f in filters)))
