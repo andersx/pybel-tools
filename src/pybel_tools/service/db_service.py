@@ -33,8 +33,6 @@ def set_db_service(app, service):
     app.config[DATABASE_SERVICE] = service
 
 
-
-
 def build_database_service_app(app, connection=None):
     """Builds the PyBEL Database-Backed API Service.
 
@@ -43,7 +41,6 @@ def build_database_service_app(app, connection=None):
     :param connection: custom database connection string
     :type connection: str
     """
-
     api = DatabaseService(connection=connection)
     app.config[DATABASE_SERVICE] = api
 
