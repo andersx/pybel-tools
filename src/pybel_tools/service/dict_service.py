@@ -9,17 +9,12 @@ import flask
 import networkx as nx
 from flask import Flask, request, jsonify
 
-from pybel import to_cx_json, to_graphml, to_bytes, to_bel_lines, to_json_dict, to_csv
 from .dict_service_utils import DictionaryService
+from .send_utils import serve_network
+from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary import get_annotation_values_by_annotation
 from ..summary import get_authors, get_pmids
-from ..mutation.metadata import fix_pubmed_citations
-try:
-    from StringIO import StringIO
-    from BytesIO import BytesIO
-except ImportError:
-    from io import StringIO, BytesIO
 
 log = logging.getLogger(__name__)
 
@@ -70,53 +65,14 @@ def raise_invalid_source_target():
     except ValueError:
         raise ValueError('{} is not valid node'.format(request.args.get(TARGET_NODE)))
 
-
-def serve_network(graph):
-    """A helper function to serialize a graph and download as a file"""
-    serve_format = request.args.get(FORMAT)
-
-    if serve_format is None or serve_format == 'json':
-        data = to_json_dict(graph)
-        return jsonify(data)
-
-    if serve_format == 'cx':
-        data = to_cx_json(graph)
-        return jsonify(data)
-
-    if serve_format == 'bytes':
-        data = to_bytes(graph)
-        return flask.send_file(data, mimetype='application/octet-stream', as_attachment=True,
-                               attachment_filename='graph.gpickle')
-
-    if serve_format == 'bel':
-        data = '\n'.join(to_bel_lines(graph))
-        return flask.Response(data, mimetype='text/plain')
-
-    if serve_format == 'graphml':
-        bio = BytesIO()
-        to_graphml(graph, bio)
-        bio.seek(0)
-        data = StringIO(bio.read().decode('utf-8'))
-        return flask.send_file(data, mimetype='text/xml', attachment_filename='graph.graphml', as_attachment=True)
-
-    if serve_format == 'csv':
-        bio = BytesIO()
-        to_csv(graph, bio)
-        bio.seek(0)
-        data = StringIO(bio.read().decode('utf-8'))
-        return flask.send_file(data, attachment_filename="graph.tsv", as_attachment=True)
-
     return flask.abort(404)
 
 
 def render_network(graph, network_id=None):
+    """Renders the visualization of a network"""
     name = graph.name or DEFAULT_TITLE
-
-    unique_annotation_dict = get_annotation_values_by_annotation(graph)
-
-    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in
-                 unique_annotation_dict.items()]
-
+    annotations = get_annotation_values_by_annotation(graph)
+    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in annotations.items()]
     return flask.render_template(
         'network_visualization.html',
         filter_json=json_dict,
@@ -215,8 +171,11 @@ def build_dictionary_service_app(app, connection=None):
 
         return graph
 
+    # Web Pages
+
     @app.route('/')
-    def list_networks():
+    def view_network_list():
+        """Renders a page for the user to choose a network"""
         data = [(nid, n.name, n.version) for nid, n in api.networks.items()]
         return flask.render_template('network_list.html', data=data)
 
@@ -225,27 +184,43 @@ def build_dictionary_service_app(app, connection=None):
         """Renders a page for the user to explore a network"""
         if network_id == 0:
             network_id = None
-        #graph = api.get_network_by_id(network_id)
+        # graph = api.get_network_by_id(network_id)
         graph = get_graph_from_request(network_id=network_id)
         return render_network(graph, network_id)
 
     @app.route('/network/', methods=['GET'])
     def view_supernetwork():
-        """Renders a page for the user to explore a network"""
+        """Renders a page for the user to explore the combine network"""
         graph = api.get_network_by_id()
         return render_network(graph)
+
+    # App Control
+
+    @app.route('/admin/reload')
+    def run_reload():
+        api.load_networks()
+        api.get_super_network(force=True)
+        return jsonify({'status': 200})
+
+    @app.route('/admin/enrich')
+    def run_enrich_authors():
+        """Enriches information in network. Be patient"""
+        fix_pubmed_citations(api.full_network)
+        return jsonify({'status': 200})
+
+    # Data Service
 
     @app.route('/api/network/', methods=['GET'])
     def download_network():
         """Builds a graph and sends it in the given format"""
         graph = get_graph_from_request()
-        return serve_network(graph)
+        return serve_network(graph, request.args.get(FORMAT))
 
     @app.route('/api/network/<int:network_id>', methods=['GET'])
     def download_network_by_id(network_id):
         """Builds a graph from the given network id and sends it in the given format"""
         graph = get_graph_from_request(network_id=network_id)
-        return serve_network(graph)
+        return serve_network(graph, request.args.get(FORMAT))
 
     @app.route('/api/edges/incident/<int:network_id>/<int:node_id>')
     def get_incident_edges(network_id, node_id):
@@ -378,17 +353,6 @@ def build_dictionary_service_app(app, connection=None):
     def get_edges(sid, tid):
         return jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
 
-    @app.route('/reload')
-    def reload():
-        api.load_networks()
-        api.get_super_network(force=True)
-        return jsonify({'status': 200})
-
-    @app.route('/enrich')
-    def enrich_authors():
-        """Enriches information in network. Be patient"""
-        fix_pubmed_citations(api.full_network)
-        return jsonify({'status': 200})
 
 def get_app():
     return Flask(__name__)

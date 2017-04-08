@@ -33,6 +33,8 @@ def set_db_service(app, service):
     app.config[DATABASE_SERVICE] = service
 
 
+
+
 def build_database_service_app(app, connection=None):
     """Builds the PyBEL Database-Backed API Service.
 
@@ -156,5 +158,5 @@ def build_database_service_app(app, connection=None):
         return jsonify(nodes)
 
 
-def get_db_app():
+def get_app():
     return Flask(__name__)

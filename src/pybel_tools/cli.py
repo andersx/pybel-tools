@@ -25,9 +25,12 @@ from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
-from .service.db_service import build_database_service_app, get_db_app
-from .service.dict_service import get_dict_service, build_dictionary_service_app, get_app
+from .service import db_service
+from .service import dict_service
+from .service.db_service import build_database_service_app
+from .service.dict_service import get_dict_service, build_dictionary_service_app
 from .utils import get_version
+from .web.parser_endpoint import build_parser_service_app
 
 log = logging.getLogger(__name__)
 
@@ -49,14 +52,15 @@ def upload(path, connection, skip_check_version):
 
 
 @main.command()
-@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection string. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('--host', help='Flask host. Defaults to localhost')
 @click.option('--port', help='Flask port. Defaults to 5000')
-@click.option('--debug', is_flag=True)
+@click.option('-v', '--debug', is_flag=True)
 @click.option('--flask-debug', is_flag=True)
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-@click.option('--database', help='Use the database service')
-def service(connection, host, port, debug, flask_debug, skip_check_version, database):
+@click.option('--database', is_flag=True, help='Use the database service')
+@click.option('--parser-service', is_flag=True, help='Enable the single statement parser')
+def service(connection, host, port, debug, flask_debug, skip_check_version, database, parser_service):
     """Runs the PyBEL API RESTful web service"""
     if debug:
         logging.basicConfig(level=10)
@@ -67,12 +71,15 @@ def service(connection, host, port, debug, flask_debug, skip_check_version, data
         log.info('Running PyBEL Tools v%s', get_version())
 
     if database:
-        app = get_db_app()
-        build_database_service_app(app, database)
+        app = db_service.get_app()
+        build_database_service_app(app, connection=connection)
     else:
-        app = get_app()
+        app = dict_service.get_app()
         build_dictionary_service_app(app, connection=connection)
         get_dict_service(app).load_networks(check_version=(not skip_check_version))
+
+    if parser_service:
+        build_parser_service_app(app)
 
     app.run(debug=flask_debug, host=host, port=port)
 
