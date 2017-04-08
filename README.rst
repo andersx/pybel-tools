@@ -7,6 +7,11 @@ This package was developed at `Fraunhofer SCAI <https://www.scai.fraunhofer.de/>
 with support from the `IMI <https://www.imi.europa.eu/>`_ projects: `AETIONOMY <http://www.aetionomy.eu/>`_ and
 `PHAGO <http://www.phago.eu/>`_.
 
+Getting Started
+---------------
+- Documentation at http://pybel-tools.readthedocs.io
+- Cookbook at https://github.com/pybel/pybel-notebooks
+
 Installation |pypi_version| |python_versions|
 ---------------------------------------------
 PyBEL Tools can be installed easily from `PyPI <https://pypi.python.org/pypi/pybel_tools>`_ with the following code in
@@ -21,11 +26,6 @@ or from the latest code on `GitHub <https://github.com/pybel/pybel-tools>`_ with
 .. code-block:: sh
 
     $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
-
-Cookbook and Documentation
---------------------------
-- Documentation at http://pybel-tools.readthedocs.io
-- Examples at https://github.com/pybel/pybel-notebooks
 
 Biological Network Explorer
 ---------------------------
