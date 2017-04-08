@@ -3,6 +3,10 @@ PyBEL Tools |develop_build| |develop_coverage| |develop_documentation| |pypi_lic
 `PyBEL Tools <http://pybel-tools.readthedocs.io/>`_ is a suite of tools built on top of
 `PyBEL <http://pybel.readthedocs.io>`_ to facilitate data management, integration, and analysis.
 
+This package was developed at `Fraunhofer SCAI <https://www.scai.fraunhofer.de/>`_
+with support from the `IMI <https://www.imi.europa.eu/>`_ projects: `AETIONOMY <http://www.aetionomy.eu/>`_ and
+`PHAGO <http://www.phago.eu/>`_.
+
 Installation |pypi_version| |python_versions|
 ---------------------------------------------
 PyBEL Tools can be installed easily from `PyPI <https://pypi.python.org/pypi/pybel_tools>`_ with the following code in
@@ -37,6 +41,13 @@ After previously having uploaded your BEL graphs
 
     $ python3 -m pybel_tools upload "PATH_TO_YOUR_GRAPH_PICKLE"
 
+Links
+-----
+- Documented on `Read the Docs <http://pybel-tools.readthedocs.io/>`_
+- Versioned on `GitHub <https://github.com/pybel/pybel-tools>`_
+- Tested on `Travis CI <https://travis-ci.org/pybel/pybel-tools>`_
+- Distributed by `PyPI <https://pypi.python.org/pypi/pybel-tools>`_
+- Chat on `Gitter <https://gitter.im/pybel/Lobby>`_
 
 .. |develop_build| image:: https://travis-ci.org/pybel/pybel-tools.svg?branch=develop
     :target: https://travis-ci.org/pybel/pybel-tools
