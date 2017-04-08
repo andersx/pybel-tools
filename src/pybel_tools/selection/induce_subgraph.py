@@ -6,6 +6,7 @@ import os
 from pybel import BELGraph, to_pickle
 from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
+from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_citation_inclusion_filter, build_author_inclusion_filter, \
     keep_causal_edges, build_annotation_value_filter, build_annotation_dict_filter
 from ..filters.node_filters import filter_nodes
@@ -46,6 +47,8 @@ SEED_TYPES = {
     SEED_TYPE_PROVENANCE,
 }
 
+
+@pipeline.mutator
 def get_subgraph_by_induction(graph, nodes):
     """Induces a graph on the given nodes
 
@@ -59,6 +62,7 @@ def get_subgraph_by_induction(graph, nodes):
     return graph.subgraph(nodes)
 
 
+@pipeline.mutator
 def get_subgraph_by_node_filter(graph, node_filters):
     """Induces a graph on the nodes that pass all filters
 
@@ -72,6 +76,7 @@ def get_subgraph_by_node_filter(graph, node_filters):
     return get_subgraph_by_induction(graph, filter_nodes(graph, node_filters))
 
 
+@pipeline.mutator
 def get_subgraph_by_neighborhood(graph, nodes):
     """Gets a BEL graph around the neighborhoods of the given nodes
 
@@ -82,7 +87,7 @@ def get_subgraph_by_neighborhood(graph, nodes):
     :return: A BEL graph induced around the neighborhoods of the given nodes
     :rtype: pybel.BELGraph
     """
-    bg = BELGraph()
+    result = BELGraph()
 
     node_set = set(nodes)
 
@@ -91,17 +96,18 @@ def get_subgraph_by_neighborhood(graph, nodes):
             raise ValueError('{} not in graph'.format(node))
 
     for u, v, k, d in graph.in_edges_iter(nodes, keys=True, data=True):
-        bg.add_edge(u, v, key=k, attr_dict=d)
+        result.add_edge(u, v, key=k, attr_dict=d)
 
     for u, v, k, d in graph.out_edges_iter(nodes, keys=True, data=True):
-        bg.add_edge(u, v, key=k, attr_dict=d)
+        result.add_edge(u, v, key=k, attr_dict=d)
 
-    for node in bg.nodes_iter():
-        bg.node[node].update(graph.node[node])
+    for node in result.nodes_iter():
+        result.node[node].update(graph.node[node])
 
-    return bg
+    return result
 
 
+@pipeline.mutator
 def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
     """Induces a subgraph over the nodes in the pairwise shortest paths between all of the nodes in the given list
 
@@ -122,6 +128,7 @@ def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
         return graph.subgraph(get_nodes_in_dijkstra_paths(graph, nodes, cutoff=cutoff, weight=weight))
 
 
+@pipeline.mutator
 def get_subgraph_by_edge_filter(graph, edge_filters):
     """Induces a subgraph on all edges that pass the given filters
     
@@ -143,6 +150,7 @@ def get_subgraph_by_edge_filter(graph, edge_filters):
     return result
 
 
+@pipeline.mutator
 def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
     """Builds a new subgraph induced over all edges whose annotations match the given key and value
 
@@ -155,11 +163,12 @@ def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    g = get_subgraph_by_edge_filter(graph, build_annotation_value_filter(annotation, value))
-    g.graph[GRAPH_METADATA][METADATA_NAME] = '{} - ({}: {})'.format(graph.name, annotation, value)
-    return g
+    result = get_subgraph_by_edge_filter(graph, build_annotation_value_filter(annotation, value))
+    result.graph[GRAPH_METADATA][METADATA_NAME] = '{} - ({}: {})'.format(graph.name, annotation, value)
+    return result
 
 
+@pipeline.mutator
 def get_subgraph_by_data(graph, annotations):
     """
     
@@ -188,6 +197,7 @@ def get_subgraphs_by_annotation(graph, annotation='Subgraph'):
     return {value: get_subgraph_by_annotation_value(graph, value, annotation=annotation) for value in values}
 
 
+@pipeline.mutator
 def get_causal_subgraph(graph):
     """Builds a new subgraph induced over all edges that are causal
 
@@ -201,6 +211,7 @@ def get_causal_subgraph(graph):
     return result
 
 
+@pipeline.mutator
 def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None, **annotations):
     """Runs pipeline query on graph with multiple subgraph filters and expanders
 
@@ -237,29 +248,31 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
         seed_graph = graph
 
     # Filter by the given annotations
-    subgraph = get_subgraph_by_data(seed_graph, {ANNOTATIONS: annotations})
+    result = get_subgraph_by_data(seed_graph, {ANNOTATIONS: annotations})
 
     # Expand around the given nodes
     if expand_nodes:
         for node in expand_nodes:
-            expand_node_neighborhood(graph, subgraph, node)
+            expand_node_neighborhood(graph, result, node)
 
     # Delete the given nodes
     if remove_nodes:
         for node in remove_nodes:
-            if node not in subgraph:
+            if node not in result:
                 log.warning('%s is not in graph %s', node, graph.name)
                 continue
-            subgraph.remove_node(node)
+            result.remove_node(node)
 
-    return subgraph
+    return result
 
 
+@pipeline.mutator
 def get_subgraph_by_pubmed(graph, pmids):
     """Induces a subgraph over the edges retrieved from the given PubMed identifier(s)"""
     return get_subgraph_by_edge_filter(graph, build_citation_inclusion_filter(pmids))
 
 
+@pipeline.mutator
 def get_subgraph_by_authors(graph, authors):
     """Induces a subgraph over the edges retrieved publications by the given author(s)"""
     return get_subgraph_by_edge_filter(graph, build_author_inclusion_filter(authors))
@@ -287,11 +300,14 @@ def subgraphs_to_pickles(graph, directory, annotation='Subgraph'):
         to_pickle(sg, path)
 
 
+@pipeline.mutator
 def get_subgraph_by_provenance(graph, kwargs):
     """Thin wrapper around :func:`get_subgraph_by_provenance_helper` by splatting keyword arguments"""
+    # TODO get rid of this function
     return get_subgraph_by_provenance_helper(graph, **kwargs)
 
 
+@pipeline.mutator
 def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_neighborhoods=True):
     """Gets all edges of given provenance and expands around their nodes' neighborhoods
     

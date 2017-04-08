@@ -4,11 +4,12 @@ import logging
 
 from pybel.canonicalize import calculate_canonical_name
 from pybel.constants import CITATION, CITATION_AUTHORS, CITATION_REFERENCE
+from .. import pipeline
 from ..citation_utils import get_citations_by_pmids
 from ..constants import CNAME
 from ..filters.edge_filters import keep_has_author, filter_edges, keep_has_pubmed_citation
 from ..filters.node_filters import keep_missing_cname, filter_nodes
-from ..summary.provenance import get_pmids, has_pubmed_citation
+from ..summary.provenance import get_pmids
 
 __all__ = [
     'parse_authors',
@@ -20,6 +21,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
+@pipeline.in_place_mutator
 def parse_authors(graph):
     """Parses all of the citation author strings to lists by splitting on the pipe character "|"
 
@@ -41,6 +43,7 @@ def parse_authors(graph):
     graph.parsed_authors = True
 
 
+@pipeline.in_place_mutator
 def serialize_authors(graph):
     """Recombines all authors with the pipe character "|"
 
@@ -62,6 +65,7 @@ def serialize_authors(graph):
     graph.parsed_authors = False
 
 
+@pipeline.in_place_mutator
 def add_canonical_names(graph):
     """Adds a canonical name to each node's data dictionary if they are missing, in place
 
@@ -72,6 +76,7 @@ def add_canonical_names(graph):
         graph.node[node][CNAME] = calculate_canonical_name(graph, node)
 
 
+@pipeline.in_place_mutator
 def fix_pubmed_citations(graph, stringify_authors=False):
     """Overwrites all PubMed citations with values from NCBI's eUtils lookup service.
 
@@ -89,7 +94,7 @@ def fix_pubmed_citations(graph, stringify_authors=False):
     pmids = get_pmids(graph)
     pmid_data, errors = get_citations_by_pmids(pmids, return_errors=True)
 
-    for u,v,k,d in filter_edges(graph, keep_has_pubmed_citation):
+    for u, v, k, d in filter_edges(graph, keep_has_pubmed_citation):
         pmid = d[CITATION][CITATION_REFERENCE].strip()
 
         if pmid not in pmid_data:

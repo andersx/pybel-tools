@@ -10,6 +10,7 @@ Random permutations are useful in statistical testing over aggregate statistics.
 
 import random
 
+from .. import pipeline
 from ..utils import is_edge_consistent
 
 
@@ -24,6 +25,7 @@ def all_edges_consistent(graph):
     return all(is_edge_consistent(graph, u, v) for u, v in graph.edges_iter())
 
 
+@pipeline.mutator
 def rewire_targets(graph, p):
     """Rewires a graph's edges' target nodes
 
@@ -40,19 +42,19 @@ def rewire_targets(graph, p):
     if not all_edges_consistent(graph):
         raise ValueError('{} is not consistent'.format(graph))
 
-    bg = graph.copy()
-    nodes = bg.nodes()
+    result = graph.copy()
+    nodes = result.nodes()
 
-    for u, v in bg.edges():
+    for u, v in result.edges():
         if random.random() < p:
             continue
 
         w = random.choice(nodes)
 
-        while w == u or bg.has_edge(u, w):
+        while w == u or result.has_edge(u, w):
             w = random.choice(nodes)
 
-        bg.add_edge(w, v)
-        bg.remove_edge(u, v)
+        result.add_edge(w, v)
+        result.remove_edge(u, v)
 
-    return bg
+    return result

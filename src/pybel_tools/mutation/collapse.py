@@ -6,6 +6,7 @@ from collections import defaultdict
 from pybel.constants import *
 from .deletion import prune_central_dogma
 from .inference import infer_central_dogma
+from .. import pipeline
 
 __all__ = [
     'collapse_nodes',
@@ -20,6 +21,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
+@pipeline.in_place_mutator
 def collapse_nodes(graph, dict_of_sets_of_nodes):
     """Collapses all nodes in values to the key nodes in place
 
@@ -112,6 +114,7 @@ def build_central_dogma_collapse_gene_dict(graph):
     return collapse_dict
 
 
+@pipeline.in_place_mutator
 def collapse_by_central_dogma(graph):
     """Collapses all nodes from the central dogma (GENE, RNA, PROTEIN) to PROTEIN, or most downstream possible entity,
     in place. This function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_dict`.
@@ -128,6 +131,7 @@ def collapse_by_central_dogma(graph):
     collapse_nodes(graph, collapse_dict)
 
 
+@pipeline.in_place_mutator
 def collapse_by_central_dogma_to_genes(graph):
     """Collapses all nodes from the central dogma (:data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`, 
     :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE` in place. This 
@@ -145,6 +149,7 @@ def collapse_by_central_dogma_to_genes(graph):
     collapse_nodes(graph, collapse_dict)
 
 
+@pipeline.in_place_mutator
 def collapse_variants_to_genes(graph):
     """Finds all protein variants that are pointing to a gene and not a protein and fixes them by changing their
     function to be :data:`pybel.constants.GENE`
@@ -161,6 +166,7 @@ def collapse_variants_to_genes(graph):
             graph.node[node][FUNCTION] = GENE
 
 
+@pipeline.in_place_mutator
 def opening_on_central_dogma(graph):
     """Infers central dogmatic relations with :func:`infer_central_dogma` then successively prunes gene leaves then
     RNA leaves with :func:`prune_central_dogma` to connect disparate elements in a knowledge assembly
@@ -178,6 +184,7 @@ def opening_on_central_dogma(graph):
     prune_central_dogma(graph)
 
 
+@pipeline.in_place_mutator
 def collapse_by_opening_on_central_dogma(graph):
     """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
     gene node to its RNA/miRNA node, then possibly from RNA to protein if available. Wraps :func:`infer_central_dogma`
@@ -195,6 +202,7 @@ def collapse_by_opening_on_central_dogma(graph):
     collapse_by_central_dogma(graph)
 
 
+@pipeline.in_place_mutator
 def collapse_by_opening_by_central_dogma_to_genes(graph):
     """Infers the matching RNA for each protein and the gene for each RNA and miRNA, then collapses the corresponding
     protein and RNA/miRNA nodes to the gene node.

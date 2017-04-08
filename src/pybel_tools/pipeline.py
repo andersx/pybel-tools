@@ -4,7 +4,7 @@
 
 from pybel import BELGraph
 from .summary.export import info_list
-
+from functools import wraps
 OPERATION_PROVENANCE = 'operation_provenance'
 
 
@@ -67,10 +67,14 @@ def summarize_operation_list(graph, graph_function):
     return result
 
 
-class PipelineRunner:
+class Pipeline:
     """Builds and runs analytical pipelines on BEL graphs"""
 
     def __init__(self, universe):
+        """
+        :param universe: The entire set of known knowledge to draw from
+        :type universe: pybel.BELGraph 
+        """
         self.universe = universe
         self.protocol = []
 
@@ -85,20 +89,64 @@ class PipelineRunner:
 
         return universe_protocol
 
+    def wrap_in_place(self, func):
+        def wrapped(graph, *attrs, **kwargs):
+            func(graph, *attrs, **kwargs)
+            return graph
+
+        return wrapped
+
     def add_universe_protocol(self, func, *attrs, **kwargs):
         """Adds a function that takes the universe as its first argument to the protocol"""
-        self._add_protocol(True, self.wrap_universe_protocol(func), *attrs, **kwargs)
+        self._add_protocol(True, False, self.wrap_universe_protocol(func), *attrs, **kwargs)
 
     def add_mutation_protocol(self, func, *attrs, **kwargs):
         """Adds a function that mutates a graph to the protocol"""
-        self._add_protocol(False, func, *attrs, **kwargs)
+        self._add_protocol(False, False, func, *attrs, **kwargs)
+
+    def add_universe_protocol_inplace(self, func, *attrs, **kwargs):
+        """Adds a function that takes the universe as its first argument to the protocol"""
+        self._add_protocol(True, True, self.wrap_in_place(self.wrap_universe_protocol(func)), *attrs, **kwargs)
+
+    def add_mutation_protocol_inplace(self, func, *attrs, **kwargs):
+        """Adds a function that mutates a graph to the protocol"""
+        self._add_protocol(False, True, self.wrap_in_place(func), *attrs, **kwargs)
 
     def _add_protocol(self, wrapped, func, *attrs, **kwargs):
         self.protocol.append((wrapped, func, attrs, kwargs))
 
     def run_protocol(self, graph):
-        """Runs the protocol on a seed graph"""
+        """Runs the contained protocol on a seed graph
+        
+        :param graph: The seed BEL graph
+        :type graph: pybel.BELGraph 
+        """
         result = graph
-        for _, func, attrs, kwargs in self.protocol:
-            result = func(graph, *attrs, **kwargs)
+        for _, _, func, attrs, kwargs in self.protocol:
+            result = func(result, *attrs, **kwargs)
         return result
+
+    def print_summary(self, file=None):
+        """Prints as summary of the protocol"""
+        for wrapped, func, attrs, kwargs in self.protocol:
+            print(wrapped, func, attrs, kwargs, file=file)
+
+    @staticmethod
+    def runnable(wrap_universe, wrap_in_place):
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*attrs, **kwargs):
+                func(*attrs, **kwargs)
+
+            wrapper.wrap_universe = wrap_universe
+            wrapper.wrap_in_place = wrap_in_place
+            return wrapper
+
+        return decorator
+
+
+#: A function decorator to inform the Pipeline how to handle a function
+in_place_mutator = Pipeline.runnable(wrap_universe=False, wrap_in_place=True)
+uni_in_place_mutator = Pipeline.runnable(wrap_universe=True, wrap_in_place=True)
+uni_mutator = Pipeline.runnable(wrap_universe=True, wrap_in_place=False)
+mutator = Pipeline.runnable(wrap_universe=False, wrap_in_place=False)
