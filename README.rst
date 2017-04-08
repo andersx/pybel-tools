@@ -1,6 +1,6 @@
 PyBEL Tools |develop_build| |develop_coverage| |develop_documentation| |pypi_license|
 =====================================================================================
- `PyBEL Tools <http://pybel-tools.readthedocs.io/>`_ is a suite of tools built on top of
+`PyBEL Tools <http://pybel-tools.readthedocs.io/>`_ is a suite of tools built on top of
 `PyBEL <http://pybel.readthedocs.io>`_ to facilitate data management, integration, and analysis.
 
 Installation |pypi_version| |python_versions|
@@ -53,7 +53,7 @@ After previously having uploaded your BEL graphs
 .. |python_versions| image:: https://img.shields.io/pypi/pyversions/pybel-tools.svg
     :alt: Stable Supported Python Versions
 
-.. |pypi_version| image:: https://img.shields.io/pypi/v/PyBEL.svg
+.. |pypi_version| image:: https://img.shields.io/pypi/v/pybel-tools.svg
     :alt: Current version on PyPI
 
 .. |pypi_license| image:: https://img.shields.io/pypi/l/pybel-tools.svg
