@@ -6,7 +6,7 @@ from pybel import BELGraph
 from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from .. import pipeline
-from ..filters.edge_filters import filter_edges, build_citation_inclusion_filter, build_author_inclusion_filter, \
+from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
     keep_causal_edges, build_annotation_value_filter, build_annotation_dict_filter
 from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
@@ -275,7 +275,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
 @pipeline.mutator
 def get_subgraph_by_pubmed(graph, pmids):
     """Induces a subgraph over the edges retrieved from the given PubMed identifier(s)"""
-    return get_subgraph_by_edge_filter(graph, build_citation_inclusion_filter(pmids))
+    return get_subgraph_by_edge_filter(graph, build_pmid_inclusion_filter(pmids))
 
 
 @pipeline.mutator

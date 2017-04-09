@@ -26,8 +26,8 @@ __all__ = [
     'build_inverse_filter',
     'build_annotation_value_filter',
     'build_annotation_dict_filter',
-    'build_citation_inclusion_filter',
-    'build_citation_exclusion_filter',
+    'build_pmid_inclusion_filter',
+    'build_pmid_exclusion_filter',
     'build_author_inclusion_filter',
     'build_relation_filter',
     'concatenate_edge_filters',
@@ -223,7 +223,7 @@ def build_relation_filter(relations):
         raise ValueError('Invalid type for argument: {}'.format(relations))
 
 
-def build_citation_inclusion_filter(pmids):
+def build_pmid_inclusion_filter(pmids):
     """Only passes for edges with citations whose references are one of the given PubMed identifiers
     
     :param pmids: A PubMed identifier or list of PubMed identifiers to filter for
@@ -233,7 +233,7 @@ def build_citation_inclusion_filter(pmids):
     """
 
     if isinstance(pmids, str):
-        def citation_inclusion_filter(graph, u, v, k, d):
+        def pmid_inclusion_filter(graph, u, v, k, d):
             """Only passes for edges with PubMed citations matching the contained PubMed identifier
 
             :param graph: A BEL Graph
@@ -251,12 +251,12 @@ def build_citation_inclusion_filter(pmids):
             """
             return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] == pmids
 
-        return citation_inclusion_filter
+        return pmid_inclusion_filter
 
     else:
         pmids = set(pmids)
 
-        def citations_inclusion_filter(graph, u, v, k, d):
+        def pmid_inclusion_filter(graph, u, v, k, d):
             """Only passes for edges with PubMed citations matching one of the contained PubMed identifiers
 
             :param graph: A BEL Graph
@@ -274,10 +274,10 @@ def build_citation_inclusion_filter(pmids):
             """
             return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] in pmids
 
-        return citations_inclusion_filter
+        return pmid_inclusion_filter
 
 
-def build_citation_exclusion_filter(pmids):
+def build_pmid_exclusion_filter(pmids):
     """Fails for edges with citations whose references are one of the given PubMed identifiers
 
     :param pmids: A PubMed identifier or list of PubMed identifiers to filter against
@@ -287,7 +287,7 @@ def build_citation_exclusion_filter(pmids):
     """
 
     if isinstance(pmids, str):
-        def citation_exclusion_filter(graph, u, v, k, d):
+        def pmid_exclusion_filter(graph, u, v, k, d):
             """Fails for edges with PubMed citations matching the contained PubMed identifier
 
             :param graph: A BEL Graph
@@ -305,12 +305,12 @@ def build_citation_exclusion_filter(pmids):
             """
             return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] != pmids
 
-        return citation_exclusion_filter
+        return pmid_exclusion_filter
 
     else:
         pmids = set(pmids)
 
-        def citations_exclusion_filter(graph, u, v, k, d):
+        def pmid_exclusion_filter(graph, u, v, k, d):
             """Only passes for edges with PubMed citations matching one of the contained PubMed identifiers
 
             :param graph: A BEL Graph
@@ -329,7 +329,7 @@ def build_citation_exclusion_filter(pmids):
             return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][
                                                                                   CITATION_REFERENCE] not in pmids
 
-        return citations_exclusion_filter
+        return pmid_exclusion_filter
 
 
 def build_author_inclusion_filter(authors):
