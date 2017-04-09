@@ -63,9 +63,9 @@ def work():
 @work.command()
 @click.argument('path')
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
-@click.option('-r', '--recursive')
+@click.option('-r', '--recursive', help='Recursively upload all gpickles in the directory given as the path')
 @click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-@click.option('-v', '--debug', count=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 def upload(path, connection, recursive, skip_check_version, debug):
     """Quick uploader"""
     if debug == 1:
@@ -82,9 +82,10 @@ def upload(path, connection, recursive, skip_check_version, debug):
 
 @work.command()
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
-@click.option('-u', '--upload', is_flag=True)
-@click.option('-d', '--directory', default=os.getcwd())
-@click.option('-v', '--debug', count=True)
+@click.option('-u', '--upload', is_flag=True, help='Enable automatic database uploading')
+@click.option('-d', '--directory', default=os.getcwd(),
+              help='The directory to search. Defaults to current working directory')
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 def convert(connection, upload, directory, debug):
     """Recursively converts BEL scripts to gpickles. Optional uploader"""
     if debug == 1:
@@ -98,16 +99,16 @@ def convert(connection, upload, directory, debug):
 @click.option('-c', '--connection', help='Cache connection string. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('--host', help='Flask host. Defaults to localhost')
 @click.option('--port', help='Flask port. Defaults to 5000')
-@click.option('-v', '--debug', count=True)
-@click.option('--flask-debug', is_flag=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+@click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
 @click.option('--run-database-service', is_flag=True, help='Use the database service')
-@click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser')
-@click.option('--run-uploader-service', is_flag=True)
-@click.option('--run-compiler-service', is_flag=True)
-@click.option('--run-summary-service', is_flag=True)
-@click.option('-a', '--run-all', is_flag=True, help="Run all services")
-@click.option('--secret-key')
+@click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
+@click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
+@click.option('--run-compiler-service', is_flag=True, help='Enable the compiler page')
+@click.option('--run-summary-service', is_flag=True, help='Enable the graph summary page')
+@click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
+@click.option('--secret-key', help='Set the CSRF secret key')
 def service(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
             run_uploader_service, run_compiler_service, run_summary_service, run_all, secret_key):
     """Runs the PyBEL web service"""
