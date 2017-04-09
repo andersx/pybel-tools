@@ -61,7 +61,7 @@
     <div class="col-lg-12">
         <div class="row justify-content-md-center"><!-- visualization row -->
             <div class="col-lg-8" id="graph-chart"></div>
-            <div class="col-lg-4" style="max-height: 550px;height: 550px;overflow: auto;"><!-- filters and tools div -->
+            <div class="col-lg-4" style="max-height: 550px;height: 550px;"><!-- filters and tools div -->
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item">
@@ -82,7 +82,7 @@
 
                 <!-- Tab panes -->
                 <div class="tab-content">
-                    <div class="tab-pane active" id="tree-panel" role="tabpanel">
+                    <div class="tab-pane active" id="tree-panel" role="tabpanel" style="max-height: 509px;height: 509px; overflow:auto;">
                         <div id="tree"></div>
                     </div>
                     <div class="tab-pane not-rounded" id="nodes-panel" role="tabpanel">
@@ -94,7 +94,7 @@
                                    class="wide form-control not-rounded"
                                    aria-describedby="sizing-addon1" type="text"/>
                         </div>
-                        <div class="not-rounded2" id="node-list"></div>
+                        <div class="not-rounded2" id="node-list" style="max-height: 434px;height: 434px; overflow:auto;"></div>
 
                     </div>
                     <div class="tab-pane not-rounded" id="edges-panel" role="tabpanel">
@@ -106,7 +106,7 @@
                                    class="wide form-control not-rounded"
                                    aria-describedby="sizing-addon1" type="text"/>
                         </div>
-                        <div id="edge-list" class="not-rounded2"></div>
+                        <div id="edge-list" class="not-rounded2" style="max-height: 434px;height: 434px; overflow:auto;"></div>
                     </div>
                 </div>
             </div>
