@@ -15,6 +15,7 @@ Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
 import logging
+import os
 import sys
 from getpass import getuser
 
@@ -25,7 +26,7 @@ from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
-from .ioutils import upload_recursive
+from .ioutils import convert_recursive, upload_recusive
 from .service.database_service import build_database_service_app
 from .service.database_service import get_app as get_database_service_app
 from .service.dict_service import build_dictionary_service_app
@@ -52,11 +53,16 @@ def main():
     pass
 
 
-@main.command()
+@main.group()
+def work():
+    """Upload and conversion utilities"""
+
+
+@work.command()
 @click.argument('path')
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
-@click.option('-r', '--recursive', is_flag=True, help="Recursive parsing/uploading of .bel files in given directory")
-@click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+@click.option('-r', '--recursive')
+@click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
 @click.option('-v', '--debug', count=True)
 def upload(path, connection, recursive, skip_check_version, debug):
     """Quick uploader"""
@@ -69,7 +75,21 @@ def upload(path, connection, recursive, skip_check_version, debug):
         graph = from_pickle(path, check_version=(not skip_check_version))
         to_database(graph, connection=connection)
     else:
-        upload_recursive(path, connection=connection)
+        upload_recusive(path, connection=connection)
+
+
+@work.command()
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-u', '--upload', is_flag=True)
+@click.option('-d', '--directory', default=os.getcwd())
+@click.option('-v', '--debug', count=True)
+def convert(connection, upload, directory, debug):
+    """Recursively converts BEL scripts to gpickles. Optional uploader"""
+    if debug == 1:
+        set_debug(20)
+    elif debug == 2:
+        set_debug(10)
+    convert_recursive(directory, connection=connection, upload=upload, pickle=True)
 
 
 @main.command()
@@ -183,8 +203,8 @@ def boilerplate(document_name, contact, description, pmids, version, copyright, 
 
 @document.command()
 @click.argument('namespaces', nargs=-1)
-@click.option('--path', type=click.File('r'), default=sys.stdin, help='Input BEL file path. Defaults to stdin.')
-@click.option('--directory', help='Output directory')
+@click.option('-p', '--path', type=click.File('r'), default=sys.stdin, help='Input BEL file path. Defaults to stdin.')
+@click.option('-d', '--directory', help='Output directory. Defaults to current working directory')
 def serialize_namespaces(namespaces, path, directory):
     """Parses a BEL document then serializes the given namespaces (errors and all) to the given directory"""
     graph = from_lines(path)
