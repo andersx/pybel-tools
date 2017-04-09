@@ -74,7 +74,7 @@ def remove_leaves_by_type(graph, function=None, prune_threshold=1):
 
     :param graph: a BEL network
     :type graph: pybel.BELGraph
-    :param function: If set, filters by the node's function from :code:`pybel.constants` like
+    :param function: If set, filters by the node's function from :mod:`pybel.constants` like
                     :data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`, :data:`pybel.constants.PROTEIN`, or
                     :data:`pybel.constants.BIOPROCESS`
     :type function: str

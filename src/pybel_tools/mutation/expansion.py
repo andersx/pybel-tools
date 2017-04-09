@@ -154,10 +154,10 @@ def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filte
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
-                         :code:`pybel_tools.filters.node_filters` for more information
+                         :mod:`pybel_tools.filters.node_filters` for more information
     :type node_filters: lambda
     :param edge_filters: Optional. A list of edge filter predicates with the interface (graph, node, node, key, data)
-                          -> bool. See :code:`pybel_tools.filters.edge_filters` for more information
+                          -> bool. See :mod:`pybel_tools.filters.edge_filters` for more information
     :type edge_filters: lambda
     :return: A dictionary of {external node: {'successor': {internal node: list of (key, dict)},
                                             'predecessor': {internal node: list of (key, dict)}}}
@@ -205,10 +205,10 @@ def expand_periphery(graph, subgraph, node_filters=None, edge_filters=None, thre
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
-                         :code:`pybel_tools.filters.node_filters` for more information
+                         :mod:`pybel_tools.filters.node_filters` for more information
     :type node_filters: lambda
     :param edge_filters: Optional. A list of edge filter predicates with the interface (graph, node, node, key, data)
-                          -> bool. See :code:`pybel_tools.filters.edge_filters` for more information
+                          -> bool. See :mod:`pybel_tools.filters.edge_filters` for more information
     :type edge_filters: lambda
     :param threshold: Minimum frequency of betweenness occurrence to add a gap node
 

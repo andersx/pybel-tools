@@ -37,17 +37,17 @@ __all__ = [
 # Example filter
 
 def keep_node_permissive(graph, node):
-    """A default node filter that always evaluates to :code:`True`.
+    """A default node filter that always evaluates to :data:`True`.
 
     Given BEL graph :code:`graph`, applying :func:`keep_node_permissive` with a filter on the nodes iterable
     as in :code:`filter(keep_node_permissive, graph.nodes_iter())` will result in the same iterable as
-    :code:`graph.nodes_iter()`
+    :meth:`pybel.BELGraph.nodes_iter`
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :param node: The node
     :type node: tuple
-    :return: Always returns :code:`True`
+    :return: Always returns :data:`True`
     :rtype: bool
     """
     return True

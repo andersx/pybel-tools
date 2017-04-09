@@ -41,8 +41,10 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
 
     :param name: The namespace name
     :param keyword: Preferred BEL Keyword, maximum length of 8
-    :param domain: One of: :code:`BiologicalProcess`, :code:`Chemical`, :code:`Gene and Gene Products`,
-                   or :code:`Other`
+    :param domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
+                    :data:`pybel.constants.NAMESPACE_DOMAIN_CHEMICAL`,
+                    :data:`pybel.constants.NAMESPACE_DOMAIN_GENE`, or
+                    :data:`pybel.constants.NAMESPACE_DOMAIN_OTHER`
     :param query_url: HTTP URL to query for details on namespace values (must be valid URL)
     :param description: Namespace description
     :param species: Comma-separated list of species taxonomy id's
@@ -77,7 +79,7 @@ def make_author_header(name=None, contact=None, copyright_str=None):
 
     :param name: Namespace's authors
     :param contact: Namespace author's contact info/email address
-    :param copyright_str: Namespace's copyright/license information. Defaults to :code:`Other/Proprietary`
+    :param copyright_str: Namespace's copyright/license information. Defaults to ``Other/Proprietary``
     :return: An iterable over the ``[Author]`` section of a BELNS file
     :rtype: iter
     """
@@ -147,8 +149,10 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
     :type namespace_name: str
     :param namespace_keyword: Preferred BEL Keyword, maximum length of 8
     :type namespace_keyword: str
-    :param namespace_domain: One of: :code:`BiologicalProcess`, :code:`Chemical`, :code:`Gene and Gene Products`,
-                             or :code:`Other`
+    :param namespace_domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_CHEMICAL`,
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_GENE`, or
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_OTHER`
     :type namespace_domain: str
     :param author_name: The namespace's authors
     :type author_name: str
@@ -190,7 +194,7 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
     :type file: file or file-like
     :param value_prefix: a prefix for each name
     :type value_prefix: str
-    :param sort_key: A function to sort the values with :code:`sorted`
+    :param sort_key: A function to sort the values with :func:`sorted`
     """
     file = sys.stdout if file is None else file
 

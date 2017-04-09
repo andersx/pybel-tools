@@ -27,7 +27,7 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1, return_errors=Fa
     :param return_errors: Should a set of erroneous PubMed identifiers be returned?
     :type return_errors: bool
     :return: A dictionary of {pmid: pmid data dictionary} or a pair of this dictionary and a set ot erroneous
-            pmids if return_errors is :code:`True`
+            pmids if return_errors is :data:`True`
     :rtype: dict
     """
     pmids = [str(pmid).strip() for pmid in sorted(pmids)]

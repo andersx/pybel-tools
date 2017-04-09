@@ -124,7 +124,7 @@ def build_dictionary_service(app, preload=True, check_version=True):
     :param app: A Flask App
     :type app: Flask
     :param connection: The database connection string. Default location described in
-                       :code:`pybel.manager.cache.BaseCacheManager`
+                       :class:`pybel.manager.cache.BaseCacheManager`
     :type connection: str
     """
 

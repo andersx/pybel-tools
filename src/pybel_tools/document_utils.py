@@ -193,7 +193,7 @@ def write_boilerplate(document_name, contact, description, version=None, copyrig
     :type authors: str
     :param licenses: The license applied to this document
     :type licenses: str
-    :param file: output stream. If None, defaults to :code:`sys.stdout`
+    :param file: output stream. If None, defaults to :data:`sys.stdout`
     :param namespace_dict: an optional dictionary of {str name: str URL} of namespaces
     :type namespace_dict: dict
     :param annotations_dict: an optional dictionary of {str name: str URL} of annotations

@@ -78,8 +78,8 @@ def get_leaves_by_type(graph, function=None, prune_threshold=1):
 
     :param graph: a BEL network
     :type graph: pybel.BELGraph
-    :param function: If set, filters by the node's function from :code:`pybel.constants` like :code:`GENE`, :code:`RNA`,
-                     :code:`PROTEIN`, or :code:`BIOPROCESS`
+    :param function: If set, filters by the node's function from :mod:`pybel.constants` like :data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`,
+                     :data:`pybel.constants.PROTEIN`, or :data:`pybel.constants.BIOPROCESS`
     :type function: str
     :param prune_threshold: Removes nodes with less than or equal to this number of connections. Defaults to :code:`1`
     :type prune_threshold: int
