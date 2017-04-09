@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import codecs  # To use a consistent encoding
 import os
 import re
