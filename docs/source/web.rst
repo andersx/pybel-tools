@@ -3,7 +3,6 @@ Web Services
 
 Running with the Command Line
 -----------------------------
-
 Running the PyBEL Tools Flask application allows you to interact with your networks and apply filters/algorithms.
 Multiple services are available. Use :code:`--help` for a description.
 
@@ -22,7 +21,8 @@ Setting up with Docker
 - http://phusion.github.io/baseimage-docker/
 - https://penandpants.com/2014/03/09/docker-via-homebrew/
 
+
 .. automodule:: pybel_tools.web
 
-.. automodule:: pybel_tools.service
 
+.. automodule:: pybel_tools.service

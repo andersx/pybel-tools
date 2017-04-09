@@ -40,7 +40,7 @@ After previously having uploaded your BEL graphs
 
 .. code-block:: sh
 
-    $ python3 -m pybel_tools upload "PATH_TO_YOUR_GRAPH_PICKLE"
+    $ python3 -m pybel_tools io upload "PATH_TO_YOUR_GRAPH_PICKLE"
 
 Links
 -----

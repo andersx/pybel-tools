@@ -56,11 +56,11 @@ def main():
 
 
 @main.group()
-def work():
+def io():
     """Upload and conversion utilities"""
 
 
-@work.command()
+@io.command()
 @click.argument('path')
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('-r', '--recursive', help='Recursively upload all gpickles in the directory given as the path')
@@ -80,14 +80,14 @@ def upload(path, connection, recursive, skip_check_version, debug):
         upload_recusive(path, connection=connection)
 
 
-@work.command()
+@io.command()
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('-u', '--upload', is_flag=True, help='Enable automatic database uploading')
 @click.option('-d', '--directory', default=os.getcwd(),
               help='The directory to search. Defaults to current working directory')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 def convert(connection, upload, directory, debug):
-    """Recursively converts BEL scripts to gpickles. Optional uploader"""
+    """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
     if debug == 1:
         set_debug(20)
     elif debug == 2:
@@ -111,7 +111,7 @@ def convert(connection, upload, directory, debug):
 @click.option('--secret-key', help='Set the CSRF secret key')
 def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
         run_uploader_service, run_compiler_service, run_summary_service, run_all, secret_key):
-    """Runs the PyBEL web service"""
+    """Runs PyBEL Web"""
     if debug == 1:
         set_debug(20)
     elif debug == 2:
@@ -200,7 +200,7 @@ def document():
 @click.option('--licenses')
 @click.option('--output', type=click.File('wb'), default=sys.stdout)
 def boilerplate(document_name, contact, description, pmids, version, copyright, authors, licenses, output):
-    """Builds a template BEL document with the given PMID's"""
+    """Builds a template BEL document with the given PubMed identifiers"""
     write_boilerplate(
         document_name,
         contact,
