@@ -76,7 +76,7 @@ def render_network(graph, network_id=None):
     """Renders the visualization of a network"""
     name = graph.name or DEFAULT_TITLE
     annotations = get_annotation_values_by_annotation(graph)
-    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in v]} for k, v in annotations.items()]
+    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in sorted(v)]} for k, v in annotations.items()]
     return flask.render_template(
         'network_visualization.html',
         filter_json=json_dict,
@@ -137,7 +137,6 @@ def build_dictionary_service_app(app, preload=True, check_version=True):
         :rtype: pybel.BELGraph
         """
         network_id = request.args.get(GRAPH_ID, network_id)
-        log.info('requested network [%s]', network_id)
 
         if network_id == 0:
             network_id = None
