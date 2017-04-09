@@ -33,6 +33,7 @@ PyBEL Tools Documentation
 
    dictservice
    dbservice
+   web
 
 .. toctree::
    :caption: Other Utilities

@@ -27,13 +27,14 @@ or from the latest code on `GitHub <https://github.com/pybel/pybel-tools>`_ with
 
     $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
 
-Biological Network Explorer
----------------------------
+Web Services
+------------
 Running the PyBEL Tools Flask application allows you to interact with your networks and apply filters/algorithms.
+Multiple services are available. Use :code:`--help` for a description.
 
 .. code-block:: sh
 
-    $ python3 -m pybel_tools service
+    $ python3 -m pybel_tools web
 
 After previously having uploaded your BEL graphs
 

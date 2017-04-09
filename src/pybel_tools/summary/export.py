@@ -49,7 +49,6 @@ def plot_summary_axes(graph, lax, rax):
     >>> plt.tight_layout()
     >>> plt.show()
     """
-
     ntc = count_functions(graph)
     etc = count_relations(graph)
 
@@ -88,7 +87,6 @@ def plot_summary(graph, plt, **kwargs):
     >>> graph = from_pickle('~/dev/bms/aetionomy/parkinsons.gpickle')
     >>> plot_summary(graph, plt, figsize=(10, 4))
     >>> plt.show()
-
     """
     fig, axes = plt.subplots(1, 2, **kwargs)
     lax = axes[0]

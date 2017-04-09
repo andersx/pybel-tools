@@ -1,22 +1,26 @@
 Command Line Cookbook
 =====================
 
+Pickling lots of BEL scripts
+----------------------------
+All of the BEL scripts in the current working directory (and sub-directories) can be pickled in-place with the
+following command (add :code:`-d` to specify a different directory)
+
+.. code-block:: sh
+
+    $ python3 -m pybel_tools work convert -d ~/bms/aetionomy/
+
 Uploading a Network
 -------------------
-Networks stored as pickles can quickly be uploaded with the command line interface using:
+A single network stored as a pickle can quickly be uploaded.
 
 .. code::
 
-    python3 -m pybel_tools upload "/path/to/my_network.gpickle"
+    python3 -m pybel_tools work upload /path/to/my_network.gpickle
 
-Network pickles can easily be produced using the PyBEL command line tool:
-
-.. code::
-
-    python3 -m pybel convert "/path/to/my_bel.bel" --pickle "/path/to/my_network.gpickle"
-
-Or, the network can be directly uploaded from the PyBEL conversion script:
+Multiple networks in a given directory and sub-directories can be uploaded by adding the :code:`-r` tag.
 
 .. code::
 
-    python3 -m pybel convert "/path/to/my_bel.bel" --store-default
+    python3 -m pybel_tools work upload ~/bms/aetionomy/  -r
+

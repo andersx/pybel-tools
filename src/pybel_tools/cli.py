@@ -109,8 +109,8 @@ def convert(connection, upload, directory, debug):
 @click.option('--run-summary-service', is_flag=True, help='Enable the graph summary page')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
-def service(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
-            run_uploader_service, run_compiler_service, run_summary_service, run_all, secret_key):
+def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
+        run_uploader_service, run_compiler_service, run_summary_service, run_all, secret_key):
     """Runs the PyBEL web service"""
     if debug == 1:
         set_debug(20)
