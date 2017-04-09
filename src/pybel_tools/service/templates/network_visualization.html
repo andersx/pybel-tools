@@ -175,25 +175,12 @@
         <div class="modal-content"><!-- /.Modal content -->
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                    ×
+                    <span aria-hidden="true">&times;</span>
                 </button>
                 <h4 class="modal-title">Help</h4>
             </div>
-
             <div class="modal-body text-left"><!-- /.Modal body -->
-
-                <hr>
-                <div class="text-center">
-                    <button type="button" id="hide_node_names" class="btn btn-info button-padding">Hide BEL names
-                    </button>
-                    <button type="button" id="restore_node_names" class="btn btn-info button-padding">Restore BEL names
-                    </button>
-                    <button type="button" id="restore" class="btn btn-info button-padding">Restore ALL
-                    </button>
-                </div>
-                <hr>
                 <div class="center-table">
-                    <h4 class="text-center">Network Visualization Info</h4>
                     <div class="table-wrapper">
                         <table class="table table-responsive">
                             <thead>
@@ -248,26 +235,30 @@
                     </div>
                 </div>
             </div><!-- /.Modal body -->
-
             <div class="modal-footer">
+                <button type="button" id="hide_node_names" class="btn btn-info button-padding">Hide labels
+                </button>
+                <button type="button" id="restore_node_names" class="btn btn-info button-padding">Restore labels
+                </button>
+                <button type="button" id="restore" class="btn btn-info button-padding">Restore all labels
+                </button>
                 <button class="btn btn-default" data-dismiss="modal" type="button">
                     Close
                 </button>
             </div>
-
         </div><!-- /.Modal content -->
     </div><!-- /.Modal dialog -->
 </div><!-- /.info-graph Modal -->
 
-<div aria-hidden="true" style="display: none;" id="legend" class="modal fade"><!-- /.Legend Modal -->
+<div id="legend" aria-hidden="true" style="display: none;" class="modal fade"><!-- /.Legend Modal -->
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title center">Legend</h4>
-            </div>
-            <!-- .modal-header -->
-
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Legend</h4>
+            </div> <!-- .modal-header -->
             <div class="modal-body">
                 <div id="accordion" role="tablist" aria-multiselectable="true">
                     <div class="card">
@@ -277,7 +268,6 @@
                                 Node legend
                             </a>
                         </div>
-
                         <div id="collapseOne" class="collapse show" role="tabpanel" aria-labelledby="headingOne">
                             <div class="card-block">
                                 <div class="table-wrapper">
@@ -497,12 +487,6 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>actsIn</td>
-                                            <td>
-                                                <hr class="legend-dashed-line" width="30%"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
                                             <td>hasProduct</td>
                                             <td>
                                                 <hr class="legend-dashed-line" width="30%"/>
@@ -522,18 +506,6 @@
                                         </tr>
                                         <tr>
                                             <td>reactantIn</td>
-                                            <td>
-                                                <hr class="legend-dashed-line" width="30%"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>translocates</td>
-                                            <td>
-                                                <hr class="legend-dashed-line" width="30%"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>includes</td>
                                             <td>
                                                 <hr class="legend-dashed-line" width="30%"/>
                                             </td>
@@ -561,214 +533,195 @@
     </div><!-- .modal-content -->
 </div>
 
-
 <div id="paths" class="modal fade"><!-- /paths Modal -->
     <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
         <div class="modal-content"><!-- /.Modal content -->
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                    ×
+                    <span aria-hidden="true">&times;</span>
                 </button>
+                <h4 class="modal-title">Path Mining</h4>
             </div>
+            <div class="modal-body"><!-- /.Modal body -->
+                <h4>Shortest Path Search</h4>
+                <p>Highlight the shortest path between two nodes</p>
+                <form id="shortest-path-form" method="get">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
+                        </span>
+                                <input type="text" class="form-control" placeholder="Source node" name="source"
+                                       id="source-node" aria-describedby="sizing-addon1"/>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                        <span class="input-group-addon" id="sizing-addon">
+                            <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
+                        </span>
+                                <input type="text" class="form-control" placeholder="Target node" name="target"
+                                       id="target-node" aria-describedby="sizing-addon1"/>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="modal-body text-left"><!-- /.Modal body -->
-                <h4>Path mining tools</h4>
+                    <label>
+                        <input type="checkbox" name="visualization-options" value="hide">
+                        Hide Other Nodes
+                    </label>
+                    <label>
+                        <input type="checkbox" name="undirectionalize" value="undirected">
+                        Remove Directionality
+                    </label>
+                    <input type="button" id="button-shortest-path" value="Submit"/>
+                </form>
                 <hr>
-                <div>
-                    <p class="color_red text-left">Highlight the shortest path between two nodes </p>
-                    <form id="shortest-path-form" method="get">
-                        <label>
-                            <input class="text-left" type="checkbox" name="visualization-options" value="hide">
-                            Hide other nodes
-                        </label>
-                        <label>
-                            <input class="text-left" type="checkbox" name="undirectionalize" value="undirected">
-                            Remove directionality
-                        </label>
-                        <div class="input-group">
-                        <span class="input-group-addon" id="sizing-addon"><i class="fa fa-arrow-circle-o-right"
-                                                                             aria-hidden="true"></i></span>
-                            <input placeholder="Source node" name="source" id="source-node" class="text-left"
-                                   aria-describedby="sizing-addon1" type="text"/>
+                <h4>All Path Search</h4>
+                <p>Highlight all paths between two nodes</p>
+                <form id="all-paths-form" method="get" class="form-inline">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-arrow-circle-o-right"
+                                                                   aria-hidden="true"></i></span>
+                                <input class="form-control" placeholder="Source node" name="source" id="source-node2"
+                                       aria-describedby="sizing-addon1" type="text"/>
+                            </div>
                         </div>
-                        <div class="input-group">
-                        <span class="input-group-addon" id="sizing-addon"><i class="fa fa-paper-plane-o"
-                                                                             aria-hidden="true"></i></span>
-                            <input placeholder="Target node" name="target" id="target-node" class="text-left"
-                                   aria-describedby="sizing-addon1" type="text"/>
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-paper-plane-o"
+                                                                   aria-hidden="true"></i></span>
+                                <input class="form-control" placeholder="Target node" name="target" id="target-node2"
+                                       aria-describedby="sizing-addon1" type="text"/>
+                            </div>
                         </div>
-                    </form>
-                    <div class="buttons">
-                        <input type="button" id="button-shortest-path" value="Submit"/>
                     </div>
-                </div>
-                <hr>
-                <div>
-                    <p class="color_red text-left">Highlight all paths between two nodes </p>
-                    <form id="all-paths-form" method="get">
-                        <label>
-                            <input class="text-left" type="checkbox" name="visualization-options" value="hide">
-                            Hide other nodes
-                        </label>
-                        <label>
-                            <input class="text-left" type="checkbox" name="undirectionalize" value="undirected">
-                            Remove directionality
-                        </label>
-                        <div class="input-group">
-                        <span class="input-group-addon" id="sizing-addon"><i class="fa fa-arrow-circle-o-right"
-                                                                             aria-hidden="true"></i></span>
-                            <input placeholder="Source node" name="source" id="source-node2" class="text-left"
-                                   aria-describedby="sizing-addon1" type="text"/>
-                        </div>
-                        <div class="input-group">
-                        <span class="input-group-addon" id="sizing-addon"><i class="fa fa-paper-plane-o"
-                                                                             aria-hidden="true"></i></span>
-                            <input placeholder="Target node" name="target" id="target-node2" class="text-left"
-                                   aria-describedby="sizing-addon1" type="text"/>
-                        </div>
-                    </form>
-                    <div class="buttons">
-                        <input type="button" id="button-all-paths" value="Submit"/>
-                    </div>
-                </div>
+                    <label class="checkbox">
+                        <input type="checkbox" name="visualization-options" value="hide">
+                        Hide Other Nodes
+                    </label>
+                    <label class="checkbox">
+                        <input type="checkbox" name="undirectionalize" value="undirected">
+                        Remove Directionality
+                    </label>
+                    <input type="button" id="button-all-paths" value="Submit"/>
+                </form>
             </div><!-- /.Modal body -->
 
             <div class="modal-footer">
-                <button class="btn btn-default" data-dismiss="modal" type="button">
-                    Close
-                </button>
+                <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
             </div>
 
         </div><!-- /.Modal content -->
     </div><!-- /.Modal dialog -->
 </div><!-- /.paths Modal -->
 
-
 <div id="algorithms" class="modal fade"><!-- /Algorithms Modal -->
     <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
         <div class="modal-content"><!-- /.Modal content -->
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                    ×
+                    <span aria-hidden="true">&times;</span>
                 </button>
+                <h4 class="modal-title">Algorithms</h4>
             </div>
-
-            <div class="modal-body text-left"><!-- /.Modal body -->
-                <h4>Algorithms</h4>
-                <hr>
-                <div>
-                    <p class="color_red text-left"> Visualize top nodes according to betweenness centrality</p>
-                    <form id="betweenness-centrality" method="get">
-                        <div class="input-group">
-                            <input placeholder="Number of nodes" name="betweenness" id="betweenness" class="text-left"
-                                   type="text"/>
-                        </div>
-                        <div class="buttons">
-                            <input type="button" id="betweenness-button" value="Submit"/>
-                        </div>
-                    </form>
-                </div>
-                <hr>
-                <div>
-                </div>
+            <div class="modal-body"><!-- /.Modal body -->
+                <p>Visualize top nodes according to betweenness centrality</p>
+                <form id="betweenness-centrality" method="get">
+                    <div class="input-group">
+                        <input placeholder="Number of nodes" name="betweenness" id="betweenness" type="text"/>
+                    </div>
+                    <div class="buttons">
+                        <input type="button" class="btn" id="betweenness-button" value="Submit"/>
+                    </div>
+                </form>
             </div><!-- /.Modal body -->
-
             <div class="modal-footer">
-                <button class="btn btn-default" data-dismiss="modal" type="button">
-                    Close
-                </button>
+                <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
             </div>
-
         </div><!-- /.Modal content -->
     </div><!-- /.Modal dialog -->
 </div><!-- /.Algorithms Modal -->
-
 
 <div id="export" class="modal fade"><!-- /.export-graph Modal -->
     <div class="modal-dialog"><!-- /.Modal dialog -->
         <div class="modal-content"><!-- /.Modal content -->
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                    ×
+                    <span aria-hidden="true">&times;</span>
                 </button>
+                <h4 class="modal-title">Export</h4>
             </div>
-
-            <div class="modal-body text-left"><!-- /.Modal body -->
-                <h4 class="text-center">Export options</h4>
-                <hr>
-                <div class="center-table">
-                    <table class="table table-responsive">
-                        <thead>
-                        <tr>
-                            <th><b>Export type</b></th>
-                            <th><b>Action Button</b></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>Network to SVG</td>
-                            <td>
-                                <button type="button" id="save-svg-graph" class="btn btn-primary"
-                                        aria-label="Left Align">
-                                    <i class="fa fa-file-image-o"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Network to BEL</td>
-                            <td>
-                                <button type="button" id="bel-button" class="btn btn-primary" aria-label="Left Align">
-                                    <img alt="BEL-logo" id="bel-logo"
-                                         src="{{ url_for('static', filename='img/bel300x.png') }}"></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Network to <a href="http://graphml.graphdrawing.org/">GraphML</a></td>
-                            <td>
-                                <button type="button" id="graphml-button" class="btn btn-primary"
-                                        aria-label="Left Align">To GraphML
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Network to CSV</td>
-                            <td>
-                                <button type="button" id="csv-button" class="btn btn-primary"
-                                        aria-label="Left Align">To CSV
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Network to Bytes</td>
-                            <td>
-                                <button type="button" id="bytes-button" class="btn btn-primary"
-                                        aria-label="Left Align">To Bytes
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Network to <a href="http://www.home.ndexbio.org/data-model/">CX</a></td>
-                            <td>
-                                <button type="button" id="cx-button" class="btn btn-primary"
-                                        aria-label="Left Align">To CX
-                                </button>
-                            </td>
-                        </tr>
-
-                        </tbody>
-                    </table>
-                </div>
-
+            <div class="modal-body"><!-- /.Modal body -->
+                <table class="table table-responsive">
+                    <thead>
+                    <tr>
+                        <th>Format</th>
+                        <th>Download</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Network to SVG</td>
+                        <td>
+                            <button type="button" id="save-svg-graph" class="btn btn-primary"
+                                    aria-label="Left Align">
+                                <i class="fa fa-file-image-o"></i></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Network to BEL</td>
+                        <td>
+                            <button type="button" id="bel-button" class="btn btn-primary" aria-label="Left Align">
+                                <img alt="BEL-logo" id="bel-logo"
+                                     src="{{ url_for('static', filename='img/bel300x.png') }}"></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Network to <a href="http://graphml.graphdrawing.org/">GraphML</a></td>
+                        <td>
+                            <button type="button" id="graphml-button" class="btn btn-primary"
+                                    aria-label="Left Align">GraphML
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Network to CSV</td>
+                        <td>
+                            <button type="button" id="csv-button" class="btn btn-primary"
+                                    aria-label="Left Align">CSV
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Network to Bytes</td>
+                        <td>
+                            <button type="button" id="bytes-button" class="btn btn-primary"
+                                    aria-label="Left Align">Bytes
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Network to <a href="http://www.home.ndexbio.org/data-model/">CX</a></td>
+                        <td>
+                            <button type="button" id="cx-button" class="btn btn-primary"
+                                    aria-label="Left Align">CX
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div><!-- /.Modal body -->
-
             <div class="modal-footer">
                 <button class="btn btn-default" data-dismiss="modal" type="button">
                     Close
                 </button>
             </div>
-
         </div><!-- /.Modal content -->
     </div><!-- /.Modal dialog -->
 </div><!-- /.export-graph Modal -->
-
 </body>
 </html>
