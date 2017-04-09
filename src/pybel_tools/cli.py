@@ -125,11 +125,12 @@ def service(connection, host, port, debug, flask_debug, skip_check_version, run_
         load_managers(app)
         build_dictionary_service_app(app, check_version=(not skip_check_version))
 
+    app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
+
     if run_parser_service:
         build_parser_service_app(app)
 
     if run_uploader_service:
-        app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
         build_pickle_uploader_app(app)
 
     app.run(debug=flask_debug, host=host, port=port)
