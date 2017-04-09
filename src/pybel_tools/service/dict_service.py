@@ -12,6 +12,7 @@ from flask_bootstrap import Bootstrap
 
 from pybel.constants import METADATA_DESCRIPTION
 from .dict_service_utils import DictionaryService
+from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
@@ -55,6 +56,14 @@ BLACK_LIST = {
 }
 
 
+def sanitize_list_of_str(l):
+    """
+    :type l: list[str]
+    :rtype: list[str]
+    """
+    return [e for e in (e.strip() for e in l) if e]
+
+
 def raise_invalid_source_target():
     if SOURCE_NODE not in request.args:
         raise ValueError('Not source node in request')
@@ -76,7 +85,8 @@ def render_network(graph, network_id=None):
     """Renders the visualization of a network"""
     name = graph.name or DEFAULT_TITLE
     annotations = get_annotation_values_by_annotation(graph)
-    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in sorted(v)]} for k, v in annotations.items()]
+    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in sorted(v)]} for k, v in
+                 annotations.items()]
     return flask.render_template(
         'network_visualization.html',
         filter_json=json_dict,
@@ -150,11 +160,11 @@ def build_dictionary_service_app(app, preload=True, check_version=True):
 
             authors = request.args.get(SEED_DATA_AUTHORS)
             if authors:
-                seed_data['authors'] = authors.split('|')
+                seed_data['authors'] = sanitize_list_of_str(authors.split('|'))
 
             pmids = request.args.get(SEED_DATA_PMIDS)
             if pmids:
-                seed_data['pmids'] = pmids.split(',')
+                seed_data['pmids'] = sanitize_list_of_str(pmids.split(','))
         elif seed_method:
             seed_data = request.args.get(SEED_DATA_NODES).split(',')
             seed_data = [api.get_node_by_id(h) for h in seed_data]
@@ -185,11 +195,32 @@ def build_dictionary_service_app(app, preload=True, check_version=True):
 
     # Web Pages
 
-    @app.route('/')
+    @app.route('/', methods=['GET', 'POST'])
     def view_network_list():
         """Renders a page for the user to choose a network"""
+        seed_subgraph_form = SeedSubgraphForm()
+        seed_provenance_form = SeedProvenanceForm()
+
+        if seed_subgraph_form.validate_on_submit() and seed_subgraph_form.submit_subgraph.data:
+            nodes = sanitize_list_of_str(seed_subgraph_form.node_list.data.split(','))
+            seed_method = seed_subgraph_form.seed_method.data
+            log.info('got subgraph seed: %s', dict(nodes=nodes, method=seed_method))
+            # return render_network(api.query(seed_method=seed_method, seed_data=list(nodes)))
+
+        elif seed_provenance_form.validate_on_submit() and seed_provenance_form.submit_provenance.data:
+            authors = sanitize_list_of_str(seed_provenance_form.author_list.data.split(','))
+            pmids = sanitize_list_of_str(seed_provenance_form.pubmed_list.data.split(','))
+            log.info('got prov: %s', dict(authors=authors, pmids=pmids))
+            # return render_network(api.query(seed_method=SEED_TYPE_PROVENANCE, seed_data=dict(pmids=pmids, authors=authors)))
+
         data = [(nid, n.name, n.version, n.document[METADATA_DESCRIPTION]) for nid, n in api.networks.items()]
-        return flask.render_template('network_list.html', data=data)
+
+        return flask.render_template(
+            'network_list.html',
+            data=data,
+            provenance_form=seed_provenance_form,
+            subgraph_form=seed_subgraph_form
+        )
 
     @app.route('/network/<int:network_id>', methods=['GET'])
     def view_network(network_id):
@@ -326,11 +357,11 @@ def build_dictionary_service_app(app, preload=True, check_version=True):
         graph = get_graph_from_request()
         return jsonify(sorted(get_pmids(graph)))
 
-    @app.route('/api/nid/')
+    @app.route('/api/nodes/')
     def get_node_hashes():
         return jsonify(api.nid_node)
 
-    @app.route('/api/nid/<nid>')
+    @app.route('/api/nodes/<nid>')
     def get_node_hash(nid):
         return jsonify(api.get_node_by_id(nid))
 

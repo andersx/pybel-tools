@@ -30,19 +30,14 @@
             src="{{ url_for('static', filename='js/home_controller/home_controller.js') }}"></script>
 {% endblock %}
 
-
 {% block content %}
     <div class="container">
         <div class="page-header">
             <h1>Network Store</h1>
         </div>
-
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Curated Networks</h3>
-            </div>
-            <div class="panel-body">
-            <p>Below are listed the items in the network store.</p>
             </div>
             <div class="list-group">
                 {% for nid, name, vers, descr in data %}
@@ -58,20 +53,10 @@
                 <h3 class="panel-title">Network Seeding by Nodes</h3>
             </div>
             <div class="panel-body">
-                <form id="node-inspection" method="get">
-                    <label for="node_list">Please type the nodes you want to inspect</label>
-                    <input placeholder="Type your nodes here" name="node_list" id="node-input" type="text"/><br>
-                    <label class="checkbox"><input type="radio" name="analysis" value="induce_subgraph" checked>
-                        Induce subnetwork</label>
-                    <label class="checkbox"><input type="radio" name="analysis" value="shortest_paths">
-                        Induce over shortest paths</label>
-                    <label class="checkbox"><input type="radio" name="analysis" value="expand_neighbors">
-                        Expand neighborhoods</label>
-                    <input type="button" id="submit-nodes" value="Submit"/>
-                </form>
+                <p>This method of seeding will acquire the given nodes and expand around them using given seed method.</p>
+                {{ wtf.quick_form(subgraph_form, form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
             </div>
         </div>
-
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Network Seeding by Provenance</h3>
@@ -79,16 +64,7 @@
             <div class="panel-body">
                 <p>This method of seeding will acquire nodes and edges asserted in the given citations and by the given
                     authors, then expand around the neighborhood of these nodes to show all peripheral knowledge.</p>
-
-                <form id="provenance-inspection" method="get">
-                    <label for="pubmed_list">Please type the PubMed IDs you want to inspect</label>
-                    <input placeholder="Type PubMed IDs" name="pubmed_list" id="pubmed-input" type="text"/>
-                    <hr>
-                    <label for="author_list">Please type the authors you want to inspect</label>
-                    <input placeholder="Type authors" name="author_list" id="author-input" type="text"/>
-                    <input type="button" id="submit-provenance" value="Submit"/>
-                </form>
-
+                {{ wtf.quick_form(provenance_form, form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
             </div>
         </div>
     </div>
