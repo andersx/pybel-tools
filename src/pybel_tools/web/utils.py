@@ -8,11 +8,11 @@ from .constants import PYBEL_CACHE_CONNECTION, PYBEL_DEFINITION_MANAGER, PYBEL_M
 from ..utils import build_template_renderer
 
 __all__ = [
+    'get_cache_connection',
     'set_cache_manager',
     'get_cache_manager',
     'set_metadata_parser',
     'get_metadata_parser',
-    'load_managers',
 ]
 
 render_template = build_template_renderer(__file__)
@@ -70,19 +70,3 @@ def get_metadata_parser(app):
         set_metadata_parser(app, mdp)
 
     return app.config.get(PYBEL_METADATA_PARSER)
-
-
-def load_managers(app):
-    """Retrieves the :data:`PYBEL_CACHE_CONNECTION` from a Flask app and uses it to add definition manager,
-    metadata parser, and graph manager objects to the config.
-    
-    :param app: A Flask application 
-    :type app: flask.Flask
-    """
-    connection = get_cache_connection(app)
-
-    manager = build_manager(connection=connection)
-    mdp = MetadataParser(manager)
-
-    set_cache_manager(app, manager)
-    set_metadata_parser(app, mdp)

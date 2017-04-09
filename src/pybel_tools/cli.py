@@ -35,7 +35,6 @@ from .service.pickle_upload_service import build_pickle_uploader_app
 from .utils import get_version
 from .web.constants import SECRET_KEY, PYBEL_CACHE_CONNECTION
 from .web.parser_endpoint import build_parser_service_app
-from .web.utils import load_managers
 
 log = logging.getLogger(__name__)
 
@@ -117,12 +116,10 @@ def service(connection, host, port, debug, flask_debug, skip_check_version, run_
     if run_database_service:
         app = get_database_service_app()
         app.config[PYBEL_CACHE_CONNECTION] = connection
-        load_managers(app)
         build_database_service_app(app)
     else:
         app = get_dict_service_app()
         app.config[PYBEL_CACHE_CONNECTION] = connection
-        load_managers(app)
         build_dictionary_service_app(app, check_version=(not skip_check_version))
 
     app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
