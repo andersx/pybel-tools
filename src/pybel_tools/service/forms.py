@@ -9,7 +9,7 @@ from wtforms.validators import DataRequired
 from ..selection.induce_subgraph import SEED_TYPE_INDUCTION, SEED_TYPE_PATHS, SEED_TYPE_NEIGHBORS
 
 
-class UploadPickleForm(FlaskForm):
+class UploadForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
     file = FileField('A PyBEL gpickle', validators=[
         DataRequired(),
@@ -39,7 +39,7 @@ class SeedProvenanceForm(FlaskForm):
     submit_provenance = fields.SubmitField('Submit Provenance')
 
 
-class UploadForm(FlaskForm):
+class CompileForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
     file = FileField('My BEL file', validators=[DataRequired()])
     suggest_name_corrections = BooleanField('Suggest name corrections')

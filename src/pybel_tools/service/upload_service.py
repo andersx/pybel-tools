@@ -11,7 +11,7 @@ from flask import jsonify
 from sqlalchemy.exc import IntegrityError
 
 import pybel
-from .forms import UploadPickleForm
+from .forms import UploadForm
 from ..web.utils import get_cache_manager
 
 log = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def render_upload_error(e):
     )
 
 
-def build_pickle_uploader_app(app):
+def build_pickle_uploader_service(app):
     """Adds the endpoints for uploading pickle files
 
     :param app: A Flask application
@@ -36,12 +36,12 @@ def build_pickle_uploader_app(app):
     manager = get_cache_manager(app)
 
     @app.route('/upload', methods=('GET', 'POST'))
-    def upload_pickle_view():
+    def view_upload():
         """An upload form for a BEL script"""
-        form = UploadPickleForm()
+        form = UploadForm()
 
         if not form.validate_on_submit():
-            return render_template('pickle_upload.html', form=form)
+            return render_template('upload.html', form=form)
 
         log.info('Running on %s', form.file.data.filename)
 

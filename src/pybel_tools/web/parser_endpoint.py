@@ -13,7 +13,7 @@ from pybel.parser import BelParser
 from ..service.send_utils import serve_network
 
 __all__ = [
-    'build_parser_service_app',
+    'build_parser_service',
 ]
 
 log = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ METADATA_HOST = 'host'
 METADATA_USER = 'user'
 
 
-def build_parser_service_app(app, conversion_function=None):
+def build_parser_service(app, conversion_function=None):
     """Builds parser app for sending and receiving BEL statements
     
     :param app: A Flask app

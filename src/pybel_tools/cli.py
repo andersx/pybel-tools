@@ -27,14 +27,17 @@ from pybel.constants import DEFAULT_CACHE_LOCATION
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 from .ioutils import convert_recursive, upload_recusive
-from .service.database_service import build_database_service_app
+from .service.compilation_service import build_synchronous_compiler_service
+from .service.database_service import build_database_service
 from .service.database_service import get_app as get_database_service_app
-from .service.dict_service import build_dictionary_service_app
+from .service.dict_service import build_dictionary_service
 from .service.dict_service import get_app as get_dict_service_app
-from .service.pickle_upload_service import build_pickle_uploader_app
+from .service.summary_service import build_summary_service
+from .service.upload_service import build_pickle_uploader_service
 from .utils import get_version
 from .web.constants import SECRET_KEY, PYBEL_CACHE_CONNECTION
-from .web.parser_endpoint import build_parser_service_app
+from .web.parser_endpoint import build_parser_service
+from .web.sitemap_endpoint import build_sitemap_endpoint
 
 log = logging.getLogger(__name__)
 
@@ -101,9 +104,12 @@ def convert(connection, upload, directory, debug):
 @click.option('--run-database-service', is_flag=True, help='Use the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser')
 @click.option('--run-uploader-service', is_flag=True)
+@click.option('--run-compiler-service', is_flag=True)
+@click.option('--run-summary-service', is_flag=True)
+@click.option('-a', '--run-all', is_flag=True, help="Run all services")
 @click.option('--secret-key')
 def service(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
-            run_uploader_service, secret_key):
+            run_uploader_service, run_compiler_service, run_summary_service, run_all, secret_key):
     """Runs the PyBEL web service"""
     if debug == 1:
         set_debug(20)
@@ -116,19 +122,27 @@ def service(connection, host, port, debug, flask_debug, skip_check_version, run_
     if run_database_service:
         app = get_database_service_app()
         app.config[PYBEL_CACHE_CONNECTION] = connection
-        build_database_service_app(app)
+        build_database_service(app)
     else:
         app = get_dict_service_app()
         app.config[PYBEL_CACHE_CONNECTION] = connection
-        build_dictionary_service_app(app, check_version=(not skip_check_version))
+        build_dictionary_service(app, check_version=(not skip_check_version))
 
     app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
 
-    if run_parser_service:
-        build_parser_service_app(app)
+    if run_parser_service or run_all:
+        build_parser_service(app)
 
-    if run_uploader_service:
-        build_pickle_uploader_app(app)
+    if run_uploader_service or run_all:
+        build_pickle_uploader_service(app)
+
+    if run_summary_service or run_all:
+        build_summary_service(app)
+
+    if run_compiler_service or run_all:
+        build_synchronous_compiler_service(app)
+
+    build_sitemap_endpoint(app)
 
     app.run(debug=flask_debug, host=host, port=port)
 

@@ -340,3 +340,9 @@ class DictionaryService(BaseService):
         authors_with_keyword = [author for author in get_authors(super_network) if keyword.lower() in author.lower()]
 
         return authors_with_keyword
+
+    def list_namespaces(self):
+        return sorted(self.manager.list_namespaces())
+
+    def list_annotations(self):
+        return sorted(self.manager.list_annotations())

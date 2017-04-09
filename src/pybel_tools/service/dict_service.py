@@ -7,7 +7,7 @@ from operator import itemgetter
 
 import flask
 import networkx as nx
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_bootstrap import Bootstrap
 
 from pybel.constants import METADATA_DESCRIPTION
@@ -88,7 +88,7 @@ def render_network(graph, network_id=None):
     json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in sorted(v)]} for k, v in
                  annotations.items()]
     return flask.render_template(
-        'network_visualization.html',
+        'explorer.html',
         filter_json=json_dict,
         network_id=network_id if network_id is not None else "0",
         network_name=name
@@ -117,7 +117,7 @@ def set_dict_service(app, service):
     app.config[DICTIONARY_SERVICE] = service
 
 
-def build_dictionary_service_app(app, preload=True, check_version=True):
+def build_dictionary_service(app, preload=True, check_version=True):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -195,8 +195,8 @@ def build_dictionary_service_app(app, preload=True, check_version=True):
 
     # Web Pages
 
-    @app.route('/', methods=['GET', 'POST'])
-    def view_network_list():
+    @app.route('/networks/', methods=['GET', 'POST'])
+    def view_networks():
         """Renders a page for the user to choose a network"""
         seed_subgraph_form = SeedSubgraphForm()
         seed_provenance_form = SeedProvenanceForm()
@@ -222,20 +222,21 @@ def build_dictionary_service_app(app, preload=True, check_version=True):
             subgraph_form=seed_subgraph_form
         )
 
-    @app.route('/network/<int:network_id>', methods=['GET'])
-    def view_network(network_id):
+    @app.route('/explore/', methods=['GET'])
+    @app.route('/explore/<int:network_id>', methods=['GET'])
+    def view_explorer(network_id=None):
         """Renders a page for the user to explore a network"""
         if network_id == 0:
             network_id = None
-        # graph = api.get_network_by_id(network_id)
+
         graph = get_graph_from_request(network_id=network_id)
         return render_network(graph, network_id)
 
-    @app.route('/network/', methods=['GET'])
-    def view_supernetwork():
-        """Renders a page for the user to explore the combine network"""
-        graph = api.get_network_by_id()
-        return render_network(graph)
+    @app.route('/definitions')
+    def view_definitions():
+        """Displays a page listing the namespaces and annotations."""
+        return render_template('definitions_list.html', namespaces=api.list_namespaces(),
+                               annotations=api.list_annotations())
 
     # App Control
 
@@ -252,15 +253,9 @@ def build_dictionary_service_app(app, preload=True, check_version=True):
         return jsonify({'status': 200})
 
     # Data Service
-
     @app.route('/api/network/', methods=['GET'])
-    def download_network():
-        """Builds a graph and sends it in the given format"""
-        graph = get_graph_from_request()
-        return serve_network(graph, request.args.get(FORMAT))
-
     @app.route('/api/network/<int:network_id>', methods=['GET'])
-    def download_network_by_id(network_id):
+    def get_network(network_id=None):
         """Builds a graph from the given network id and sends it in the given format"""
         graph = get_graph_from_request(network_id=network_id)
         return serve_network(graph, request.args.get(FORMAT))

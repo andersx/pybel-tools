@@ -35,7 +35,7 @@ def set_database_service(app, service):
     app.config[DATABASE_SERVICE] = service
 
 
-def build_database_service_app(app):
+def build_database_service(app):
     """Builds the PyBEL Database-Backed API Service.
 
     :param app: A Flask App
