@@ -19,6 +19,11 @@ render_template = build_template_renderer(__file__)
 
 
 def get_cache_connection(app):
+    """Gets the connection string from the configuration of the Flask app
+    
+    :param app: A Flask application
+    :type app: flask.Flask
+    """
     return app.config.get(PYBEL_CACHE_CONNECTION)
 
 
