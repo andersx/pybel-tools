@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import os
-
 import flask
 
 from pybel.manager.cache import build_manager
 from pybel.parser.parse_metadata import MetadataParser
 from .constants import PYBEL_CACHE_CONNECTION, PYBEL_DEFINITION_MANAGER, PYBEL_METADATA_PARSER
-from ..utils import build_template_environment, render_template_by_env
+from ..utils import build_template_renderer
 
 __all__ = [
     'set_cache_manager',
@@ -17,12 +15,7 @@ __all__ = [
     'load_managers',
 ]
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_ENVIRONMENT = build_template_environment(HERE)
-
-
-def render_template(template_filename, **context):
-    return render_template_by_env(TEMPLATE_ENVIRONMENT, template_filename, context=context)
+render_template = build_template_renderer(__file__)
 
 
 def get_cache_connection(app):

@@ -6,7 +6,7 @@ import flask
 from flask import jsonify
 
 from pybel.constants import METADATA_NAME, METADATA_VERSION
-from .utils import get_cache_manager, render_template
+from .utils import get_cache_manager
 
 __all__ = [
     'build_graph_endpoint',
@@ -30,20 +30,4 @@ def build_graph_endpoint(app):
         result = {gid: {METADATA_NAME: name, METADATA_VERSION: version} for gid, name, version in manager.list_graphs()}
         return jsonify(result)
 
-    log.info('Added PyBEL Web graph endpoint to %s', app)
-
-
-def build_graph_viewer(app, prefix='/networks'):
-    """Adds common access to the graph cache
-
-    :param app: A Flask app
-    :type app: flask.Flask
-    :param prefix: The 
-    :type prefix: str
-    """
-    manager = get_cache_manager(app)
-
-    @app.route('/networks/list')
-    def list_networks_user():
-        """Displays an HTML page for listing the networks"""
-        return render_template('network_list.html', data=list(manager.list_graphs()), prefix=prefix)
+    log.info('Added graph endpoint to %s', app)

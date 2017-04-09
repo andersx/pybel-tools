@@ -38,4 +38,4 @@ def build_definition_endpoint(app):
         """Returns JSON of the OWL namespaces stored in memory"""
         return jsonify(mdp.namespace_owl_dict)
 
-    log.info('Added PyBEL Web definitions endpoint to %s', app)
+    log.info('Added definitions endpoint to %s', app)

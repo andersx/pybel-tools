@@ -352,3 +352,17 @@ def render_template_by_env(template_environment, template_filename, context=None
     if context is None:
         context = {}
     return template_environment.get_template(template_filename).render(context)
+
+
+def build_template_renderer(file):
+    """In your file, give this function the current file 
+    
+    >>> render_template = build_template_renderer(__file__)
+    """
+    here = os.path.dirname(os.path.abspath(file))
+    template_environment = build_template_environment(here)
+
+    def render_template(template_filename, **context):
+        return template_environment.get_template(template_filename).render(context)
+
+    return render_template

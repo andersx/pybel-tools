@@ -39,7 +39,6 @@ def build_parser_service_app(app, conversion_function=None):
         METADATA_DESCRIPTION: 'This graph was produced using the PyBEL Parser API. It was instantiated at {}'.format(
             time.asctime())
     })
-
     parser = BelParser(graph)
 
     @app.route('/api/parser/status')
@@ -91,4 +90,4 @@ def build_parser_service_app(app, conversion_function=None):
         parser.clear()
         return jsonify({'status': 'ok'})
 
-    log.info('Added parser backend to %s', app)
+    log.info('Added parser endpoint to %s', app)
