@@ -8,13 +8,17 @@ from operator import itemgetter
 import flask
 import networkx as nx
 from flask import Flask, request, jsonify
+from flask_bootstrap import Bootstrap
 
+from pybel.constants import METADATA_DESCRIPTION
 from .dict_service_utils import DictionaryService
 from .send_utils import serve_network
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary import get_annotation_values_by_annotation
 from ..summary import get_authors, get_pmids
+from ..summary import info_json
+from ..web.utils import get_cache_manager
 
 log = logging.getLogger(__name__)
 
@@ -103,7 +107,7 @@ def set_dict_service(app, service):
     app.config[DICTIONARY_SERVICE] = service
 
 
-def build_dictionary_service_app(app, connection=None):
+def build_dictionary_service_app(app, preload=True, check_version=True):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -113,7 +117,15 @@ def build_dictionary_service_app(app, connection=None):
                        :code:`pybel.manager.cache.BaseCacheManager`
     :type connection: str
     """
-    api = DictionaryService(connection=connection)
+
+    manager = get_cache_manager(app)
+
+    api = DictionaryService(manager=manager)
+
+    if preload:
+        api.load_networks(check_version=check_version)
+        api.load_super_network()
+
     set_dict_service(app, api)
 
     def get_graph_from_request(network_id=None):
@@ -125,6 +137,7 @@ def build_dictionary_service_app(app, connection=None):
         :rtype: pybel.BELGraph
         """
         network_id = request.args.get(GRAPH_ID, network_id)
+        log.info('requested network [%s]', network_id)
 
         if network_id == 0:
             network_id = None
@@ -176,7 +189,7 @@ def build_dictionary_service_app(app, connection=None):
     @app.route('/')
     def view_network_list():
         """Renders a page for the user to choose a network"""
-        data = [(nid, n.name, n.version) for nid, n in api.networks.items()]
+        data = [(nid, n.name, n.version, n.document[METADATA_DESCRIPTION]) for nid, n in api.networks.items()]
         return flask.render_template('network_list.html', data=data)
 
     @app.route('/network/<int:network_id>', methods=['GET'])
@@ -199,7 +212,7 @@ def build_dictionary_service_app(app, connection=None):
     @app.route('/admin/reload')
     def run_reload():
         api.load_networks()
-        api.get_super_network(force=True)
+        api.get_super_network(reload=True)
         return jsonify({'status': 200})
 
     @app.route('/admin/enrich')
@@ -322,6 +335,10 @@ def build_dictionary_service_app(app, connection=None):
     def get_node_hash(nid):
         return jsonify(api.get_node_by_id(nid))
 
+    @app.route('/api/summary/<int:network_id>')
+    def get_number_nodes(network_id):
+        return jsonify(info_json(api.get_network_by_id(network_id)))
+
     @app.route('/api/suggestion/nodes/<node>')
     def get_node_suggestion(node):
 
@@ -353,6 +370,10 @@ def build_dictionary_service_app(app, connection=None):
     def get_edges(sid, tid):
         return jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
 
+    log.info('Added dictionary service to %s', app)
+
 
 def get_app():
-    return Flask(__name__)
+    app = Flask(__name__)
+    Bootstrap(app)
+    return app

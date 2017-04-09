@@ -2,6 +2,8 @@
 
 """This module assists in running complex workflows on BEL graphs"""
 
+import logging
+import pickle
 from functools import wraps
 
 __all__ = [
@@ -11,6 +13,8 @@ __all__ = [
     'uni_mutator',
     'mutator'
 ]
+
+log = logging.getLogger(__name__)
 
 
 class PipelineBuilder:
@@ -26,11 +30,12 @@ class PipelineBuilder:
 
     def wrap_universe_protocol(self, f):
         """Takes a function that needs a universe graph as the first argument and returns a wrapped one"""
-        if self.universe is None:
-            raise ValueError('No universe is set in PipelineBuilder')
 
         @wraps(f)
         def wrapper(graph, argument):
+            if self.universe is None:
+                raise ValueError('No universe is set in PipelineBuilder')
+
             return f(self.universe, graph, argument)
 
         return wrapper
@@ -80,12 +85,15 @@ class PipelineBuilder:
             else:
                 self.add_mutation_protocol(f, *attrs, **kwargs)
 
-    def run_protocol(self, graph):
+    def run_protocol(self, graph, universe=None):
         """Runs the contained protocol on a seed graph
         
         :param graph: The seed BEL graph
         :type graph: pybel.BELGraph 
         """
+        if universe is not None:
+            self.universe = universe
+
         result = graph
         for _, _, f, attrs, kwargs in self.protocol:
             result = f(result, *attrs, **kwargs)
@@ -96,26 +104,41 @@ class PipelineBuilder:
         for universe, wrapped, func, attrs, kwargs in self.protocol:
             print(universe, wrapped, func, attrs, kwargs, file=file)
 
+    def to_pickle(self, file):
+        log.info('Dumping protocol')
+        pickle.dump(self.protocol, file)
+
     @staticmethod
-    def mutator_decorator_builder(wrap_universe, wrap_in_place):
-        """Builds a decorator function to tag mutator functions"""
+    def from_pickle(file):
+        protocol = pickle.load(file)
+        pipeline_builder = PipelineBuilder()
+        pipeline_builder.protocol = protocol
+        return pipeline_builder
 
-        def decorator(f):
-            """A decorator that tags mutator functions"""
 
-            @wraps(f)
-            def wrapper(*attrs, **kwargs):
-                f(*attrs, **kwargs)
+def mutator_decorator_builder(wrap_universe, wrap_in_place):
+    """Builds a decorator function to tag mutator functions"""
 
-            wrapper.wrap_universe = wrap_universe
-            wrapper.wrap_in_place = wrap_in_place
-            return wrapper
+    def decorator(f):
+        """A decorator that tags mutator functions"""
 
-        return decorator
+        @wraps(f)
+        def wrapper(*attrs, **kwargs):
+            return f(*attrs, **kwargs)
+
+        wrapper.wrap_universe = wrap_universe
+        wrapper.wrap_in_place = wrap_in_place
+
+        return wrapper
+
+    return decorator
 
 
 #: A function decorator to inform the Pipeline how to handle a function
-in_place_mutator = PipelineBuilder.mutator_decorator_builder(wrap_universe=False, wrap_in_place=True)
-uni_in_place_mutator = PipelineBuilder.mutator_decorator_builder(wrap_universe=True, wrap_in_place=True)
-uni_mutator = PipelineBuilder.mutator_decorator_builder(wrap_universe=True, wrap_in_place=False)
-mutator = PipelineBuilder.mutator_decorator_builder(wrap_universe=False, wrap_in_place=False)
+in_place_mutator = mutator_decorator_builder(wrap_universe=False, wrap_in_place=True)
+#: A function decorator to inform the Pipeline how to handle a function
+uni_in_place_mutator = mutator_decorator_builder(wrap_universe=True, wrap_in_place=True)
+#: A function decorator to inform the Pipeline how to handle a function
+uni_mutator = mutator_decorator_builder(wrap_universe=True, wrap_in_place=False)
+#: A function decorator to inform the Pipeline how to handle a function
+mutator = mutator_decorator_builder(wrap_universe=False, wrap_in_place=False)

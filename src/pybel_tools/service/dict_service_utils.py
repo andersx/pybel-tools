@@ -34,13 +34,14 @@ class DictionaryService(BaseService):
     dictionaries.
     """
 
-    def __init__(self, connection=None):
+    def __init__(self, manager):
         """
-        :param connection: The database connection string. Default location described in
+        :param manager: The database connection string. Default location described in
                            :code:`pybel.manager.cache.BaseCacheManager`
-        :type connection: str
+        
+        :type manager: pybel.manager.cache.CacheManager
         """
-        super(DictionaryService, self).__init__(connection=connection)
+        super(DictionaryService, self).__init__(manager)
 
         #: dictionary of {int id: BELGraph graph}
         self.networks = {}
@@ -83,8 +84,10 @@ class DictionaryService(BaseService):
         :type graph: pybel.BELGraph
         """
         if network_id in self.networks:
+            log.info('tried adding network [%s] again')
             return
 
+        parse_authors(graph)
         add_canonical_names(graph)
 
         self.networks[network_id] = graph
@@ -100,8 +103,6 @@ class DictionaryService(BaseService):
         """
         for network_id, blob in self.manager.session.query(Network.id, Network.blob).all():
             graph = from_bytes(blob, check_version=check_version)
-            parse_authors(graph)
-            add_canonical_names(graph)
             self.add_network(network_id, graph)
 
     def update_node_indexes(self, graph):
@@ -139,31 +140,42 @@ class DictionaryService(BaseService):
         return list(self.networks)
 
     def get_network_by_id(self, network_id=None):
-        """Gets a network by its ID
+        """Gets a network by its ID or super network if identifier is not specified
 
         :param network_id: The internal ID of the network to get
         :type network_id: int
         :return: A BEL Graph
         :rtype: BELGraph
         """
-        return self.networks[network_id] if network_id is not None else self.get_super_network()
+        result = self.networks[network_id] if network_id is not None else self.get_super_network()
+        log.debug('got network %s (%s nodes/%s edges)', network_id, result.number_of_nodes(), result.number_of_edges())
+        return result
 
-    def get_super_network(self, force=False):
+    def load_super_network(self):
+        """Reloads the super network"""
+        for graph in self.networks.values():
+            left_merge(self.full_network, graph)
+
+        parse_authors(self.full_network)
+
+        log.info(
+            'loaded super network. %s nodes and %s edges',
+            self.full_network.number_of_nodes(),
+            self.full_network.number_of_edges()
+        )
+
+        self.full_network_loaded = True
+
+    def get_super_network(self, reload=False):
         """Gets all networks and merges them together. Caches in self.full_network.
 
         :return: A BEL Graph
         :rtype: pybel.BELGraph
         """
-        if not force and self.full_network_loaded:
+        if not reload and self.full_network_loaded:
             return self.full_network
 
-        for network_id in self.get_network_ids():
-            left_merge(self.full_network, self.get_network_by_id(network_id))
-
-        parse_authors(self.full_network)
-
-        log.info('Loaded super network')
-        self.full_network_loaded = True
+        self.load_super_network()
 
         return self.full_network
 
@@ -240,16 +252,15 @@ class DictionaryService(BaseService):
         :return: A BEL Graph
         :rtype: BELGraph
         """
-        log.debug('Requested: %s', {
-            'network_id': network_id,
+        graph = self.get_network_by_id(network_id)
+
+        log.debug('query: %s', {
             'seed_method': seed_method,
             'seed_data': seed_data,
             'expand': expand_nodes,
             'delete': remove_nodes,
             'annotations': annotations
         })
-
-        graph = self.get_network_by_id(network_id) if network_id is not None else self.get_super_network()
 
         result = get_subgraph(
             graph,
@@ -259,25 +270,31 @@ class DictionaryService(BaseService):
             remove_nodes=remove_nodes,
             **annotations
         )
+
+        log.debug('query returned (%s nodes/%s edges)', result.number_of_nodes(), result.number_of_edges())
+
         add_canonical_names(result)
         self.relabel_nodes_to_identifiers(result)
+
         return result
 
     def get_edges(self, u, v, both_ways=True):
         """Gets the data dictionaries of all edges between the given nodes"""
-        if u not in self.get_super_network():
+        graph = self.get_super_network()
+
+        if u not in graph:
             raise ValueError("Network doesnt have node: {}".format(u))
 
-        if v not in self.full_network:
+        if v not in graph:
             raise ValueError("Network doesnt have node: {}".format(v))
 
-        if v not in self.full_network.edge[u]:
+        if v not in graph.edge[u]:
             raise ValueError('No edges between {} and {}'.format(u, v))
 
-        result = list(self.full_network.edge[u][v].values())
+        result = list(graph.edge[u][v].values())
 
-        if both_ways and v in self.full_network.edge and u in self.full_network.edge[v]:
-            result.extend(self.full_network.edge[v][u].values())
+        if both_ways and v in graph.edge and u in graph.edge[v]:
+            result.extend(graph.edge[v][u].values())
 
         return result
 

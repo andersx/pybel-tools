@@ -5,8 +5,10 @@
 import flask
 from flask import Flask
 from flask import jsonify
+from flask_bootstrap import Bootstrap
 
-from .db_service_utils import DatabaseService
+from .database_service_utils import DatabaseService
+from ..web.utils import get_cache_manager
 
 DATABASE_SERVICE = 'database_service'
 
@@ -22,7 +24,7 @@ def get_db_service(dsa):
     return dsa.config[DATABASE_SERVICE]
 
 
-def set_db_service(app, service):
+def set_database_service(app, service):
     """Adds the dictionary service to the config of the given Flask app
 
     :param app: A Flask app
@@ -33,16 +35,15 @@ def set_db_service(app, service):
     app.config[DATABASE_SERVICE] = service
 
 
-def build_database_service_app(app, connection=None):
+def build_database_service_app(app):
     """Builds the PyBEL Database-Backed API Service.
 
     :param app: A Flask App
     :type app: Flask
-    :param connection: custom database connection string
-    :type connection: str
     """
-    api = DatabaseService(connection=connection)
-    app.config[DATABASE_SERVICE] = api
+    manager = get_cache_manager(app)
+    api = DatabaseService(manager)
+    set_database_service(app, api)
 
     @app.route('/api/namespaces', methods=['GET'])
     def list_namespaces():
@@ -156,4 +157,6 @@ def build_database_service_app(app, connection=None):
 
 
 def get_app():
-    return Flask(__name__)
+    app = Flask(__name__)
+    Bootstrap(app)
+    return app

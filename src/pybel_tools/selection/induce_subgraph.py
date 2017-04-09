@@ -210,9 +210,10 @@ def get_causal_subgraph(graph):
 
 @pipeline.mutator
 def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None, **annotations):
-    """Runs pipeline query on graph with multiple subgraph filters and expanders
+    """Runs pipeline query on graph with multiple subgraph filters and expanders.
 
-    Order of operations:
+    Order of Operations:
+    
     1. Seeding by given function name and data
     2. Filter by annotations
     3. Add nodes
@@ -233,24 +234,31 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     :rtype: pybel.BELGraph
     """
 
+    # Seed by the given function
     if seed_method == SEED_TYPE_INDUCTION:
-        seed_graph = get_subgraph_by_induction(graph, seed_data)
+        result = get_subgraph_by_induction(graph, seed_data)
     elif seed_method == SEED_TYPE_PATHS:
-        seed_graph = get_subgraph_by_shortest_paths(graph, seed_data)
+        result = get_subgraph_by_shortest_paths(graph, seed_data)
     elif seed_method == SEED_TYPE_NEIGHBORS:
-        seed_graph = get_subgraph_by_neighborhood(graph, seed_data)
+        result = get_subgraph_by_neighborhood(graph, seed_data)
     elif seed_method == SEED_TYPE_PROVENANCE:
-        seed_graph = get_subgraph_by_provenance(graph, seed_data)
-    else:  # Otherwise, don't seed a subgraph
-        seed_graph = graph
+        result = get_subgraph_by_provenance(graph, seed_data)
+    elif seed_method is None:  # Otherwise, don't seed a subgraph
+        result = graph.copy()
+        log.debug('no seed function - using full network: %s', result.name)
+    else:
+        raise ValueError('Invalid seed method: {}'.format(seed_method))
 
     # Filter by the given annotations
-    result = get_subgraph_by_data(seed_graph, {ANNOTATIONS: annotations})
+    if annotations:
+        result = get_subgraph_by_data(result, {ANNOTATIONS: annotations})
+        log.debug('graph filtered to (%s nodes / %s edges)', result.number_of_nodes(), result.number_of_edges())
 
     # Expand around the given nodes
     if expand_nodes:
         for node in expand_nodes:
             expand_node_neighborhood(graph, result, node)
+        log.debug('graph expanded to (%s nodes / %s edges)', result.number_of_nodes(), result.number_of_edges())
 
     # Delete the given nodes
     if remove_nodes:
@@ -259,6 +267,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
                 log.warning('%s is not in graph %s', node, graph.name)
                 continue
             result.remove_node(node)
+        log.debug('graph contracted to (%s nodes / %s edges)', result.number_of_nodes(), result.number_of_edges())
 
     return result
 

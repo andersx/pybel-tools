@@ -25,6 +25,10 @@ def render_template(template_filename, **context):
     return render_template_by_env(TEMPLATE_ENVIRONMENT, template_filename, context=context)
 
 
+def get_cache_connection(app):
+    return app.config.get(PYBEL_CACHE_CONNECTION)
+
+
 def set_cache_manager(app, definition_manager):
     """Sets the definition cache manager associated with a given Flask app
     
@@ -43,6 +47,10 @@ def get_cache_manager(app):
     :return: The app's definition manager
     :rtype: pybel.manager.cache.CacheManager
     """
+    if PYBEL_DEFINITION_MANAGER not in app.config:
+        manager = build_manager(get_cache_connection(app))
+        set_cache_manager(app, manager)
+
     return app.config.get(PYBEL_DEFINITION_MANAGER)
 
 
@@ -64,6 +72,10 @@ def get_metadata_parser(app):
     :return: The app's metadata parser
     :rtype: pybel.parser.parse_metadata.MetadataParser
     """
+    if PYBEL_METADATA_PARSER not in app.config:
+        mdp = MetadataParser(get_cache_manager(app))
+        set_metadata_parser(app, mdp)
+
     return app.config.get(PYBEL_METADATA_PARSER)
 
 
@@ -74,10 +86,10 @@ def load_managers(app):
     :param app: A Flask application 
     :type app: flask.Flask
     """
-    connection = app.config.get(PYBEL_CACHE_CONNECTION)
+    connection = get_cache_connection(app)
 
     manager = build_manager(connection=connection)
-    mdp = MetadataParser(manager=manager)
+    mdp = MetadataParser(manager)
 
     set_cache_manager(app, manager)
     set_metadata_parser(app, mdp)

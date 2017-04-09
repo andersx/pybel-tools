@@ -1,12 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Networks</title>
-    <meta charset="UTF-8">
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}Networks{% endblock %}
+
+{% block styles %}
+    {{ super() }}
     <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
+    <!-- From daniel: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/> -->
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    {{ fixes.ie8() }}
+
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
     <script type="text/javascript"
@@ -15,42 +24,72 @@
             src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+    <!-- from daniel <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script> -->
     <script type="text/javascript"
             src="{{ url_for('static', filename='js/home_controller/home_controller.js') }}"></script>
-</head>
-<body>
-<div class="container">
-    <h1>Loaded Networks</h1>
+{% endblock %}
 
-    <ul>
-        {% for nid, name, vers in data %}
-            <li><a href="/network/{{ nid }}">{{ name }} v{{ vers }}</a></li>
-        {% endfor %}
-    </ul>
-    <h4>Inspect nodes/papers/authors in your networks</h4>
 
-    Please type the nodes you want to inspect
-    <form id="node-inspection" method="get">
-        <input placeholder="Type here your nodes" name="node_list" id="node-input" type="text"/><br>
-        <input type="radio" name="analysis" value="induce_subgraph" checked> Induce subnetwork<br>
-        <input type="radio" name="analysis" value="shortest_paths"> Find shortest paths between nodes<br>
-        <input type="radio" name="analysis" value="expand_neighbors"> Expand around nodes<br>
-        <input type="button" id="submit-nodes" value="Submit"/>
-    </form>
-    <hr>
-    Please type the PubMed IDs you want to inspect
-    <form id="citation-inspection" method="get">
-        <input placeholder="Type here your PubMed IDs" name="pubmed_list" id="pubmed-input" type="text"/>
-    </form>
-    <hr>
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>Network Store</h1>
+        </div>
 
-    Please type the authors you want to inspect
-    <form id="author-inspection" method="get">
-        <input placeholder="Type here your authors" name="author_list" id="author-input" type="text"/>
-    </form>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Networks</h3>
+            </div>
+            <div class="panel-body">
+            <p>Below are listed the items in the network store.</p>
+            </div>
+            <div class="list-group">
+                {% for nid, name, vers, descr in data %}
+                    <a href="/network/{{ nid }}" class="list-group-item">
+                        <h4 class="list-group-item-heading">{{ name }} v{{ vers }}</h4>
+                        <p class="list-group-item-text">{{ descr }}</p>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Network Seeding by Nodes</h3>
+            </div>
+            <div class="panel-body">
+                <form id="node-inspection" method="get">
+                    <label for="node_list">Please type the nodes you want to inspect</label>
+                    <input placeholder="Type your nodes here" name="node_list" id="node-input" type="text"/><br>
+                    <label class="checkbox"><input type="radio" name="analysis" value="induce_subgraph" checked>
+                        Induce subnetwork</label>
+                    <label class="checkbox"><input type="radio" name="analysis" value="shortest_paths">
+                        Induce over shortest paths</label>
+                    <label class="checkbox"><input type="radio" name="analysis" value="expand_neighbors">
+                        Expand neighborhoods</label>
+                    <input type="button" id="submit-nodes" value="Submit"/>
+                </form>
+            </div>
+        </div>
 
-</div>
-</body>
-</html>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Network Seeding by Provenance</h3>
+            </div>
+            <div class="panel-body">
+                <p>This method of seeding will acquire nodes and edges asserted in the given citations and by the given
+                    authors, then expand around the neighborhood of these nodes to show all peripheral knowledge.</p>
+
+                <form id="provenance-inspection" method="get">
+                    <label for="pubmed_list">Please type the PubMed IDs you want to inspect</label>
+                    <input placeholder="Type PubMed IDs" name="pubmed_list" id="pubmed-input" type="text"/>
+                    <hr>
+                    <label for="author_list">Please type the authors you want to inspect</label>
+                    <input placeholder="Type authors" name="author_list" id="author-input" type="text"/>
+                    <input type="button" id="submit-provenance" value="Submit"/>
+                </form>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

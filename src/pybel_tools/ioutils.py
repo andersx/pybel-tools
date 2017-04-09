@@ -2,20 +2,23 @@
 
 """Utilities for loading and exporting BEL graphs"""
 
+import logging
 import os
 
 from pybel import from_path, BELGraph, to_pickle
-from pybel.manager.cache import CacheManager
-from pybel.parser import MetadataParser
+from pybel.io.line_utils import build_metadata_parser
+from pybel.manager.cache import build_manager
 from .mutation.merge import left_merge
 from .selection import get_subgraph_by_annotation_value
 from .summary import get_annotation_values
-
+from sqlalchemy.exc import IntegrityError
 __all__ = [
     'load_paths',
     'load_directory',
     'subgraphs_to_pickles',
 ]
+
+log = logging.getLogger(__name__)
 
 
 def load_paths(paths, connection=None):
@@ -31,8 +34,7 @@ def load_paths(paths, connection=None):
     :return: A BEL graph comprised of the union of all BEL graphs produced by each BEL script
     :rtype: pybel.BELGraph
     """
-    manager = CacheManager(connection=connection)
-    metadata_parser = MetadataParser(manager=manager)
+    metadata_parser = build_metadata_parser(connection)
     result = BELGraph()
 
     for path in paths:
@@ -54,6 +56,34 @@ def load_directory(directory, connection=None):
     """
     paths = (path for path in os.listdir(directory) if path.endswith('.bel'))
     return load_paths(paths, connection=connection)
+
+
+def get_bel_recursive(directory):
+    for root, directory, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.bel'):
+                yield os.path.join(root, file)
+
+
+def upload_recursive(directory, connection=None):
+    metadata_parser = build_metadata_parser(connection)
+
+    paths = list(get_bel_recursive(directory))
+    log.info('Paths to parse: %s', paths)
+
+    for path in paths:
+        try:
+            graph = from_path(path, manager=metadata_parser.manager)
+        except Exception as e:
+            log.exception('Problem parsing %s', path)
+
+        try:
+            metadata_parser.manager.insert_graph(graph)
+        except IntegrityError as e:
+            log.exception('Integrity problem')
+            metadata_parser.manager.rollback()
+        except Exception as e:
+            log.exception('Problem uploading %s', graph.name)
 
 
 def subgraphs_to_pickles(graph, directory=None, annotation='Subgraph'):

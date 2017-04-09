@@ -13,6 +13,7 @@ Setting up with Docker
 
 """
 
+from . import constants
 from . import definitions_endpoint
 from . import graph_endpoint
 from . import parser_endpoint
