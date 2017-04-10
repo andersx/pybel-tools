@@ -15,7 +15,7 @@ $(document).ready(function () {
     }
 
     // Node autocompletion
-    $("#node-input").autocomplete({
+    $("#node_list").autocomplete({
 
         source: function (request, response) {
             $.ajax({
@@ -24,6 +24,8 @@ $(document).ready(function () {
                 type: 'GET',
                 url: "/api/suggestion/nodes/" + request.term,
                 success: function (data) {
+
+                    console.log('ajax');
                     // Only gives the first 20 matches
                     response(data.slice(0, 20));
                 }
@@ -55,7 +57,7 @@ $(document).ready(function () {
     });
 
     // Author autocompletion
-    $("#author-input").autocomplete({
+    $("#author_list").autocomplete({
 
         source: function (request, response) {
             $.ajax({
@@ -88,14 +90,14 @@ $(document).ready(function () {
             terms.push(ui.item.value);
             // add placeholder to get the comma-and-space at the end
             terms.push("");
-            this.value = terms.join("|");
+            this.value = terms.join(",");
             return false;
         },
         minLength: 2
     });
 
     // PubMed IDs autocompletion
-    $("#pubmed-input").autocomplete({
+    $("#pubmed_list").autocomplete({
 
         source: function (request, response) {
             $.ajax({
@@ -128,7 +130,7 @@ $(document).ready(function () {
             terms.push(ui.item.value);
             // add placeholder to get the comma-and-space at the end
             terms.push("");
-            this.value = terms.join("|");
+            this.value = terms.join(",");
             return false;
         },
         minLength: 2
