@@ -41,7 +41,7 @@ class DictionaryService(BaseService):
         
         :type manager: pybel.manager.cache.CacheManager
         """
-        super(DictionaryService, self).__init__(manager)
+        BaseService.__init__(self, manager)
 
         #: dictionary of {int id: BELGraph graph}
         self.networks = {}
