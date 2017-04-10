@@ -32,8 +32,6 @@ function renderNetwork(tree) {
     $.getJSON("/api/network/" + '?' + node_param, function (data) {
         initD3Force(data, tree);
     });
-    console.log('render network');
-    console.log(node_param);
     window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
 }
 
