@@ -21,6 +21,9 @@ function parameterFilters(tree) {
     var args = getSelectedNodesFromTree(tree);
     args["remove"] = window.deleteNodes.join();
     args["append"] = window.expandNodes.join();
+    args["seed_method"] = window.seedMethod;
+    args["seed_data"] = window.seedList;
+    args["graphid"] = window.id;
     return args
 }
 
@@ -57,10 +60,13 @@ $(document).ready(function () {
 
     // Export to BEL
     $("#bel-button").click(function () {
+        params = parameterFilters(tree);
+        params["format"] = "bel";
+
         $.ajax({
-            url: '/api/network/' + window.id,
+            url: '/api/network/',
             dataType: "text",
-            data: $.param(getSelectedNodesFromTree(tree), true) + '&format=bel'
+            data: $.param(params, true)
         }).done(function (response) {
             downloadText(response, 'MyGraph.bel')
         });
@@ -68,24 +74,31 @@ $(document).ready(function () {
 
     // Export to GraphML
     $("#graphml-button").click(function () {
-        window.location.href = '/api/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=graphml';
+        params = parameterFilters(tree);
+        params["format"] = "graphml";
+        window.location.href = '/api/network/' + $.param(params, true);
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
-        window.location.href = '/api/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=bytes';
+        params = parameterFilters(tree);
+        params["format"] = "bytes";
+        window.location.href = '/api/network/' + $.param(params, true);
 
     });
 
     // Export to CX
     $("#cx-button").click(function () {
-        window.location.href = '/api/network/' + window.id + '?' + $.param(getSelectedNodesFromTree(tree), true) + '&' + 'format=cx';
+        params = parameterFilters(tree);
+        params["format"] = "cx";
+        window.location.href = '/api/network/' + $.param(params, true);
     });
 
     // Export to CSV
     $("#csv-button").click(function () {
-        node_tree = getSelectedNodesFromTree(tree);
-        window.location.href = '/api/network/' + window.id + '?' + $.param(node_tree, true) + '&' + 'format=csv';
+        params = parameterFilters(tree);
+        params["format"] = "csv";
+        window.location.href = '/api/network/' + $.param(params, true);
     });
 });
 
@@ -257,7 +270,7 @@ function initD3Force(graph, tree) {
 
                 // Ajax to update the cypher query. Three list are sent to the server. pks of the subgraphs, list of nodes to delete and list of nodes to expand
                 $.ajax({
-                    url: "/api/network/" + window.id,
+                    url: "/api/network/",
                     dataType: "json",
                     data: $.param(args, true)
                 }).done(function (response) {
@@ -285,7 +298,7 @@ function initD3Force(graph, tree) {
 
 
                 $.ajax({
-                    url: "/api/network/" + window.id,
+                    url: "/api/network/",
                     dataType: "json",
                     data: $.param(args, true)
                 }).done(function (response) {
