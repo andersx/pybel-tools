@@ -5,7 +5,7 @@ from flask import url_for, render_template
 
 import pybel.utils
 from ..utils import get_version
-
+import sys
 log = logging.getLogger(__name__)
 
 
@@ -28,8 +28,9 @@ def build_sitemap_endpoint(app, route=None):
                 pass
 
         metadata = [
+            ('Python', sys.version),
             ('PyBEL Version', pybel.utils.get_version()),
-            ('PyBEL Tools Version', get_version())
+            ('PyBEL Tools Version', get_version()),
         ]
         return render_template("sitemap.html",
                                metadata=metadata,
