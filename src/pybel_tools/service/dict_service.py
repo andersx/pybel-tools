@@ -54,7 +54,7 @@ BLACK_LIST = {
     SEED_DATA_AUTHORS,
     SEED_DATA_PMIDS,
     SEED_DATA_NODES,
-    PATHS_METHOD
+    PATHS_METHOD,
 }
 
 
@@ -83,17 +83,25 @@ def raise_invalid_source_target():
     return flask.abort(404)
 
 
-def get_tree(graph):
+def get_tree_annotations(graph):
+    """
+    
+    :param graph: 
+    :type graph: pybel.BELGraph
+    :return: 
+    :rtype: list
+    """
     annotations = get_annotation_values_by_annotation(graph)
     return [{'text': k, 'children': [{'text': annotation} for annotation in sorted(v)]} for k, v in
-                 annotations.items()]
+            sorted(annotations.items())]
+
 
 def render_network(graph, network_id=None):
     """Renders the visualization of a network"""
     name = graph.name or DEFAULT_TITLE
     return flask.render_template(
         'explorer.html',
-        annotation_filter_json=get_tree(graph),
+        annotation_filter_json=get_tree_annotations(graph),
         network_id=network_id if network_id is not None else "0",
         network_name=name
     )
@@ -152,7 +160,10 @@ def build_dictionary_service(app, preload=True, check_version=True):
         """
         network_id = request.args.get(GRAPH_ID, network_id)
 
-        if network_id in {0, "0"}:
+        if network_id is not None:
+            network_id = int(network_id)
+
+        if network_id == 0:
             network_id = None
 
         seed_method = request.args.get(SEED_TYPE)
@@ -261,17 +272,20 @@ def build_dictionary_service(app, preload=True, check_version=True):
     @app.route('/api/network/<int:network_id>', methods=['GET'])
     def get_network(network_id=None):
         """Builds a graph from the given network id and sends it in the given format"""
-        #log.info('requested network: %s', request.args)
+        # log.info('requested network: %s', request.args)
 
         graph = get_graph_from_request(network_id=network_id)
         return serve_network(graph, request.args.get(FORMAT))
 
     @app.route('/api/tree/')
     @app.route('/api/tree/<int:network_id>')
-    def get_tree(network_id=None):
+    def get_tree_api(network_id=None):
         network_id = request.args.get(GRAPH_ID, network_id)
+        if network_id is not None:
+            network_id = int(network_id)
+
         graph = api.get_network_by_id(network_id)
-        return jsonify(get_tree(graph))
+        return jsonify(get_tree_annotations(graph))
 
     @app.route('/api/edges/incident/<int:network_id>/<int:node_id>')
     def get_incident_edges(network_id, node_id):
@@ -390,7 +404,12 @@ def build_dictionary_service(app, preload=True, check_version=True):
 
     @app.route('/api/edges/provenance/<int:sid>/<int:tid>')
     def get_edges(sid, tid):
+
         return jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
+
+    @app.route('/api/meta/blacklist')
+    def get_blacklist():
+        return jsonify(sorted(BLACK_LIST))
 
     log.info('Added dictionary service to %s', app)
 
