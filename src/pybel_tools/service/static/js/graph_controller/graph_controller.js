@@ -37,7 +37,6 @@ function renderNetwork(tree) {
 
 
 $(document).ready(function () {
-
     var tree = new InspireTree({
         target: '#tree',
         selection: {

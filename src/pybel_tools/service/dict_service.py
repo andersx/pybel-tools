@@ -83,15 +83,17 @@ def raise_invalid_source_target():
     return flask.abort(404)
 
 
+def get_tree(graph):
+    annotations = get_annotation_values_by_annotation(graph)
+    return [{'text': k, 'children': [{'text': annotation} for annotation in sorted(v)]} for k, v in
+                 annotations.items()]
+
 def render_network(graph, network_id=None):
     """Renders the visualization of a network"""
     name = graph.name or DEFAULT_TITLE
-    annotations = get_annotation_values_by_annotation(graph)
-    json_dict = [{'text': k, 'children': [{'text': annotation} for annotation in sorted(v)]} for k, v in
-                 annotations.items()]
     return flask.render_template(
         'explorer.html',
-        annotation_filter_json=json_dict,
+        annotation_filter_json=get_tree(graph),
         network_id=network_id if network_id is not None else "0",
         network_name=name
     )
@@ -263,6 +265,13 @@ def build_dictionary_service(app, preload=True, check_version=True):
 
         graph = get_graph_from_request(network_id=network_id)
         return serve_network(graph, request.args.get(FORMAT))
+
+    @app.route('/api/tree/')
+    @app.route('/api/tree/<int:network_id>')
+    def get_tree(network_id=None):
+        network_id = request.args.get(GRAPH_ID, network_id)
+        graph = api.get_network_by_id(network_id)
+        return jsonify(get_tree(graph))
 
     @app.route('/api/edges/incident/<int:network_id>/<int:node_id>')
     def get_incident_edges(network_id, node_id):
