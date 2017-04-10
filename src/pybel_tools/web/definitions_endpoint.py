@@ -5,7 +5,7 @@ import logging
 import flask
 from flask import jsonify
 
-from .utils import get_definition_manager, get_metadata_parser
+from .utils import get_cache_manager, get_metadata_parser
 
 __all__ = [
     'build_definition_endpoint',
@@ -16,10 +16,11 @@ log = logging.getLogger(__name__)
 
 def build_definition_endpoint(app):
     """Adds common access to definitions cache
-
+    
+    :param app: A Flask application
     :type app: flask.Flask
     """
-    dcm = get_definition_manager(app)
+    dcm = get_cache_manager(app)
     mdp = get_metadata_parser(app)
 
     @app.route('/api/database/namespaces/')
@@ -37,4 +38,4 @@ def build_definition_endpoint(app):
         """Returns JSON of the OWL namespaces stored in memory"""
         return jsonify(mdp.namespace_owl_dict)
 
-    log.info('Added PyBEL Web definitions endpoint to %s', app)
+    log.info('Added definitions endpoint to %s', app)

@@ -1,43 +1,72 @@
-PyBEL Tools
-===========
+PyBEL Tools |develop_build| |develop_coverage| |develop_documentation| |pypi_license|
+=====================================================================================
+`PyBEL Tools <http://pybel-tools.readthedocs.io/>`_ is a suite of tools built on top of
+`PyBEL <http://pybel.readthedocs.io>`_ to facilitate data management, integration, and analysis.
 
-Installation
-------------
+This package was developed at `Fraunhofer SCAI <https://www.scai.fraunhofer.de/>`_
+with support from the `IMI <https://www.imi.europa.eu/>`_ projects: `AETIONOMY <http://www.aetionomy.eu/>`_ and
+`PHAGO <http://www.phago.eu/>`_.
+
+Getting Started
+---------------
+- Documentation at http://pybel-tools.readthedocs.io
+- Cookbook at https://github.com/pybel/pybel-notebooks
+
+Installation |pypi_version| |python_versions|
+---------------------------------------------
 PyBEL Tools can be installed easily from `PyPI <https://pypi.python.org/pypi/pybel_tools>`_ with the following code in
 your favorite terminal:
 
 .. code-block:: sh
 
-    python3 -m pip install pybel_tools
+    $ python3 -m pip install pybel_tools
 
-or from the latest code on GitHub with:
+or from the latest code on `GitHub <https://github.com/pybel/pybel-tools>`_ with:
 
 .. code-block:: sh
 
-    python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
+    $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
 
-Documentation
--------------
-Documentation at http://pybel-tools.readthedocs.io/en/latest/.
-
-Setting up with Docker
-----------------------
-- http://phusion.github.io/baseimage-docker/
-- https://penandpants.com/2014/03/09/docker-via-homebrew/
-
-Running the PyBEL Tool's service
-----------------------
+Web Services
+------------
 Running the PyBEL Tools Flask application allows you to interact with your networks and apply filters/algorithms.
+Multiple services are available. Use :code:`--help` for a description.
 
 .. code-block:: sh
 
-     python3 -m pybel_tools service
+    $ python3 -m pybel_tools web
 
 After previously having uploaded your BEL graphs
 
 .. code-block:: sh
 
-     python3 -m pybel_tools upload "PATH_TO_YOUR_GRAPH_PICKLE"
+    $ python3 -m pybel_tools io upload "PATH_TO_YOUR_GRAPH_PICKLE"
 
+Links
+-----
+- Documented on `Read the Docs <http://pybel-tools.readthedocs.io/>`_
+- Versioned on `GitHub <https://github.com/pybel/pybel-tools>`_
+- Tested on `Travis CI <https://travis-ci.org/pybel/pybel-tools>`_
+- Distributed by `PyPI <https://pypi.python.org/pypi/pybel-tools>`_
+- Chat on `Gitter <https://gitter.im/pybel/Lobby>`_
 
+.. |develop_build| image:: https://travis-ci.org/pybel/pybel-tools.svg?branch=develop
+    :target: https://travis-ci.org/pybel/pybel-tools
+    :alt: Development Build Status
 
+.. |develop_coverage| image:: https://codecov.io/gh/pybel/pybel-tools/coverage.svg?branch=develop
+    :target: https://codecov.io/gh/pybel/pybel-tools?branch=develop
+    :alt: Development Coverage Status
+
+.. |develop_documentation| image:: https://readthedocs.org/projects/pybel-tools/badge/?version=latest
+    :target: http://pybel-tools.readthedocs.io/en/latest/
+    :alt: Development Documentation Status
+
+.. |python_versions| image:: https://img.shields.io/pypi/pyversions/pybel-tools.svg
+    :alt: Stable Supported Python Versions
+
+.. |pypi_version| image:: https://img.shields.io/pypi/v/pybel-tools.svg
+    :alt: Current version on PyPI
+
+.. |pypi_license| image:: https://img.shields.io/pypi/l/pybel-tools.svg
+    :alt: Apache 2.0 License

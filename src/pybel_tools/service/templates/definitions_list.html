@@ -1,0 +1,65 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}Definitions{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>Definition Store</h1>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Namespaces</h3>
+            </div>
+            <div class="panel-body">
+                <p>The list below enumerates the cached namespaces.</p>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Keyword</th>
+                    <th>URL</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for keyword, url in namespaces %}
+                    <tr>
+                        <td>{{ keyword }}</td>
+                        <td><a href="{{ url }}">{{ url }}</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Annotations</h3>
+            </div>
+            <div class="panel-body">
+                <p>The list below enumerates the cached annotations.</p>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Keyword</th>
+                    <th>URL</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for keyword, url in annotations %}
+                    <tr>
+                        <td>{{ keyword }}</td>
+                        <td><a href="{{ url }}">{{ url }}</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+

@@ -4,7 +4,9 @@
 
 import logging
 
-from pybel.constants import FUNCTION, NAMESPACE, NAME
+from pybel.constants import NAME
+from . import pipeline
+from .filters.node_filters import filter_nodes, function_namespace_inclusion_builder
 
 __all__ = [
     'overlay_data',
@@ -14,6 +16,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
+@pipeline.in_place_mutator
 def overlay_data(graph, data, label, overwrite=False):
     """Overlays tabular data on the network
 
@@ -37,6 +40,7 @@ def overlay_data(graph, data, label, overwrite=False):
 
 
 # TODO switch label to be kwarg with default value DATA_WEIGHT
+@pipeline.in_place_mutator
 def overlay_type_data(graph, data, label, function, namespace, overwrite=False, impute=None):
     """Overlays tabular data on the network for data that comes from an data set with identifiers that lack
     namespaces.
@@ -61,11 +65,7 @@ def overlay_type_data(graph, data, label, function, namespace, overwrite=False, 
     """
     new_data = {}
 
-    for node, d in graph.nodes_iter(data=True):
-        if NAMESPACE not in d:
-            continue
-
-        if d[FUNCTION] == function and d[NAMESPACE] == namespace:
-            new_data[node] = data.get(d[NAME], impute)
+    for node in filter_nodes(graph, function_namespace_inclusion_builder(function, namespace)):
+        new_data[node] = data.get(graph.node[node][NAME], impute)
 
     overlay_data(graph, new_data, label, overwrite=overwrite)

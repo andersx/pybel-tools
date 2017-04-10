@@ -32,11 +32,14 @@ PyBEL Tools Documentation
    :name: services
 
    dictservice
+   dbservice
+   web
 
 .. toctree::
    :caption: Other Utilities
    :name: utilities
 
+   cookbook
    definitions
    documentutils
    utilities

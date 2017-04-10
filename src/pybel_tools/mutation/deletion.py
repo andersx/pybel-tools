@@ -2,21 +2,53 @@
 
 """This module contains convenient functions for removing nodes/edges that are returned from selection functions"""
 
-from ..filters.node_filters import filter_nodes
+from .. import pipeline
+from ..filters.edge_filters import filter_edges
+from ..filters.node_filters import filter_nodes, function_namespace_inclusion_builder
 from ..selection.leaves import get_gene_leaves, get_rna_leaves
-from ..selection.utils import get_leaves_by_type, get_nodes_by_function_namespace
+from ..selection.utils import get_leaves_by_type
 from ..summary.edge_summary import get_inconsistent_edges
 from ..utils import all_edges_iter
 
 __all__ = [
+    'remove_filtered_nodes',
+    'remove_filtered_edges',
     'remove_nodes_by_namespace',
     'remove_leaves_by_type',
     'prune_central_dogma',
-    'remove_filtered_nodes',
+
     'remove_inconsistent_edges',
 ]
 
 
+@pipeline.in_place_mutator
+def remove_filtered_nodes(graph, node_filters):
+    """Removes nodes passing the given node filters
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node_filters: A list of node filters
+    :type node_filters: list
+    """
+    nodes = list(filter_nodes(graph, node_filters))
+    graph.remove_nodes_from(nodes)
+
+
+@pipeline.in_place_mutator
+def remove_filtered_edges(graph, edge_filters):
+    """Removes edges passing the given edge filters
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param edge_filters: A list of edge filters
+    :type edge_filters: list 
+    :return: 
+    """
+    edges = list(filter_edges(graph, edge_filters))
+    graph.remove_edges_from(edges)
+
+
+@pipeline.in_place_mutator
 def remove_nodes_by_namespace(graph, function, namespace):
     """Removes nodes with the given function and namespace.
 
@@ -30,10 +62,11 @@ def remove_nodes_by_namespace(graph, function, namespace):
     :param namespace: The namespace to filter
     :type namespace: str
     """
-    nodes = list(get_nodes_by_function_namespace(graph, function, namespace))
+    nodes = list(filter_nodes(graph, function_namespace_inclusion_builder(function, namespace)))
     graph.remove_nodes_from(nodes)
 
 
+@pipeline.in_place_mutator
 def remove_leaves_by_type(graph, function=None, prune_threshold=1):
     """Removes all nodes in graph (in-place) with only a connection to one node. Useful for gene and RNA.
     Allows for optional filter by function type.
@@ -41,7 +74,7 @@ def remove_leaves_by_type(graph, function=None, prune_threshold=1):
 
     :param graph: a BEL network
     :type graph: pybel.BELGraph
-    :param function: If set, filters by the node's function from :code:`pybel.constants` like
+    :param function: If set, filters by the node's function from :mod:`pybel.constants` like
                     :data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`, :data:`pybel.constants.PROTEIN`, or
                     :data:`pybel.constants.BIOPROCESS`
     :type function: str
@@ -52,8 +85,7 @@ def remove_leaves_by_type(graph, function=None, prune_threshold=1):
     graph.remove_nodes_from(nodes)
 
 
-
-
+@pipeline.in_place_mutator
 def prune_central_dogma(graph):
     """Prunes genes, then RNA, in place
 
@@ -67,18 +99,7 @@ def prune_central_dogma(graph):
     graph.remove_nodes_from(rna_leaves)
 
 
-def remove_filtered_nodes(graph, filters):
-    """Removes nodes passing the given filters
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param filters: a list of filters
-    :type filters: list
-    """
-    nodes = list(filter_nodes(graph, filters))
-    graph.remove_nodes_from(nodes)
-
-
+@pipeline.in_place_mutator
 def remove_inconsistent_edges(graph):
     """Remove all edges between node paris with consistent edges.
 

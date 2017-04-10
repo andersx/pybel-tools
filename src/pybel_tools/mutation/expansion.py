@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 from pybel import BELGraph
 from pybel.constants import *
 from .merge import left_merge
+from .. import pipeline
 from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filters, keep_causal_edges
 from ..filters.node_filters import keep_node_permissive, concatenate_node_filters
 from ..selection.utils import get_nodes_by_function
@@ -25,6 +26,7 @@ __all__ = [
     'get_subgraph_peripheral_nodes',
     'expand_periphery',
     'expand_node_neighborhood',
+    'expand_all_node_neighborhoods',
     'expand_upstream_causal_subgraph',
     'enrich_grouping',
     'enrich_complexes',
@@ -39,6 +41,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
+@pipeline.uni_mutator
 def get_upstream_causal_subgraph(graph, nbunch):
     """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
 
@@ -151,10 +154,10 @@ def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filte
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
-                         :code:`pybel_tools.filters.node_filters` for more information
+                         :mod:`pybel_tools.filters.node_filters` for more information
     :type node_filters: lambda
     :param edge_filters: Optional. A list of edge filter predicates with the interface (graph, node, node, key, data)
-                          -> bool. See :code:`pybel_tools.filters.edge_filters` for more information
+                          -> bool. See :mod:`pybel_tools.filters.edge_filters` for more information
     :type edge_filters: lambda
     :return: A dictionary of {external node: {'successor': {internal node: list of (key, dict)},
                                             'predecessor': {internal node: list of (key, dict)}}}
@@ -164,7 +167,7 @@ def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filte
 
     >>> import pybel_tools as pbt
     >>> sgn = 'Blood vessel dilation subgraph'
-    >>> sg = pbt.selection.get_subgraph_by_annotation(graph, value=sgn, annotation='Subgraph')
+    >>> sg = pbt.selection.get_subgraph_by_annotation_value(graph, value=sgn, annotation='Subgraph')
     >>> p = pbt.mutation.get_subgraph_peripheral_nodes(graph, sg, node_filters=pbt.filters.exclude_pathology_filter)
     >>> for node in sorted(p, key=lambda node: len(set(p[node]['successor']) | set(p[node]['predecessor'])), reverse=True):
     >>>     if 1 == len(p[sgn][node]['successor']) or 1 == len(p[sgn][node]['predecessor']):
@@ -202,10 +205,10 @@ def expand_periphery(graph, subgraph, node_filters=None, edge_filters=None, thre
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
-                         :code:`pybel_tools.filters.node_filters` for more information
+                         :mod:`pybel_tools.filters.node_filters` for more information
     :type node_filters: lambda
     :param edge_filters: Optional. A list of edge filter predicates with the interface (graph, node, node, key, data)
-                          -> bool. See :code:`pybel_tools.filters.edge_filters` for more information
+                          -> bool. See :mod:`pybel_tools.filters.edge_filters` for more information
     :type edge_filters: lambda
     :param threshold: Minimum frequency of betweenness occurrence to add a gap node
 
@@ -252,6 +255,7 @@ def infer_subgraph_expansion(graph, annotation='Subgraph'):
     raise NotImplementedError
 
 
+@pipeline.uni_in_place_mutator
 def enrich_grouping(graph, subgraph, function, relation):
     """Adds all of the grouped elements. See :func:`enrich_complexes`, :func:`enrich_composites`, and
     :func:`enrich_reactions`
@@ -274,6 +278,7 @@ def enrich_grouping(graph, subgraph, function, relation):
                 subgraph.add_unqualified_edge(u, v, relation)
 
 
+@pipeline.uni_in_place_mutator
 def enrich_complexes(graph, subgraph):
     """Adds all of the members of the complexes in the subgraph that are in the original graph with appropriate
     :data:`pybel.constants.HAS_COMPONENT` relationships, in place.
@@ -286,6 +291,7 @@ def enrich_complexes(graph, subgraph):
     enrich_grouping(graph, subgraph, COMPLEX, HAS_COMPONENT)
 
 
+@pipeline.uni_in_place_mutator
 def enrich_composites(graph, subgraph):
     """Adds all of the members of the composite abundances in the subgraph that are in the original graph with
     appropriate :data:`pybel.constants.HAS_COMPONENT` relationships, in place.
@@ -298,6 +304,7 @@ def enrich_composites(graph, subgraph):
     enrich_grouping(graph, subgraph, COMPOSITE, HAS_COMPONENT)
 
 
+@pipeline.uni_in_place_mutator
 def enrich_reactions(graph, subgraph):
     """Adds all of the reactants and products of reactions in the subgraph that are in the original graph with
     appropriate :data:`pybel.constants.HAS_REACTANT` and :data:`pybel.constants.HAS_PRODUCT` relationships,
@@ -312,6 +319,7 @@ def enrich_reactions(graph, subgraph):
     enrich_grouping(graph, subgraph, REACTION, HAS_PRODUCT)
 
 
+@pipeline.uni_in_place_mutator
 def enrich_variants_helper(graph, subgraph, function):
     """Adds the reference nodes for all variants of the given function
 
@@ -335,6 +343,7 @@ def enrich_variants_helper(graph, subgraph, function):
                 subgraph.add_unqualified_edge(u, v, HAS_VARIANT)
 
 
+@pipeline.uni_in_place_mutator
 def enrich_variants(graph, subgraph):
     """Adds the reference nodes for all variants of genes, RNAs, miRNAs, and proteins
 
@@ -359,6 +368,7 @@ def enrich_variants(graph, subgraph):
     enrich_variants_helper(graph, subgraph, GENE)
 
 
+@pipeline.uni_in_place_mutator
 def enrich_unqualified(graph, subgraph):
     """Enriches the subgraph with the unqualified edges from the graph.
 
@@ -386,6 +396,7 @@ def enrich_unqualified(graph, subgraph):
     enrich_variants(graph, subgraph)
 
 
+@pipeline.uni_in_place_mutator
 def expand_internal(graph, subgraph, edge_filters=None):
     """Edges between entities in the subgraph that pass the given filters
 
@@ -417,6 +428,7 @@ def expand_internal(graph, subgraph, edge_filters=None):
             log.debug('Multiple relationship types found between %s and %s', u, v)
 
 
+@pipeline.uni_in_place_mutator
 def expand_internal_causal(graph, subgraph):
     """Adds causal edges between entities in the subgraph. Is an extremely thin wrapper around :func:`expand_internal`.
 
@@ -433,6 +445,7 @@ def expand_internal_causal(graph, subgraph):
     expand_internal(graph, subgraph, edge_filters=keep_causal_edges)
 
 
+@pipeline.uni_in_place_mutator
 def expand_node_neighborhood(graph, subgraph, node):
     """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
     in place.
@@ -475,6 +488,20 @@ def expand_node_neighborhood(graph, subgraph, node):
         safe_add_edge(subgraph, node, successor, k, d)
 
 
+@pipeline.uni_in_place_mutator
+def expand_all_node_neighborhoods(graph, subgraph):
+    """Expands the neighborhoods of all nodes in the given subgraph
+    
+    :param graph: The graph containing the stuff to add
+    :type graph: pybel.BELGraph
+    :param subgraph: The graph to add stuff to
+    :type subgraph: pybel.BELGraph 
+    """
+    for node in subgraph.nodes_iter():
+        expand_node_neighborhood(graph, subgraph, node)
+
+
+@pipeline.uni_in_place_mutator
 def expand_upstream_causal_subgraph(graph, subgraph):
     """Adds the upstream causal relations to the given subgraph
 

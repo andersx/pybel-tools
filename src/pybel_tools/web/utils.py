@@ -1,33 +1,33 @@
 # -*- coding: utf-8 -*-
 
-import os
-
 import flask
 
-from pybel.manager.cache import CacheManager
-from pybel.manager.graph_cache import GraphCacheManager
+from pybel.manager.cache import build_manager
 from pybel.parser.parse_metadata import MetadataParser
-from .constants import PYBEL_CACHE_CONNECTION, PYBEL_DEFINITION_MANAGER, PYBEL_METADATA_PARSER, PYBEL_GRAPH_MANAGER
-from ..utils import build_template_environment, render_template_by_env
+from .constants import PYBEL_CACHE_CONNECTION, PYBEL_DEFINITION_MANAGER, PYBEL_METADATA_PARSER
+from ..utils import build_template_renderer
 
 __all__ = [
-    'set_definition_manager',
-    'get_definition_manager',
-    'set_graph_manager',
-    'get_graph_manager',
+    'get_cache_connection',
+    'set_cache_manager',
+    'get_cache_manager',
     'set_metadata_parser',
     'get_metadata_parser',
 ]
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_ENVIRONMENT = build_template_environment(HERE)
+render_template = build_template_renderer(__file__)
 
 
-def render_template(template_filename, **context):
-    return render_template_by_env(TEMPLATE_ENVIRONMENT, template_filename, context=context)
+def get_cache_connection(app):
+    """Gets the connection string from the configuration of the Flask app
+    
+    :param app: A Flask application
+    :type app: flask.Flask
+    """
+    return app.config.get(PYBEL_CACHE_CONNECTION)
 
 
-def set_definition_manager(app, definition_manager):
+def set_cache_manager(app, definition_manager):
     """Sets the definition cache manager associated with a given Flask app
     
     :param app: A Flask application
@@ -37,7 +37,7 @@ def set_definition_manager(app, definition_manager):
     app.config[PYBEL_DEFINITION_MANAGER] = definition_manager
 
 
-def get_definition_manager(app):
+def get_cache_manager(app):
     """Gets the definition cache manager associated with a given Flask app
     
     :param app: A Flask application
@@ -45,6 +45,10 @@ def get_definition_manager(app):
     :return: The app's definition manager
     :rtype: pybel.manager.cache.CacheManager
     """
+    if PYBEL_DEFINITION_MANAGER not in app.config:
+        manager = build_manager(get_cache_connection(app))
+        set_cache_manager(app, manager)
+
     return app.config.get(PYBEL_DEFINITION_MANAGER)
 
 
@@ -66,43 +70,8 @@ def get_metadata_parser(app):
     :return: The app's metadata parser
     :rtype: pybel.parser.parse_metadata.MetadataParser
     """
+    if PYBEL_METADATA_PARSER not in app.config:
+        mdp = MetadataParser(get_cache_manager(app))
+        set_metadata_parser(app, mdp)
+
     return app.config.get(PYBEL_METADATA_PARSER)
-
-
-def set_graph_manager(app, graph_manager):
-    """Sets the definition cache manager associated with a given Flask app
-    
-    :param app: A Flask application
-    :type app: flask.Flask
-    :type graph_manager: pybel.manager.graph_cache.GraphCacheManager
-    """
-    app.config[PYBEL_GRAPH_MANAGER] = graph_manager
-
-
-def get_graph_manager(app):
-    """Gets the definition cache manager associated with a given Flask app
-
-    :param app: A Flask application
-    :type app: flask.Flask
-    :return: The app's graph manager
-    :rtype: pybel.manager.graph_cache.GraphCacheManager
-    """
-    return app.config.get(PYBEL_GRAPH_MANAGER)
-
-
-def load_managers(app):
-    """Retrieves the :data:`PYBEL_CACHE_CONNECTION` from a Flask app and uses it to add definition manager,
-    metadata parser, and graph manager objects to the config.
-    
-    :param app: A Flask application 
-    :type app: flask.Flask
-    """
-    connection = app.config.get(PYBEL_CACHE_CONNECTION)
-
-    cm = CacheManager(connection=connection)
-    mdp = MetadataParser(cache_manager=cm)
-    gcm = GraphCacheManager(connection=connection)
-
-    set_definition_manager(app, cm)
-    set_metadata_parser(app, mdp)
-    set_graph_manager(app, gcm)

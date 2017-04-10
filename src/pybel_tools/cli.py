@@ -15,20 +15,38 @@ Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
 import logging
+import os
 import sys
 from getpass import getuser
 
 import click
 
-import pybel_tools as pbt
+import pybel.utils
 from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
-from pybel.utils import get_version as pybel_version
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
-from .service.dict_service import get_dict_service, build_dictionary_service_app, get_app
+from .ioutils import convert_recursive, upload_recusive
+from .service.compilation_service import build_synchronous_compiler_service
+from .service.database_service import build_database_service
+from .service.database_service import get_app as get_database_service_app
+from .service.dict_service import build_dictionary_service
+from .service.dict_service import get_app as get_dict_service_app
+from .service.summary_service import build_summary_service
+from .service.upload_service import build_pickle_uploader_service
+from .utils import get_version
+from .web.constants import SECRET_KEY, PYBEL_CACHE_CONNECTION
+from .web.parser_endpoint import build_parser_service
+from .web.sitemap_endpoint import build_sitemap_endpoint
 
 log = logging.getLogger(__name__)
+
+
+def set_debug(level):
+    logging.basicConfig(level=level)
+    logging.getLogger('pybel').setLevel(level)
+    logging.getLogger('pybel_tools').setLevel(level)
+    log.setLevel(level)
 
 
 @click.group(help="PyBEL-Tools Command Line Utilities on {}".format(sys.executable))
@@ -37,36 +55,96 @@ def main():
     pass
 
 
-@main.command()
+@main.group()
+def io():
+    """Upload and conversion utilities"""
+
+
+@io.command()
 @click.argument('path')
-@click.option('--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
-@click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-def upload(path, connection, skip_check_version):
-    """Sketchy uploader that doesn't respect database edge store"""
-    graph = from_pickle(path, check_version=(not skip_check_version))
-    to_database(graph, connection=connection)
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-r', '--recursive', help='Recursively upload all gpickles in the directory given as the path')
+@click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+def upload(path, connection, recursive, skip_check_version, debug):
+    """Quick uploader"""
+    if debug == 1:
+        set_debug(20)
+    elif debug == 2:
+        set_debug(10)
+
+    if not recursive:
+        graph = from_pickle(path, check_version=(not skip_check_version))
+        to_database(graph, connection=connection)
+    else:
+        upload_recusive(path, connection=connection)
+
+
+@io.command()
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-u', '--upload', is_flag=True, help='Enable automatic database uploading')
+@click.option('-d', '--directory', default=os.getcwd(),
+              help='The directory to search. Defaults to current working directory')
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+def convert(connection, upload, directory, debug):
+    """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
+    if debug == 1:
+        set_debug(20)
+    elif debug == 2:
+        set_debug(10)
+    convert_recursive(directory, connection=connection, upload=upload, pickle=True)
 
 
 @main.command()
-@click.option('--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection string. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('--host', help='Flask host. Defaults to localhost')
 @click.option('--port', help='Flask port. Defaults to 5000')
-@click.option('--debug', is_flag=True)
-@click.option('--flask-debug', is_flag=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+@click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-def service(connection, host, port, debug, flask_debug, skip_check_version):
-    """Runs the PyBEL API RESTful web service"""
-    if debug:
-        logging.basicConfig(level=10)
-        logging.getLogger('pybel').setLevel(10)
-        logging.getLogger('pybel_tools').setLevel(10)
-        log.setLevel(10)
-        log.info('Running PyBEL v%s', pybel_version())
-        log.info('Running PyBEL Tools v%s', pbt.utils.get_version())
+@click.option('--run-database-service', is_flag=True, help='Use the database service')
+@click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
+@click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
+@click.option('--run-compiler-service', is_flag=True, help='Enable the compiler page')
+@click.option('--run-summary-service', is_flag=True, help='Enable the graph summary page')
+@click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
+@click.option('--secret-key', help='Set the CSRF secret key')
+def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
+        run_uploader_service, run_compiler_service, run_summary_service, run_all, secret_key):
+    """Runs PyBEL Web"""
+    if debug == 1:
+        set_debug(20)
+    elif debug == 2:
+        set_debug(10)
 
-    app = get_app()
-    build_dictionary_service_app(app)
-    get_dict_service(app).load_networks(connection=connection, check_version=(not skip_check_version))
+    log.info('Running PyBEL v%s', pybel.utils.get_version())
+    log.info('Running PyBEL Tools v%s', get_version())
+
+    if run_database_service:
+        app = get_database_service_app()
+        app.config[PYBEL_CACHE_CONNECTION] = connection
+        build_database_service(app)
+    else:
+        app = get_dict_service_app()
+        app.config[PYBEL_CACHE_CONNECTION] = connection
+        build_dictionary_service(app, check_version=(not skip_check_version))
+
+    app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
+
+    if run_parser_service or run_all:
+        build_parser_service(app)
+
+    if run_uploader_service or run_all:
+        build_pickle_uploader_service(app)
+
+    if run_summary_service or run_all:
+        build_summary_service(app)
+
+    if run_compiler_service or run_all:
+        build_synchronous_compiler_service(app)
+
+    build_sitemap_endpoint(app)
+
     app.run(debug=flask_debug, host=host, port=port)
 
 
@@ -122,7 +200,7 @@ def document():
 @click.option('--licenses')
 @click.option('--output', type=click.File('wb'), default=sys.stdout)
 def boilerplate(document_name, contact, description, pmids, version, copyright, authors, licenses, output):
-    """Builds a template BEL document with the given PMID's"""
+    """Builds a template BEL document with the given PubMed identifiers"""
     write_boilerplate(
         document_name,
         contact,
@@ -138,8 +216,8 @@ def boilerplate(document_name, contact, description, pmids, version, copyright, 
 
 @document.command()
 @click.argument('namespaces', nargs=-1)
-@click.option('--path', type=click.File('r'), default=sys.stdin, help='Input BEL file path. Defaults to stdin.')
-@click.option('--directory', help='Output directory')
+@click.option('-p', '--path', type=click.File('r'), default=sys.stdin, help='Input BEL file path. Defaults to stdin.')
+@click.option('-d', '--directory', help='Output directory. Defaults to current working directory')
 def serialize_namespaces(namespaces, path, directory):
     """Parses a BEL document then serializes the given namespaces (errors and all) to the given directory"""
     graph = from_lines(path)

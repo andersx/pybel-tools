@@ -15,7 +15,8 @@ A general use for a node filter function is to use the built-in :func:`filter` i
 
 from __future__ import print_function
 
-from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY
+from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY, NAMESPACE, NAME
+from ..constants import CNAME
 
 __all__ = [
     'keep_node_permissive',
@@ -33,20 +34,67 @@ __all__ = [
 ]
 
 
-# Example filter
+# Appliers
+
+def filter_nodes(graph, node_filters):
+    """Applies a set of filters to the nodes iterator of a BEL graph
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node_filters: A node filter or list/tuple of node filters
+    :type node_filters: list or tuple or lambda
+    :return: An iterable of nodes that pass all filters
+    :rtype: iter
+    """
+
+    # If no filters are given, return the standard node iterator
+    if not node_filters:
+        for node in graph.nodes_iter():
+            yield node
+    else:
+        concatenated_filter = concatenate_node_filters(node_filters)
+        for node in graph.nodes_iter():
+            if concatenated_filter(graph, node):
+                yield node
+
+
+def count_passed_node_filter(graph, node_filters):
+    """Counts how many nodes pass a given set of filters
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node_filters: A node filter or list/tuple of node filters
+    :type node_filters: list or tuple or lambda
+    """
+    return sum(1 for _ in filter_nodes(graph, node_filters))
+
+
+def summarize_node_filter(graph, node_filters):
+    """Prints a summary of the number of nodes passing a given set of filters
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node_filters: A node filter or list/tuple of node filters
+    :type node_filters: list or tuple or lambda
+    """
+    passed = count_passed_node_filter(graph, node_filters)
+    print('{}/{} nodes passed {}'.format(passed, graph.number_of_nodes(), ', '.join(f.__name__ for f in node_filters)))
+
+
+# Example filters
 
 def keep_node_permissive(graph, node):
-    """A default node filter that always evaluates to :code:`True`.
+    """A default node filter that always evaluates to :data:`True`.
 
     Given BEL graph :code:`graph`, applying :func:`keep_node_permissive` with a filter on the nodes iterable
     as in :code:`filter(keep_node_permissive, graph.nodes_iter())` will result in the same iterable as
-    :code:`graph.nodes_iter()`
+    :meth:`pybel.BELGraph.nodes_iter`
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :param node: The node
     :type node: tuple
-    :return: Always returns :code:`True`
+    :return: Always returns :data:`True`
     :rtype: bool
     """
     return True
@@ -190,7 +238,47 @@ def function_exclusion_filter_builder(function):
     raise ValueError('Invalid type for argument: {}'.format(function))
 
 
-def data_does_not_contain_key_builder(key):
+def function_namespace_inclusion_builder(function, namespace):
+    def function_namespace_filter(graph, node):
+        if function != graph.node[node][FUNCTION]:
+            return False
+        return NAMESPACE in graph.node[node] and graph.node[node][NAMESPACE] == namespace
+
+    return function_namespace_filter
+
+
+def namespace_inclusion_builder(namespace):
+    def namespace_filter(graph, node):
+        return NAMESPACE in graph.node[node] and graph.node[node][NAMESPACE] == namespace
+
+    return namespace_filter
+
+
+def data_contains_key_builder(key):
+    """Builds a filter that passes only on nodes that have the given key in their data dictionary
+
+        :param key: A key for the node's data dictionary
+        :type key: str
+        :return: A node filter (graph, node) -> bool
+        :rtype: lambda
+        """
+
+    def data_contains_key(graph, node):
+        """Passes only for a node that contains the enclosed key in its data dictionary
+
+        :param graph: A BEL Graph
+        :type graph: pybel.BELGraph
+        :param node: A BEL node
+        :type node: tuple
+        :return: If the node contains the enclosed key in its data dictionary
+        :rtype: bool
+        """
+        return key in graph.node[node]
+
+    return data_contains_key
+
+
+def data_missing_key_builder(key):
     """Builds a filter that passes only on nodes that don't have the given key in their data dictionary
 
     :param key: A key for the node's data dictionary
@@ -212,6 +300,13 @@ def data_does_not_contain_key_builder(key):
         return key not in graph.node[node]
 
     return data_does_not_contain_key
+
+
+#: Passes for nodes that have been annotated with a canonical name
+keep_contains_cname = data_contains_key_builder(CNAME)
+
+#: Fails for nodes that have been annotated with a canonical name
+keep_missing_cname = data_missing_key_builder(CNAME)
 
 
 # Filter Builders
@@ -305,48 +400,44 @@ def upstream_leaf_predicate(graph, node):
 
 # TODO node filter that is false for abundances with no in-edges
 
-# Appliers
 
-def filter_nodes(graph, filters):
-    """Applies a set of filters to the nodes iterator of a BEL graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param filters: A node filter or list/tuple of node filters
-    :type filters: list or tuple or lambda
-    :return: An iterable of nodes that pass all filters
-    :rtype: iter
+
+def build_node_data_search(key, data_filter):
+    """Passes for nodes who have the given key in their data dictionaries and whose associated values pass the given
+    filter function
+
+    :param key: The node data dictionary key to check
+    :type key: str
+    :param data_filter: 
+    :type data_filter: types.FunctionType
+    :return: 
     """
 
-    # If no filters are given, return the standard node iterator
-    if not filters:
-        for node in graph.nodes_iter():
-            yield node
+    def node_data_filter(graph, node):
+        return key in graph.node[node] and data_filter(graph.node[node][key])
+
+    return node_data_filter
+
+
+def build_node_key_search(query, key):
+    """Builds a node filter that only passes for nodes whose values for the given key are superstrings of the query 
+    string(s)
+    
+    :param query: The query string or strings to check if they're in the node name
+    :type query: str or iter[str]
+    :param key: The key for the node data dictionary. Should refer only to str values
+    :param name: str
+    """
+    if isinstance(query, str):
+        return build_node_data_search(key, lambda s: query.lower() in s.lower())
     else:
-        concatenated_filter = concatenate_node_filters(filters)
-        for node in graph.nodes_iter():
-            if concatenated_filter(graph, node):
-                yield node
+        return build_node_data_search(key, lambda s: any(q.lower() in s.lower() for q in query))
 
 
-def count_passed_node_filter(graph, filters):
-    """Counts how many nodes pass a given set of filters
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param filters: A node filter or list/tuple of node filters
-    :type filters: list
-    """
-    return sum(1 for _ in filter_nodes(graph, filters))
+def build_node_name_search(query):
+    return build_node_key_search(query, NAME)
 
 
-def summarize_node_filter(graph, filters):
-    """Prints a summary of the number of nodes passing a given set of filters
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param filters: A node filter or list/tuple of node filters
-    :type filters: list or tuple or lambda
-    """
-    passed = count_passed_node_filter(graph, filters)
-    print('{}/{} nodes passed {}'.format(passed, graph.number_of_nodes(), ', '.join(f.__name__ for f in filters)))
+def build_node_cname_search(query):
+    return build_node_key_search(query, CNAME)

@@ -11,6 +11,23 @@
     width: 80%;
 }
 
+.left {
+    border-right: 1px solid #888;
+    float: left;
+    padding-right: 10px;
+    width: 50%
+}
+
+.right {
+    float: right;
+    padding-left: 10px;
+    width: 50%
+}
+
+.center {
+    text-align: center
+}
+
 .not-rounded {
     border-radius: 0 !important;
     width: 100%;
@@ -34,9 +51,6 @@
     text-align: center;
 }
 
-td.bigger-rows {
-    line-height: 2.38 !important;
-}
 
 #bel-logo {
     height: 20px;

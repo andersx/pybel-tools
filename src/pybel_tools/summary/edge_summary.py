@@ -47,7 +47,7 @@ def get_edge_relations(graph):
     edge_relations = defaultdict(set)
     for u, v, d in graph.edges_iter(data=True):
         edge_relations[u, v].add(d[RELATION])
-    return edge_relations
+    return dict(edge_relations)
 
 
 def count_unique_relations(graph):

@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from pybel.constants import BIOPROCESS
 from ..generation import generate_mechanism
-from ..selection.induce_subgraph import get_subgraph_by_annotation
+from ..selection.induce_subgraph import get_subgraph_by_annotation_value
 from ..selection.utils import get_nodes_by_function
 from ..summary import get_annotation_values
 from ..utils import tanimoto_set_similarity
@@ -34,7 +34,7 @@ def compare(graph, annotation='Subgraph'):
 
     canonical_mechanisms = {}
     for sg in get_annotation_values(graph, annotation):
-        m = get_subgraph_by_annotation(graph, sg)
+        m = get_subgraph_by_annotation_value(graph, value=sg, annotation=annotation)
         # TODO filters?
         canonical_mechanisms[sg] = m
 

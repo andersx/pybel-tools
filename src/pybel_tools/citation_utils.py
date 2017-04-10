@@ -27,12 +27,15 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1, return_errors=Fa
     :param return_errors: Should a set of erroneous PubMed identifiers be returned?
     :type return_errors: bool
     :return: A dictionary of {pmid: pmid data dictionary} or a pair of this dictionary and a set ot erroneous
-            pmids if return_errors is :code:`True`
+            pmids if return_errors is :data:`True`
     :rtype: dict
     """
     pmids = [str(pmid).strip() for pmid in sorted(pmids)]
+    log.info('Querying %d PubMed identifiers', len(pmids))
+
     result = defaultdict(dict)
     errors = set()
+
     for pmidList in [','.join(pmids[i:i + group_size]) for i in range(0, len(pmids), group_size)]:
         url = EUTILS_URL_FMT.format(pmidList)
         res = requests.get(url)

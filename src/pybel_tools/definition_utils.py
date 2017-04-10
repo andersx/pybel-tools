@@ -11,21 +11,22 @@ import sys
 import time
 
 from pybel.constants import NAMESPACE_DOMAIN_TYPES, belns_encodings, METADATA_AUTHORS, METADATA_CONTACT, METADATA_NAME
-from pybel.manager.utils import parse_owl
+from pybel.utils import get_bel_resource
 from .summary.error_summary import get_incorrect_names
 from .summary.node_summary import get_names
 
 __all__ = [
     'make_namespace_header',
+    'make_annotation_header',
     'make_author_header',
     'make_citation_header',
     'make_properties_header',
     'write_namespace',
-    'write_namespace_from_owl',
-    'make_annotation_header',
     'write_annotation',
     'export_namespace',
     'export_namespaces',
+    'get_merged_namespace_names',
+    'check_cacheable',
 ]
 
 log = logging.getLogger(__name__)
@@ -40,8 +41,10 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
 
     :param name: The namespace name
     :param keyword: Preferred BEL Keyword, maximum length of 8
-    :param domain: One of: :code:`BiologicalProcess`, :code:`Chemical`, :code:`Gene and Gene Products`,
-                   or :code:`Other`
+    :param domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
+                    :data:`pybel.constants.NAMESPACE_DOMAIN_CHEMICAL`,
+                    :data:`pybel.constants.NAMESPACE_DOMAIN_GENE`, or
+                    :data:`pybel.constants.NAMESPACE_DOMAIN_OTHER`
     :param query_url: HTTP URL to query for details on namespace values (must be valid URL)
     :param description: Namespace description
     :param species: Comma-separated list of species taxonomy id's
@@ -76,7 +79,7 @@ def make_author_header(name=None, contact=None, copyright_str=None):
 
     :param name: Namespace's authors
     :param contact: Namespace author's contact info/email address
-    :param copyright_str: Namespace's copyright/license information. Defaults to :code:`Other/Proprietary`
+    :param copyright_str: Namespace's copyright/license information. Defaults to ``Other/Proprietary``
     :return: An iterable over the ``[Author]`` section of a BELNS file
     :rtype: iter
     """
@@ -146,8 +149,10 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
     :type namespace_name: str
     :param namespace_keyword: Preferred BEL Keyword, maximum length of 8
     :type namespace_keyword: str
-    :param namespace_domain: One of: :code:`BiologicalProcess`, :code:`Chemical`, :code:`Gene and Gene Products`,
-                             or :code:`Other`
+    :param namespace_domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_CHEMICAL`,
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_GENE`, or
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_OTHER`
     :type namespace_domain: str
     :param author_name: The namespace's authors
     :type author_name: str
@@ -189,7 +194,7 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
     :type file: file or file-like
     :param value_prefix: a prefix for each name
     :type value_prefix: str
-    :param sort_key: A function to sort the values with :code:`sorted`
+    :param sort_key: A function to sort the values with :func:`sorted`
     """
     file = sys.stdout if file is None else file
 
@@ -221,28 +226,6 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
         if not value.strip():
             continue
         print('{}{}|{}'.format(value_prefix, value.strip(), function_values), file=file)
-
-
-def write_namespace_from_owl(url, file=None):
-    """
-
-    :param url: Path to OWL file or filelike object
-    :type url: str
-    :param file: output stream. Defaults to :code:`sys.stdout` if None
-    :type file: file or file-like
-    """
-
-    owl = parse_owl(url)
-
-    write_namespace(owl['title'],
-                    owl['subject'],
-                    owl['description'],
-                    'Other',
-                    owl['creator'],
-                    owl['email'],
-                    url,
-                    owl.graph.nodes(),
-                    file=file)
 
 
 def make_annotation_header(keyword, description=None, usage=None, version=None, created=None):
@@ -396,3 +379,59 @@ def export_namespaces(graph, namespaces, directory=None, cacheable=False):
     directory = os.getcwd() if directory is None else directory  # avoid making multiple calls to os.getcwd later
     for namespace in namespaces:
         export_namespace(graph, namespace, directory=directory, cacheable=cacheable)
+
+
+def get_merged_namespace_names(locations, check_keywords=True):
+    """Loads many namespaces and combines their names.
+    
+    :param locations: An iterable of URLs or file paths pointing to BEL namespaces.
+    :type locations: iter
+    :param check_keywords: Should all the keywords be the same? Defaults to ``True``
+    :type check_keywords: bool
+    :return: A dictionary of {names: labels}
+    :rtype: dict
+    
+    Example Usage
+    
+    >>> graph = ...
+    >>> original_ns_url = ...
+    >>> export_namespace(graph, 'MBS') # Outputs in current directory to MBS.belns
+    >>> value_dict = get_merged_namespace_names([original_ns_url, 'MBS.belns'])
+    >>> with open('merged_namespace.belns', 'w') as f:
+    >>> ...  write_namespace('MyBrokenNamespace', 'MBS', 'Other', 'Charles Hoyt', 'PyBEL Citation', value_dict, file=f)
+    """
+    resources = {location: get_bel_resource(location) for location in locations}
+
+    if check_keywords:
+        resource_keywords = set(config['Namespace']['Keyword'] for config in resources.values())
+        if 1 != len(resource_keywords):
+            raise ValueError('Tried merging namespaces with different keywords: {}'.format(resource_keywords))
+
+    result = {}
+    for resource in resources:
+        result.update(resource['Values'])
+    return result
+
+
+def check_cacheable(config):
+    """Checks the config returned by :func:`pybel.utils.get_bel_resource` to determine if the resource should be cached.
+
+    If cannot be determined, returns ``False``
+
+    :param config: A configuration dictionary representing a BEL resource
+    :type config: dict
+    :return: Should this resource be cached
+    :rtype: bool
+    """
+
+    if 'Processing' in config and 'CacheableFlag' in config['Processing']:
+        flag = config['Processing']['CacheableFlag']
+
+        if 'yes' == flag:
+            return True
+        elif 'no' == flag:
+            return False
+        else:
+            return ValueError('Invalid value for CacheableFlag: {}'.format(flag))
+
+    return False

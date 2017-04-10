@@ -107,7 +107,7 @@ def get_names_by_namespace(graph):
         if NAMESPACE in data:
             result[data[NAMESPACE]].add(data[NAME])
 
-    return result
+    return dict(result)
 
 
 def get_names_with_errors(graph, namespace):

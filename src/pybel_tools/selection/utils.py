@@ -2,8 +2,9 @@
 
 from itertools import combinations
 
-from pybel.constants import FUNCTION, NAMESPACE
-from ..filters.node_filters import function_inclusion_filter_builder, filter_nodes
+from pybel.constants import FUNCTION
+from ..filters.node_filters import function_inclusion_filter_builder, filter_nodes, \
+    function_namespace_inclusion_builder, namespace_inclusion_builder
 
 __all__ = [
     'get_nodes_by_function',
@@ -37,9 +38,7 @@ def get_nodes_by_namespace(graph, namespace):
     :return: An iterable over nodes with the given function and namspace
     :rtype: iter
     """
-    for node, data in graph.nodes(data=True):
-        if NAMESPACE in data and data[NAMESPACE] == namespace:
-            yield node
+    return filter_nodes(graph, namespace_inclusion_builder(namespace))
 
 
 def get_nodes_by_function_namespace(graph, function, namespace):
@@ -54,9 +53,7 @@ def get_nodes_by_function_namespace(graph, function, namespace):
     :return: An iterable over nodes with the given function and namspace
     :rtype: iter
     """
-    for node, data in graph.nodes(data=True):
-        if function == data[FUNCTION] and NAMESPACE in data and data[NAMESPACE] == namespace:
-            yield node
+    return filter_nodes(graph, function_namespace_inclusion_builder(function, namespace))
 
 
 def get_triangles(graph, node):
@@ -81,8 +78,8 @@ def get_leaves_by_type(graph, function=None, prune_threshold=1):
 
     :param graph: a BEL network
     :type graph: pybel.BELGraph
-    :param function: If set, filters by the node's function from :code:`pybel.constants` like :code:`GENE`, :code:`RNA`,
-                     :code:`PROTEIN`, or :code:`BIOPROCESS`
+    :param function: If set, filters by the node's function from :mod:`pybel.constants` like :data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`,
+                     :data:`pybel.constants.PROTEIN`, or :data:`pybel.constants.BIOPROCESS`
     :type function: str
     :param prune_threshold: Removes nodes with less than or equal to this number of connections. Defaults to :code:`1`
     :type prune_threshold: int

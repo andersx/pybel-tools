@@ -1,0 +1,737 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}Networks{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/inspire-tree/1.12.1/inspire-tree.css"/>
+    <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/d3-context-menu/css/d3-context-menu.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/graph.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/legend.css') }}">
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    {{ fixes.ie8() }}
+
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
+    <script type="text/javascript"
+            src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.4.0/svg.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/blob-polyfill/1.0.20150320/Blob.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.4.2/d3-sankey.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/inspire-tree/1.12.1/inspire-tree-bundled.js"></script>
+
+    <script type="text/javascript">
+        // Filters to build tree
+        window.annotationFilters = {{ annotation_filter_json|safe }};
+        // Arrays with selected nodes to expand/delete
+        window.deleteNodes = [];
+        window.expandNodes = [];
+        // Global var with network_id
+        window.id = {{ network_id }};
+        window.seedMethod = '';
+    </script>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/graph_controller/graph_controller.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/d3-context-menu/js/d3-context-menu.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/home_controller/home_controller.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>{{ network_name }}</h1>
+        </div>
+        <div class="row"><!-- visualization row -->
+            <div class="col-lg-8">
+                <div id="graph-chart"></div>
+            </div>
+            <div class="col-lg-4" style="max-height: 550px;height: 550px;"><!-- filters and tools div -->
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#tree-panel" role="tab"><i
+                                class="fa fa-filter" aria-hidden="true"></i> Annotation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" data-toggle="tab" href="#nodes-panel" role="tab"><i
+                                class="fa fa-circle-o"
+                                aria-hidden="true"></i>
+                            Nodes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" data-toggle="tab" href="#edges-panel" role="tab"><i
+                                class="fa fa-long-arrow-right" aria-hidden="true"></i> Edges</a>
+                    </li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div class="tab-pane active" id="tree-panel" role="tabpanel"
+                         style="max-height: 509px;height: 509px; overflow:auto;">
+                        <div id="tree"></div>
+                    </div>
+                    <div class="tab-pane not-rounded" id="nodes-panel" role="tabpanel">
+                        <button class='btn btn-primary not-rounded' id='get-checked-nodes'>Show Selected Nodes</button>
+                        <div class="input-group">
+                                        <span class="input-group-addon not-rounded2" id="sizing-addon"><i
+                                                class="fa fa-connectdevelop fa-0.5x"></i></span>
+                            <input placeholder="Search Nodes" id="node-search"
+                                   class="wide form-control not-rounded"
+                                   aria-describedby="sizing-addon1" type="text"/>
+                        </div>
+                        <div class="not-rounded2" id="node-list"
+                             style="max-height: 434px;height: 434px; overflow:auto;"></div>
+                    </div>
+                    <div class="tab-pane not-rounded" id="edges-panel" role="tabpanel">
+                        <button class='btn btn-primary not-rounded' id='get-checked-edges'>Show Selected Edges</button>
+                        <div class="input-group">
+                                        <span class="input-group-addon not-rounded2" id="sizing-addon"><i
+                                                class="fa fa-connectdevelop fa-0.5x"></i></span>
+                            <input placeholder="Search Edged" id="edge-search"
+                                   class="wide form-control not-rounded"
+                                   aria-describedby="sizing-addon1" type="text"/>
+                        </div>
+                        <div id="edge-list" class="not-rounded2"
+                             style="max-height: 434px;height: 434px; overflow:auto;"></div>
+                    </div>
+                </div>
+            </div><!-- visualization row -->
+        </div>
+        <div class="row"><!-- button row -->
+            <div class="col-lg-8">
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
+                        data-target="#info-graph">
+                    Help
+                </button>
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#legend">
+                    Legend
+                </button>
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
+                    Path Search
+                </button>
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
+                        data-target="#algorithms">
+                    Algorithms
+                </button>
+                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
+                        data-target="#export">
+                    Export
+                </button>
+
+            </div>
+            <div class="col-lg-4">
+                <button type="button" id="submit-button" class="btn btn-primary button-padding">
+                    Refresh Network
+                </button>
+            </div>
+        </div><!-- button row -->
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-bordered table-hover">
+                    <tbody>
+                    <tr>
+                        <td id="table-11"></td>
+                        <td id="table-12"></td>
+                    </tr>
+                    <tr>
+                        <td id="table-21"></td>
+                        <td id="table-22"></td>
+                    </tr>
+                    <tr>
+                        <td id="table-31"></td>
+                        <td id="table-32"></td>
+                    </tr>
+                    <tr>
+                        <td id="table-41"></td>
+                        <td id="table-42"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="info-graph" class="modal fade"><!-- /.info-graph Modal -->
+        <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
+            <div class="modal-content"><!-- /.Modal content -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Help</h4>
+                </div>
+                <div class="modal-body text-left"><!-- /.Modal body -->
+                    <div class="center-table">
+                        <div class="table-wrapper">
+                            <table class="table table-responsive">
+                                <thead>
+                                <tr>
+                                    <th><b>Function</b></th>
+                                    <th><b>Action</b></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>Open node contextual menu</td>
+                                    <td>Right click on node</td>
+                                </tr>
+                                <tr>
+                                    <td>Open edge contextual menu</td>
+                                    <td>Right click on edge</td>
+                                </tr>
+                                <tr>
+                                    <td>Freeze graph</td>
+                                    <td>Press Space</td>
+                                </tr>
+                                <tr>
+                                    <td>Pin a node down (fix it)</td>
+                                    <td>Left click on the node and drag it</td>
+                                </tr>
+                                <tr>
+                                    <td>Show information about node/edge</td>
+                                    <td>Left click on the node/edge</td>
+                                </tr>
+                                <tr>
+                                    <td>Release node (unfix it)</td>
+                                    <td>Doubleclick on the node</td>
+                                </tr>
+                                <tr>
+                                    <td>Highlight node and its neighbourhood</td>
+                                    <td>Mouseover node</td>
+                                </tr>
+                                <tr>
+                                    <td>Zooming</td>
+                                    <td>Zooming buttons</td>
+                                </tr>
+                                <tr>
+                                    <td>Panning</td>
+                                    <td>Mouse click and drag</td>
+                                </tr>
+                                <tr>
+                                    <td>Undo changes</td>
+                                    <td>Double click in the graph</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- /.Modal body -->
+                <div class="modal-footer">
+                    <button type="button" id="hide_node_names" class="btn btn-info button-padding">Hide labels
+                    </button>
+                    <button type="button" id="restore_node_names" class="btn btn-info button-padding">Restore labels
+                    </button>
+                    <button type="button" id="restore" class="btn btn-info button-padding">Restore all labels
+                    </button>
+                    <button class="btn btn-default" data-dismiss="modal" type="button">
+                        Close
+                    </button>
+                </div>
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.info-graph Modal -->
+
+    <div id="legend" aria-hidden="true" style="display: none;" class="modal fade"><!-- /.Legend Modal -->
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Legend</h4>
+                </div> <!-- .modal-header -->
+                <div class="modal-body">
+                    <div id="accordion" role="tablist" aria-multiselectable="true">
+                        <div class="card">
+                            <div class="card-header center" role="tab" id="headingOne">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne"
+                                   aria-expanded="true" aria-controls="collapseOne">
+                                    Node legend
+                                </a>
+                            </div>
+                            <div id="collapseOne" class="collapse show" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="card-block">
+                                    <div class="table-wrapper">
+                                        <table class="table table-responsive">
+                                            <thead>
+                                            <tr>
+                                                <th>Functions</th>
+                                                <th>Symbol</th>
+                                                <th>Description</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td class="col-md-2">p()</td>
+                                                <td class="col-md-1">
+                                                    <div class="Protein"></div>
+                                                </td>
+                                                <td>Abundance of protein</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>a()</td>
+                                                <td>
+                                                    <div class="Abundance"></div>
+                                                </td>
+                                                <td>Abundance of chemical (or other non-gene, RNA, protein abundances)
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>r()</td>
+                                                <td>
+                                                    <div class="RNA"></div>
+                                                </td>
+                                                <td>Abundance of RNA</td>
+                                            </tr>
+                                            <tr>
+                                                <td>m()</td>
+                                                <td>
+                                                    <div class="miRNA"></div>
+                                                </td>
+                                                <td>Abundance of microRNA</td>
+                                            </tr>
+                                            <tr>
+                                                <td>g()</td>
+                                                <td>
+                                                    <div class="Gene"></div>
+                                                </td>
+                                                <td>Abundance of gene</td>
+                                            </tr>
+                                            <tr>
+                                                <td>composite()</td>
+                                                <td>
+                                                    <div class="Composite"></div>
+                                                </td>
+                                                <td>Multiple entity abundances synergize to produce an effect but are
+                                                    not
+                                                    known to be bound into a complex
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>complex()</td>
+                                                <td>
+                                                    <div class="Complex"></div>
+                                                </td>
+                                                <td>Multiple entity abundances are bound into a complex</td>
+                                            </tr>
+                                            <tr>
+                                                <td>path()</td>
+                                                <td>
+                                                    <div class="Pathology"></div>
+                                                </td>
+                                                <td>Disease or pathology process</td>
+                                            </tr>
+                                            <tr>
+                                                <td>bp()</td>
+                                                <td>
+                                                    <div class="BiologicalProcess"></div>
+                                                </td>
+                                                <td>Biological process</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                        <!-- .table -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header center" role="tab" id="headingTwo">
+                                <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo"
+                                   aria-expanded="false" aria-controls="collapseTwo">
+                                    Edge legend
+                                </a>
+                            </div>
+                            <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
+                                <div class="card-block">
+                                    <div class="table-wrapper">
+                                        <table class="table">
+                                            <thead>
+                                            <tr>
+                                                <th>Relationship</th>
+                                                <th>Line Style</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td>decreases</td>
+                                                <td>
+                                                    <hr class="legend-continuous-line" width="30%"/>
+                                                    <span class="after-hr">&#124;</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>directlyDecreases</td>
+                                                <td>
+                                                    <hr class="legend-continuous-line" width="30%"/>
+                                                    <span class="after-hr">&#124;</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>increases</td>
+                                                <td>
+                                                    <hr class="legend-continuous-line" width="30%"/>
+                                                    <span class="after-hr">&#9658;</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>directlyIncreases</td>
+                                                <td>
+                                                    <hr class="legend-continuous-line" width="30%"/>
+                                                    <span class="after-hr">&#9658;</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>negativeCorrelation</td>
+                                                <td>
+                                                    <hr class="legend-continuous-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>positiveCorrelation</td>
+                                                <td>
+                                                    <hr class="legend-continuous-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>causesNoChange</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>association</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>orthologous</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>transcribedTo</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>translatedTo</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>biomarkerFor</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>hasMember</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>hasComponent</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>isA</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>prognosticBiomarkerFor</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>rateLimitingStepOf</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>subProcessOf</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>hasProduct</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>hasVariant</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>hasModification</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>reactantIn</td>
+                                                <td>
+                                                    <hr class="legend-dashed-line" width="30%"/>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                        <!-- .table -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- .panel.panel-default -->
+                </div>
+                <!-- #accordian.panel-group -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        Close
+                    </button>
+                </div><!-- .modal-footer -->
+            </div>
+            <!-- .modal-body -->
+
+
+        </div><!-- .modal-content -->
+    </div>
+
+    <div id="paths" class="modal fade"><!-- /paths Modal -->
+        <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
+            <div class="modal-content"><!-- /.Modal content -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Path Mining</h4>
+                </div>
+                <div class="modal-body"><!-- /.Modal body -->
+                    <h4>Shortest Path Search</h4>
+                    <p>Highlight the shortest path between two nodes</p>
+                    <form id="shortest-path-form" method="get">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
+                        </span>
+                                    <input type="text" class="form-control" placeholder="Source node" name="source"
+                                           id="source-node" aria-describedby="sizing-addon1"/>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="input-group">
+                        <span class="input-group-addon" id="sizing-addon">
+                            <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
+                        </span>
+                                    <input type="text" class="form-control" placeholder="Target node" name="target"
+                                           id="target-node" aria-describedby="sizing-addon1"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label>
+                            <input type="checkbox" name="visualization-options" value="hide">
+                            Hide Other Nodes
+                        </label>
+                        <label>
+                            <input type="checkbox" name="undirectionalize" value="undirected">
+                            Remove Directionality
+                        </label>
+                        <input type="button" id="button-shortest-path" value="Submit"/>
+                    </form>
+                    <hr>
+                    <h4>All Path Search</h4>
+                    <p>Highlight all paths between two nodes</p>
+                    <form id="all-paths-form" method="get" class="form-inline">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-arrow-circle-o-right"
+                                                                   aria-hidden="true"></i></span>
+                                    <input class="form-control" placeholder="Source node" name="source"
+                                           id="source-node2"
+                                           aria-describedby="sizing-addon1" type="text"/>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-paper-plane-o"
+                                                                   aria-hidden="true"></i></span>
+                                    <input class="form-control" placeholder="Target node" name="target"
+                                           id="target-node2"
+                                           aria-describedby="sizing-addon1" type="text"/>
+                                </div>
+                            </div>
+                        </div>
+                        <label class="checkbox">
+                            <input type="checkbox" name="visualization-options" value="hide">
+                            Hide Other Nodes
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" name="undirectionalize" value="undirected">
+                            Remove Directionality
+                        </label>
+                        <input type="button" id="button-all-paths" value="Submit"/>
+                    </form>
+                </div><!-- /.Modal body -->
+
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                </div>
+
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.paths Modal -->
+
+    <div id="algorithms" class="modal fade"><!-- /Algorithms Modal -->
+        <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
+            <div class="modal-content"><!-- /.Modal content -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Algorithms</h4>
+                </div>
+                <div class="modal-body"><!-- /.Modal body -->
+                    <p>Visualize top nodes according to betweenness centrality</p>
+                    <form id="betweenness-centrality" method="get">
+                        <div class="input-group">
+                            <input placeholder="Number of nodes" name="betweenness" id="betweenness" type="text"/>
+                        </div>
+                        <div class="buttons">
+                            <input type="button" class="btn" id="betweenness-button" value="Submit"/>
+                        </div>
+                    </form>
+                </div><!-- /.Modal body -->
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                </div>
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.Algorithms Modal -->
+
+    <div id="export" class="modal fade"><!-- /.export-graph Modal -->
+        <div class="modal-dialog"><!-- /.Modal dialog -->
+            <div class="modal-content"><!-- /.Modal content -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Export</h4>
+                </div>
+                <div class="modal-body"><!-- /.Modal body -->
+                    <table class="table table-responsive">
+                        <thead>
+                        <tr>
+                            <th>Format</th>
+                            <th>Download</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Network to SVG</td>
+                            <td>
+                                <button type="button" id="save-svg-graph" class="btn btn-primary"
+                                        aria-label="Left Align">
+                                    <i class="fa fa-file-image-o"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to BEL</td>
+                            <td>
+                                <button type="button" id="bel-button" class="btn btn-primary" aria-label="Left Align">
+                                    <img alt="BEL-logo" id="bel-logo"
+                                         src="{{ url_for('static', filename='img/bel300x.png') }}"></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to <a href="http://graphml.graphdrawing.org/">GraphML</a></td>
+                            <td>
+                                <button type="button" id="graphml-button" class="btn btn-primary"
+                                        aria-label="Left Align">GraphML
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to CSV</td>
+                            <td>
+                                <button type="button" id="csv-button" class="btn btn-primary"
+                                        aria-label="Left Align">CSV
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to Bytes</td>
+                            <td>
+                                <button type="button" id="bytes-button" class="btn btn-primary"
+                                        aria-label="Left Align">Bytes
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Network to <a href="http://www.home.ndexbio.org/data-model/">CX</a></td>
+                            <td>
+                                <button type="button" id="cx-button" class="btn btn-primary"
+                                        aria-label="Left Align">CX
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div><!-- /.Modal body -->
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button">
+                        Close
+                    </button>
+                </div>
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.export-graph Modal -->
+{% endblock %}

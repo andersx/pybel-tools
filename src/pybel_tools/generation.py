@@ -10,6 +10,7 @@ and provide an even more rich mechanism inventory.
 """
 
 from pybel.constants import BIOPROCESS
+from . import pipeline
 from .mutation.deletion import remove_inconsistent_edges
 from .mutation.expansion import get_upstream_causal_subgraph, expand_upstream_causal_subgraph
 from .mutation.merge import collapse_consistent_edges
@@ -24,6 +25,7 @@ __all__ = [
 ]
 
 
+@pipeline.in_place_mutator
 def remove_unweighted_leaves(graph, key):
     """
 
@@ -51,6 +53,7 @@ def get_unweighted_sources(graph, key):
             yield node
 
 
+@pipeline.in_place_mutator
 def remove_unweighted_sources(graph, key):
     """Prunes unannotated nodes on the periphery of the subgraph
 
@@ -63,6 +66,7 @@ def remove_unweighted_sources(graph, key):
     graph.remove_nodes_from(nodes)
 
 
+@pipeline.in_place_mutator
 def prune_mechanism_by_data(graph, key):
     """
 
@@ -76,6 +80,7 @@ def prune_mechanism_by_data(graph, key):
     remove_unweighted_sources(graph, key)
 
 
+@pipeline.mutator
 def generate_mechanism(graph, node, key=None):
     """Generates a mechanistic subgraph upstream of the given node
 

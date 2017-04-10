@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import codecs  # To use a consistent encoding
 import os
 import re
@@ -23,6 +25,8 @@ INSTALL_REQUIRES = [
     'requests',
     'sqlalchemy',
     'flask',
+    'flask-bootstrap',
+    'flask-wtf',
     'flask-restless',
     'flask-restless-swagger',
     'networkx',

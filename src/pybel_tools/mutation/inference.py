@@ -4,6 +4,7 @@ import itertools as itt
 import logging
 
 from pybel.constants import *
+from .. import pipeline
 from ..constants import INFERRED_INVERSE
 from ..utils import safe_add_edge
 
@@ -27,6 +28,7 @@ def _infer_converter_helper(node, data, new_function):
     return new_tup, new_dict
 
 
+@pipeline.in_place_mutator
 def infer_central_dogmatic_translations(graph):
     """For all Protein entities, adds the missing origin RNA and RNA-Protein translation edge
 
@@ -40,6 +42,7 @@ def infer_central_dogmatic_translations(graph):
             graph.add_unqualified_edge(rna_node, node, TRANSLATED_TO)
 
 
+@pipeline.in_place_mutator
 def infer_central_dogmatic_transcriptions(graph):
     """For all RNA entities, adds the missing origin Gene and Gene-RNA transcription edge
 
@@ -53,6 +56,7 @@ def infer_central_dogmatic_transcriptions(graph):
             graph.add_unqualified_edge(gene_node, node, TRANSCRIBED_TO)
 
 
+@pipeline.in_place_mutator
 def infer_central_dogma(graph):
     """Adds all RNA-Protein translations then all Gene-RNA transcriptions by applying
     :func:`infer_central_dogmatic_translations` then :func:`infer_central_dogmatic_transcriptions`
@@ -64,6 +68,7 @@ def infer_central_dogma(graph):
     infer_central_dogmatic_transcriptions(graph)
 
 
+@pipeline.in_place_mutator
 def infer_missing_two_way_edges(graph):
     """If a two way edge exists, and the opposite direction doesn't exist, add it to the graph
 
@@ -77,6 +82,7 @@ def infer_missing_two_way_edges(graph):
             infer_missing_backwards_edge(graph, u, v, k)
 
 
+@pipeline.in_place_mutator
 def infer_missing_inverse_edge(graph, relations):
     """Adds inferred edges based on pre-defined axioms
 
@@ -94,6 +100,7 @@ def infer_missing_inverse_edge(graph, relations):
             graph.add_edge(v, u, key=unqualified_edge_code[relation], **{RELATION: INFERRED_INVERSE[relation]})
 
 
+@pipeline.in_place_mutator
 def infer_missing_backwards_edge(graph, u, v, key):
     """Adds the same edge, but in the opposite direction if not already present
 
@@ -114,6 +121,7 @@ def infer_missing_backwards_edge(graph, u, v, key):
     safe_add_edge(graph, v, u, key=key, attr_dict=graph.edge[u][v][k])
 
 
+@pipeline.uni_in_place_mutator
 def enrich_internal_unqualified_edges(graph, subgraph):
     """Adds the missing unqualified edges between entities in the subgraph that are contained within the full graph
 

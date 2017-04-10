@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-An variant of the Network Pertubation Amplitude algorithm
-
-"""
+"""An variant of the Network Perturbation Amplitude algorithm"""
 
 from __future__ import print_function
 

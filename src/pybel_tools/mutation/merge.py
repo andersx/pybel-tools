@@ -3,11 +3,13 @@
 """This module contains utilities to help merge data"""
 
 from pybel.constants import RELATION
+from .. import pipeline
 from ..summary.edge_summary import get_consistent_edges
 from ..utils import all_edges_iter
 
 __all__ = [
     'left_merge',
+    'right_merge',
     'collapse_consistent_edges',
 ]
 
@@ -36,6 +38,18 @@ def left_merge(g, h):
             g.add_edge(u, v, attr_dict=d)
 
 
+def right_merge(g, h):
+    """Performs :func:`left_merge` on the arguments in the opposite order.
+
+    :param g: A BEL Graph
+    :type g: pybel.BELGraph
+    :param h: A BEL Graph
+    :type h: pybel.BELGraph
+    """
+    left_merge(h, g)
+
+
+@pipeline.in_place_mutator
 def collapse_consistent_edges(graph):
     """Collapses consistent edges together
 

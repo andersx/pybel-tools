@@ -1,4 +1,4 @@
-from pybel.constants import NAME
+from ..filters.node_filters import filter_nodes, build_node_name_search
 
 __all__ = [
     'search_node_names'
@@ -11,21 +11,22 @@ def search_node_names(graph, query):
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :param query: The search query
-    :type query: str
+    :type query: str or iter[str]
     :return: An iterator over nodes whose names match the search query
     :rtype: iter
     """
-    if isinstance(query, str):
-        sname = query.lower()
-        for node, data in graph.nodes_iter(data=True):
-            if NAME not in data:
-                continue
-            if sname in data[NAME].lower():
-                yield node
-    else:
-        snames = {q.lower() for q in query}
-        for node, data in graph.nodes_iter(data=True):
-            if NAME not in data:
-                continue
-            if any(sname in data[NAME].lower() for sname in snames):
-                yield node
+
+    return filter_nodes(graph, build_node_name_search(query))
+
+
+def search_node_cnames(graph, query):
+    """Searches for nodes whose canonical names contain a given string(s)
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param query: The search query
+    :type query: str or iter[str]
+    :return: An iterator over nodes whose names match the search query
+    :rtype: iter
+    """
+    return filter_nodes(graph, build_node_name_search(query))
