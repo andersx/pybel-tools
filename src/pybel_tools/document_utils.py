@@ -45,7 +45,7 @@ def split_document(lines):
     return documents, definitions, statements
 
 
-def merge(output_path, *input_paths, merge_document_name=None, merge_document_contact=None,
+def merge(output_path, input_paths, merge_document_name=None, merge_document_contact=None,
           merge_document_description=None):
     """Merges multiple BEL documents and maintains author information in comments
 
