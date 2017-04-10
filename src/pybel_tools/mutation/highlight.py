@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from .. import pipeline
+
 NODE_HIGHLIGHT = 'pybel_highlight'
 NODE_HIGHLIGHT_DEFAULT_COLOR = 'red'
 EDGE_HIGHLIGHT = 'pybel_highlight'
 EDGE_HIGHLIGHT_DEFAULT_COLOR = 'red'
 
 
+@pipeline.in_place_mutator
 def highlight_nodes(graph, nodes, color=None):
     """Adds a highlight tag to the given nodes
     
@@ -20,13 +23,19 @@ def highlight_nodes(graph, nodes, color=None):
         graph.node[node][NODE_HIGHLIGHT] = NODE_HIGHLIGHT_DEFAULT_COLOR if color is None else color
 
 
+def is_node_highlighted(graph, node):
+    """Returns if the given node is highlighted"""
+    return NODE_HIGHLIGHT in graph.node[node]
+
+
 def remove_highlight_nodes(graph, nodes=None):
     """Removes the highlight from the given nodes, or all nodes if none given"""
     for node in graph.nodes_iter() if nodes is None else nodes:
-        if NODE_HIGHLIGHT in graph.node[node]:
+        if is_node_highlighted(graph, node):
             del graph.node[node][NODE_HIGHLIGHT]
 
 
+@pipeline.in_place_mutator
 def highlight_edges(graph, edges, color=None):
     """Adds a highlight tag to the given edges
     
@@ -42,6 +51,11 @@ def highlight_edges(graph, edges, color=None):
         graph.edge[u][v][k][EDGE_HIGHLIGHT] = EDGE_HIGHLIGHT_DEFAULT_COLOR if color is None else color
 
 
+def is_edge_highlighted(graph, u, v, k, d):
+    """Returns if the given edge is highlighted"""
+    return EDGE_HIGHLIGHT in graph.edge[u][v][k]
+
+
 def remove_highlight_edges(graph, edges=None):
     """Removes the highlight from the given edges, or all edges if none given
     
@@ -51,7 +65,7 @@ def remove_highlight_edges(graph, edges=None):
     :type edges: iter[tuple]
     """
     for u, v, k, d in graph.edges_iter(keys=True, data=True) if edges is None else edges:
-        if EDGE_HIGHLIGHT in graph.edge[u][v][k]:
+        if is_edge_highlighted(graph, u, v, k, d):
             del graph.edge[u][v][k][EDGE_HIGHLIGHT]
 
 
