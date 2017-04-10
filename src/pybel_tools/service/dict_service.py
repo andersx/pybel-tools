@@ -35,7 +35,7 @@ FORMAT = 'format'
 UNDIRECTED = 'undirected'
 NODE_NUMBER = 'node_number'
 GRAPH_ID = 'graphid'
-SEED_TYPE = 'analysis'
+SEED_TYPE = 'seed_method'
 SEED_DATA_AUTHORS = 'authors'
 SEED_DATA_PMIDS = 'pmids'
 SEED_DATA_NODES = 'nodes'
@@ -91,7 +91,7 @@ def render_network(graph, network_id=None):
                  annotations.items()]
     return flask.render_template(
         'explorer.html',
-        filter_json=json_dict,
+        annotation_filter_json=json_dict,
         network_id=network_id if network_id is not None else "0",
         network_name=name
     )
@@ -150,11 +150,11 @@ def build_dictionary_service(app, preload=True, check_version=True):
         """
         network_id = request.args.get(GRAPH_ID, network_id)
 
-        if network_id == 0:
+        if network_id in {0, "0"}:
             network_id = None
 
         seed_method = request.args.get(SEED_TYPE)
-        if seed_method is not None and seed_method not in SEED_TYPES:
+        if seed_method and seed_method not in SEED_TYPES:
             raise ValueError('Invalid seed method: {}'.format(seed_method))
 
         if seed_method and seed_method == SEED_TYPE_PROVENANCE:
@@ -259,6 +259,8 @@ def build_dictionary_service(app, preload=True, check_version=True):
     @app.route('/api/network/<int:network_id>', methods=['GET'])
     def get_network(network_id=None):
         """Builds a graph from the given network id and sends it in the given format"""
+        #log.info('requested network: %s', request.args)
+
         graph = get_graph_from_request(network_id=network_id)
         return serve_network(graph, request.args.get(FORMAT))
 
@@ -284,7 +286,6 @@ def build_dictionary_service(app, preload=True, check_version=True):
 
         source = int(source)
         target = int(target)
-
 
         undirected = UNDIRECTED in request.args
 

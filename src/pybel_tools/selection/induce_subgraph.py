@@ -243,7 +243,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
         result = get_subgraph_by_neighborhood(graph, seed_data)
     elif seed_method == SEED_TYPE_PROVENANCE:
         result = get_subgraph_by_provenance(graph, seed_data)
-    elif seed_method is None:  # Otherwise, don't seed a subgraph
+    elif not seed_method:  # Otherwise, don't seed a subgraph
         result = graph.copy()
         log.debug('no seed function - using full network: %s', result.name)
     else:
