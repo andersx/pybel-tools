@@ -8,14 +8,11 @@
 
 {% block styles %}
     {{ super() }}
-    <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
     <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
-    <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/inspire-tree/1.12.1/inspire-tree.css"/>
-
+    <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
     <link rel="stylesheet" href="{{ url_for('static', filename='js/d3-context-menu/css/d3-context-menu.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/graph.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/legend.css') }}">
@@ -24,16 +21,11 @@
 {% block head %}
     {{ super() }}
     {{ fixes.ie8() }}
+
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
     <script type="text/javascript"
             src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
     <script type="text/javascript"
@@ -47,10 +39,6 @@
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.4.2/d3-sankey.js"></script>
     <script type="text/javascript"
-            src="{{ url_for('static', filename='js/graph_controller/graph_controller.js') }}"></script>
-    <script type="text/javascript"
-            src="{{ url_for('static', filename='js/d3-context-menu/js/d3-context-menu.js') }}"></script>
-    <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/inspire-tree/1.12.1/inspire-tree-bundled.js"></script>
 
     <script type="text/javascript">
@@ -62,7 +50,18 @@
         // Global var with network_id
         window.id = {{ network_id }};
     </script>
+{% endblock %}
 
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/graph_controller/graph_controller.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/d3-context-menu/js/d3-context-menu.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/home_controller/home_controller.js') }}"></script>
 {% endblock %}
 
 {% block content %}
