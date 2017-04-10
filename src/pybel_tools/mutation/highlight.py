@@ -2,6 +2,19 @@
 
 from .. import pipeline
 
+__all__ = [
+    'NODE_HIGHLIGHT',
+    'EDGE_HIGHLIGHT',
+    'is_node_highlighted',
+    'highlight_nodes',
+    'remove_highlight_nodes',
+    'is_edge_highlighted',
+    'highlight_edges',
+    'remove_highlight_edges',
+    'highlight_subgraph',
+    'remove_highlight_subgraph',
+]
+
 NODE_HIGHLIGHT = 'pybel_highlight'
 NODE_HIGHLIGHT_DEFAULT_COLOR = 'red'
 EDGE_HIGHLIGHT = 'pybel_highlight'
