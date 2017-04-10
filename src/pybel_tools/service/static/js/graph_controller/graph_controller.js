@@ -1046,7 +1046,7 @@ function initD3Force(graph, tree) {
             }
 
             $.ajax({
-                url: '/api/paths/shortest/' + window.id,
+                url: '/api/paths/' + window.id,
                 type: shortestPathForm.attr('method'),
                 dataType: 'json',
                 data: $.param(args, true),
@@ -1112,7 +1112,7 @@ function initD3Force(graph, tree) {
             var args = parameterFilters(tree);
             args["source"] = nodeNamesToId[allPathForm.find('input[name="source"]').val()];
             args["target"] = nodeNamesToId[allPathForm.find('input[name="target"]').val()];
-
+            args["paths_method"] = "all";
             var undirected = allPathForm.find('input[name="undirectionalize"]').is(":checked");
 
             if (undirected) {
@@ -1120,7 +1120,7 @@ function initD3Force(graph, tree) {
             }
 
             $.ajax({
-                url: '/api/paths/all/' + window.id,
+                url: '/api/paths/' + window.id,
                 type: allPathForm.attr('method'),
                 dataType: 'json',
                 data: $.param(args, true),

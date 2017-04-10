@@ -39,6 +39,7 @@ SEED_TYPE = 'analysis'
 SEED_DATA_AUTHORS = 'authors'
 SEED_DATA_PMIDS = 'pmids'
 SEED_DATA_NODES = 'nodes'
+PATHS_METHOD = 'paths_method'
 
 BLACK_LIST = {
     GRAPH_ID,
@@ -52,7 +53,8 @@ BLACK_LIST = {
     SEED_TYPE,
     SEED_DATA_AUTHORS,
     SEED_DATA_PMIDS,
-    SEED_DATA_NODES
+    SEED_DATA_NODES,
+    PATHS_METHOD
 }
 
 
@@ -265,17 +267,24 @@ def build_dictionary_service(app, preload=True, check_version=True):
         res = api.get_incident_edges(network_id, node_id)
         return jsonify(res)
 
-    @app.route('/api/paths/shortest/<int:network_id>', methods=['GET'])
-    def get_shortest_path(network_id):
+    @app.route('/api/paths')
+    @app.route('/api/paths/<int:network_id>', methods=['GET'])
+    def get_shortest_path(network_id=None):
         graph = get_graph_from_request(network_id=network_id)
 
-        try:
-            raise_invalid_source_target()
-        except ValueError as e:
-            return str(e)
+        if SOURCE_NODE not in request.args:
+            raise ValueError('no source')
 
-        source = int(request.args.get(SOURCE_NODE))
-        target = int(request.args.get(TARGET_NODE))
+        if TARGET_NODE not in request.args:
+            raise ValueError('no target')
+
+        method = request.args.get(PATHS_METHOD)
+        source = request.args.get(SOURCE_NODE)
+        target = request.args.get(TARGET_NODE)
+
+        source = int(source)
+        target = int(target)
+
 
         undirected = UNDIRECTED in request.args
 
@@ -289,6 +298,11 @@ def build_dictionary_service(app, preload=True, check_version=True):
         if undirected:
             graph = graph.to_undirected()
 
+        if method == 'all':
+            all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
+            # all_paths is a generator -> convert to list and create a list of lists (paths)
+            return jsonify([path for path in list(all_paths)])
+
         try:
             shortest_path = nx.shortest_path(graph, source=source, target=target)
         except nx.NetworkXNoPath:
@@ -296,33 +310,6 @@ def build_dictionary_service(app, preload=True, check_version=True):
             return 'No paths between the selected nodes'
 
         return jsonify(shortest_path)
-
-    @app.route('/api/paths/all/<int:network_id>', methods=['GET'])
-    def get_all_path(network_id):
-        graph = get_graph_from_request(network_id=network_id)
-
-        try:
-            raise_invalid_source_target()
-        except ValueError as e:
-            return str(e)
-
-        source = int(request.args.get(SOURCE_NODE))
-        target = int(request.args.get(TARGET_NODE))
-
-        undirected = UNDIRECTED in request.args
-
-        if source not in graph or target not in graph:
-            log.info('Source/target node not in graph')
-            log.info('Nodes in graph: %s', graph.nodes())
-            return flask.abort(500)
-
-        if undirected:
-            graph = graph.to_undirected()
-
-        all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
-
-        # all_paths is a generator -> convert to list and create a list of lists (paths)
-        return jsonify([path for path in list(all_paths)])
 
     @app.route('/api/centrality/<int:network_id>', methods=['GET'])
     def get_nodes_by_betweenness_centrality(network_id):
