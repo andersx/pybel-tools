@@ -27,7 +27,7 @@ def render_error(exception):
     return render_template('parse_error.html', error_text=str(exception), traceback_lines=traceback_lines)
 
 
-def build_synchronous_compiler_service(app, enable_cache=False):
+def build_synchronous_compiler_service(app, enable_cache=True):
     """Adds the endpoints for a synchronous web validation web app
 
     :param app: A Flask application
