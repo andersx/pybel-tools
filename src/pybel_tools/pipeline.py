@@ -2,6 +2,8 @@
 
 """This module assists in running complex workflows on BEL graphs"""
 
+from __future__ import print_function
+
 import logging
 import pickle
 from functools import wraps
