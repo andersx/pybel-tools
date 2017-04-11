@@ -101,7 +101,6 @@ def render_network(graph, network_id=None):
     name = graph.name or DEFAULT_TITLE
     return flask.render_template(
         'explorer.html',
-        annotation_filter_json=get_tree_annotations(graph),
         network_id=network_id if network_id is not None else "0",
         network_name=name
     )

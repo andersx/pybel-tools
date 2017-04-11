@@ -32,7 +32,8 @@ function renderNetwork(tree) {
     $.getJSON("/api/network/" + '?' + node_param, function (data) {
         initD3Force(data, tree);
     });
-    window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
+    // TODO: change window.id to another variable
+    window.history.pushState("BiNE", "BiNE", "/explore/" + window.id + "?" + node_param);
 }
 
 function encodeQueryData(data) {
@@ -63,6 +64,7 @@ function doAjaxCall(url) {
 
 $(document).ready(function () {
 
+    // Get the URL parameters (except for the int after /explore/ representing the network_id)
     var URLString = function () {
         // This function is anonymous, is executed immediately and
         // the return value is assigned to QueryString!
@@ -86,8 +88,22 @@ $(document).ready(function () {
         return query_string;
     }();
 
+    // if graphid not in arguments check if it is after /explore/
+    if (!('graphid' in URLString)) {
+        // grab the last part of the URL after /explore/...
+        var lastPartURL = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
+        // if there is anything after the last slash and not starts with "?" is the network_id
+        if ((lastPartURL) && ("?" !== lastPartURL.substring(0, 1) )) {
+            // split by ? get the int representing the network_id
+            URLString["graphid"] = lastPartURL.split("?")[0];
+        }
+    }
+
     var annotationFilter = null;
 
+    console.log(URLString);
+
+    // get tree for graph id or supernetwork if none
     if ('graphid' in URLString) {
         annotationFilter = doAjaxCall("/api/tree/?graphid=" + URLString["graphid"]);
     } else {
