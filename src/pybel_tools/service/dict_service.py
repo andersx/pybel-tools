@@ -296,7 +296,7 @@ def build_dictionary_service(app, preload=True, check_version=True):
 
     @app.route('/api/paths')
     @app.route('/api/paths/<int:network_id>', methods=['GET'])
-    def get_shortest_path(network_id=None):
+    def get_paths_api(network_id=None):
         graph = get_graph_from_request(network_id=network_id)
 
         if SOURCE_NODE not in request.args:

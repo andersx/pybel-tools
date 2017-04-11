@@ -1195,19 +1195,19 @@ function initD3Force(graph, tree) {
         resetAttributesDoubleClick()
     });
 
-    var shortestPathForm = $("#shortest-path-form");
+    var pathForm = $("#path-form");
 
-    // Get the shortest path between two nodes via Ajax or get the BEL for the shortest path
-    $('#button-shortest-path').on('click', function () {
-        if (shortestPathForm.valid()) {
+    $('#button-paths').on('click', function () {
+        if (pathForm.valid()) {
 
-            var checkbox = shortestPathForm.find('input[name="visualization-options"]').is(":checked");
+            var checkbox = pathForm.find('input[name="visualization-options"]').is(":checked");
 
             var args = parameterFilters(tree);
-            args["source"] = nodeNamesToId[shortestPathForm.find('input[name="source"]').val()];
-            args["target"] = nodeNamesToId[shortestPathForm.find('input[name="target"]').val()];
+            args["source"] = nodeNamesToId[pathForm.find('input[name="source"]').val()];
+            args["target"] = nodeNamesToId[pathForm.find('input[name="target"]').val()];
+            args["paths_method"] = $('input[name=paths_method]:checked', pathForm).val();
 
-            var undirected = shortestPathForm.find('input[name="undirectionalize"]').is(":checked");
+            var undirected = pathForm.find('input[name="undirectionalize"]').is(":checked");
 
             if (undirected) {
                 args["undirected"] = undirected;
@@ -1215,32 +1215,47 @@ function initD3Force(graph, tree) {
 
             $.ajax({
                 url: '/api/paths/' + window.networkID,
-                type: shortestPathForm.attr('method'),
+                type: pathForm.attr('method'),
                 dataType: 'json',
                 data: $.param(args, true),
-                success: function (shortestPathNodes) {
+                success: function (paths) {
 
-                    // Change style in force
-                    resetAttributes();
+                    if (args["paths_method"] === "all") {
+                        if (paths.length == 0) {
+                            alert('No paths between the selected nodes');
+                        }
 
-                    var nodesNotInPath = nodesNotInArray(shortestPathNodes);
+                        resetAttributes();
 
-                    var edgesNotInPath = g.selectAll(".link").filter(function (el) {
-                        // Source and target should be present in the edge and the distance in the array should be one
-                        return !((shortestPathNodes.indexOf(el.source.id) >= 0 && shortestPathNodes.indexOf(el.target.id) >= 0)
-                        && (Math.abs(shortestPathNodes.indexOf(el.source.id) - shortestPathNodes.indexOf(el.target.id)) == 1));
-                    });
-
-                    // If checkbox is True -> Hide all, Else -> Opacity 0.1
-                    if (checkbox == true) {
-                        nodesNotInPath.style("visibility", "hidden");
-                        edgesNotInPath.style("visibility", "hidden");
-                    } else {
-                        nodesNotInPath.style("opacity", "0.1");
-                        edgesNotInPath.style("opacity", "0.05");
+                        // Apply changes in style for select paths
+                        hideNodesTextInPaths(paths, false);
+                        colorPaths(paths, checkbox);
+                        resetAttributesDoubleClick()
                     }
-                    hideNodesText(shortestPathNodes, checkbox);
-                    resetAttributesDoubleClick();
+                    else {
+
+                        // Change style in force
+                        resetAttributes();
+
+                        var nodesNotInPath = nodesNotInArray(paths);
+
+                        var edgesNotInPath = g.selectAll(".link").filter(function (el) {
+                            // Source and target should be present in the edge and the distance in the array should be one
+                            return !((paths.indexOf(el.source.id) >= 0 && paths.indexOf(el.target.id) >= 0)
+                            && (Math.abs(paths.indexOf(el.source.id) - paths.indexOf(el.target.id)) == 1));
+                        });
+
+                        // If checkbox is True -> Hide all, Else -> Opacity 0.1
+                        if (checkbox == true) {
+                            nodesNotInPath.style("visibility", "hidden");
+                            edgesNotInPath.style("visibility", "hidden");
+                        } else {
+                            nodesNotInPath.style("opacity", "0.1");
+                            edgesNotInPath.style("opacity", "0.05");
+                        }
+                        hideNodesText(paths, checkbox);
+                        resetAttributesDoubleClick();
+                    }
                 }, error: function (request) {
                     alert(request.responseText);
                 }
@@ -1248,8 +1263,8 @@ function initD3Force(graph, tree) {
         }
     });
 
-    // Shortest path validation form
-    shortestPathForm.validate(
+    // Path validation form
+    pathForm.validate(
         {
             rules: {
                 source: {
@@ -1268,90 +1283,17 @@ function initD3Force(graph, tree) {
         }
     );
 
-    // Get or show all paths between two nodes via Ajax
 
-    var allPathForm = $("#all-paths-form");
-
-    $('#button-all-paths').on('click', function () {
-        if (allPathForm.valid()) {
-
-            var checkbox = allPathForm.find('input[name="visualization-options"]').is(":checked");
-
-            var args = parameterFilters(tree);
-            args["source"] = nodeNamesToId[allPathForm.find('input[name="source"]').val()];
-            args["target"] = nodeNamesToId[allPathForm.find('input[name="target"]').val()];
-            args["paths_method"] = "all";
-            var undirected = allPathForm.find('input[name="undirectionalize"]').is(":checked");
-
-            if (undirected) {
-                args["undirected"] = undirected;
-            }
-
-            $.ajax({
-                url: '/api/paths/' + window.networkID,
-                type: allPathForm.attr('method'),
-                dataType: 'json',
-                data: $.param(args, true),
-                success: function (data) {
-
-                    if (data.length == 0) {
-                        alert('No paths between the selected nodes');
-                    }
-
-                    resetAttributes();
-
-                    // Apply changes in style for select paths
-                    hideNodesTextInPaths(data, false);
-                    colorPaths(data, checkbox);
-                    resetAttributesDoubleClick()
-                },
-                error: function (request) {
-                    alert(request.responseText);
-                }
-            })
-        }
-    });
-
-    allPathForm.validate(
-        {
-            rules: {
-                source: {
-                    required: true,
-                    minlength: 2
-                },
-                target: {
-                    required: true,
-                    minlength: 2
-                }
-            },
-            messages: {
-                source: "Please enter a valid source",
-                target: "Please enter a valid target"
-            }
-        }
-    );
-
-    // Shortest path autocompletion input
-    var nodeNames = Object.keys(nodeNamesToId).sort();
+    // Path autocompletion input
+    var nodeNamesSorted = Object.keys(nodeNamesToId).sort();
 
     $("#source-node").autocomplete({
-        source: nodeNames,
+        source: nodeNamesSorted,
         appendTo: "#paths"
     });
 
     $("#target-node").autocomplete({
-        source: nodeNames,
-        appendTo: "#paths"
-    });
-
-    // All paths form autocompletion
-    $("#source-node2").autocomplete({
-        source: nodeNames,
-        appendTo: "#paths"
-    });
-
-    $("#target-node2").autocomplete({
-        source: nodeNames,
+        source: nodeNamesSorted,
         appendTo: "#paths"
     });
 

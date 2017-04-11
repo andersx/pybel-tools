@@ -549,73 +549,43 @@
                     <h4 class="modal-title">Path Mining</h4>
                 </div>
                 <div class="modal-body"><!-- /.Modal body -->
-                    <h4>Shortest Path Search</h4>
-                    <p>Highlight the shortest path between two nodes</p>
-                    <form id="shortest-path-form" method="get">
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <div class="input-group">
-                        <span class="input-group-addon">
-                            <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
-                        </span>
-                                    <input type="text" class="form-control" placeholder="Source node" name="source"
-                                           id="source-node" aria-describedby="sizing-addon1"/>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="input-group">
-                        <span class="input-group-addon" id="sizing-addon">
-                            <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
-                        </span>
-                                    <input type="text" class="form-control" placeholder="Target node" name="target"
-                                           id="target-node" aria-describedby="sizing-addon1"/>
-                                </div>
-                            </div>
+                    <h4>Path Search</h4>
+                    <p>Highlight paths between two nodes</p>
+                    <form id="path-form" class="form-horizontal" method="get">
+
+                        <div class="input-group col-lg-6">
+                            <input type="text" class="form-control" placeholder="Source node" name="source"
+                                   id="source-node">
+                            <span class="input-group-addon">
+                                <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
+                                </span>
                         </div>
 
-                        <label>
-                            <input type="checkbox" name="visualization-options" value="hide">
-                            Hide Other Nodes
-                        </label>
-                        <label>
-                            <input type="checkbox" name="undirectionalize" value="undirected">
-                            Remove Directionality
-                        </label>
-                        <input type="button" id="button-shortest-path" value="Submit"/>
-                    </form>
-                    <hr>
-                    <h4>All Path Search</h4>
-                    <p>Highlight all paths between two nodes</p>
-                    <form id="all-paths-form" method="get" class="form-inline">
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <div class="input-group">
-                                <span class="input-group-addon"><i class="fa fa-arrow-circle-o-right"
-                                                                   aria-hidden="true"></i></span>
-                                    <input class="form-control" placeholder="Source node" name="source"
-                                           id="source-node2"
-                                           aria-describedby="sizing-addon1" type="text"/>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="input-group">
-                                <span class="input-group-addon"><i class="fa fa-paper-plane-o"
-                                                                   aria-hidden="true"></i></span>
-                                    <input class="form-control" placeholder="Target node" name="target"
-                                           id="target-node2"
-                                           aria-describedby="sizing-addon1" type="text"/>
-                                </div>
-                            </div>
+                        <div class="input-group col-lg-6">
+                            <input type="text" class="form-control" placeholder="Target node" name="target"
+                                   id="target-node">
+                            <span class="input-group-addon">
+                            <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
+                                </span>
                         </div>
-                        <label class="checkbox">
-                            <input type="checkbox" name="visualization-options" value="hide">
-                            Hide Other Nodes
-                        </label>
-                        <label class="checkbox">
-                            <input type="checkbox" name="undirectionalize" value="undirected">
-                            Remove Directionality
-                        </label>
-                        <input type="button" id="button-all-paths" value="Submit"/>
+
+                        <div class="input-group">
+                            <label>
+                                <input type="radio" name="paths_method" value="shortest" checked> Shortest path<br>
+                                <input type="radio" name="paths_method" value="all"> All paths<br>
+                            </label>
+                        </div>
+
+                        <div class="input-group">
+
+                            <label>
+                                <input type="checkbox" name="visualization-options" value="hide">
+                                Hide Other Nodes
+                                <input type="checkbox" name="undirectionalize" value="undirected">
+                                Remove Directionality
+                            </label>
+                            <input type="button" id="button-paths" value="Submit"/>
+                        </div>
                     </form>
                 </div><!-- /.Modal body -->
 
