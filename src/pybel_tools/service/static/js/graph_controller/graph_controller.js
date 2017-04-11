@@ -16,13 +16,23 @@ function getSelectedNodesFromTree(tree) {
     return selectionHashMap;
 }
 
+function resetGlobals() {
+    // Arrays with selected nodes to expand/delete
+    window.deleteNodes = [];
+    window.expandNodes = [];
+    // Global var with network_id
+    window.seedMethod = '';
+}
+
 
 function parameterFilters(tree) {
     var args = getSelectedNodesFromTree(tree);
     args["remove"] = window.deleteNodes.join();
     args["append"] = window.expandNodes.join();
     args["seed_method"] = window.seedMethod;
-    args["graphid"] = window.id;
+    args["graphid"] = window.networkID;
+    console.log(args);
+
     return args
 }
 
@@ -32,16 +42,10 @@ function renderNetwork(tree) {
     $.getJSON("/api/network/" + '?' + node_param, function (data) {
         initD3Force(data, tree);
     });
-    // TODO: change window.id to another variable
-    window.history.pushState("BiNE", "BiNE", "/explore/" + window.id + "?" + node_param);
-}
-
-function encodeQueryData(data) {
-    var search = location.search.substring(1);
-    !search ? {} : JSON.parse('{"' + search.replace(/&/g, '","').replace(/=/g, '":"') + '"}',
-        function (key, value) {
-            return key === "" ? value : decodeURIComponent(value)
-        })
+    // reset window variables (window.expand/delete/method)
+    resetGlobals();
+    // TODO: change window.networkID to another variable
+    window.history.pushState("BiNE", "BiNE", "/explore/" + window.networkID + "?" + node_param);
 }
 
 function doAjaxCall(url) {
@@ -97,6 +101,17 @@ $(document).ready(function () {
             // split by ? get the int representing the network_id
             URLString["graphid"] = lastPartURL.split("?")[0];
         }
+    }
+
+    // Set global variable
+    if ('graphid' in URLString) {
+        window.networkID = URLString["graphid"];
+        console.log(typeof window.networkID)
+        console.log(window.networkID)
+
+    }
+    else {
+        window.networkID = "0";
     }
 
     var annotationFilter = null;
@@ -1187,7 +1202,7 @@ function initD3Force(graph, tree) {
             }
 
             $.ajax({
-                url: '/api/paths/' + window.id,
+                url: '/api/paths/' + window.networkID,
                 type: shortestPathForm.attr('method'),
                 dataType: 'json',
                 data: $.param(args, true),
@@ -1261,7 +1276,7 @@ function initD3Force(graph, tree) {
             }
 
             $.ajax({
-                url: '/api/paths/' + window.id,
+                url: '/api/paths/' + window.networkID,
                 type: allPathForm.attr('method'),
                 dataType: 'json',
                 data: $.param(args, true),
@@ -1371,7 +1386,7 @@ function initD3Force(graph, tree) {
             args["node_number"] = betwennessForm.find('input[name="betweenness"]').val();
 
             $.ajax({
-                url: '/api/centrality/' + window.id,
+                url: '/api/centrality/' + window.networkID,
                 type: betwennessForm.attr('method'),
                 dataType: 'json',
                 data: $.param(args, true),
