@@ -31,8 +31,6 @@ function parameterFilters(tree) {
     args["append"] = window.expandNodes.join();
     args["seed_method"] = window.seedMethod;
     args["graphid"] = window.networkID;
-    console.log(args);
-
     return args
 }
 
@@ -875,13 +873,8 @@ function initD3Force(graph, tree) {
             });
             return nodeObject._groups[0][0]
         });
-
-
-        console.log(nodes);
-
         return nodes
     }
-
 
     function resetAttributesDoubleClick() {
 
@@ -1346,17 +1339,21 @@ function initD3Force(graph, tree) {
                 data: $.param(args, true),
                 success: function (data) {
 
-                    var topNodes = nodesInArrayKeepOrder(data);
+                    var nodesToIncrease = nodesInArrayKeepOrder(data);
 
-                    var nodeFactor = nominalBaseNodeSize / topNodes.length;
+                    var nodesToReduce = nodesNotInArray(data);
+
+                    $.each(nodesToReduce._groups[0], function (index, value) {
+                        value.childNodes[0].setAttribute("r", "7");
+                    });
+
+                    // Make bigger by factor scale the nodes in the top x
+                    var nodeFactor = (nominalBaseNodeSize / 3) / nodesToIncrease.length;
                     var factor = nominalBaseNodeSize + nodeFactor;
 
-                    // Change display property to 'none'
-                    $.each(topNodes.reverse(), function (index, value) {
-
+                    $.each(nodesToIncrease.reverse(), function (index, value) {
                         value.childNodes[0].setAttribute("r", factor);
                         factor += nodeFactor;
-
                     });
                 },
                 error: function (request) {

@@ -353,11 +353,6 @@ def build_dictionary_service(app, preload=True, check_version=True):
 
         node_list = [i[0] for i in sorted(bw_dict.items(), key=itemgetter(1), reverse=True)[0:node_numbers]]
 
-        top = [(data[CNAME], n) for n, data in graph.nodes_iter(data=True) if n in node_list]
-
-        [print(i,x) for i,x in top]
-        print(node_list)
-
         return jsonify(node_list)
 
     @app.route('/api/authors')
