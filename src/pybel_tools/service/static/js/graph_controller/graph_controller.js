@@ -106,9 +106,6 @@ $(document).ready(function () {
     // Set global variable
     if ('graphid' in URLString) {
         window.networkID = URLString["graphid"];
-        console.log(typeof window.networkID)
-        console.log(window.networkID)
-
     }
     else {
         window.networkID = "0";
@@ -856,18 +853,33 @@ function initD3Force(graph, tree) {
 
     // Filter nodes in list
     function nodesNotInArray(nodeArray) {
-        var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
+        var nodes = svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el.id) < 0;
         });
-        return nodesNotInArray
+        return nodes
     }
 
     // Filter nodes in list
     function nodesInArray(nodeArray) {
-        var nodesInArray = svg.selectAll(".node").filter(function (el) {
+        var nodes = svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el.id) >= 0;
         });
-        return nodesInArray
+        return nodes
+    }
+
+    // Filter nodes in list keeping the order of the nodeArray
+    function nodesInArrayKeepOrder(nodeArray) {
+        var nodes = nodeArray.map(function (el) {
+            var nodeObject = svg.selectAll(".node").filter(function (node) {
+                return el === node.id;
+            });
+            return nodeObject._groups[0][0]
+        });
+
+
+        console.log(nodes);
+
+        return nodes
     }
 
 
@@ -1392,27 +1404,18 @@ function initD3Force(graph, tree) {
                 data: $.param(args, true),
                 success: function (data) {
 
-                    var topNodes = nodesInArray(data);
+                    var topNodes = nodesInArrayKeepOrder(data);
 
-                    console.log(topNodes);
+                    var nodeFactor = nominalBaseNodeSize / topNodes.length;
+                    var factor = nominalBaseNodeSize + nodeFactor;
 
                     // Change display property to 'none'
-                    $.each(topNodes._groups[0], function (index, value) {
-                        value.childNodes[0].attributes[0] = d3.symbol().size(function (d) {
-                            return Math.PI * Math.pow(size(d.size) || 15, 2);
-                        });
-                        console.log(value.childNodes[0].attributes[0]);
+                    $.each(topNodes.reverse(), function (index, value) {
 
-                        console.log(d3.symbol().size(Math.PI * Math.pow(size(d.size) || 15, 2)));
+                        value.childNodes[0].setAttribute("r", factor);
+                        factor += nodeFactor;
 
                     });
-
-
-                    //             .attr("d", d3.symbol()
-                    //     .size(function (d) {
-                    //         return Math.PI * Math.pow(size(d.size) || nominalBaseNodeSize, 2);
-                    //     })
-                    // )
                 },
                 error: function (request) {
                     alert(request.responseText);

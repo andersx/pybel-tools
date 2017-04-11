@@ -21,6 +21,9 @@ from ..summary import get_authors, get_pmids
 from ..summary import info_json
 from ..web.utils import get_cache_manager
 
+from ..constants import CNAME
+
+
 log = logging.getLogger(__name__)
 
 DICTIONARY_SERVICE = 'dictionary_service'
@@ -99,9 +102,9 @@ def get_tree_annotations(graph):
 def render_network(graph, network_id=None):
     """Renders the visualization of a network"""
     name = graph.name or DEFAULT_TITLE
+    #TODO: delete network_name from context and implement end-point to get network_name from network_id
     return flask.render_template(
         'explorer.html',
-        # network_id=network_id if network_id is not None else "0",
         network_name=name
     )
 
@@ -349,6 +352,11 @@ def build_dictionary_service(app, preload=True, check_version=True):
         bw_dict = nx.betweenness_centrality(graph)
 
         node_list = [i[0] for i in sorted(bw_dict.items(), key=itemgetter(1), reverse=True)[0:node_numbers]]
+
+        top = [(data[CNAME], n) for n, data in graph.nodes_iter(data=True) if n in node_list]
+
+        [print(i,x) for i,x in top]
+        print(node_list)
 
         return jsonify(node_list)
 
