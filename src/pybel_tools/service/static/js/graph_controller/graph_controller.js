@@ -1343,11 +1343,13 @@ function initD3Force(graph, tree) {
 
                     var nodesToReduce = nodesNotInArray(data);
 
+                    // Reduce to 7 radius the nodes not in top x
                     $.each(nodesToReduce._groups[0], function (index, value) {
                         value.childNodes[0].setAttribute("r", "7");
                     });
 
                     // Make bigger by factor scale the nodes in the top x
+                    //TODO: change this coefficient
                     var nodeFactor = (nominalBaseNodeSize / 3) / nodesToIncrease.length;
                     var factor = nominalBaseNodeSize + nodeFactor;
 
