@@ -30,8 +30,11 @@ def try_insert_graph(manager, graph):
     :return: HTTP response for flask rote
     """
     try:
-        manager.insert_graph(graph)
-        return jsonify({'status': 200})
+        network = manager.insert_graph(graph)
+        return jsonify({
+            'status': 200,
+            'network_id': network.id
+        })
     except IntegrityError as e:
         flask.flash("Graph with same Name/Version already exists. Try bumping the version number.")
         log.exception('Integrity error')
