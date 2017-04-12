@@ -35,13 +35,15 @@ def set_database_service(app, service):
     app.config[DATABASE_SERVICE] = service
 
 
-def build_database_service(app):
+def build_database_service(app, manager=None):
     """Builds the PyBEL Database-Backed API Service.
 
     :param app: A Flask App
     :type app: Flask
+    :param manager: A PyBEL cache manager
+    :type manager: pybel.manager.cache.CacheManager
     """
-    manager = get_cache_manager(app)
+    manager = get_cache_manager(app) if manager is None else manager
     api = DatabaseService(manager)
     set_database_service(app, api)
 

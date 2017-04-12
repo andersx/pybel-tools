@@ -14,13 +14,15 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def build_definition_endpoint(app):
+def build_definition_endpoint(app, manager=None):
     """Adds common access to definitions cache
     
     :param app: A Flask application
     :type app: flask.Flask
+    :param manager: A PyBEL cache manager
+    :type manager: pybel.manager.cache.CacheManager
     """
-    dcm = get_cache_manager(app)
+    dcm = get_cache_manager(app) if manager is None else manager
     mdp = get_metadata_parser(app)
 
     @app.route('/api/database/namespaces/')

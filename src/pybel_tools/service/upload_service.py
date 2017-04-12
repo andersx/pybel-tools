@@ -27,13 +27,15 @@ def render_upload_error(e):
     )
 
 
-def build_pickle_uploader_service(app):
+def build_pickle_uploader_service(app, manager=None):
     """Adds the endpoints for uploading pickle files
 
     :param app: A Flask application
     :type app: Flask
+    :param manager: A PyBEL cache manager
+    :type manager: pybel.manager.cache.CacheManager
     """
-    manager = get_cache_manager(app)
+    manager = get_cache_manager(app) if manager is None else manager
 
     @app.route('/upload', methods=('GET', 'POST'))
     def view_upload():

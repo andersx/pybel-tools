@@ -10,13 +10,15 @@ from ..web.utils import get_cache_manager
 log = logging.getLogger(__name__)
 
 
-def build_summary_service(app):
+def build_summary_service(app, manager=None):
     """Adds the endpoints for a synchronous web validation web app
 
     :param app: A Flask application
     :type app: Flask
+    :param manager: A PyBEL cache manager
+    :type manager: pybel.manager.cache.CacheManager
     """
-    manager = get_cache_manager(app)
+    manager = get_cache_manager(app) if manager is None else manager
 
     @app.route('/summary/<int:graph_id>')
     def view_summary(graph_id):

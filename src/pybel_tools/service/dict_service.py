@@ -131,18 +131,21 @@ def set_dict_service(app, service):
     app.config[DICTIONARY_SERVICE] = service
 
 
-def build_dictionary_service(app, preload=True, check_version=True):
+def build_dictionary_service(app, manager=None, preload=True, check_version=True):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
     :param app: A Flask App
     :type app: Flask
-    :param connection: The database connection string. Default location described in
-                       :class:`pybel.manager.cache.BaseCacheManager`
-    :type connection: str
+    :param manager: A PyBEL cache manager
+    :type manager: pybel.manager.cache.CacheManager
+    :param preload: Should the networks be preloaded?
+    :type preload: bool
+    :param check_version: Should the versions of the networks be checked during loading?
+    :type check_version: bool
     """
 
-    manager = get_cache_manager(app)
+    manager = get_cache_manager(app) if manager is None else manager
 
     api = DictionaryService(manager=manager)
 

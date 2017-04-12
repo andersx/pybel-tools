@@ -27,15 +27,17 @@ def render_error(exception):
     return render_template('parse_error.html', error_text=str(exception), traceback_lines=traceback_lines)
 
 
-def build_synchronous_compiler_service(app, enable_cache=True):
+def build_synchronous_compiler_service(app, manager=None, enable_cache=True):
     """Adds the endpoints for a synchronous web validation web app
 
     :param app: A Flask application
     :type app: Flask
+    :param manager: A PyBEL cache manager
+    :type manager: pybel.manager.cache.CacheManager
     :param enable_cache: Should the user be given the option to cache graphs?
     :type enable_cache: bool
     """
-    manager = get_cache_manager(app)
+    manager = get_cache_manager(app) if manager is None else manager
 
     @app.route('/compile', methods=('GET', 'POST'))
     def view_compile():
