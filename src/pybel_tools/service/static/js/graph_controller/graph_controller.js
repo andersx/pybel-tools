@@ -1189,8 +1189,6 @@ function initD3Force(graph, tree) {
             args["paths_method"] = $('input[name=paths_method]:checked', pathForm).val();
             args["graphid"] = window.networkID;
 
-            console.log(args);
-
             var undirected = pathForm.find('input[name="undirectionalize"]').is(":checked");
 
             if (undirected) {

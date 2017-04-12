@@ -84,8 +84,7 @@ def raise_invalid_source_target():
 
 
 def get_tree_annotations(graph):
-    """
-    
+    """ Builds tree structure with annotation for a given graph
     :param graph: 
     :type graph: pybel.BELGraph
     :return: 
@@ -178,9 +177,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     def get_graph_from_request():
         """Process the GET request returning the filtered graph
         
-        :param network_id: The database id of a network. If none, uses the entire network database, merged.
-        :type network_id: int
-        :return: A BEL graph
+        :param request.args: request dictionary
+        :type request.args: dict
+        :return: graph: A BEL graph
         :rtype: pybel.BELGraph
         """
         network_id = request.args.get(GRAPH_ID)
@@ -291,13 +290,12 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/network/', methods=['GET'])
     def get_network():
         """Builds a graph from the given network id and sends it in the given format"""
-        # log.info('requested network: %s', request.args)
-
         graph = get_graph_from_request()
         return serve_network(graph, request.args.get(FORMAT))
 
     @app.route('/api/tree/')
     def get_tree_api():
+        """Builds the annotation tree data structure for a given graph"""
         graph = get_graph_from_request()
         return jsonify(get_tree_annotations(graph))
 
@@ -308,6 +306,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     @app.route('/api/paths/')
     def get_paths_api():
+        """Returns array of shortest/all paths given a source node and target node both belonging in the graph
+        :return: JSON 
+        """
         graph = get_graph_from_request()
 
         if SOURCE_NODE not in request.args:
@@ -399,6 +400,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     @app.route('/api/suggestion/authors/<author>')
     def get_author_suggestion(author):
+        """Return list of authors matching the author keyword"""
 
         keywords = [entry.strip() for entry in author.split(DELIMITER)]
 
@@ -408,6 +410,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     @app.route('/api/suggestion/pubmed/<pubmed>')
     def get_pubmed_suggestion(pubmed):
+        """Return list of pubmedids matching the integer keyword"""
 
         keywords = [entry.strip() for entry in pubmed.split(DELIMITER)]
 
@@ -422,6 +425,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     @app.route('/api/meta/blacklist')
     def get_blacklist():
+        """Return list of blacklist constants"""
         return jsonify(sorted(BLACK_LIST))
 
     log.info('Added dictionary service to %s', app)
