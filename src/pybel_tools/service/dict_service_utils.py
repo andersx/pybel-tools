@@ -89,13 +89,16 @@ class DictionaryService(BaseService):
             log.info('tried adding network [%s] again')
             return
 
+        log.debug('parsing authors from [%s]', network_id)
         parse_authors(graph)
+
+        log.debug('adding cnames to [%s]', network_id)
         add_canonical_names(graph)
 
         self.networks[network_id] = graph
         self.update_node_indexes(graph)
 
-        log.info('loaded network: [%s] %s ', network_id, graph.document.get(METADATA_NAME, 'UNNAMED'))
+        log.info('finished loading network [%s] %s ', network_id, graph.document.get(METADATA_NAME, 'UNNAMED'))
 
     def load_networks(self, check_version=True):
         """This function needs to get all networks from the graph cache manager and make a dictionary
@@ -103,7 +106,10 @@ class DictionaryService(BaseService):
         :param check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
         :type check_version: bool
         """
-        for network_id, blob in self.manager.session.query(Network.id, Network.blob).all():
+        networks = self.manager.session.query(Network.id, Network.blob).all()
+        log.debug('made query for networks')
+        for network_id, blob in networks:
+            log.debug('getting bytes from %s', network_id)
             graph = from_bytes(blob, check_version=check_version)
             self.add_network(network_id, graph)
 
@@ -113,12 +119,16 @@ class DictionaryService(BaseService):
         :param graph: A BEL Graph
         :type graph: pybel.BELGraph
         """
+        log.debug('started updating node indexes for %s', graph.name)
+
         for node in graph.nodes_iter():
             if node in self.node_nid:
                 continue
 
             self.node_nid[node] = len(self.node_nid)
             self.nid_node[self.node_nid[node]] = node
+
+        log.debug('finished updating node indexes %s', graph.name)
 
     # Graph mutation functions
 

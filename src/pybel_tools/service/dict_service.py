@@ -146,7 +146,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     set_dict_service(app, api)
 
     if preload:
+        log.info('loading networks')
         api.load_networks(check_version=check_version)
+        log.info('preloading supernetwork')
         api.load_super_network()
         log.info('preloaded dict service')
 
