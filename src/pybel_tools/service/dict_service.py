@@ -175,7 +175,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             manager.rollback()
             return jsonify({'status': 200})
 
-    def get_graph_from_request(network_id=None):
+    def get_graph_from_request():
         """Process the GET request returning the filtered graph
         
         :param network_id: The database id of a network. If none, uses the entire network database, merged.
@@ -183,7 +183,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         :return: A BEL graph
         :rtype: pybel.BELGraph
         """
-        network_id = request.args.get(GRAPH_ID, network_id)
+        network_id = request.args.get(GRAPH_ID)
 
         if network_id is not None:
             network_id = int(network_id)
@@ -276,14 +276,10 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         )
 
     @app.route('/explore/', methods=['GET'])
-    @app.route('/explore/<int:network_id>', methods=['GET'])
-    def view_explorer(network_id=None):
+    def view_explorer():
         """Renders a page for the user to explore a network"""
-        if network_id == 0:
-            network_id = None
-
-        graph = get_graph_from_request(network_id=network_id)
-        return render_network(graph, network_id)
+        graph = get_graph_from_request()
+        return render_network(graph)
 
     @app.route('/definitions')
     def view_definitions():
@@ -293,12 +289,11 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     # Data Service
     @app.route('/api/network/', methods=['GET'])
-    @app.route('/api/network/<int:network_id>', methods=['GET'])
-    def get_network(network_id=None):
+    def get_network():
         """Builds a graph from the given network id and sends it in the given format"""
         # log.info('requested network: %s', request.args)
 
-        graph = get_graph_from_request(network_id=network_id)
+        graph = get_graph_from_request()
         return serve_network(graph, request.args.get(FORMAT))
 
     @app.route('/api/tree/')
@@ -317,9 +312,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         return jsonify(res)
 
     @app.route('/api/paths')
-    @app.route('/api/paths/<int:network_id>', methods=['GET'])
     def get_paths_api(network_id=None):
-        graph = get_graph_from_request(network_id=network_id)
+        graph = get_graph_from_request()
 
         if SOURCE_NODE not in request.args:
             raise ValueError('no source')
@@ -359,9 +353,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
         return jsonify(shortest_path)
 
-    @app.route('/api/centrality/<int:network_id>', methods=['GET'])
-    def get_nodes_by_betweenness_centrality(network_id):
-        graph = get_graph_from_request(network_id=network_id)
+    @app.route('/api/centrality/', methods=['GET'])
+    def get_nodes_by_betweenness_centrality():
+        graph = get_graph_from_request()
 
         try:
             node_numbers = int(request.args.get(NODE_NUMBER))
