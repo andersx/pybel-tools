@@ -11,10 +11,12 @@ from flask import Flask, request, jsonify, render_template, url_for, redirect
 from flask_basicauth import BasicAuth
 from flask_bootstrap import Bootstrap
 
-from pybel.constants import METADATA_DESCRIPTION
+import pybel
+from pybel.constants import METADATA_DESCRIPTION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
+from .utils import try_insert_graph
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary import get_annotation_values_by_annotation
@@ -27,7 +29,6 @@ DICTIONARY_SERVICE = 'dictionary_service'
 DEFAULT_TITLE = 'Biological Network Explorer'
 TAB_DELIMITER = '|'
 COMMA_DELIMITER = ','
-
 
 APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
@@ -178,6 +179,20 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             """Rolls back the transaction for when something bad happens"""
             manager.rollback()
             return jsonify({'status': 200})
+
+        @app.route('/admin/ensure/small')
+        @basic_auth.required
+        def ensure_small_corpus():
+            """Parses the small corpus"""
+            graph = pybel.from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+            return try_insert_graph(manager, graph)
+
+        @app.route('/admin/ensure/small')
+        @basic_auth.required
+        def ensure_large_corpus():
+            """Parses the large corpus"""
+            graph = pybel.from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+            return try_insert_graph(manager, graph)
 
         log.info('added admin functions to dict service')
 
