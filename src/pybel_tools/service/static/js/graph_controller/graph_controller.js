@@ -759,7 +759,7 @@ function initD3Force(graph, tree) {
     function exitHighlight() {
         highlightNode = null;
         if (focusNode === null) {
-            if (highlightNodeBoundering != circleColor) {
+            if (highlightNodeBoundering !== circleColor) {
                 circle.style("stroke", circleColor);
                 text.style("fill", "black");
                 link.style("stroke", defaultLinkColor);
@@ -771,7 +771,7 @@ function initD3Force(graph, tree) {
         if (focusNode !== null) d = focusNode;
         highlightNode = d;
 
-        if (highlightNodeBoundering != circleColor) {
+        if (highlightNodeBoundering !== circleColor) {
             circle.style("stroke", function (o) {
                 return isConnected(d, o) ? highlightNodeBoundering : circleColor;
             });
@@ -1094,20 +1094,6 @@ function initD3Force(graph, tree) {
 
     // Call freezeGraph when a key is pressed, freezeGraph checks whether this key is "Space" that triggers the freeze
     d3.select(window).on("keydown", freezeGraph);
-
-    /////////////////////////
-    // Additional features //
-    /////////////////////////
-
-    function downloadLink(response, name) {
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(response));
-        element.setAttribute('download', name);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-    }
 
     /////////////////////////////////////////////////////////////////////////
     // Build the node selection toggle and creates hashmap nodeNames to IDs /
