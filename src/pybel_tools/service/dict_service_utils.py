@@ -110,7 +110,12 @@ class DictionaryService(BaseService):
         log.debug('made query for networks')
         for network_id, blob in networks:
             log.debug('getting bytes from %s', network_id)
-            graph = from_bytes(blob, check_version=check_version)
+            try:
+                graph = from_bytes(blob, check_version=check_version)
+            except:
+                log.exception("couldn't load from bytes [%s]", network_id)
+                continue
+
             self.add_network(network_id, graph)
 
     def update_node_indexes(self, graph):
