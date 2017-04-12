@@ -38,6 +38,7 @@ from .utils import get_version
 from .web.constants import SECRET_KEY, PYBEL_CACHE_CONNECTION
 from .web.parser_endpoint import build_parser_service
 from .web.sitemap_endpoint import build_sitemap_endpoint
+from pybel.manager.cache import build_manager
 
 log = logging.getLogger(__name__)
 
@@ -120,14 +121,16 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
     log.info('Running PyBEL v%s', pybel.utils.get_version())
     log.info('Running PyBEL Tools v%s', get_version())
 
+    manager = build_manager(connection)
+
     if run_database_service:
         app = get_database_service_app()
         app.config[PYBEL_CACHE_CONNECTION] = connection
-        build_database_service(app)
+        build_database_service(app, manager=manager)
     else:
         app = get_dict_service_app()
         app.config[PYBEL_CACHE_CONNECTION] = connection
-        build_dictionary_service(app, check_version=(not skip_check_version))
+        build_dictionary_service(app, manager=manager, check_version=(not skip_check_version))
 
     app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
 
@@ -135,13 +138,13 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
         build_parser_service(app)
 
     if run_uploader_service or run_all:
-        build_pickle_uploader_service(app)
+        build_pickle_uploader_service(app, manager=manager)
 
     if run_summary_service or run_all:
-        build_summary_service(app)
+        build_summary_service(app, manager=manager)
 
     if run_compiler_service or run_all:
-        build_synchronous_compiler_service(app)
+        build_synchronous_compiler_service(app, manager=manager)
 
     build_sitemap_endpoint(app)
 

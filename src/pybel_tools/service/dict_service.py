@@ -19,10 +19,6 @@ from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary import get_annotation_values_by_annotation
 from ..summary import get_authors, get_pmids
 from ..summary import info_json
-from ..web.utils import get_cache_manager
-
-from ..constants import CNAME
-
 
 log = logging.getLogger(__name__)
 
@@ -102,7 +98,7 @@ def get_tree_annotations(graph):
 def render_network(graph, network_id=None):
     """Renders the visualization of a network"""
     name = graph.name or DEFAULT_TITLE
-    #TODO: delete network_name from context and implement end-point to get network_name from network_id
+    # TODO: delete network_name from context and implement end-point to get network_name from network_id
     return flask.render_template(
         'explorer.html',
         network_name=name
@@ -131,7 +127,7 @@ def set_dict_service(app, service):
     app.config[DICTIONARY_SERVICE] = service
 
 
-def build_dictionary_service(app, manager=None, preload=True, check_version=True):
+def build_dictionary_service(app, manager, preload=True, check_version=True):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -144,16 +140,12 @@ def build_dictionary_service(app, manager=None, preload=True, check_version=True
     :param check_version: Should the versions of the networks be checked during loading?
     :type check_version: bool
     """
-
-    manager = get_cache_manager(app) if manager is None else manager
-
     api = DictionaryService(manager=manager)
+    set_dict_service(app, api)
 
     if preload:
         api.load_networks(check_version=check_version)
         api.load_super_network()
-
-    set_dict_service(app, api)
 
     def get_graph_from_request(network_id=None):
         """Process the GET request returning the filtered graph

@@ -12,7 +12,6 @@ from sqlalchemy.exc import IntegrityError
 
 import pybel
 from .forms import UploadForm
-from ..web.utils import get_cache_manager
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ def render_upload_error(e):
     )
 
 
-def build_pickle_uploader_service(app, manager=None):
+def build_pickle_uploader_service(app, manager):
     """Adds the endpoints for uploading pickle files
 
     :param app: A Flask application
@@ -35,7 +34,6 @@ def build_pickle_uploader_service(app, manager=None):
     :param manager: A PyBEL cache manager
     :type manager: pybel.manager.cache.CacheManager
     """
-    manager = get_cache_manager(app) if manager is None else manager
 
     @app.route('/upload', methods=('GET', 'POST'))
     def view_upload():

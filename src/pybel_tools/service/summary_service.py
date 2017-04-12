@@ -5,12 +5,11 @@ from flask import render_template
 from pybel import from_bytes
 from ..summary import count_functions, count_relations, count_error_types
 from ..utils import prepare_c3
-from ..web.utils import get_cache_manager
 
 log = logging.getLogger(__name__)
 
 
-def build_summary_service(app, manager=None):
+def build_summary_service(app, manager):
     """Adds the endpoints for a synchronous web validation web app
 
     :param app: A Flask application
@@ -18,7 +17,6 @@ def build_summary_service(app, manager=None):
     :param manager: A PyBEL cache manager
     :type manager: pybel.manager.cache.CacheManager
     """
-    manager = get_cache_manager(app) if manager is None else manager
 
     @app.route('/summary/<int:graph_id>')
     def view_summary(graph_id):

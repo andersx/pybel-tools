@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
+import sys
 
 from flask import url_for, render_template
 
 import pybel.utils
 from ..utils import get_version
-import sys
+
 log = logging.getLogger(__name__)
 
 

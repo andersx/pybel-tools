@@ -13,10 +13,8 @@ from . import constants
 from . import definitions_endpoint
 from . import graph_endpoint
 from . import parser_endpoint
-from . import utils
 from .definitions_endpoint import *
 from .graph_endpoint import *
 from .parser_endpoint import *
-from .utils import *
 
-__all__ = definitions_endpoint.__all__ + graph_endpoint.__all__ + parser_endpoint.__all__ + utils.__all__
+__all__ = definitions_endpoint.__all__ + graph_endpoint.__all__ + parser_endpoint.__all__
