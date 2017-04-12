@@ -29,7 +29,7 @@ def build_sitemap_endpoint(app, route=None):
                 pass
 
         metadata = [
-            ('Python', sys.version),
+            ('Python Version', sys.version),
             ('PyBEL Version', pybel.utils.get_version()),
             ('PyBEL Tools Version', get_version()),
         ]
