@@ -21,7 +21,7 @@ def render_upload_error(e):
 
 
 def try_insert_graph(manager, graph):
-    """
+    """Inserts a graph and sends an okay message if success. else renders upload page
     
     :param manager: 
     :type manager: pybel.manager.cache.CacheManager
@@ -31,7 +31,7 @@ def try_insert_graph(manager, graph):
     """
     try:
         manager.insert_graph(graph)
-        return jsonify({'status', 'okay'})
+        return jsonify({'status': 200})
     except IntegrityError as e:
         flask.flash("Graph with same Name/Version already exists. Try bumping the version number.")
         log.exception('Integrity error')

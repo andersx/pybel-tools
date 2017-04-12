@@ -173,7 +173,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         def rollback():
             """Rolls back the transaction for when something bad happens"""
             manager.rollback()
-            return jsonify(dict(status=200))
+            return jsonify({'status': 200})
 
     def get_graph_from_request(network_id=None):
         """Process the GET request returning the filtered graph

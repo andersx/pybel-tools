@@ -170,6 +170,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
 
     build_sitemap_endpoint(app)
 
+    log.info('Done building %s', app)
     app.run(debug=flask_debug, host=host, port=port)
 
 
