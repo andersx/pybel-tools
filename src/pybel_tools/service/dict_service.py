@@ -25,7 +25,9 @@ log = logging.getLogger(__name__)
 
 DICTIONARY_SERVICE = 'dictionary_service'
 DEFAULT_TITLE = 'Biological Network Explorer'
-DELIMITER = '|'
+TAB_DELIMITER = '|'
+COMMA_DELIMITER = ','
+
 
 APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
@@ -176,9 +178,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     def get_graph_from_request():
         """Process the GET request returning the filtered graph
-        
-        :param request.args: request dictionary
-        :type request.args: dict
         :return: graph: A BEL graph
         :rtype: pybel.BELGraph
         """
@@ -392,7 +391,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/suggestion/nodes/<node>')
     def get_node_suggestion(node):
 
-        keywords = [entry.strip() for entry in node.split(DELIMITER)]
+        keywords = [entry.strip() for entry in node.split(TAB_DELIMITER)]
 
         autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
 
@@ -402,7 +401,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     def get_author_suggestion(author):
         """Return list of authors matching the author keyword"""
 
-        keywords = [entry.strip() for entry in author.split(DELIMITER)]
+        keywords = [entry.strip() for entry in author.split(COMMA_DELIMITER)]
 
         autocompletion_set = api.get_authors_containing_keyword(keywords[-1])
 
@@ -412,7 +411,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     def get_pubmed_suggestion(pubmed):
         """Return list of pubmedids matching the integer keyword"""
 
-        keywords = [entry.strip() for entry in pubmed.split(DELIMITER)]
+        keywords = [entry.strip() for entry in pubmed.split(COMMA_DELIMITER)]
 
         autocompletion_set = api.get_pubmed_containing_keyword(keywords[-1])
 
