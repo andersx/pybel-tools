@@ -7,7 +7,7 @@ from operator import itemgetter
 
 import flask
 import networkx as nx
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, url_for, redirect
 from flask_bootstrap import Bootstrap
 
 from pybel.constants import METADATA_DESCRIPTION
@@ -214,16 +214,29 @@ def build_dictionary_service(app, manager, preload=True, check_version=True):
         seed_provenance_form = SeedProvenanceForm()
 
         if seed_subgraph_form.validate_on_submit() and seed_subgraph_form.submit_subgraph.data:
-            nodes = sanitize_list_of_str(seed_subgraph_form.node_list.data.split(','))
+            # nodes = sanitize_list_of_str()
+            seed_data_nodes = seed_subgraph_form.node_list.data.split('|')
             seed_method = seed_subgraph_form.seed_method.data
-            log.info('got subgraph seed: %s', dict(nodes=nodes, method=seed_method))
-            # return render_network(api.query(seed_method=seed_method, seed_data=list(nodes)))
-
+            log.info('got subgraph seed: %s', dict(nodes=seed_data_nodes, method=seed_method))
+            url = url_for('view_explorer', **{
+                SEED_TYPE: seed_method,
+                SEED_DATA_NODES: seed_data_nodes,
+                'autoload': 'yes',
+            })
+            log.info('redirecting to %s', url)
+            return redirect(url)
         elif seed_provenance_form.validate_on_submit() and seed_provenance_form.submit_provenance.data:
             authors = sanitize_list_of_str(seed_provenance_form.author_list.data.split(','))
             pmids = sanitize_list_of_str(seed_provenance_form.pubmed_list.data.split(','))
             log.info('got prov: %s', dict(authors=authors, pmids=pmids))
-            # return render_network(api.query(seed_method=SEED_TYPE_PROVENANCE, seed_data=dict(pmids=pmids, authors=authors)))
+            url = url_for('view_explorer', **{
+                SEED_TYPE: SEED_TYPE_PROVENANCE,
+                SEED_DATA_PMIDS: pmids,
+                SEED_DATA_AUTHORS: authors,
+                'autoload': 'yes',
+            })
+            log.info('redirecting to %s', url)
+            return redirect(url)
 
         data = [(nid, n.name, n.version, n.document[METADATA_DESCRIPTION]) for nid, n in api.networks.items()]
 
