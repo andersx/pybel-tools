@@ -8,6 +8,7 @@ from operator import itemgetter
 import flask
 import networkx as nx
 from flask import Flask, request, jsonify, render_template, url_for, redirect
+from flask_basicauth import BasicAuth
 from flask_bootstrap import Bootstrap
 
 from pybel.constants import METADATA_DESCRIPTION
@@ -127,7 +128,7 @@ def set_dict_service(app, service):
     app.config[DICTIONARY_SERVICE] = service
 
 
-def build_dictionary_service(app, manager, preload=True, check_version=True):
+def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -146,6 +147,33 @@ def build_dictionary_service(app, manager, preload=True, check_version=True):
     if preload:
         api.load_networks(check_version=check_version)
         api.load_super_network()
+
+    if admin_password is not None:
+        app.config['BASIC_AUTH_USERNAME'] = 'pybel'
+        app.config['BASIC_AUTH_PASSWORD'] = admin_password
+
+        basic_auth = BasicAuth(app)
+
+        @app.route('/admin/reload')
+        @basic_auth.required
+        def run_reload():
+            api.load_networks()
+            api.get_super_network(reload=True)
+            return jsonify({'status': 200})
+
+        @app.route('/admin/enrich')
+        @basic_auth.required
+        def run_enrich_authors():
+            """Enriches information in network. Be patient"""
+            fix_pubmed_citations(api.full_network)
+            return jsonify({'status': 200})
+
+        @app.route('/admin/rollback')
+        @basic_auth.required
+        def rollback():
+            """Rolls back the transaction for when something bad happens"""
+            manager.rollback()
+            return jsonify(dict(status=200))
 
     def get_graph_from_request(network_id=None):
         """Process the GET request returning the filtered graph
@@ -262,20 +290,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True):
         """Displays a page listing the namespaces and annotations."""
         return render_template('definitions_list.html', namespaces=api.list_namespaces(),
                                annotations=api.list_annotations())
-
-    # App Control
-
-    @app.route('/admin/reload')
-    def run_reload():
-        api.load_networks()
-        api.get_super_network(reload=True)
-        return jsonify({'status': 200})
-
-    @app.route('/admin/enrich')
-    def run_enrich_authors():
-        """Enriches information in network. Be patient"""
-        fix_pubmed_citations(api.full_network)
-        return jsonify({'status': 200})
 
     # Data Service
     @app.route('/api/network/', methods=['GET'])

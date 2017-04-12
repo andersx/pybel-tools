@@ -126,8 +126,10 @@ def convert(connection, upload, directory, debug):
 @click.option('--run-receiver-service', is_flag=True, help='Enable the graph receiver service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
+@click.option('--admin-password')
 def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
-        run_uploader_service, run_compiler_service, run_summary_service, run_receiver_service, run_all, secret_key):
+        run_uploader_service, run_compiler_service, run_summary_service, run_receiver_service, run_all, secret_key,
+        admin_password):
     """Runs PyBEL Web"""
     if debug == 1:
         set_debug(20)
@@ -146,7 +148,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
     else:
         app = get_dict_service_app()
         app.config[PYBEL_CACHE_CONNECTION] = connection
-        build_dictionary_service(app, manager=manager, check_version=(not skip_check_version))
+        build_dictionary_service(app, manager=manager, check_version=(not skip_check_version),
+                                 admin_password=admin_password)
 
     app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
 
