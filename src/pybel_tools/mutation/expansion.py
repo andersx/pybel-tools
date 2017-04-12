@@ -497,7 +497,7 @@ def expand_all_node_neighborhoods(graph, subgraph):
     :param subgraph: The graph to add stuff to
     :type subgraph: pybel.BELGraph 
     """
-    for node in subgraph.nodes_iter():
+    for node in subgraph.nodes():
         expand_node_neighborhood(graph, subgraph, node)
 
 
