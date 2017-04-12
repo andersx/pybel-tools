@@ -139,7 +139,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
     log.info('Running PyBEL v%s', pybel_version())
     log.info('Running PyBEL Tools v%s', get_version())
 
-    manager = build_manager(connection)
+    manager = build_manager(connection, echo=bool(debug))
 
     if run_database_service:
         app = get_database_service_app()
