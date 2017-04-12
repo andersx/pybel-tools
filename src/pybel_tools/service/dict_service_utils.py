@@ -92,7 +92,7 @@ class DictionaryService(BaseService):
         log.debug('parsing authors from [%s]', network_id)
         parse_authors(graph)
 
-        log.debug('adding cnames to [%s]', network_id)
+        log.debug('adding canonical names to [%s]', network_id)
         add_canonical_names(graph)
 
         self.networks[network_id] = graph

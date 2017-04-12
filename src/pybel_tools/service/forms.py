@@ -12,7 +12,7 @@ from ..selection.induce_subgraph import SEED_TYPE_INDUCTION, SEED_TYPE_PATHS, SE
 class UploadForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
     file = FileField('A PyBEL gpickle', validators=[
-        DataRequired(),
+        DataRequired(message="You must provide a PyBEL gpickle file"),
         FileAllowed(['gpickle'], 'Only gpickles allowed')
     ])
     submit = fields.SubmitField('Upload')
