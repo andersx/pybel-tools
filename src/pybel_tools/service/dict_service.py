@@ -432,5 +432,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
 def get_app():
     app = Flask(__name__)
+    log.debug('made app %s', app)
     Bootstrap(app)
+    log.debug('added bootstrap to app %s', app)
     return app
