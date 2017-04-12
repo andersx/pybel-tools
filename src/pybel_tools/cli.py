@@ -21,9 +21,10 @@ from getpass import getuser
 
 import click
 
-import pybel.utils
 from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION
+from pybel.manager.cache import build_manager
+from pybel.utils import get_version as pybel_version
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 from .ioutils import convert_recursive, upload_recusive
@@ -32,13 +33,14 @@ from .service.database_service import build_database_service
 from .service.database_service import get_app as get_database_service_app
 from .service.dict_service import build_dictionary_service
 from .service.dict_service import get_app as get_dict_service_app
+from .service.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
+from .service.receiver_service import post as send_to_service
 from .service.summary_service import build_summary_service
 from .service.upload_service import build_pickle_uploader_service
 from .utils import get_version
 from .web.constants import SECRET_KEY, PYBEL_CACHE_CONNECTION
 from .web.parser_endpoint import build_parser_service
 from .web.sitemap_endpoint import build_sitemap_endpoint
-from pybel.manager.cache import build_manager
 
 log = logging.getLogger(__name__)
 
@@ -66,19 +68,32 @@ def io():
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('-r', '--recursive', help='Recursively upload all gpickles in the directory given as the path')
 @click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+@click.option('--to-service', is_flag=True, help='Sends to PyBEL web service')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def upload(path, connection, recursive, skip_check_version, debug):
+def upload(path, connection, recursive, skip_check_version, to_service, debug):
     """Quick uploader"""
     if debug == 1:
         set_debug(20)
     elif debug == 2:
         set_debug(10)
 
-    if not recursive:
-        graph = from_pickle(path, check_version=(not skip_check_version))
-        to_database(graph, connection=connection)
-    else:
+    if recursive:
         upload_recusive(path, connection=connection)
+    else:
+        graph = from_pickle(path, check_version=(not skip_check_version))
+        if to_service:
+            send_to_service(graph)
+        else:
+            to_database(graph, connection=connection)
+
+
+@io.command()
+@click.argument('path')
+@click.option('-u', '--url', help='Service location. Defautls to {}'.format(DEFAULT_SERVICE_URL))
+@click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+def post(path, url, skip_check_version):
+    graph = from_pickle(path, check_version=(not skip_check_version))
+    send_to_service(graph, url)
 
 
 @io.command()
@@ -108,17 +123,18 @@ def convert(connection, upload, directory, debug):
 @click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
 @click.option('--run-compiler-service', is_flag=True, help='Enable the compiler page')
 @click.option('--run-summary-service', is_flag=True, help='Enable the graph summary page')
+@click.option('--run-receiver-service', is_flag=True, help='Enable the graph receiver service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
 def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
-        run_uploader_service, run_compiler_service, run_summary_service, run_all, secret_key):
+        run_uploader_service, run_compiler_service, run_summary_service, run_receiver_service, run_all, secret_key):
     """Runs PyBEL Web"""
     if debug == 1:
         set_debug(20)
     elif debug == 2:
         set_debug(10)
 
-    log.info('Running PyBEL v%s', pybel.utils.get_version())
+    log.info('Running PyBEL v%s', pybel_version())
     log.info('Running PyBEL Tools v%s', get_version())
 
     manager = build_manager(connection)
@@ -145,6 +161,9 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
 
     if run_compiler_service or run_all:
         build_synchronous_compiler_service(app, manager=manager)
+
+    if run_receiver_service or run_all:
+        build_receiver_service(app, manager=manager)
 
     build_sitemap_endpoint(app)
 
