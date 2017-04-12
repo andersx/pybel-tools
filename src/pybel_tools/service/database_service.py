@@ -5,7 +5,6 @@
 import flask
 from flask import Flask
 from flask import jsonify
-from flask_bootstrap import Bootstrap
 
 from .database_service_utils import DatabaseService
 
@@ -154,9 +153,3 @@ def build_database_service(app, manager):
     def nodes_by_network(network_id):
         nodes = api.get_nodes(network_id=network_id)
         return jsonify(nodes)
-
-
-def get_app():
-    app = Flask(__name__)
-    Bootstrap(app)
-    return app

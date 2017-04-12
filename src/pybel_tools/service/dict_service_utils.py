@@ -55,6 +55,8 @@ class DictionaryService(BaseService):
         self.full_network = BELGraph()
         self.full_network_loaded = False
 
+        log.info('initialized dictionary service')
+
     def _validate_network_id(self, network_id):
         if network_id not in self.networks:
             raise ValueError()

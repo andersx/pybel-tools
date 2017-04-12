@@ -148,6 +148,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     if preload:
         api.load_networks(check_version=check_version)
         api.load_super_network()
+        log.info('preloaded dict service')
 
     if admin_password is not None:
         app.config['BASIC_AUTH_USERNAME'] = 'pybel'
@@ -175,6 +176,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             """Rolls back the transaction for when something bad happens"""
             manager.rollback()
             return jsonify({'status': 200})
+
+        log.info('added admin functions to dict service')
 
     def get_graph_from_request():
         """Process the GET request returning the filtered graph

@@ -30,15 +30,13 @@ from .document_utils import write_boilerplate
 from .ioutils import convert_recursive, upload_recusive
 from .service.compilation_service import build_synchronous_compiler_service
 from .service.database_service import build_database_service
-from .service.database_service import get_app as get_database_service_app
-from .service.dict_service import build_dictionary_service
-from .service.dict_service import get_app as get_dict_service_app
+from .service.dict_service import build_dictionary_service, get_app
 from .service.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
 from .service.receiver_service import post as send_to_service
 from .service.summary_service import build_summary_service
 from .service.upload_service import build_pickle_uploader_service
 from .utils import get_version
-from .web.constants import SECRET_KEY, PYBEL_CACHE_CONNECTION
+from .web.constants import SECRET_KEY
 from .web.parser_endpoint import build_parser_service
 from .web.sitemap_endpoint import build_sitemap_endpoint
 
@@ -140,17 +138,22 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
     log.info('Running PyBEL v%s', pybel_version())
     log.info('Running PyBEL Tools v%s', get_version())
 
+    app = get_app()
+    app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
+
     manager = build_manager(connection, echo=echo_sql)
 
-    if run_database_service:
-        app = get_database_service_app()
-        build_database_service(app, manager=manager)
-    else:
-        app = get_dict_service_app()
-        build_dictionary_service(app, manager=manager, check_version=(not skip_check_version),
-                                 admin_password=admin_password)
+    build_sitemap_endpoint(app)
 
-    app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
+    build_dictionary_service(
+        app,
+        manager=manager,
+        check_version=(not skip_check_version),
+        admin_password=admin_password
+    )
+
+    if run_database_service:
+        build_database_service(app, manager)
 
     if run_parser_service or run_all:
         build_parser_service(app)
@@ -167,9 +170,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
     if run_receiver_service or run_all:
         build_receiver_service(app, manager=manager)
 
-    build_sitemap_endpoint(app)
-
     log.info('Done building %s', app)
+
     app.run(debug=flask_debug, host=host, port=port)
 
 
