@@ -297,13 +297,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         return serve_network(graph, request.args.get(FORMAT))
 
     @app.route('/api/tree/')
-    @app.route('/api/tree/<int:network_id>')
-    def get_tree_api(network_id=None):
-        network_id = request.args.get(GRAPH_ID, network_id)
-        if network_id is not None:
-            network_id = int(network_id)
-
-        graph = api.get_network_by_id(network_id)
+    def get_tree_api():
+        graph = get_graph_from_request()
         return jsonify(get_tree_annotations(graph))
 
     @app.route('/api/edges/incident/<int:network_id>/<int:node_id>')
@@ -311,8 +306,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         res = api.get_incident_edges(network_id, node_id)
         return jsonify(res)
 
-    @app.route('/api/paths')
-    def get_paths_api(network_id=None):
+    @app.route('/api/paths/')
+    def get_paths_api():
         graph = get_graph_from_request()
 
         if SOURCE_NODE not in request.args:

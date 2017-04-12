@@ -35,15 +35,17 @@ function parameterFilters(tree) {
 }
 
 function renderNetwork(tree) {
-    node_tree = getSelectedNodesFromTree(tree);
-    node_param = $.param(node_tree, true);
+    params = getSelectedNodesFromTree(tree);
+    params["graphid"] = window.networkID;
+
+    node_param = $.param(params, true);
     $.getJSON("/api/network/" + '?' + node_param, function (data) {
         initD3Force(data, tree);
     });
     // reset window variables (window.expand/delete/method)
     resetGlobals();
     // TODO: change window.networkID to another variable
-    window.history.pushState("BiNE", "BiNE", "/explore/" + window.networkID + "?" + node_param);
+    window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
 }
 
 function doAjaxCall(url) {
@@ -1185,6 +1187,9 @@ function initD3Force(graph, tree) {
             args["source"] = nodeNamesToId[pathForm.find('input[name="source"]').val()];
             args["target"] = nodeNamesToId[pathForm.find('input[name="target"]').val()];
             args["paths_method"] = $('input[name=paths_method]:checked', pathForm).val();
+            args["graphid"] = window.networkID;
+
+            console.log(args);
 
             var undirected = pathForm.find('input[name="undirectionalize"]').is(":checked");
 
@@ -1193,7 +1198,7 @@ function initD3Force(graph, tree) {
             }
 
             $.ajax({
-                url: '/api/paths/' + window.networkID,
+                url: '/api/paths/',
                 type: pathForm.attr('method'),
                 dataType: 'json',
                 data: $.param(args, true),
@@ -1317,9 +1322,10 @@ function initD3Force(graph, tree) {
 
             var args = parameterFilters(tree);
             args["node_number"] = betwennessForm.find('input[name="betweenness"]').val();
+            args["graphid"] = window.networkID;
 
             $.ajax({
-                url: '/api/centrality/' + window.networkID,
+                url: '/api/centrality/',
                 type: betwennessForm.attr('method'),
                 dataType: 'json',
                 data: $.param(args, true),
@@ -1360,7 +1366,7 @@ function initD3Force(graph, tree) {
                 }
             },
             messages: {
-                betweenness: "Please enter a number",
+                betweenness: "Please enter a number"
             }
         }
     );
