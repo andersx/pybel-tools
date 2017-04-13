@@ -191,6 +191,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         :return: graph: A BEL graph
         :rtype: pybel.BELGraph
         """
+
         network_id = request.args.get(GRAPH_ID)
 
         if network_id is not None:
@@ -206,15 +207,17 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         if seed_method and seed_method == SEED_TYPE_PROVENANCE:
             seed_data = {}
 
-            authors = request.args.get(SEED_DATA_AUTHORS)
-            if authors:
-                seed_data['authors'] = sanitize_list_of_str(authors.split('|'))
+            authors = request.args.getlist(SEED_DATA_AUTHORS)
 
-            pmids = request.args.get(SEED_DATA_PMIDS)
+            if authors:
+                #TODO: decode authors
+                seed_data['authors'] = authors
+
+            pmids = request.args.getlist(SEED_DATA_PMIDS)
             if pmids:
-                seed_data['pmids'] = sanitize_list_of_str(pmids.split(','))
+                seed_data['pmids'] = pmids
         elif seed_method:
-            seed_data = request.args.get(SEED_DATA_NODES).split(',')
+            seed_data = request.args.getlist(SEED_DATA_NODES)
             seed_data = [api.get_node_by_id(h) for h in seed_data]
         else:
             seed_data = None
@@ -255,6 +258,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             seed_method = seed_subgraph_form.seed_method.data
             log.info('got subgraph seed: %s', dict(nodes=seed_data_nodes, method=seed_method))
             url = url_for('view_explorer', **{
+                GRAPH_ID: '0',
                 SEED_TYPE: seed_method,
                 SEED_DATA_NODES: seed_data_nodes,
                 'autoload': 'yes',
@@ -266,6 +270,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             pmids = sanitize_list_of_str(seed_provenance_form.pubmed_list.data.split(','))
             log.info('got prov: %s', dict(authors=authors, pmids=pmids))
             url = url_for('view_explorer', **{
+                GRAPH_ID: '0',
                 SEED_TYPE: SEED_TYPE_PROVENANCE,
                 SEED_DATA_PMIDS: pmids,
                 SEED_DATA_AUTHORS: authors,

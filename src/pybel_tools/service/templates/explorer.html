@@ -43,8 +43,6 @@
         // Arrays with selected nodes to expand/delete
         window.deleteNodes = [];
         window.expandNodes = [];
-        // Global var with network_id
-        window.seedMethod = '';
     </script>
 {% endblock %}
 
@@ -58,8 +56,6 @@
             src="{{ url_for('static', filename='js/graph_controller/graph_controller.js') }}"></script>
     <script type="text/javascript"
             src="{{ url_for('static', filename='js/d3-context-menu/js/d3-context-menu.js') }}"></script>
-    <script type="text/javascript"
-            src="{{ url_for('static', filename='js/home_controller/home_controller.js') }}"></script>
 {% endblock %}
 
 {% block content %}
