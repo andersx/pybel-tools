@@ -381,28 +381,14 @@
                                             </thead>
                                             <tbody>
                                             <tr>
-                                                <td>decreases</td>
+                                                <td>decreases, directlyDecreases</td>
                                                 <td>
                                                     <hr class="legend-continuous-line" width="30%"/>
                                                     <span class="after-hr">&#124;</span>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>directlyDecreases</td>
-                                                <td>
-                                                    <hr class="legend-continuous-line" width="30%"/>
-                                                    <span class="after-hr">&#124;</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>increases</td>
-                                                <td>
-                                                    <hr class="legend-continuous-line" width="30%"/>
-                                                    <span class="after-hr">&#9658;</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>directlyIncreases</td>
+                                                <td>increases, directlyIncreases</td>
                                                 <td>
                                                     <hr class="legend-continuous-line" width="30%"/>
                                                     <span class="after-hr">&#9658;</span>
@@ -421,97 +407,33 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>causesNoChange</td>
+                                                <td>causesNoChange, association, orthologous</td>
                                                 <td>
                                                     <hr class="legend-dashed-line" width="30%"/>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>association</td>
+                                                <td>transcribedTo, translatedTo</td>
                                                 <td>
                                                     <hr class="legend-dashed-line" width="30%"/>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>orthologous</td>
+                                                <td>biomarkerFor, prognosticBiomarkerFor</td>
                                                 <td>
                                                     <hr class="legend-dashed-line" width="30%"/>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>transcribedTo</td>
+                                                <td>hasMember, hasComponent, hasProduct, hasVariant, hasReactant,
+                                                    hasProduct, isA
+                                                </td>
                                                 <td>
                                                     <hr class="legend-dashed-line" width="30%"/>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>translatedTo</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>biomarkerFor</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>hasMember</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>hasComponent</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>isA</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>prognosticBiomarkerFor</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>rateLimitingStepOf</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>subProcessOf</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>hasProduct</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>hasVariant</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>hasModification</td>
-                                                <td>
-                                                    <hr class="legend-dashed-line" width="30%"/>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>reactantIn</td>
+                                                <td>rateLimitingStepOf, subProcessOf</td>
                                                 <td>
                                                     <hr class="legend-dashed-line" width="30%"/>
                                                 </td>
@@ -584,7 +506,7 @@
                                 Remove Directionality
                             </label>
                         </div>
-                         <div class="input-group">
+                        <div class="input-group">
                             <input type="button" id="button-paths" value="Submit"/>
                         </div>
                     </form>
