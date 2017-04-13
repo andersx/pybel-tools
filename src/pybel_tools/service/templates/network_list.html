@@ -9,6 +9,9 @@
 {% block styles %}
     {{ super() }}
     <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
+    <link rel="stylesheet" type="text/css"
+          href='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'/>
+
 {% endblock %}
 
 {% block head %}
@@ -23,6 +26,8 @@
 
 {% block scripts %}
     {{ super() }}
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.full.min.js"></script>
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <script type="text/javascript"
@@ -60,7 +65,11 @@
             <div class="panel-body">
                 <p>This method of seeding will acquire the given nodes and expand around them using given seed
                     method.</p>
-                {{ wtf.quick_form(subgraph_form, form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
+
+                <select style="width: 100%" multiple="multiple"
+                        id="node_selection"></select>
+
+                {{ wtf.quick_form(subgraph_form, id='subgraph_form', form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
             </div>
         </div>
         <div class="panel panel-default">

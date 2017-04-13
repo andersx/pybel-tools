@@ -3,7 +3,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import fields
-from wtforms.fields import BooleanField, RadioField
+from wtforms.fields import BooleanField, RadioField, HiddenField
 from wtforms.validators import DataRequired
 
 from ..selection.induce_subgraph import SEED_TYPE_INDUCTION, SEED_TYPE_PATHS, SEED_TYPE_NEIGHBORS
@@ -20,7 +20,7 @@ class UploadForm(FlaskForm):
 
 class SeedSubgraphForm(FlaskForm):
     """Builds the form for seeding by subgraph"""
-    node_list = fields.StringField('Nodes')
+    node_list = HiddenField('Nodes')
     seed_method = fields.RadioField(
         'Expansion Method',
         choices=[

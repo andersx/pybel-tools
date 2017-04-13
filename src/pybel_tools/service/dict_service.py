@@ -399,14 +399,19 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     def get_number_nodes(network_id):
         return jsonify(info_json(api.get_network_by_id(network_id)))
 
-    @app.route('/api/suggestion/nodes/<node>')
-    def get_node_suggestion(node):
+    @app.route('/api/suggestion/nodes/')
+    def get_node_suggestion():
 
-        keywords = [entry.strip() for entry in node.split(TAB_DELIMITER)]
+        if not request.args['search']:
+            return jsonify([])
+
+        keywords = [entry.strip() for entry in request.args['search'].split(TAB_DELIMITER)]
+
+        log.debug(keywords)
 
         autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
 
-        return jsonify(list(autocompletion_set))
+        return jsonify(autocompletion_set)
 
     @app.route('/api/suggestion/authors/<author>')
     def get_author_suggestion(author):
@@ -415,6 +420,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         keywords = [entry.strip() for entry in author.split(COMMA_DELIMITER)]
 
         autocompletion_set = api.get_authors_containing_keyword(keywords[-1])
+
+        # {k: v for v, k in enumerate(lst)}
 
         return jsonify(list(autocompletion_set))
 

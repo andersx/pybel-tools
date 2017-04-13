@@ -1,8 +1,3 @@
-/**
- * Created by ddomingofernandez on 4/7/17.
- */
-
-
 $(document).ready(function () {
 
     // Required for multiple autocompletion
@@ -22,6 +17,8 @@ $(document).ready(function () {
         return splitByPipes(term).pop();
     }
 
+    // LICENSE: http://www.devthought.com/projects/mootools/textboxlist/
+
     // Node autocompletion
     $("#node_list").autocomplete({
 
@@ -32,8 +29,6 @@ $(document).ready(function () {
                 type: 'GET',
                 url: "/api/suggestion/nodes/" + request.term,
                 success: function (data) {
-
-                    console.log(data);
                     // Only gives the first 20 matches
                     response(data.slice(0, 20));
                 }
@@ -143,4 +138,53 @@ $(document).ready(function () {
         },
         minLength: 2
     });
+
+
+    $('#subgraph_form').submit(function (e) {
+
+        var data = $("#node_selection").select2('data');
+
+        var nodesIDs = [];
+
+        $.each(data, function (index, value) {
+            nodesIDs.push(value.id)
+        });
+
+        $("#node_list").val(nodesIDs.join("|"));
+
+    });
+
+    $("#node_selection").select2({
+        // data:data
+        minimumInputLength: 2,
+        multiple: true,
+        placeholder: 'Please type here your nodes of interest',
+        ajax: {
+            url: function (params) {
+                return "/api/suggestion/nodes/";
+            },
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            data: function (params) {
+                return {
+                    search: params.term
+                };
+            },
+            delay: 250,
+            processResults: function (data) {
+                return {
+                    results: data.map(function (item) {
+                            return {
+                                id: item.id,
+                                text: item.text
+                            };
+                        }
+                    )
+                };
+            }
+        }
+    })
+
+
 });

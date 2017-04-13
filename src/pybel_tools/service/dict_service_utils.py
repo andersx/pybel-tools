@@ -329,26 +329,12 @@ class DictionaryService(BaseService):
     def get_nodes_containing_keyword(self, keyword):
         """Gets a list with all cnames that contain a certain keyword adding to the duplicates their function"""
 
-        super_network = self.get_super_network()
-
-        node_list = [data[CNAME] for n, data in super_network.nodes_iter(data=True)]
-
         # Case insensitive comparison
-        nodes_with_keyword = [cname for cname in node_list if keyword.lower() in cname.lower()]
+        nodes_with_keyword = [bel_entity for bel_entity in self.bel_id if keyword.lower() in bel_entity.lower()]
 
-        duplicates_cnames = set(x for x, count in Counter(nodes_with_keyword).items() if count > 1)
+        final_dict = [{"text": bel_entity, "id": str(self.bel_id[bel_entity])} for bel_entity in nodes_with_keyword]
 
-        if not duplicates_cnames:
-            return set(nodes_with_keyword)
-
-        unique_cnames = set(x for x, count in Counter(nodes_with_keyword).items() if count == 1)
-
-        duplicates_with_function = {'{}({})'.format(data[CNAME], data[FUNCTION]) for n, data in
-                                    super_network.nodes_iter(data=True) if data[CNAME] in duplicates_cnames}
-
-        nodes_with_keyword = unique_cnames.union(duplicates_with_function)
-
-        return nodes_with_keyword
+        return final_dict
 
     def get_pubmed_containing_keyword(self, keyword):
         """Gets a list with pubmed_ids that contain a certain keyword"""
