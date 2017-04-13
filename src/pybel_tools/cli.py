@@ -112,7 +112,7 @@ def convert(connection, upload, directory, debug):
 @main.command()
 @click.option('-c', '--connection', help='Cache connection string. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('--host', help='Flask host. Defaults to localhost')
-@click.option('--port', help='Flask port. Defaults to 5000')
+@click.option('--port', type=int, help='Flask port. Defaults to 5000')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 @click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
@@ -137,6 +137,12 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
 
     log.info('Running PyBEL v%s', pybel_version())
     log.info('Running PyBEL Tools v%s', get_version())
+
+    if host is not None:
+        log.info('Running on host: %s', host)
+
+    if port is not None:
+        log.info('Running on port: %d', port)
 
     app = get_app()
     app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
