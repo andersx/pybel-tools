@@ -132,6 +132,10 @@ class DictionaryService(BaseService):
         log.debug('started updating node indexes for %s', graph.name)
 
         for node in graph.nodes_iter():
+            if isinstance(node, int):
+                log.warning('nodes already converted to ids')
+                return
+
             if node in self.node_nid:
                 continue
 
@@ -155,7 +159,7 @@ class DictionaryService(BaseService):
         :param graph: A BEL Graph
         :type graph: pybel.BELGraph
         """
-        mapping = {k: v for k, v in self.node_nid.items() if k in graph}
+        mapping = {node: self.node_nid[node] for node in graph.nodes_iter()}
         nx.relabel.relabel_nodes(graph, mapping, copy=False)
 
     # Graph selection functions
