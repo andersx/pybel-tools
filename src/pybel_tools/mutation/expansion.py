@@ -456,46 +456,46 @@ def expand_node_successors(universe, graph, node):
 
 
 @pipeline.uni_in_place_mutator
-def expand_node_neighborhood(graph, subgraph, node):
+def expand_node_neighborhood(universe, graph, node):
     """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
     in place.
 
-    :param graph: The graph containing the stuff to add
+    :param universe: The graph containing the stuff to add
+    :type universe: pybel.BELGraph
+    :param graph: The graph to add stuff to
     :type graph: pybel.BELGraph
-    :param subgraph: The graph to add stuff to
-    :type subgraph: pybel.BELGraph
     :param node: A node tuples from the query graph
     :type node: tuple
     """
-    if node not in graph:
-        raise ValueError('{} not in graph {}'.format(node, subgraph.name))
+    if node not in universe:
+        raise ValueError('{} not in graph {}'.format(node, universe.name))
 
-    if node not in subgraph:
-        subgraph.add_node(node, attr_dict=graph.node[node])
+    if node not in graph:
+        graph.add_node(node, attr_dict=universe.node[node])
 
     skip_predecessors = set()
-    for predecessor in graph.predecessors_iter(node):
-        if predecessor in subgraph:
+    for predecessor in universe.predecessors_iter(node):
+        if predecessor in graph:
             skip_predecessors.add(predecessor)
             continue
-        subgraph.add_node(predecessor, attr_dict=graph.node[node])
+        graph.add_node(predecessor, attr_dict=universe.node[node])
 
-    for predecessor, _, k, d in graph.in_edges_iter(node, data=True, keys=True):
+    for predecessor, _, k, d in universe.in_edges_iter(node, data=True, keys=True):
         if predecessor in skip_predecessors:
             continue
-        safe_add_edge(subgraph, predecessor, node, k, d)
+        safe_add_edge(graph, predecessor, node, k, d)
 
     skip_successors = set()
-    for successor in graph.successors_iter(node):
-        if successor in subgraph:
+    for successor in universe.successors_iter(node):
+        if successor in graph:
             skip_successors.add(successor)
             continue
-        subgraph.add_node(successor, attr_dict=graph.node[node])
+        graph.add_node(successor, attr_dict=universe.node[node])
 
-    for _, successor, k, d in graph.out_edges_iter(node, data=True, keys=True):
+    for _, successor, k, d in universe.out_edges_iter(node, data=True, keys=True):
         if successor in skip_successors:
             continue
-        safe_add_edge(subgraph, node, successor, k, d)
+        safe_add_edge(graph, node, successor, k, d)
 
 
 @pipeline.uni_in_place_mutator
