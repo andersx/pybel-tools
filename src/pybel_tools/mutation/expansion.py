@@ -447,19 +447,38 @@ def expand_internal_causal(graph, subgraph):
 
 @pipeline.uni_in_place_mutator
 def expand_node_predecessors(universe, graph, node):
-    raise NotImplementedError
+    """
+    
+    :param universe: The graph containing the stuff to add
+    :type universe: pybel.BELGraph
+    :param graph: The graph to add stuff to
+    :type graph: pybel.BELGraph
+    :param node: A node tuples from the query graph
+    :type node: tuple
+    """
+    if node not in universe:
+        raise ValueError('{} not in graph {}'.format(node, universe.name))
+
+    if node not in graph:
+        graph.add_node(node, attr_dict=universe.node[node])
+
+    skip_successors = set()
+    for successor in universe.successors_iter(node):
+        if successor in graph:
+            skip_successors.add(successor)
+            continue
+        graph.add_node(successor, attr_dict=universe.node[node])
+
+    for _, successor, k, d in universe.out_edges_iter(node, data=True, keys=True):
+        if successor in skip_successors:
+            continue
+        safe_add_edge(graph, node, successor, k, d)
 
 
 @pipeline.uni_in_place_mutator
 def expand_node_successors(universe, graph, node):
-    raise NotImplementedError
-
-
-@pipeline.uni_in_place_mutator
-def expand_node_neighborhood(universe, graph, node):
-    """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
-    in place.
-
+    """
+    
     :param universe: The graph containing the stuff to add
     :type universe: pybel.BELGraph
     :param graph: The graph to add stuff to
@@ -485,17 +504,21 @@ def expand_node_neighborhood(universe, graph, node):
             continue
         safe_add_edge(graph, predecessor, node, k, d)
 
-    skip_successors = set()
-    for successor in universe.successors_iter(node):
-        if successor in graph:
-            skip_successors.add(successor)
-            continue
-        graph.add_node(successor, attr_dict=universe.node[node])
 
-    for _, successor, k, d in universe.out_edges_iter(node, data=True, keys=True):
-        if successor in skip_successors:
-            continue
-        safe_add_edge(graph, node, successor, k, d)
+@pipeline.uni_in_place_mutator
+def expand_node_neighborhood(universe, graph, node):
+    """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
+    in place.
+
+    :param universe: The graph containing the stuff to add
+    :type universe: pybel.BELGraph
+    :param graph: The graph to add stuff to
+    :type graph: pybel.BELGraph
+    :param node: A node tuples from the query graph
+    :type node: tuple
+    """
+    expand_node_predecessors(universe, graph, node)
+    expand_node_successors(universe, graph, node)
 
 
 @pipeline.uni_in_place_mutator
