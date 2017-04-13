@@ -36,9 +36,9 @@ class TestExpandNeighborhood(unittest.TestCase):
     def test_expand_successors(self):
         expand_node_neighborhood(self.universe, self.graph, 1)
 
+        self.assertIn(4, self.graph)
         self.assertIn(5, self.graph)
-        self.assertIn(6, self.graph)
-        self.assertIn(6, self.graph.edge[6])
+        self.assertIn(5, self.graph.edge[1])
 
     def test_expand_predecessors(self):
         expand_node_neighborhood(self.universe, self.graph, 2)
