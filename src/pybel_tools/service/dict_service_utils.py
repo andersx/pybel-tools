@@ -11,6 +11,7 @@ from collections import Counter
 import networkx as nx
 
 from pybel import from_bytes, BELGraph
+from pybel.canonicalize import decanonicalize_node
 from pybel.constants import *
 from pybel.manager.models import Network
 from pybel.utils import hash_tuple
@@ -51,6 +52,10 @@ class DictionaryService(BaseService):
 
         #: dictionary of {int id: tuple node}
         self.nid_node = {}
+
+        #: dictionary of {str BEL: int id}
+        self.bel_id = {}
+        self.id_bel = {}
 
         self.full_network = BELGraph()
         self.full_network_loaded = False
@@ -130,8 +135,14 @@ class DictionaryService(BaseService):
             if node in self.node_nid:
                 continue
 
-            self.node_nid[node] = len(self.node_nid)
-            self.nid_node[self.node_nid[node]] = node
+            nid = len(self.node_nid)
+
+            self.node_nid[node] = nid
+            self.nid_node[nid] = node
+
+            bel = decanonicalize_node(graph, node)
+            self.id_bel[nid] = bel
+            self.bel_id[bel] = nid
 
         log.debug('finished updating node indexes %s', graph.name)
 
