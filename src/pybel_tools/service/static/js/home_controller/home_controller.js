@@ -6,12 +6,20 @@
 $(document).ready(function () {
 
     // Required for multiple autocompletion
-    function split(val) {
+    function splitByPipes(val) {
         return val.split(/\|/);
     }
 
-    function extractLast(term) {
-        return split(term).pop();
+    function splitByCommas(val) {
+        return val.split(/,\s*/);
+    }
+
+    function extractLastCommas(term) {
+        return splitByCommas(term).pop();
+    }
+
+    function extractLastPipes(term) {
+        return splitByPipes(term).pop();
     }
 
     // Node autocompletion
@@ -25,7 +33,7 @@ $(document).ready(function () {
                 url: "/api/suggestion/nodes/" + request.term,
                 success: function (data) {
 
-                    console.log('ajax');
+                    console.log(data);
                     // Only gives the first 20 matches
                     response(data.slice(0, 20));
                 }
@@ -33,7 +41,7 @@ $(document).ready(function () {
         },
         search: function () {
             // custom minLength
-            var term = extractLast(this.value);
+            var term = extractLastPipes(this.value);
             if (term.length < 1) {
                 return false;
             }
@@ -43,7 +51,7 @@ $(document).ready(function () {
             return false;
         },
         select: function (event, ui) {
-            var terms = split(this.value);
+            var terms = splitByPipes(this.value);
             // remove the current input
             terms.pop();
             // add the selected item
@@ -73,7 +81,7 @@ $(document).ready(function () {
         },
         search: function () {
             // custom minLength
-            var term = extractLast(this.value);
+            var term = extractLastCommas(this.value);
             if (term.length < 1) {
                 return false;
             }
@@ -83,7 +91,7 @@ $(document).ready(function () {
             return false;
         },
         select: function (event, ui) {
-            var terms = split(this.value);
+            var terms = splitByCommas(this.value);
             // remove the current input
             terms.pop();
             // add the selected item
@@ -113,7 +121,7 @@ $(document).ready(function () {
         },
         search: function () {
             // custom minLength
-            var term = extractLast(this.value);
+            var term = extractLastCommas(this.value);
             if (term.length < 1) {
                 return false;
             }
@@ -123,7 +131,7 @@ $(document).ready(function () {
             return false;
         },
         select: function (event, ui) {
-            var terms = split(this.value);
+            var terms = splitByCommas(this.value);
             // remove the current input
             terms.pop();
             // add the selected item
