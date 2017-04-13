@@ -446,6 +446,16 @@ def expand_internal_causal(graph, subgraph):
 
 
 @pipeline.uni_in_place_mutator
+def expand_node_predecessors(universe, graph, node):
+    raise NotImplementedError
+
+
+@pipeline.uni_in_place_mutator
+def expand_node_successors(universe, graph, node):
+    raise NotImplementedError
+
+
+@pipeline.uni_in_place_mutator
 def expand_node_neighborhood(graph, subgraph, node):
     """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
     in place.
