@@ -98,16 +98,6 @@ def get_tree_annotations(graph):
             sorted(annotations.items())]
 
 
-def render_network(graph, network_id=None):
-    """Renders the visualization of a network"""
-    name = graph.name or DEFAULT_TITLE
-    # TODO: delete network_name from context and implement end-point to get network_name from network_id
-    return flask.render_template(
-        'explorer.html',
-        network_name=name
-    )
-
-
 def get_dict_service(dsa):
     """Gets the latent PyBEL Dictionary Service from a Flask app
 
@@ -296,8 +286,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/explore/', methods=['GET'])
     def view_explorer():
         """Renders a page for the user to explore a network"""
-        graph = get_graph_from_request()
-        return render_network(graph)
+        return flask.render_template(
+            'explorer.html',
+        )
 
     @app.route('/definitions')
     def view_definitions():
