@@ -9,6 +9,7 @@ import requests
 
 from pybel.constants import CITATION, CITATION_NAME, CITATION_REFERENCE, CITATION_TYPE, EVIDENCE, ANNOTATIONS
 from pybel.constants import GENE, ORTHOLOGOUS, RELATION
+from . import pipeline
 from .constants import PUBMED
 from .utils import safe_add_edge
 
@@ -93,6 +94,7 @@ def structure_orthologies_from_rgd(path=None):
     return mgi_orthologies, rgd_orthologies
 
 
+@pipeline.in_place_mutator
 def add_orthology_statements(graph, orthologies, namespace):
     """Adds orthology statements for all orthologous nodes to HGNC nodes
 
@@ -123,14 +125,17 @@ def add_orthology_statements(graph, orthologies, namespace):
         })
 
 
+@pipeline.in_place_mutator
 def add_mgi_orthology_statements(graph, mgi_orthologies):
     add_orthology_statements(graph, mgi_orthologies, MGI)
 
 
+@pipeline.in_place_mutator
 def add_rgd_orthology_statements(graph, rgd_orthologies):
     add_orthology_statements(graph, rgd_orthologies, RGD)
 
 
+@pipeline.in_place_mutator
 def integrate_orthologies_from_hgnc(graph, lines=None):
     """Adds orthology statements to graph using HGNC symbols, MGI IDs, and RGD IDs.
 
@@ -145,6 +150,7 @@ def integrate_orthologies_from_hgnc(graph, lines=None):
     add_rgd_orthology_statements(graph, rgdo)
 
 
+@pipeline.in_place_mutator
 def integrate_orthologies_from_rgd(graph, path=None):
     """Adds orthology statements to graph using HGNC symbols, MGI symbols, and RGD symbols.
 
@@ -160,6 +166,7 @@ def integrate_orthologies_from_rgd(graph, path=None):
     add_rgd_orthology_statements(graph, rgdo)
 
 
+@pipeline.in_place_mutator
 def collapse_orthologies(graph):
     """Collapses all orthology relations.
 
