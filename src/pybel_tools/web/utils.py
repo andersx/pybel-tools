@@ -11,12 +11,16 @@ from sqlalchemy.exc import IntegrityError
 log = logging.getLogger(__name__)
 
 
-def render_upload_error(e):
+def render_upload_error(exc):
+    """Builds a flask Response for an exception.
+    
+    :type exc: Exception
+    """
     traceback_lines = traceback.format_exc().split('\n')
     return render_template(
         'parse_error.html',
         error_title='Upload Error',
-        error_text=str(e),
+        error_text=str(exc),
         traceback_lines=traceback_lines
     )
 

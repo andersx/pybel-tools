@@ -11,8 +11,11 @@ log = logging.getLogger(__name__)
 
 
 def build_sitemap_endpoint(app, route=None):
+    """Builds the sitemap endpoing"""
+
     @app.route("/" if route is None else route)
     def view_site_map():
+        """Displays a page with the site map"""
         api_links = []
         page_links = []
         for rule in app.url_map.iter_rules():

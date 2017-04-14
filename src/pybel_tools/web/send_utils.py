@@ -6,7 +6,7 @@ from six import BytesIO, StringIO
 from pybel import to_json_dict, to_cx_json, to_bel_lines, to_graphml, to_bytes, to_csv
 
 
-def serve_network(graph, serve_format):
+def serve_network(graph, serve_format=None):
     """A helper function to serialize a graph and download as a file"""
     if serve_format is None or serve_format == 'json':
         data = to_json_dict(graph)
@@ -38,3 +38,5 @@ def serve_network(graph, serve_format):
         bio.seek(0)
         data = StringIO(bio.read().decode('utf-8'))
         return send_file(data, attachment_filename="graph.tsv", as_attachment=True)
+
+    raise TypeError('{} is not a valid format'.format(serve_format))

@@ -25,6 +25,7 @@ def build_receiver_service(app, manager):
 
     @app.route('/api/receive', methods=['POST'])
     def receive():
+        """Receives a JSON serialized BEL graph"""
         try:
             graph = from_json_dict(flask.request.get_json())
         except Exception as e:
