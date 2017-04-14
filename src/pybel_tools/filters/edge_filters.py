@@ -76,12 +76,40 @@ def edge_is_causal(graph, u, v, k, d):
 
 
 def edge_has_author_annotation(graph, u, v, k, d):
-    """Passes for edges that have citations with authors"""
+    """Passes for edges that have citations with authors
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param u: A BEL node
+    :type u: tuple
+    :param v: A BEL node
+    :type v: tuple
+    :param k: The edge key between the given nodes
+    :type k: int
+    :param d: The edge data dictionary
+    :type d: dict
+    :return: Does the edge's citation data dictionary have authors included?
+    :rtype: bool
+    """
     return CITATION in graph.edge[u][v][k] and CITATION_AUTHORS in graph.edge[u][v][k][CITATION]
 
 
 def edge_has_pubmed_citation(graph, u, v, k, d):
-    """Passes for edges that have PubMed citations"""
+    """Passes for edges that have PubMed citations
+    
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param u: A BEL node
+    :type u: tuple
+    :param v: A BEL node
+    :type v: tuple
+    :param k: The edge key between the given nodes
+    :type k: int
+    :param d: The edge data dictionary
+    :type d: dict
+    :return: Is the edge's citation from :data:`PUBMED`?
+    :rtype: bool
+    """
     return CITATION in graph.edge[u][v][k] and PUBMED == graph.edge[u][v][k][CITATION][CITATION_TYPE]
 
 

@@ -149,8 +149,8 @@ def make_document_annotations(annotation_dict=None):
 
     :param annotation_dict: A dictionary of {str name: str URL} of annotations
     :type annotation_dict: dict
-    :return: A list of lines for the annotation definitions
-    :rtype: list of str
+    :return: An iterator over the lines for the annotation definitions
+    :rtype: iter[str]
     """
     annotation_dict = default_annotations if annotation_dict is None else annotation_dict
 
@@ -159,6 +159,13 @@ def make_document_annotations(annotation_dict=None):
 
 
 def make_document_statement_group(pmids):
+    """Builds a skeleton for the citations' statements
+    
+    :param pmids: A list of pubmed identifiers
+    :type pmids: iter[str] or iter[int]
+    :return: An iterator over the lines of the citation section
+    :rtype iter[str]
+    """
     for i, pmid in enumerate(pmids, start=1):
         yield 'SET STATEMENT_GROUP = "Group {}"\n'.format(i)
         res = requests.get(title_url_fmt.format(pmid))
