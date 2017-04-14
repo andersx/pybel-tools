@@ -4,7 +4,8 @@ import logging
 import traceback
 
 import flask
-from flask import render_template, jsonify
+from flask import render_template, jsonify, Flask
+from flask_bootstrap import Bootstrap
 from sqlalchemy.exc import IntegrityError
 
 log = logging.getLogger(__name__)
@@ -44,3 +45,24 @@ def try_insert_graph(manager, graph):
         flask.flash("Error storing in database")
         log.exception('Upload error')
         return render_upload_error(e)
+
+
+def get_app():
+    """Builds a Flask app for the PyBEL web service
+    
+    :rtype: flask.Flask
+    """
+    app = Flask(__name__)
+    log.debug('made app %s', app)
+    Bootstrap(app)
+    log.debug('added bootstrap to app %s', app)
+    return app
+
+
+def sanitize_list_of_str(l):
+    """Strips all strings in a list and filters to the non-empty ones
+    
+    :type l: list[str]
+    :rtype: list[str]
+    """
+    return [e for e in (e.strip() for e in l) if e]

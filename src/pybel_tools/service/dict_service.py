@@ -9,14 +9,13 @@ import flask
 import networkx as nx
 from flask import Flask, request, jsonify, render_template, url_for, redirect
 from flask_basicauth import BasicAuth
-from flask_bootstrap import Bootstrap
 
 import pybel
 from pybel.constants import METADATA_DESCRIPTION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
-from .utils import try_insert_graph
+from .utils import try_insert_graph, sanitize_list_of_str
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary import get_annotation_values_by_annotation
@@ -61,31 +60,6 @@ BLACK_LIST = {
 }
 
 
-def sanitize_list_of_str(l):
-    """
-    :type l: list[str]
-    :rtype: list[str]
-    """
-    return [e for e in (e.strip() for e in l) if e]
-
-
-def raise_invalid_source_target():
-    if SOURCE_NODE not in request.args:
-        raise ValueError('Not source node in request')
-    if TARGET_NODE not in request.args:
-        raise ValueError('Not taget node in request')
-    try:
-        int(request.args.get(SOURCE_NODE))
-    except ValueError:
-        raise ValueError('{} is not valid node'.format(request.args.get(SOURCE_NODE)))
-    try:
-        int(request.args.get(TARGET_NODE))
-    except ValueError:
-        raise ValueError('{} is not valid node'.format(request.args.get(TARGET_NODE)))
-
-    return flask.abort(404)
-
-
 def get_tree_annotations(graph):
     """ Builds tree structure with annotation for a given graph
     :param graph: 
@@ -94,7 +68,7 @@ def get_tree_annotations(graph):
     :rtype: list
     """
     annotations = get_annotation_values_by_annotation(graph)
-    return [{'text': k, 'children': [{'text': annotation} for annotation in sorted(v)]} for k, v in
+    return [{'text': annotation, 'children': [{'text': value} for value in sorted(values)]} for annotation, values in
             sorted(annotations.items())]
 
 
@@ -132,6 +106,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     :type preload: bool
     :param check_version: Should the versions of the networks be checked during loading?
     :type check_version: bool
+    :param admin_password: The administrator password for accessing restricted web pages
+    :type admin_password: str
     """
     api = DictionaryService(manager=manager)
     set_dict_service(app, api)
@@ -152,6 +128,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         @app.route('/admin/reload')
         @basic_auth.required
         def run_reload():
+            """Reloads the networks and supernetwork"""
             api.load_networks()
             api.get_super_network(reload=True)
             return jsonify({'status': 200})
@@ -210,7 +187,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             authors = request.args.getlist(SEED_DATA_AUTHORS)
 
             if authors:
-                #TODO: decode authors
+                # TODO: decode authors
                 seed_data['authors'] = authors
 
             pmids = request.args.getlist(SEED_DATA_PMIDS)
@@ -298,8 +275,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/definitions')
     def view_definitions():
         """Displays a page listing the namespaces and annotations."""
-        return render_template('definitions_list.html', namespaces=api.list_namespaces(),
-                               annotations=api.list_annotations())
+        return render_template('definitions_list.html', namespaces=manager.list_namespaces(),
+                               annotations=manager.list_annotations())
 
     # Data Service
     @app.route('/api/network/', methods=['GET'])
@@ -313,11 +290,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         """Builds the annotation tree data structure for a given graph"""
         graph = get_graph_from_request()
         return jsonify(get_tree_annotations(graph))
-
-    @app.route('/api/edges/incident/<int:network_id>/<int:node_id>')
-    def get_incident_edges(network_id, node_id):
-        res = api.get_incident_edges(network_id, node_id)
-        return jsonify(res)
 
     @app.route('/api/paths/')
     def get_paths_api():
@@ -366,6 +338,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     @app.route('/api/centrality/', methods=['GET'])
     def get_nodes_by_betweenness_centrality():
+        """Gets a list of nodes with the top betweenness-centrality"""
         graph = get_graph_from_request()
 
         try:
@@ -384,29 +357,34 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     @app.route('/api/authors')
     def get_all_authors():
+        """Gets a list of all authors in the graph produced by the given URL parameters"""
         graph = get_graph_from_request()
         return jsonify(sorted(get_authors(graph)))
 
     @app.route('/api/pmids')
     def get_all_pmids():
+        """Gets a list of all pubmed citation identifiers in the graph produced by the given URL parameters"""
         graph = get_graph_from_request()
         return jsonify(sorted(get_pmids(graph)))
 
     @app.route('/api/nodes/')
     def get_node_hashes():
+        """Gets the dictionary of {node id: pybel node tuples}"""
         return jsonify(api.nid_node)
 
     @app.route('/api/nodes/<nid>')
     def get_node_hash(nid):
+        """Gets the pybel node tuple"""
         return jsonify(api.get_node_by_id(nid))
 
     @app.route('/api/summary/<int:network_id>')
     def get_number_nodes(network_id):
+        """Gets a summary of the given network"""
         return jsonify(info_json(api.get_network_by_id(network_id)))
 
     @app.route('/api/suggestion/nodes/')
     def get_node_suggestion():
-
+        """Suggests a node based on the search criteria"""
         if not request.args['search']:
             return jsonify([])
 
@@ -421,7 +399,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/suggestion/authors/<author>')
     def get_author_suggestion(author):
         """Return list of authors matching the author keyword"""
-
         keywords = [entry.strip() for entry in author.split(COMMA_DELIMITER)]
 
         autocompletion_set = api.get_authors_containing_keyword(keywords[-1])
@@ -433,7 +410,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/suggestion/pubmed/<pubmed>')
     def get_pubmed_suggestion(pubmed):
         """Return list of pubmedids matching the integer keyword"""
-
         keywords = [entry.strip() for entry in pubmed.split(COMMA_DELIMITER)]
 
         autocompletion_set = api.get_pubmed_containing_keyword(keywords[-1])
@@ -442,7 +418,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     @app.route('/api/edges/provenance/<int:sid>/<int:tid>')
     def get_edges(sid, tid):
-
+        """Gets all edges between the two given nodes"""
         return jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
 
     @app.route('/api/meta/blacklist')
@@ -451,11 +427,3 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         return jsonify(sorted(BLACK_LIST))
 
     log.info('Added dictionary service to %s', app)
-
-
-def get_app():
-    app = Flask(__name__)
-    log.debug('made app %s', app)
-    Bootstrap(app)
-    log.debug('added bootstrap to app %s', app)
-    return app

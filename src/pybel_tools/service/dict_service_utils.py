@@ -6,7 +6,6 @@ dictionary
 """
 
 import logging
-from collections import Counter
 
 import networkx as nx
 
@@ -16,12 +15,10 @@ from pybel.constants import *
 from pybel.manager.models import Network
 from pybel.utils import hash_tuple
 from .base_service import BaseService
-from ..constants import CNAME
 from ..mutation import add_canonical_names, left_merge
 from ..mutation.metadata import parse_authors
 from ..selection import get_subgraph
 from ..summary import get_authors, get_pmids
-from ..utils import citation_to_tuple
 
 log = logging.getLogger(__name__)
 
@@ -231,26 +228,20 @@ class DictionaryService(BaseService):
 
         :param network_id: The internal ID of the network to get
         :type network_id: int
-        :return:
+        :return: A list of URLs for the namespaces in the network
+        :rtype: list[str]
         """
         return list(self.get_network_by_id(network_id).namespace_url.values())
 
     def get_annotations_in_network(self, network_id):
+        """Returns the annotations in a given network
+        
+        :param network_id: The internal ID of the network to get
+        :type network_id: int
+        :return: A list of URLs for the annotations in the network
+        :rtype: list[str]
+        """
         return list(self.get_network_by_id(network_id).annotation_url.values())
-
-    def get_citations_in_network(self, network_id):
-        g = self.get_network_by_id(network_id)
-        citations = set(data[CITATION] for _, _, data in g.edges_iter(data=True))
-        return list(sorted(citations, key=citation_to_tuple))
-
-    def get_incident_edges(self, network_id, node_id):
-        graph = self.get_network_by_id(network_id)
-        node = self.get_node_by_id(node_id)
-
-        successors = list(self._build_edge_json(graph, u, v, d) for u, v, d in graph.out_edges_iter(node, data=True))
-        predecessors = list(self._build_edge_json(graph, u, v, d) for u, v, d in graph.in_edges_iter(node, data=True))
-
-        return successors + predecessors
 
     def query(self, network_id=None, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None,
               **annotations):
@@ -354,9 +345,3 @@ class DictionaryService(BaseService):
         authors_with_keyword = [author for author in get_authors(super_network) if keyword.lower() in author.lower()]
 
         return authors_with_keyword
-
-    def list_namespaces(self):
-        return sorted(self.manager.list_namespaces())
-
-    def list_annotations(self):
-        return sorted(self.manager.list_annotations())
