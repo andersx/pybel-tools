@@ -7,8 +7,9 @@ from collections import Counter, defaultdict
 from pybel import BELGraph
 from pybel.constants import *
 from .merge import left_merge
+from .utils import ensure_node_from_universe
 from .. import pipeline
-from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filters, keep_causal_edges
+from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filters, edge_is_causal
 from ..filters.node_filters import keep_node_permissive, concatenate_node_filters
 from ..selection.utils import get_nodes_by_function
 from ..summary.edge_summary import count_annotation_values
@@ -440,9 +441,9 @@ def expand_internal_causal(graph, subgraph):
     Equivalent to:
 
     >>> import pybel_tools as pbt
-    >>> pbt.mutation.expand_internal(graph, subgraph, edge_filters=pbt.filters.keep_causal_edges)
+    >>> pbt.mutation.expand_internal(graph, subgraph, edge_filters=pbt.filters.edge_is_causal)
     """
-    expand_internal(graph, subgraph, edge_filters=keep_causal_edges)
+    expand_internal(graph, subgraph, edge_filters=edge_is_causal)
 
 
 @pipeline.uni_in_place_mutator
@@ -456,11 +457,7 @@ def expand_node_predecessors(universe, graph, node):
     :param node: A node tuples from the query graph
     :type node: tuple
     """
-    if node not in universe:
-        raise ValueError('{} not in graph {}'.format(node, universe.name))
-
-    if node not in graph:
-        graph.add_node(node, attr_dict=universe.node[node])
+    ensure_node_from_universe(universe, graph, node)
 
     skip_successors = set()
     for successor in universe.successors_iter(node):
@@ -486,11 +483,7 @@ def expand_node_successors(universe, graph, node):
     :param node: A node tuples from the query graph
     :type node: tuple
     """
-    if node not in universe:
-        raise ValueError('{} not in graph {}'.format(node, universe.name))
-
-    if node not in graph:
-        graph.add_node(node, attr_dict=universe.node[node])
+    ensure_node_from_universe(universe, graph, node)
 
     skip_predecessors = set()
     for predecessor in universe.predecessors_iter(node):

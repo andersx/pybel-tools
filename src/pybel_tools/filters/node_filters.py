@@ -384,7 +384,7 @@ def keep_molecularly_active(graph, node):
     return False
 
 
-def upstream_leaf_predicate(graph, node):
+def node_is_upstream_leaf(graph, node):
     """Returns if the node is an upstream leaf. An upstream leaf is defined as a node that has no in-edges, and exactly
     1 out-edge.
 
@@ -399,9 +399,6 @@ def upstream_leaf_predicate(graph, node):
 
 
 # TODO node filter that is false for abundances with no in-edges
-
-
-
 
 def build_node_data_search(key, data_filter):
     """Passes for nodes who have the given key in their data dictionaries and whose associated values pass the given
