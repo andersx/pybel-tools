@@ -448,7 +448,8 @@ def expand_internal_causal(graph, subgraph):
 
 @pipeline.uni_in_place_mutator
 def expand_node_predecessors(universe, graph, node):
-    """
+    """Expands around the predecessors of the given node in the result graph by looking at the universe graph,
+    in place.
     
     :param universe: The graph containing the stuff to add
     :type universe: pybel.BELGraph
@@ -474,7 +475,8 @@ def expand_node_predecessors(universe, graph, node):
 
 @pipeline.uni_in_place_mutator
 def expand_node_successors(universe, graph, node):
-    """
+    """Expands around the successors of the given node in the result graph by looking at the universe graph,
+    in place.
     
     :param universe: The graph containing the stuff to add
     :type universe: pybel.BELGraph
@@ -500,7 +502,7 @@ def expand_node_successors(universe, graph, node):
 
 @pipeline.uni_in_place_mutator
 def expand_node_neighborhood(universe, graph, node):
-    """Expands around the neighborhoods of the given nodes in the result graph by looking at the original_graph,
+    """Expands around the neighborhoods of the given node in the result graph by looking at the universe graph,
     in place.
 
     :param universe: The graph containing the stuff to add
@@ -515,16 +517,16 @@ def expand_node_neighborhood(universe, graph, node):
 
 
 @pipeline.uni_in_place_mutator
-def expand_all_node_neighborhoods(graph, subgraph):
-    """Expands the neighborhoods of all nodes in the given subgraph
+def expand_all_node_neighborhoods(universe, graph):
+    """Expands the neighborhoods of all nodes in the given graph based on the universe graph.
     
-    :param graph: The graph containing the stuff to add
-    :type graph: pybel.BELGraph
-    :param subgraph: The graph to add stuff to
-    :type subgraph: pybel.BELGraph 
+    :param universe: The graph containing the stuff to add
+    :type universe: pybel.BELGraph
+    :param graph: The graph to add stuff to
+    :type graph: pybel.BELGraph 
     """
-    for node in subgraph.nodes():
-        expand_node_neighborhood(graph, subgraph, node)
+    for node in graph.nodes():
+        expand_node_neighborhood(universe, graph, node)
 
 
 @pipeline.uni_in_place_mutator
