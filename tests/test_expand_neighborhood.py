@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 
 from pybel import BELGraph
@@ -21,7 +23,7 @@ class TestExpandNeighborhood(unittest.TestCase):
 
     def test_expand_failure(self):
         self.graph.add_node(0)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Exception):
             expand_node_neighborhood(self.universe, self.graph, 0)
 
     def test_expand_add(self):
