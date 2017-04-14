@@ -18,9 +18,9 @@ from .send_utils import serve_network
 from .utils import try_insert_graph, sanitize_list_of_str
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
-from ..summary import get_annotation_values_by_annotation
-from ..summary import get_authors, get_pmids
-from ..summary import info_json
+from ..summary.edge_summary import get_annotation_values_by_annotation
+from ..summary.export import info_json
+from ..summary.provenance import get_authors, get_pmids
 
 log = logging.getLogger(__name__)
 

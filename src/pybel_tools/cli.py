@@ -28,18 +28,18 @@ from pybel.utils import get_version as pybel_version
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 from .ioutils import convert_recursive, upload_recusive
-from .service.compilation_service import build_synchronous_compiler_service
-from .service.database_service import build_database_service
-from .service.dict_service import build_dictionary_service
-from .service.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
-from .service.receiver_service import post as send_to_service
-from .service.summary_service import build_summary_service
-from .service.upload_service import build_pickle_uploader_service
-from .service.utils import get_app
 from .utils import get_version
+from .web.compilation_service import build_synchronous_compiler_service
 from .web.constants import SECRET_KEY
+from .web.database_service import build_database_service
+from .web.dict_service import build_dictionary_service
 from .web.parser_endpoint import build_parser_service
+from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
+from .web.receiver_service import post as send_to_service
 from .web.sitemap_endpoint import build_sitemap_endpoint
+from .web.summary_service import build_summary_service
+from .web.upload_service import build_pickle_uploader_service
+from .web.utils import get_app
 
 log = logging.getLogger(__name__)
 

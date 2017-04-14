@@ -15,10 +15,10 @@ from pybel.constants import *
 from pybel.manager.models import Network
 from pybel.utils import hash_tuple
 from .base_service import BaseService
-from ..mutation import add_canonical_names, left_merge
-from ..mutation.metadata import parse_authors
-from ..selection import get_subgraph
-from ..summary import get_authors, get_pmids
+from ..mutation.merge import left_merge
+from ..mutation.metadata import parse_authors, add_canonical_names
+from ..selection.induce_subgraph import get_subgraph
+from ..summary.provenance import get_authors, get_pmids
 
 log = logging.getLogger(__name__)
 

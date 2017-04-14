@@ -3,7 +3,9 @@ import logging
 from flask import render_template
 
 from pybel import from_bytes
-from ..summary import count_functions, count_relations, count_error_types
+from ..summary.edge_summary import count_relations
+from ..summary.error_summary import count_error_types
+from ..summary.node_summary import count_functions
 from ..utils import prepare_c3
 
 log = logging.getLogger(__name__)

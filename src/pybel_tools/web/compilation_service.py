@@ -12,7 +12,7 @@ from flask import Flask, render_template
 from sqlalchemy.exc import IntegrityError
 
 from pybel import from_lines
-from pybel_tools.service.forms import CompileForm
+from .forms import CompileForm
 from ..summary import count_functions, count_relations, count_error_types
 from ..utils import prepare_c3
 

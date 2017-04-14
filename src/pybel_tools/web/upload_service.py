@@ -4,10 +4,7 @@ from __future__ import unicode_literals
 
 import logging
 
-import flask
 from flask import Flask, render_template
-from flask import jsonify
-from sqlalchemy.exc import IntegrityError
 
 import pybel
 from .forms import UploadForm
