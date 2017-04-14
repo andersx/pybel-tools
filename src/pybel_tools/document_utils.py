@@ -164,7 +164,7 @@ def make_document_statement_group(pmids):
     :param pmids: A list of pubmed identifiers
     :type pmids: iter[str] or iter[int]
     :return: An iterator over the lines of the citation section
-    :rtype iter[str]
+    :rtype: iter[str]
     """
     for i, pmid in enumerate(pmids, start=1):
         yield 'SET STATEMENT_GROUP = "Group {}"\n'.format(i)
