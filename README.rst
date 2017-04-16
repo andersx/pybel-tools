@@ -7,11 +7,6 @@ This package was developed at `Fraunhofer SCAI <https://www.scai.fraunhofer.de/>
 with support from the `IMI <https://www.imi.europa.eu/>`_ projects: `AETIONOMY <http://www.aetionomy.eu/>`_ and
 `PHAGO <http://www.phago.eu/>`_.
 
-Getting Started
----------------
-- Documentation at http://pybel-tools.readthedocs.io
-- Cookbook at https://github.com/pybel/pybel-notebooks
-
 Installation |pypi_version| |python_versions|
 ---------------------------------------------
 PyBEL Tools can be installed easily from `PyPI <https://pypi.python.org/pypi/pybel_tools>`_ with the following code in
@@ -27,20 +22,52 @@ or from the latest code on `GitHub <https://github.com/pybel/pybel-tools>`_ with
 
     $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
 
+Getting Data
+------------
+Before running the service, some data can be pre-loaded in your cache.
+
+Loading Selventa Corpra
+~~~~~~~~~~~~~~~~~~~~~~~
+The Selventa Small Corpus and Large Corpus are two example BEL documents distributed by the
+`OpenBEL framework <https://wiki.openbel.org/display/home/Summary+of+Large+and+Small+BEL+Corpuses>`_. They are good
+examples of many types of BEL statements and can be used immediately to begin exploring. Add :code:`-v` for more
+logging information during compilation. This is highly suggested for the first run, since it takes a while to cache
+all of the namespaces and annotations. This only has to be done once, and will be much faster the second time!
+
+Small Corpus:
+
+.. code-block:: sh
+
+    $ python3 -m pybel_tools ensure small_corpus -v
+
+Large Corpus:
+
+.. code-block:: sh
+
+    $ python3 -m pybel_tools ensure large_corpus -v
+
+Uploading Precompiled BEL
+~~~~~~~~~~~~~~~~~~~~~~~~~
+A single network stored as a PyBEL gpickle can quickly be uploaded using the following code:
+
+.. code-block:: sh
+
+    $ python3 -m pybel_tools io upload /path/to/my_network.gpickle
+
 Web Services
 ------------
-Running the PyBEL Tools Flask application allows you to interact with your networks and apply filters/algorithms.
-Multiple services are available. Use :code:`--help` for a description.
+PyBEL Tools deploys a Flask web application that allows you to interact with your networks and apply filters/algorithms.
+
+Multiple services are available. Use :code:`--help` for a description. To run the web services, type:
 
 .. code-block:: sh
 
     $ python3 -m pybel_tools web
 
-After previously having uploaded your BEL graphs
-
-.. code-block:: sh
-
-    $ python3 -m pybel_tools io upload "PATH_TO_YOUR_GRAPH_PICKLE"
+Documentation and Examples
+--------------------------
+- Documentation at http://pybel-tools.readthedocs.io
+- Cookbook at https://github.com/pybel/pybel-notebooks
 
 Links
 -----

@@ -37,7 +37,13 @@ def build_receiver_service(app, manager):
 
 
 def post(graph, service=None):
-    """Sends a graph to the receiver service and returns the :mod:`requests` response object"""
+    """Sends a graph to the receiver service and returns the :mod:`requests` response object
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :param str service: The location of the PyBEL web server. Defaults to :data:`DEFAULT_SERVICE_URL`
+    :return: The response object from :mod:`requests` 
+    :rtype: requests.Response
+    """
     service = DEFAULT_SERVICE_URL if service is None else service
     url = service + '/api/receive'
     headers = {'content-type': 'application/json'}
