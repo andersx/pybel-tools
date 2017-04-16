@@ -64,8 +64,8 @@ Multiple services are available. Use :code:`--help` for a description. To run th
 
     $ python3 -m pybel_tools web
 
-By default, Flask deploys on `localhost` at port `5000`. These can be changed respectively with the `--host` and
-`--port` arguments.
+By default, Flask deploys on ``localhost`` at port ``5000``. These can be changed respectively with the ``--host`` and
+``--port`` arguments. Additionally, logging can be shown with ``-v``.
 
 Documentation and Examples
 --------------------------
