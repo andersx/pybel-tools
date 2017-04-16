@@ -23,6 +23,3 @@ Setting up with Docker
 
 
 .. automodule:: pybel_tools.web
-
-
-.. automodule:: pybel_tools.service

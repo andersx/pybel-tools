@@ -1,8 +1,8 @@
 Dictionary Service
 ==================
 
-.. automodule:: pybel_tools.service.dict_service_utils
+.. automodule:: pybel_tools.web.dict_service_utils
     :members:
 
-.. automodule:: pybel_tools.service.dict_service
+.. automodule:: pybel_tools.web.dict_service
     :members:
