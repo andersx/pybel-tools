@@ -13,18 +13,13 @@ from pybel import from_bytes, BELGraph
 from pybel.canonicalize import decanonicalize_node
 from pybel.constants import *
 from pybel.manager.models import Network
-from pybel.utils import hash_tuple
 from .base_service import BaseService
 from ..mutation.merge import left_merge
 from ..mutation.metadata import parse_authors, add_canonical_names
 from ..selection.induce_subgraph import get_subgraph
-from ..summary.provenance import get_authors, get_pmids
+from ..summary.provenance import get_authors, iter_pmids
 
 log = logging.getLogger(__name__)
-
-
-def _node_to_identifier(node, graph):
-    return hash_tuple(graph.nodes[node])
 
 
 class DictionaryService(BaseService):
@@ -34,9 +29,7 @@ class DictionaryService(BaseService):
 
     def __init__(self, manager):
         """
-        :param manager: The database connection string. Default location described in
-                           :class:`pybel.manager.cache.BaseCacheManager`
-        
+        :param manager: A cache manager
         :type manager: pybel.manager.cache.CacheManager
         """
         BaseService.__init__(self, manager)
@@ -54,71 +47,10 @@ class DictionaryService(BaseService):
         self.bel_id = {}
         self.id_bel = {}
 
-        self.full_network = BELGraph()
-        self.full_network_loaded = False
+        #: The complete graph of all knowledge stored in the cache
+        self.universe = BELGraph()
 
         log.info('initialized dictionary service')
-
-    def _validate_network_id(self, network_id):
-        if network_id not in self.networks:
-            raise ValueError()
-
-    def _build_edge_json(self, graph, u, v, d):
-        """
-
-        :param graph:
-        :type graph: pybel.BELGraph
-        :param u:
-        :param v:
-        :param d:
-        :return:
-        """
-        return {
-            'source': graph.node[u] + {'id': self.node_nid[u]},
-            'target': graph.node[v] + {'id': self.node_nid[v]},
-            'data': d
-        }
-
-    def add_network(self, network_id, graph):
-        """Adds a network to the module-level cache from the underlying database
-
-        :param network_id: The database identifier for the network
-        :type network_id: int
-        :param graph: A BEL Graph
-        :type graph: pybel.BELGraph
-        """
-        if network_id in self.networks:
-            log.info('tried adding network [%s] again')
-            return
-
-        log.debug('parsing authors from [%s]', network_id)
-        parse_authors(graph)
-
-        log.debug('adding canonical names to [%s]', network_id)
-        add_canonical_names(graph)
-
-        self.networks[network_id] = graph
-        self.update_node_indexes(graph)
-
-        log.info('finished loading network [%s] %s ', network_id, graph.document.get(METADATA_NAME, 'UNNAMED'))
-
-    def load_networks(self, check_version=True):
-        """This function needs to get all networks from the graph cache manager and make a dictionary
-
-        :param check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
-        :type check_version: bool
-        """
-        networks = self.manager.session.query(Network.id, Network.blob).all()
-        log.debug('made query for networks')
-        for network_id, blob in networks:
-            log.debug('getting bytes from %s', network_id)
-            try:
-                graph = from_bytes(blob, check_version=check_version)
-            except:
-                log.exception("couldn't load from bytes [%s]", network_id)
-                continue
-
-            self.add_network(network_id, graph)
 
     def update_node_indexes(self, graph):
         """Updates identifiers for nodes based on addition order
@@ -126,8 +58,6 @@ class DictionaryService(BaseService):
         :param graph: A BEL Graph
         :type graph: pybel.BELGraph
         """
-        log.debug('started updating node indexes for %s', graph.name)
-
         for node in graph.nodes_iter():
             if isinstance(node, int):
                 log.warning('nodes already converted to ids')
@@ -145,26 +75,97 @@ class DictionaryService(BaseService):
             self.id_bel[nid] = bel
             self.bel_id[bel] = nid
 
-        log.debug('finished updating node indexes %s', graph.name)
-
-    # Graph mutation functions
-
     def relabel_nodes_to_identifiers(self, graph):
         """Relabels all nodes by their identifiers, in place. This function is a thin wrapper around
-        :func:`networkx.relabel.relabel_nodes` with the module level variable :code:`node_id` used as the mapping.
+        :func:`networkx.relabel.relabel_nodes` with the module level variable :data:`node_nid` used as the mapping.
 
         :param graph: A BEL Graph
         :type graph: pybel.BELGraph
         """
+        if 'PYBEL_RELABELED' in graph.graph:
+            log.warning('%s has already been relabeled', graph.name)
+            return
+
         mapping = {node: self.node_nid[node] for node in graph.nodes_iter()}
         nx.relabel.relabel_nodes(graph, mapping, copy=False)
+
+        graph.graph['PYBEL_RELABELED'] = True
+
+    def relabel_nodes_to_bel(self, graph):
+        """Relabels all nodes to their original BEL identifiers, in place. This function is a thin wrapper around
+        :func:`networkx.relabel.relabel_nodes` with the module level variable :data:`nid_node` used as the mapping. It
+        is the inverse function to :meth:`relabel_nodes_to_identifiers`
+        
+        :param graph: A BEL Graph
+        :type graph: pybel.BELGraph
+        """
+        if 'PYBEL_RELABELED' not in graph.graph:
+            log.warning('%s has not been relabeled to identifiers', graph.name)
+            return
+
+        mapping = {nid: self.nid_node[nid] for nid in graph.nodes_iter()}
+        nx.relabel.relabel_nodes(graph, mapping, copy=False)
+
+        del graph.graph['PYBEL_RELABELED']
+
+    def add_network(self, gid, graph, force_reload=False):
+        """Adds a network to the module-level cache from the underlying database
+
+        :param gid: The identifier for the graph
+        :type gid: int
+        :param graph: A BEL Graph
+        :type graph: pybel.BELGraph
+        :param force_reload: Should the graphs be reloaded even if it has already been cached?
+        :type force_reload: bool
+        """
+        if gid in self.networks and not force_reload:
+            log.info('tried adding graph [%s] again')
+            return
+
+        log.debug('parsing authors from [%s]', gid)
+        parse_authors(graph)
+
+        log.debug('adding canonical names to [%s]', gid)
+        add_canonical_names(graph)
+
+        log.debug('updating node indexes from [%s]', gid)
+        self.update_node_indexes(graph)
+
+        log.debug('relabeling nodes by index from [%s]', gid)
+        self.relabel_nodes_to_identifiers(graph)
+
+        log.debug('adding [%s] to the universe', gid)
+        left_merge(self.universe, graph)
+
+        self.networks[gid] = graph
+
+        log.info('loaded network [%s] %s ', gid, graph.document.get(METADATA_NAME, 'UNNAMED'))
+
+    def load_networks(self, check_version=True, force_reload=False):
+        """This function needs to get all networks from the graph cache manager and make a dictionary
+
+        :param check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
+        :type check_version: bool
+        :param force_reload: Should all graphs be reloaded even if they have already been cached?
+        :type force_reload: bool
+        """
+        for network_id, network_blob in self.manager.session.query(Network.id, Network.blob).all():
+            log.debug('getting bytes from [%s]', network_id)
+
+            try:
+                graph = from_bytes(network_blob, check_version=check_version)
+            except:
+                log.exception("couldn't load from bytes [%s]", network_id)
+                continue
+
+            self.add_network(network_id, graph, force_reload=force_reload)
 
     # Graph selection functions
 
     def get_network_ids(self):
         """Returns a list of all network IDs
 
-        :rtype: list of int
+        :rtype: list[int]
         """
         return list(self.networks)
 
@@ -174,39 +175,21 @@ class DictionaryService(BaseService):
         :param network_id: The internal ID of the network to get
         :type network_id: int
         :return: A BEL Graph
-        :rtype: BELGraph
-        """
-        result = self.networks[network_id] if network_id is not None else self.get_super_network()
-        log.debug('got network %s (%s nodes/%s edges)', network_id, result.number_of_nodes(), result.number_of_edges())
-        return result
-
-    def load_super_network(self):
-        """Reloads the super network"""
-        for graph in self.networks.values():
-            left_merge(self.full_network, graph)
-
-        parse_authors(self.full_network)
-
-        log.info(
-            'loaded super network. %s nodes and %s edges',
-            self.full_network.number_of_nodes(),
-            self.full_network.number_of_edges()
-        )
-
-        self.full_network_loaded = True
-
-    def get_super_network(self, reload=False):
-        """Gets all networks and merges them together. Caches in self.full_network.
-
-        :return: A BEL Graph
         :rtype: pybel.BELGraph
         """
-        if not reload and self.full_network_loaded:
-            return self.full_network
+        result = self.networks[network_id] if network_id is not None else self.universe
+        log.debug('got network [%s] (%s nodes/%s edges)', network_id, result.number_of_nodes(),
+                  result.number_of_edges())
+        return result
 
-        self.load_super_network()
+    def decode_node(self, node_id):
+        """Decodes node from URL format"""
+        nid = int(node_id)
 
-        return self.full_network
+        if nid not in self.nid_node:
+            raise IndexError('{} not in universe'.format(node_id))
+
+        return nid
 
     def get_node_by_id(self, node_id):
         """Returns the node tuple based on the node id
@@ -218,10 +201,11 @@ class DictionaryService(BaseService):
         """
         if isinstance(node_id, str):
             return self.nid_node[int(node_id)]
-        elif isinstance(node_id, int):
+
+        if isinstance(node_id, int):
             return self.nid_node[node_id]
 
-        raise TypeError('{} is wrong type'.format(node_id))
+        raise TypeError('{} is wrong type: {}'.format(node_id, type(node_id)))
 
     def get_namespaces_in_network(self, network_id):
         """Returns the namespaces in a given network
@@ -269,7 +253,7 @@ class DictionaryService(BaseService):
         :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
         :type annotations: dict
         :return: A BEL Graph
-        :rtype: BELGraph
+        :rtype: pybel.BELGraph
         """
         graph = self.get_network_by_id(network_id)
 
@@ -292,56 +276,45 @@ class DictionaryService(BaseService):
 
         log.debug('query returned (%s nodes/%s edges)', result.number_of_nodes(), result.number_of_edges())
 
-        add_canonical_names(result)
-        self.relabel_nodes_to_identifiers(result)
-
         return result
 
     def get_edges(self, u, v, both_ways=True):
         """Gets the data dictionaries of all edges between the given nodes"""
-        graph = self.get_super_network()
+        if u not in self.universe:
+            raise ValueError("Network store doesn't have node: {}".format(u))
 
-        if u not in graph:
-            raise ValueError("Network doesnt have node: {}".format(u))
+        if v not in self.universe:
+            raise ValueError("Network store doesn't have node: {}".format(v))
 
-        if v not in graph:
-            raise ValueError("Network doesnt have node: {}".format(v))
-
-        if v not in graph.edge[u]:
+        if v not in self.universe.edge[u]:
             raise ValueError('No edges between {} and {}'.format(u, v))
 
-        result = list(graph.edge[u][v].values())
+        result = list(self.universe.edge[u][v].values())
 
-        if both_ways and v in graph.edge and u in graph.edge[v]:
-            result.extend(graph.edge[v][u].values())
+        if both_ways and v in self.universe.edge and u in self.universe.edge[v]:
+            result.extend(self.universe.edge[v][u].values())
 
         return result
 
     def get_nodes_containing_keyword(self, keyword):
         """Gets a list with all cnames that contain a certain keyword adding to the duplicates their function"""
+        return [{"text": bel, "id": str(nid)} for bel, nid in self.bel_id.items() if keyword.lower() in bel.lower()]
 
-        # Case insensitive comparison
-        nodes_with_keyword = [bel_entity for bel_entity in self.bel_id if keyword.lower() in bel_entity.lower()]
-
-        final_dict = [{"text": bel_entity, "id": str(self.bel_id[bel_entity])} for bel_entity in nodes_with_keyword]
-
-        return final_dict
-
+    # TODO save pmids in a cache
+    # TODO use ..summary.provenance.get_pmid_by_keyword
     def get_pubmed_containing_keyword(self, keyword):
-        """Gets a list with pubmed_ids that contain a certain keyword"""
+        """Gets a list with pubmed_ids that contain a certain keyword
+        
+        :rtype: list[str]
+        """
+        return [pubmed_id for pubmed_id in iter_pmids(self.universe) if pubmed_id.startswith(keyword)]
 
-        super_network = self.get_super_network()
-
-        pubmed_id_with_keyword = [pubmed_id for pubmed_id in get_pmids(super_network) if pubmed_id.startswith(keyword)]
-
-        return pubmed_id_with_keyword
-
+    # TODO save authors in a cache
+    # TODO use ..summary.provenance.get_authors_by_keyword
     def get_authors_containing_keyword(self, keyword):
-        """Gets a list with authors that contain a certain keyword"""
-
-        super_network = self.get_super_network()
-
+        """Gets a list with authors that contain a certain keyword
+        
+        :rtype: list[str]
+        """
         # Case insensitive comparison
-        authors_with_keyword = [author for author in get_authors(super_network) if keyword.lower() in author.lower()]
-
-        return authors_with_keyword
+        return [author for author in get_authors(self.universe) if keyword.lower() in author.lower()]

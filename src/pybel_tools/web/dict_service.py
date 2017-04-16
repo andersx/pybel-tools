@@ -10,7 +10,7 @@ import networkx as nx
 from flask import Flask, request, jsonify, render_template, url_for, redirect
 from flask_basicauth import BasicAuth
 
-import pybel
+from pybel import from_url
 from pybel.constants import METADATA_DESCRIPTION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
@@ -62,36 +62,15 @@ BLACK_LIST = {
 
 def get_tree_annotations(graph):
     """ Builds tree structure with annotation for a given graph
-    :param graph: 
+    
+    :param graph: A BEL Graph
     :type graph: pybel.BELGraph
-    :return: 
-    :rtype: list
+    :return: The JSON structure necessary for building the tree box
+    :rtype: list[dict]
     """
     annotations = get_annotation_values_by_annotation(graph)
     return [{'text': annotation, 'children': [{'text': value} for value in sorted(values)]} for annotation, values in
             sorted(annotations.items())]
-
-
-def get_dict_service(dsa):
-    """Gets the latent PyBEL Dictionary Service from a Flask app
-
-    :param dsa: A Flask app
-    :type dsa: Flask
-    :return: The latent dictionary service
-    :rtype: DictionaryService
-    """
-    return dsa.config[DICTIONARY_SERVICE]
-
-
-def set_dict_service(app, service):
-    """Adds the dictionary service to the config of the given Flask app
-    
-    :param app: A Flask app
-    :type app: flask.Flask
-    :param service: The Dictionary Service
-    :type service: DictionaryService
-    """
-    app.config[DICTIONARY_SERVICE] = service
 
 
 def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None):
@@ -110,14 +89,11 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     :type admin_password: str
     """
     api = DictionaryService(manager=manager)
-    set_dict_service(app, api)
 
     if preload:
         log.info('loading networks')
         api.load_networks(check_version=check_version)
-        log.info('preloading supernetwork')
-        api.load_super_network()
-        log.info('preloaded dict service')
+        log.info('pre-loaded the dict service')
 
     if admin_password is not None:
         app.config['BASIC_AUTH_USERNAME'] = 'pybel'
@@ -129,15 +105,14 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         @basic_auth.required
         def run_reload():
             """Reloads the networks and supernetwork"""
-            api.load_networks()
-            api.get_super_network(reload=True)
+            api.load_networks(force_reload=True)
             return jsonify({'status': 200})
 
         @app.route('/admin/enrich')
         @basic_auth.required
         def run_enrich_authors():
             """Enriches information in network. Be patient"""
-            fix_pubmed_citations(api.full_network)
+            fix_pubmed_citations(api.universe)
             return jsonify({'status': 200})
 
         @app.route('/admin/rollback')
@@ -151,14 +126,14 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         @basic_auth.required
         def ensure_small_corpus():
             """Parses the small corpus"""
-            graph = pybel.from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+            graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
             return try_insert_graph(manager, graph)
 
         @app.route('/admin/ensure/small')
         @basic_auth.required
         def ensure_large_corpus():
             """Parses the large corpus"""
-            graph = pybel.from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+            graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
             return try_insert_graph(manager, graph)
 
         log.info('added admin functions to dict service')
@@ -195,7 +170,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
                 seed_data['pmids'] = pmids
         elif seed_method:
             seed_data = request.args.getlist(SEED_DATA_NODES)
-            seed_data = [api.get_node_by_id(h) for h in seed_data]
+            seed_data = [api.decode_node(h) for h in seed_data]
         else:
             seed_data = None
 
@@ -203,10 +178,10 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         remove_nodes = request.args.get(REMOVE_PARAM)
 
         if expand_nodes:
-            expand_nodes = [api.get_node_by_id(h) for h in expand_nodes.split(',')]
+            expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
 
         if remove_nodes:
-            remove_nodes = [api.get_node_by_id(h) for h in remove_nodes.split(',')]
+            remove_nodes = [api.decode_node(h) for h in remove_nodes.split(',')]
 
         annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
 
@@ -268,9 +243,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/explore/', methods=['GET'])
     def view_explorer():
         """Renders a page for the user to explore a network"""
-        return flask.render_template(
-            'explorer.html',
-        )
+        return flask.render_template('explorer.html')
 
     @app.route('/definitions')
     def view_definitions():
@@ -326,7 +299,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         if method == 'all':
             all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
             # all_paths is a generator -> convert to list and create a list of lists (paths)
-            return jsonify([path for path in list(all_paths)])
+            return jsonify(list(all_paths))
 
         try:
             shortest_path = nx.shortest_path(graph, source=source, target=target)
@@ -390,7 +363,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
         keywords = [entry.strip() for entry in request.args['search'].split(TAB_DELIMITER)]
 
-        log.debug(keywords)
+        log.debug('Searching nodes by keywords: %s', keywords)
 
         autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
 
@@ -419,7 +392,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/edges/provenance/<int:sid>/<int:tid>')
     def get_edges(sid, tid):
         """Gets all edges between the two given nodes"""
-        return jsonify(api.get_edges(api.get_node_by_id(sid), api.get_node_by_id(tid)))
+        return jsonify(api.get_edges(api.decode_node(sid), api.decode_node(tid)))
 
     @app.route('/api/meta/blacklist')
     def get_blacklist():
