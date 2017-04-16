@@ -28,8 +28,8 @@ def parse_authors(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     """
-    if hasattr(graph, 'parsed_authors') and getattr(graph, 'parsed_authors'):
-        log.debug('No need to parse authors again')
+    if 'PYBEL_PARSED_AUTHORS' in graph.graph:
+        log.warning('Authors have already been parsed in %s', graph.graph)
         return
 
     for u, v, k, d in filter_edges(graph, edge_has_author_annotation):
@@ -40,7 +40,7 @@ def parse_authors(graph):
 
         graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = list(authors.split('|'))
 
-    graph.parsed_authors = True
+    graph.graph['PYBEL_PARSED_AUTHORS'] = True
 
 
 @pipeline.in_place_mutator
@@ -50,8 +50,8 @@ def serialize_authors(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     """
-    if hasattr(graph, 'parsed_authors') and not getattr(graph, 'parsed_authors'):
-        log.debug('No need to serialize authors again')
+    if 'PYBEL_PARSED_AUTHORS' not in graph.graph:
+        log.warning('Authors have not yet been parsed in %s', graph.graph)
         return
 
     for u, v, k, d in filter_edges(graph, edge_has_author_annotation):
@@ -62,12 +62,12 @@ def serialize_authors(graph):
 
         graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = '|'.join(authors)
 
-    graph.parsed_authors = False
+    del graph.graph['PYBEL_PARSED_AUTHORS']
 
 
 @pipeline.in_place_mutator
 def add_canonical_names(graph):
-    """Adds a canonical name to each node's data dictionary if they are missing, in place
+    """Adds a canonical name to each node's data dictionary if they are missing, in place. 
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
