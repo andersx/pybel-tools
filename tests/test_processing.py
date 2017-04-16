@@ -35,10 +35,6 @@ class TestProcessing(unittest.TestCase):
         self.assertEqual(14, self.graph.number_of_nodes())
         self.assertEqual(16, self.graph.number_of_edges())
 
-    def test_prune_by_type(self):
-        remove_leaves_by_type(self.graph, GENE)
-        self.assertEqual(10, self.graph.number_of_nodes())
-
     def test_prune(self):
         prune_central_dogma(self.graph)
         self.assertEqual(9, self.graph.number_of_nodes())
