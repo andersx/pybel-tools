@@ -274,19 +274,28 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
 
 @pipeline.mutator
 def get_subgraph_by_pubmed(graph, pmids):
-    """Induces a subgraph over the edges retrieved from the given PubMed identifier(s)"""
+    """Induces a subgraph over the edges retrieved from the given PubMed identifier(s)
+    
+    :rtype: pybel.BELGraph
+    """
     return get_subgraph_by_edge_filter(graph, build_pmid_inclusion_filter(pmids))
 
 
 @pipeline.mutator
 def get_subgraph_by_authors(graph, authors):
-    """Induces a subgraph over the edges retrieved publications by the given author(s)"""
+    """Induces a subgraph over the edges retrieved publications by the given author(s)
+    
+    :rtype: pybel.BELGraph
+    """
     return get_subgraph_by_edge_filter(graph, build_author_inclusion_filter(authors))
 
 
 @pipeline.mutator
 def get_subgraph_by_provenance(graph, kwargs):
-    """Thin wrapper around :func:`get_subgraph_by_provenance_helper` by splatting keyword arguments"""
+    """Thin wrapper around :func:`get_subgraph_by_provenance_helper` by splatting keyword arguments
+    
+    :rtype: pybel.BELGraph
+    """
     # TODO get rid of this function
     return get_subgraph_by_provenance_helper(graph, **kwargs)
 
