@@ -12,10 +12,9 @@ from flask import Flask, render_template
 from sqlalchemy.exc import IntegrityError
 
 from pybel import from_lines
-from pybel_tools.service.forms import CompileForm
+from .forms import CompileForm
 from ..summary import count_functions, count_relations, count_error_types
 from ..utils import prepare_c3
-from ..web.utils import get_cache_manager
 
 log = logging.getLogger(__name__)
 
@@ -27,15 +26,16 @@ def render_error(exception):
     return render_template('parse_error.html', error_text=str(exception), traceback_lines=traceback_lines)
 
 
-def build_synchronous_compiler_service(app, enable_cache=False):
+def build_synchronous_compiler_service(app, manager, enable_cache=True):
     """Adds the endpoints for a synchronous web validation web app
 
     :param app: A Flask application
     :type app: Flask
+    :param manager: A PyBEL cache manager
+    :type manager: pybel.manager.cache.CacheManager
     :param enable_cache: Should the user be given the option to cache graphs?
     :type enable_cache: bool
     """
-    manager = get_cache_manager(app)
 
     @app.route('/compile', methods=('GET', 'POST'))
     def view_compile():

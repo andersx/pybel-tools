@@ -16,50 +16,190 @@ function getSelectedNodesFromTree(tree) {
     return selectionHashMap;
 }
 
+function resetGlobals() {
+    // Arrays with selected nodes to expand/delete
+    window.deleteNodes = [];
+    window.expandNodes = [];
+}
+
 
 function parameterFilters(tree) {
     var args = getSelectedNodesFromTree(tree);
     args["remove"] = window.deleteNodes.join();
     args["append"] = window.expandNodes.join();
-    args["seed_method"] = window.seedMethod;
-    args["graphid"] = window.id;
+    args["graphid"] = window.networkID;
     return args
 }
 
-function renderNetwork(tree) {
-    node_tree = getSelectedNodesFromTree(tree);
-    node_param = $.param(node_tree, true);
-    $.getJSON("/api/network/" + '?' + node_param, function (data) {
+function renderNetwork(tree, url) {
+    var params = parameterFilters(tree);
+
+    if ("seed_method" in url) {
+        params["seed_method"] = url["seed_method"];
+
+        if ("provenance" === url["seed_method"]) {
+            params["pmids"] = url["pmids"];
+        }
+        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] || "neighbors" === url["seed_method"]) {
+            params["nodes"] = url["nodes"];
+        }
+        if ("provenance" === url["seed_method"]) {
+            params["pmids"] = url["pmids"];
+        }
+    }
+
+    console.log(params);
+
+    console.log($.param(params, true));
+
+    node_param = $.param(params, true);
+    $.getJSON("/api/network/" + "?" + node_param, function (data) {
         initD3Force(data, tree);
     });
+    // reset window variables (window.expand/delete/method)
+    resetGlobals();
+    // TODO: change window.networkID to another variable
     window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
+}
+
+function doAjaxCall(url) {
+
+    var result = null;
+    $.ajax({
+        type: "GET",
+        url: url,
+        dataType: "json",
+        success: function (data) {
+            result = data;
+        },
+        data: {},
+        async: false
+    });
+
+    return result
 }
 
 
 $(document).ready(function () {
+
+    // Get the URL parameters (except for the int after /explore/ representing the network_id)
+    var URLString = function () {
+        // This function is anonymous, is executed immediately and
+        // the return value is assigned to QueryString!
+        var query_string = {};
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            // If first entry with this name
+            if (typeof query_string[pair[0]] === "undefined") {
+                query_string[pair[0]] = decodeURIComponent(pair[1]);
+                // If second entry with this name
+            } else if (typeof query_string[pair[0]] === "string") {
+                var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
+                query_string[pair[0]] = arr;
+                // If third or later entry with this name
+            } else {
+                query_string[pair[0]].push(decodeURIComponent(pair[1]));
+            }
+        }
+        return query_string;
+    }();
+
+    // if graphid not in arguments check if it is after /explore/
+    if (!("graphid" in URLString)) {
+        // grab the last part of the URL after /explore/...
+        var lastPartURL = window.location.href.substring(window.location.href.lastIndexOf("/") + 1);
+        // if there is anything after the last slash and not starts with "?" is the network_id
+        if ((lastPartURL) && ("?" !== lastPartURL.substring(0, 1) )) {
+            // split by ? get the int representing the network_id
+            URLString["graphid"] = lastPartURL.split("?")[0];
+        }
+    }
+
+    // Set global variable
+    if ("graphid" in URLString) {
+        window.networkID = URLString["graphid"];
+    }
+    else {
+        window.networkID = "0";
+    }
+
+    // Get the annotations for the queried graph
+    var annotationFilter = null;
+
+    // get tree for graph id or supernetwork if none
+    if ("graphid" in URLString) {
+        annotationFilter = doAjaxCall("/api/tree/?graphid=" + URLString["graphid"]);
+    } else {
+        annotationFilter = doAjaxCall("/api/tree/");
+    }
+
+    // Initiate the tree
     var tree = new InspireTree({
-        target: '#tree',
+        target: "#tree",
         selection: {
-            mode: 'checkbox',
+            mode: "checkbox",
             multiple: true
         },
-        data: window.annotationFilters
+        data: annotationFilter
     });
 
-    tree.on('model.loaded', function () {
+    tree.on("model.loaded", function () {
         tree.expand();
     });
 
-    if (window.location.search.indexOf('autoload=yes') > -1) {
-        renderNetwork(tree);
+    var blackList = doAjaxCall("/api/meta/blacklist");
+
+    // Select in the tree the tree-nodes in URL
+    var selectedNodes = {};
+
+    $.each(URLString, function (index, value) {
+        if (!(index in blackList)) {
+            if (Array.isArray(value)) {
+                $.each(value, function (childIndex, child) {
+                    if (index in selectedNodes) {
+                        selectedNodes[index].push(child.replace(/\+/g, " "))
+                    }
+                    else {
+                        selectedNodes[index] = [child.replace(/\+/g, " ")];
+                    }
+                });
+            }
+            else {
+                if (index in selectedNodes) {
+                    selectedNodes[index].push(value.replace(/\+/g, " "))
+                }
+                else {
+                    selectedNodes[index] = [value.replace(/\+/g, " ")];
+                }
+            }
+        }
+    });
+
+    var treeNodes = tree.nodes();
+
+    $.each(treeNodes, function (index, value) {
+        if (value.text in selectedNodes) {
+            $.each(value.children, function (child, childValue) {
+
+                if (selectedNodes[value.text].indexOf(childValue.text) >= 0) {
+                    childValue.check();
+                }
+            });
+        }
+    });
+
+
+    if (window.location.search.indexOf("autoload=yes") > -1) {
+        renderNetwork(tree, URLString);
     }
     else {
         renderEmptyFrame();
     }
 
-
     $("#submit-button").on("click", function () {
-        renderNetwork(tree);
+        renderNetwork(tree, URLString);
     });
 
 
@@ -71,11 +211,11 @@ $(document).ready(function () {
         params["format"] = "bel";
 
         $.ajax({
-            url: '/api/network/',
+            url: "/api/network/",
             dataType: "text",
             data: $.param(params, true)
         }).done(function (response) {
-            downloadText(response, 'MyGraph.bel')
+            downloadText(response, "MyGraph.bel")
         });
     });
 
@@ -83,14 +223,14 @@ $(document).ready(function () {
     $("#graphml-button").click(function () {
         params = parameterFilters(tree);
         params["format"] = "graphml";
-        window.location.href = '/api/network/' + $.param(params, true);
+        window.location.href = "/api/network/" + $.param(params, true);
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
         params = parameterFilters(tree);
         params["format"] = "bytes";
-        window.location.href = '/api/network/' + $.param(params, true);
+        window.location.href = "/api/network/" + $.param(params, true);
 
     });
 
@@ -98,14 +238,14 @@ $(document).ready(function () {
     $("#cx-button").click(function () {
         params = parameterFilters(tree);
         params["format"] = "cx";
-        window.location.href = '/api/network/' + $.param(params, true);
+        window.location.href = "/api/network/" + $.param(params, true);
     });
 
     // Export to CSV
     $("#csv-button").click(function () {
         params = parameterFilters(tree);
         params["format"] = "csv";
-        window.location.href = '/api/network/' + $.param(params, true);
+        window.location.href = "/api/network/" + $.param(params, true);
     });
 });
 
@@ -114,9 +254,9 @@ function renderEmptyFrame() {
 
     d = document;
     e = d.documentElement;
-    g = d.getElementsByTagName('body')[0];
+    g = d.getElementsByTagName("body")[0];
 
-    var graphDiv = $('#graph-chart');
+    var graphDiv = $("#graph-chart");
     var w = graphDiv.width(), h = graphDiv.height();
 
     var svg = d3.select("#graph-chart").append("svg")
@@ -140,11 +280,11 @@ function renderEmptyFrame() {
 
 function clearUsedDivs() {
     // Force div
-    var graphDiv = $('#graph-chart');
+    var graphDiv = $("#graph-chart");
     // Node search div
-    var nodePanel = $('#node-list');
+    var nodePanel = $("#node-list");
     // Edge search div
-    var edgePanel = $('#edge-list');
+    var edgePanel = $("#edge-list");
 
     // Clean the current frame
     graphDiv.empty();
@@ -157,7 +297,7 @@ function clearUsedDivs() {
 ///////////////////////////////////////
 
 function savePreviousPositions() {
-    // Save current positions into prevLoc 'object;
+    // Save current positions into prevLoc "object;
     var prevPos = {};
 
     // __data__ can be accessed also as an attribute (d.__data__)
@@ -242,11 +382,11 @@ function downloadSvg() {
 }
 
 function downloadText(response, name) {
-    var element = document.createElement('a');
+    var element = document.createElement("a");
     encoded_response = encodeURIComponent(response);
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encoded_response);
-    element.setAttribute('download', name);
-    element.style.display = 'none';
+    element.setAttribute("href", "data:text/plain;charset=utf-8," + encoded_response);
+    element.setAttribute("download", name);
+    element.style.display = "none";
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -264,7 +404,7 @@ function initD3Force(graph, tree) {
     // Definition of context menu for nodes
     var nodeMenu = [
         {
-            title: 'Expand node',
+            title: "Expand node",
             action: function (elm, d, i) {
                 // Variables explanation:
                 // elm: [object SVGGElement] d: [object Object] i: (#Number)
@@ -289,7 +429,7 @@ function initD3Force(graph, tree) {
 
                     clearUsedDivs();
 
-                    initD3Force(data['json'], tree);
+                    initD3Force(data["json"], tree);
 
                     window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
 
@@ -298,7 +438,7 @@ function initD3Force(graph, tree) {
             disabled: false // optional, defaults to false
         },
         {
-            title: 'Delete node',
+            title: "Delete node",
             action: function (elm, d, i) {
 
                 var positions = savePreviousPositions();
@@ -320,7 +460,7 @@ function initD3Force(graph, tree) {
 
                     clearUsedDivs();
 
-                    initD3Force(data['json'], tree);
+                    initD3Force(data["json"], tree);
 
                     window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
 
@@ -333,7 +473,7 @@ function initD3Force(graph, tree) {
     // Definition of context menu for nodes
     var edgeMenu = [
         {
-            title: 'Log evidences to console',
+            title: "Log evidences to console",
             action: function (elm, d, i) {
 
                 console.log(d.source);
@@ -356,20 +496,20 @@ function initD3Force(graph, tree) {
     //////////////////////////////
 
     // Enable nodes and edges tabs
-    $(".disabled").attr('class', 'nav-link ');
+    $(".disabled").attr("class", "nav-link ");
 
     // Force div
-    var graphDiv = $('#graph-chart');
+    var graphDiv = $("#graph-chart");
     // Node search div
-    var nodePanel = $('#node-list');
+    var nodePanel = $("#node-list");
     // Edge search div
-    var edgePanel = $('#edge-list');
+    var edgePanel = $("#edge-list");
 
     clearUsedDivs();
 
     d = document;
     e = d.documentElement;
-    g = d.getElementsByTagName('body')[0];
+    g = d.getElementsByTagName("body")[0];
 
     var w = graphDiv.width(), h = graphDiv.height();
 
@@ -449,7 +589,7 @@ function initD3Force(graph, tree) {
     var nominalStroke = 2.5;
     // Zoom variables
     var minZoom = 0.1, maxZoom = 10;
-    var border = 1, bordercolor = 'black';
+    var border = 1, bordercolor = "black";
 
     var svg = d3.select("#graph-chart").append("svg")
         .attr("width", w)
@@ -557,10 +697,10 @@ function initD3Force(graph, tree) {
         .on("click", function (d) {
             displayEdgeInfo(d);
         })
-        .on('contextmenu', d3.contextMenu(edgeMenu)) // Attach context menu to edge link
+        .on("contextmenu", d3.contextMenu(edgeMenu)) // Attach context menu to edge link
         .attr("class", function (d) {
-            if (['decreases', 'directlyDecreases', 'increases', 'directlyIncreases', 'negativeCorrelation',
-                    'positiveCorrelation'].indexOf(d.relation) >= 0) {
+            if (["decreases", "directlyDecreases", "increases", "directlyIncreases", "negativeCorrelation",
+                    "positiveCorrelation"].indexOf(d.relation) >= 0) {
                 return "link link_continuous"
             }
             else {
@@ -568,10 +708,10 @@ function initD3Force(graph, tree) {
             }
         })
         .attr("marker-start", function (d) {
-            if ('positiveCorrelation' == d.relation) {
+            if ("positiveCorrelation" == d.relation) {
                 return "url(#arrowhead)"
             }
-            else if ('negativeCorrelation' == d.relation) {
+            else if ("negativeCorrelation" == d.relation) {
                 return "url(#stub)"
             }
             else {
@@ -579,10 +719,10 @@ function initD3Force(graph, tree) {
             }
         })
         .attr("marker-end", function (d) {
-            if (['increases', 'directlyIncreases', 'positiveCorrelation'].indexOf(d.relation) >= 0) {
+            if (["increases", "directlyIncreases", "positiveCorrelation"].indexOf(d.relation) >= 0) {
                 return "url(#arrowhead)"
             }
-            else if (['decreases', 'directlyDecreases', 'negativeCorrelation'].indexOf(d.relation) >= 0) {
+            else if (["decreases", "directlyDecreases", "negativeCorrelation"].indexOf(d.relation) >= 0) {
                 return "url(#stub)"
             }
             else {
@@ -595,13 +735,13 @@ function initD3Force(graph, tree) {
         .enter().append("g")
         .attr("class", "node")
         // Next two lines -> Pin down functionality
-        .on('dblclick', releaseNode)
+        .on("dblclick", releaseNode)
         // Box info
         .on("click", function (d) {
             displayNodeInfo(d);
         })
         // context-menu on right click
-        .on('contextmenu', d3.contextMenu(nodeMenu)) // Attach context menu to node's circle
+        .on("contextmenu", d3.contextMenu(nodeMenu)) // Attach context menu to node"s circle
         // Dragging
         .call(nodeDrag);
 
@@ -636,7 +776,7 @@ function initD3Force(graph, tree) {
     function exitHighlight() {
         highlightNode = null;
         if (focusNode === null) {
-            if (highlightNodeBoundering != circleColor) {
+            if (highlightNodeBoundering !== circleColor) {
                 circle.style("stroke", circleColor);
                 text.style("fill", "black");
                 link.style("stroke", defaultLinkColor);
@@ -648,7 +788,7 @@ function initD3Force(graph, tree) {
         if (focusNode !== null) d = focusNode;
         highlightNode = d;
 
-        if (highlightNodeBoundering != circleColor) {
+        if (highlightNodeBoundering !== circleColor) {
             circle.style("stroke", function (o) {
                 return isConnected(d, o) ? highlightNodeBoundering : circleColor;
             });
@@ -728,20 +868,30 @@ function initD3Force(graph, tree) {
 
     // Filter nodes in list
     function nodesNotInArray(nodeArray) {
-        var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
+        var nodes = svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el.id) < 0;
         });
-        return nodesNotInArray
+        return nodes
     }
 
     // Filter nodes in list
     function nodesInArray(nodeArray) {
-        var nodesInArray = svg.selectAll(".node").filter(function (el) {
+        var nodes = svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el.id) >= 0;
         });
-        return nodesInArray
+        return nodes
     }
 
+    // Filter nodes in list keeping the order of the nodeArray
+    function nodesInArrayKeepOrder(nodeArray) {
+        var nodes = nodeArray.map(function (el) {
+            var nodeObject = svg.selectAll(".node").filter(function (node) {
+                return el === node.id;
+            });
+            return nodeObject._groups[0][0]
+        });
+        return nodes
+    }
 
     function resetAttributesDoubleClick() {
 
@@ -782,7 +932,7 @@ function initD3Force(graph, tree) {
             var visualizationOption = "visibility", on = "visible", off = "hidden";
         }
 
-        // Change display property to 'none'
+        // Change display property to "none"
         $.each(nodesNotInList._groups[0], function (index, value) {
             value.style.setProperty(visualizationOption, off);
         });
@@ -812,7 +962,7 @@ function initD3Force(graph, tree) {
             var visualizationOption = "visibility", on = "visible", off = "hidden";
         }
 
-        // Change display property to 'none'
+        // Change display property to "none"
         $.each(textNotInPaths._groups[0], function (index, value) {
             value.style.setProperty(visualizationOption, off);
         });
@@ -875,7 +1025,7 @@ function initD3Force(graph, tree) {
         }
 
         // data: nested array with all nodes in each path
-        // visualization: parameter with visualization info ('hide' || 'opaque)
+        // visualization: parameter with visualization info ("hide" || "opaque)
 
         var link = g.selectAll(".link");
 
@@ -907,11 +1057,11 @@ function initD3Force(graph, tree) {
         ///////// Colour links in each path differently and hide others ////////
 
         // Colour the links ( Max 21 paths )
-        var colorArray = ['#ff2200', ' #282040', ' #a68d7c', ' #332b1a', ' #435916', ' #00add9', ' #bfd0ff', ' #f200c2',
-            ' #990014', ' #d97b6c', ' #ff8800', ' #f2ffbf', ' #e5c339', ' #5ba629', ' #005947', ' #005580', ' #090040',
-            ' #8d36d9', ' #e5005c', ' #733941', ' #993d00', ' #80ffb2', ' #66421a', ' #e2f200', ' #20f200', ' #80fff6',
-            ' #002b40', ' #6e698c', ' #802079', ' #330014', ' #331400', ' #ffc480', ' #7ca682', ' #264a4d', ' #0074d9',
-            ' #220080', ' #d9a3d5', ' #f279aa'];
+        var colorArray = ["#ff2200", " #282040", " #a68d7c", " #332b1a", " #435916", " #00add9", " #bfd0ff", " #f200c2",
+            " #990014", " #d97b6c", " #ff8800", " #f2ffbf", " #e5c339", " #5ba629", " #005947", " #005580", " #090040",
+            " #8d36d9", " #e5005c", " #733941", " #993d00", " #80ffb2", " #66421a", " #e2f200", " #20f200", " #80fff6",
+            " #002b40", " #6e698c", " #802079", " #330014", " #331400", " #ffc480", " #7ca682", " #264a4d", " #0074d9",
+            " #220080", " #d9a3d5", " #f279aa"];
 
         // iter = number of paths ( Max 21 paths )
         if (data.length > colorArray.length) {
@@ -962,20 +1112,6 @@ function initD3Force(graph, tree) {
     // Call freezeGraph when a key is pressed, freezeGraph checks whether this key is "Space" that triggers the freeze
     d3.select(window).on("keydown", freezeGraph);
 
-    /////////////////////////
-    // Additional features //
-    /////////////////////////
-
-    function downloadLink(response, name) {
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(response));
-        element.setAttribute('download', name);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-    }
-
     /////////////////////////////////////////////////////////////////////////
     // Build the node selection toggle and creates hashmap nodeNames to IDs /
     /////////////////////////////////////////////////////////////////////////
@@ -1011,7 +1147,7 @@ function initD3Force(graph, tree) {
     });
 
     // Highlight only selected nodes in the graph
-    $('#get-checked-nodes').on('click', function (event) {
+    $("#get-checked-nodes").on("click", function (event) {
         event.preventDefault();
         var checkedItems = [];
         $(".node-checkbox:checked").each(function (idx, li) {
@@ -1040,7 +1176,7 @@ function initD3Force(graph, tree) {
 
     });
 
-    $('#get-checked-edges').on('click', function (event) {
+    $("#get-checked-edges").on("click", function (event) {
         event.preventDefault();
 
         var checkedItems = [];
@@ -1055,52 +1191,68 @@ function initD3Force(graph, tree) {
         resetAttributesDoubleClick()
     });
 
-    var shortestPathForm = $("#shortest-path-form");
+    var pathForm = $("#path-form");
 
-    // Get the shortest path between two nodes via Ajax or get the BEL for the shortest path
-    $('#button-shortest-path').on('click', function () {
-        if (shortestPathForm.valid()) {
+    $("#button-paths").on("click", function () {
+        if (pathForm.valid()) {
 
-            var checkbox = shortestPathForm.find('input[name="visualization-options"]').is(":checked");
+            var checkbox = pathForm.find("input[name='visualization-options'']").is(":checked");
 
             var args = parameterFilters(tree);
-            args["source"] = nodeNamesToId[shortestPathForm.find('input[name="source"]').val()];
-            args["target"] = nodeNamesToId[shortestPathForm.find('input[name="target"]').val()];
+            args["source"] = nodeNamesToId[pathForm.find("input[name='source']").val()];
+            args["target"] = nodeNamesToId[pathForm.find("input[name='target'']").val()];
+            args["paths_method"] = $("input[name=paths_method]:checked", pathForm).val();
+            args["graphid"] = window.networkID;
 
-            var undirected = shortestPathForm.find('input[name="undirectionalize"]').is(":checked");
+            var undirected = pathForm.find("input[name='undirectionalize']").is(":checked");
 
             if (undirected) {
                 args["undirected"] = undirected;
             }
 
             $.ajax({
-                url: '/api/paths/' + window.id,
-                type: shortestPathForm.attr('method'),
-                dataType: 'json',
+                url: "/api/paths/",
+                type: pathForm.attr("method"),
+                dataType: "json",
                 data: $.param(args, true),
-                success: function (shortestPathNodes) {
+                success: function (paths) {
 
-                    // Change style in force
-                    resetAttributes();
+                    if (args["paths_method"] === "all") {
+                        if (paths.length == 0) {
+                            alert("No paths between the selected nodes");
+                        }
 
-                    var nodesNotInPath = nodesNotInArray(shortestPathNodes);
+                        resetAttributes();
 
-                    var edgesNotInPath = g.selectAll(".link").filter(function (el) {
-                        // Source and target should be present in the edge and the distance in the array should be one
-                        return !((shortestPathNodes.indexOf(el.source.id) >= 0 && shortestPathNodes.indexOf(el.target.id) >= 0)
-                        && (Math.abs(shortestPathNodes.indexOf(el.source.id) - shortestPathNodes.indexOf(el.target.id)) == 1));
-                    });
-
-                    // If checkbox is True -> Hide all, Else -> Opacity 0.1
-                    if (checkbox == true) {
-                        nodesNotInPath.style("visibility", "hidden");
-                        edgesNotInPath.style("visibility", "hidden");
-                    } else {
-                        nodesNotInPath.style("opacity", "0.1");
-                        edgesNotInPath.style("opacity", "0.05");
+                        // Apply changes in style for select paths
+                        hideNodesTextInPaths(paths, false);
+                        colorPaths(paths, checkbox);
+                        resetAttributesDoubleClick()
                     }
-                    hideNodesText(shortestPathNodes, checkbox);
-                    resetAttributesDoubleClick();
+                    else {
+
+                        // Change style in force
+                        resetAttributes();
+
+                        var nodesNotInPath = nodesNotInArray(paths);
+
+                        var edgesNotInPath = g.selectAll(".link").filter(function (el) {
+                            // Source and target should be present in the edge and the distance in the array should be one
+                            return !((paths.indexOf(el.source.id) >= 0 && paths.indexOf(el.target.id) >= 0)
+                            && (Math.abs(paths.indexOf(el.source.id) - paths.indexOf(el.target.id)) == 1));
+                        });
+
+                        // If checkbox is True -> Hide all, Else -> Opacity 0.1
+                        if (checkbox == true) {
+                            nodesNotInPath.style("visibility", "hidden");
+                            edgesNotInPath.style("visibility", "hidden");
+                        } else {
+                            nodesNotInPath.style("opacity", "0.1");
+                            edgesNotInPath.style("opacity", "0.05");
+                        }
+                        hideNodesText(paths, checkbox);
+                        resetAttributesDoubleClick();
+                    }
                 }, error: function (request) {
                     alert(request.responseText);
                 }
@@ -1108,8 +1260,8 @@ function initD3Force(graph, tree) {
         }
     });
 
-    // Shortest path validation form
-    shortestPathForm.validate(
+    // Path validation form
+    pathForm.validate(
         {
             rules: {
                 source: {
@@ -1128,90 +1280,17 @@ function initD3Force(graph, tree) {
         }
     );
 
-    // Get or show all paths between two nodes via Ajax
 
-    var allPathForm = $("#all-paths-form");
-
-    $('#button-all-paths').on('click', function () {
-        if (allPathForm.valid()) {
-
-            var checkbox = allPathForm.find('input[name="visualization-options"]').is(":checked");
-
-            var args = parameterFilters(tree);
-            args["source"] = nodeNamesToId[allPathForm.find('input[name="source"]').val()];
-            args["target"] = nodeNamesToId[allPathForm.find('input[name="target"]').val()];
-            args["paths_method"] = "all";
-            var undirected = allPathForm.find('input[name="undirectionalize"]').is(":checked");
-
-            if (undirected) {
-                args["undirected"] = undirected;
-            }
-
-            $.ajax({
-                url: '/api/paths/' + window.id,
-                type: allPathForm.attr('method'),
-                dataType: 'json',
-                data: $.param(args, true),
-                success: function (data) {
-
-                    if (data.length == 0) {
-                        alert('No paths between the selected nodes');
-                    }
-
-                    resetAttributes();
-
-                    // Apply changes in style for select paths
-                    hideNodesTextInPaths(data, false);
-                    colorPaths(data, checkbox);
-                    resetAttributesDoubleClick()
-                },
-                error: function (request) {
-                    alert(request.responseText);
-                }
-            })
-        }
-    });
-
-    allPathForm.validate(
-        {
-            rules: {
-                source: {
-                    required: true,
-                    minlength: 2
-                },
-                target: {
-                    required: true,
-                    minlength: 2
-                }
-            },
-            messages: {
-                source: "Please enter a valid source",
-                target: "Please enter a valid target"
-            }
-        }
-    );
-
-    // Shortest path autocompletion input
-    var nodeNames = Object.keys(nodeNamesToId).sort();
+    // Path autocompletion input
+    var nodeNamesSorted = Object.keys(nodeNamesToId).sort();
 
     $("#source-node").autocomplete({
-        source: nodeNames,
+        source: nodeNamesSorted,
         appendTo: "#paths"
     });
 
     $("#target-node").autocomplete({
-        source: nodeNames,
-        appendTo: "#paths"
-    });
-
-    // All paths form autocompletion
-    $("#source-node2").autocomplete({
-        source: nodeNames,
-        appendTo: "#paths"
-    });
-
-    $("#target-node2").autocomplete({
-        source: nodeNames,
+        source: nodeNamesSorted,
         appendTo: "#paths"
     });
 
@@ -1220,12 +1299,12 @@ function initD3Force(graph, tree) {
         // Get value from search form (fixing spaces and case insensitive
         var searchText = $(this).val();
         searchText = searchText.toLowerCase();
-        searchText = searchText.replace(/\s+/g, '');
+        searchText = searchText.replace(/\s+/g, "");
 
-        $.each($('#node-list-ul')[0].childNodes, updateNodeArray);
+        $.each($("#node-list-ul")[0].childNodes, updateNodeArray);
         function updateNodeArray() {
             var currentLiText = $(this).find("span")[0].innerHTML,
-                showCurrentLi = ((currentLiText.toLowerCase()).replace(/\s+/g, '')).indexOf(searchText) !== -1;
+                showCurrentLi = ((currentLiText.toLowerCase()).replace(/\s+/g, "")).indexOf(searchText) !== -1;
             $(this).toggle(showCurrentLi);
         }
     });
@@ -1235,13 +1314,13 @@ function initD3Force(graph, tree) {
         // Get value from search form (fixing spaces and case insensitive
         var searchText = $(this).val();
         searchText = searchText.toLowerCase();
-        searchText = searchText.replace(/\s+/g, '');
+        searchText = searchText.replace(/\s+/g, "");
 
-        $.each($('#edge-list-ul')[0].childNodes, updateEdgeArray);
+        $.each($("#edge-list-ul")[0].childNodes, updateEdgeArray);
         function updateEdgeArray() {
 
             var currentLiText = $(this).find("span")[0].innerHTML,
-                showCurrentLi = ((currentLiText.toLowerCase()).replace(/\s+/g, '')).indexOf(searchText) !== -1;
+                showCurrentLi = ((currentLiText.toLowerCase()).replace(/\s+/g, "")).indexOf(searchText) !== -1;
             $(this).toggle(showCurrentLi);
         }
     });
@@ -1251,40 +1330,38 @@ function initD3Force(graph, tree) {
 
     var betwennessForm = $("#betweenness-centrality");
 
-    $('#betweenness-button').on('click', function () {
+    $("#betweenness-button").on("click", function () {
         if (betwennessForm.valid()) {
 
             var args = parameterFilters(tree);
-            args["node_number"] = betwennessForm.find('input[name="betweenness"]').val();
+            args["node_number"] = betwennessForm.find("input[name='betweenness']").val();
+            args["graphid"] = window.networkID;
 
             $.ajax({
-                url: '/api/centrality/' + window.id,
-                type: betwennessForm.attr('method'),
-                dataType: 'json',
+                url: "/api/centrality/",
+                type: betwennessForm.attr("method"),
+                dataType: "json",
                 data: $.param(args, true),
                 success: function (data) {
 
-                    var topNodes = nodesInArray(data);
+                    var nodesToIncrease = nodesInArrayKeepOrder(data);
 
-                    console.log(topNodes);
+                    var nodesToReduce = nodesNotInArray(data);
 
-                    // Change display property to 'none'
-                    $.each(topNodes._groups[0], function (index, value) {
-                        value.childNodes[0].attributes[0] = d3.symbol().size(function (d) {
-                            return Math.PI * Math.pow(size(d.size) || 15, 2);
-                        });
-                        console.log(value.childNodes[0].attributes[0]);
-
-                        console.log(d3.symbol().size(Math.PI * Math.pow(size(d.size) || 15, 2)));
-
+                    // Reduce to 7 radius the nodes not in top x
+                    $.each(nodesToReduce._groups[0], function (index, value) {
+                        value.childNodes[0].setAttribute("r", "7");
                     });
 
+                    // Make bigger by factor scale the nodes in the top x
+                    //TODO: change this coefficient
+                    var nodeFactor = (nominalBaseNodeSize / 3) / nodesToIncrease.length;
+                    var factor = nominalBaseNodeSize + nodeFactor;
 
-                    //             .attr("d", d3.symbol()
-                    //     .size(function (d) {
-                    //         return Math.PI * Math.pow(size(d.size) || nominalBaseNodeSize, 2);
-                    //     })
-                    // )
+                    $.each(nodesToIncrease.reverse(), function (index, value) {
+                        value.childNodes[0].setAttribute("r", factor);
+                        factor += nodeFactor;
+                    });
                 },
                 error: function (request) {
                     alert(request.responseText);
@@ -1302,7 +1379,7 @@ function initD3Force(graph, tree) {
                 }
             },
             messages: {
-                betweenness: "Please enter a number",
+                betweenness: "Please enter a number"
             }
         }
     );

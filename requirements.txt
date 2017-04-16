@@ -3,8 +3,7 @@ requests
 flask
 flask-bootstrap
 flask-wtf
-flask-restless
-flask-restless-swagger
+flask-basicauth
 networkx
 pybel
 click

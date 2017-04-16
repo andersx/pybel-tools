@@ -5,15 +5,13 @@
 import flask
 from flask import Flask
 from flask import jsonify
-from flask_bootstrap import Bootstrap
 
 from .database_service_utils import DatabaseService
-from ..web.utils import get_cache_manager
 
 DATABASE_SERVICE = 'database_service'
 
 
-def get_db_service(dsa):
+def get_database_service(dsa):
     """Gets the latent PyBEL Dictionary Service from a Flask app
 
     :param dsa: A Flask app
@@ -35,14 +33,15 @@ def set_database_service(app, service):
     app.config[DATABASE_SERVICE] = service
 
 
-def build_database_service(app):
+def build_database_service(app, manager):
     """Builds the PyBEL Database-Backed API Service.
 
     :param app: A Flask App
     :type app: Flask
+    :param manager: A PyBEL cache manager
+    :type manager: pybel.manager.cache.CacheManager
     """
-    manager = get_cache_manager(app)
-    api = DatabaseService(manager)
+    api = DatabaseService(manager=manager)
     set_database_service(app, api)
 
     @app.route('/api/namespaces', methods=['GET'])
@@ -154,9 +153,3 @@ def build_database_service(app):
     def nodes_by_network(network_id):
         nodes = api.get_nodes(network_id=network_id)
         return jsonify(nodes)
-
-
-def get_app():
-    app = Flask(__name__)
-    Bootstrap(app)
-    return app

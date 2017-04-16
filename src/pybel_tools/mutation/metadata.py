@@ -7,7 +7,7 @@ from pybel.constants import CITATION, CITATION_AUTHORS, CITATION_REFERENCE
 from .. import pipeline
 from ..citation_utils import get_citations_by_pmids
 from ..constants import CNAME
-from ..filters.edge_filters import keep_has_author, filter_edges, keep_has_pubmed_citation
+from ..filters.edge_filters import edge_has_author_annotation, filter_edges, edge_has_pubmed_citation
 from ..filters.node_filters import keep_missing_cname, filter_nodes
 from ..summary.provenance import get_pmids
 
@@ -28,11 +28,11 @@ def parse_authors(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     """
-    if hasattr(graph, 'parsed_authors') and getattr(graph, 'parsed_authors'):
-        log.debug('No need to parse authors again')
+    if 'PYBEL_PARSED_AUTHORS' in graph.graph:
+        log.warning('Authors have already been parsed in %s', graph.graph)
         return
 
-    for u, v, k, d in filter_edges(graph, keep_has_author):
+    for u, v, k, d in filter_edges(graph, edge_has_author_annotation):
         authors = d[CITATION][CITATION_AUTHORS]
 
         if not isinstance(authors, str):
@@ -40,7 +40,7 @@ def parse_authors(graph):
 
         graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = list(authors.split('|'))
 
-    graph.parsed_authors = True
+    graph.graph['PYBEL_PARSED_AUTHORS'] = True
 
 
 @pipeline.in_place_mutator
@@ -50,11 +50,11 @@ def serialize_authors(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     """
-    if hasattr(graph, 'parsed_authors') and not getattr(graph, 'parsed_authors'):
-        log.debug('No need to serialize authors again')
+    if 'PYBEL_PARSED_AUTHORS' not in graph.graph:
+        log.warning('Authors have not yet been parsed in %s', graph.graph)
         return
 
-    for u, v, k, d in filter_edges(graph, keep_has_author):
+    for u, v, k, d in filter_edges(graph, edge_has_author_annotation):
         authors = d[CITATION][CITATION_AUTHORS]
 
         if not isinstance(authors, list):
@@ -62,12 +62,12 @@ def serialize_authors(graph):
 
         graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = '|'.join(authors)
 
-    graph.parsed_authors = False
+    del graph.graph['PYBEL_PARSED_AUTHORS']
 
 
 @pipeline.in_place_mutator
 def add_canonical_names(graph):
-    """Adds a canonical name to each node's data dictionary if they are missing, in place
+    """Adds a canonical name to each node's data dictionary if they are missing, in place. 
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
@@ -94,7 +94,7 @@ def fix_pubmed_citations(graph, stringify_authors=False):
     pmids = get_pmids(graph)
     pmid_data, errors = get_citations_by_pmids(pmids, return_errors=True)
 
-    for u, v, k, d in filter_edges(graph, keep_has_pubmed_citation):
+    for u, v, k, d in filter_edges(graph, edge_has_pubmed_citation):
         pmid = d[CITATION][CITATION_REFERENCE].strip()
 
         if pmid not in pmid_data:

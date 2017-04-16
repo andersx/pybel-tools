@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import sys
 
 from flask import url_for, render_template
 
@@ -10,8 +11,11 @@ log = logging.getLogger(__name__)
 
 
 def build_sitemap_endpoint(app, route=None):
+    """Builds the sitemap endpoing"""
+
     @app.route("/" if route is None else route)
     def view_site_map():
+        """Displays a page with the site map"""
         api_links = []
         page_links = []
         for rule in app.url_map.iter_rules():
@@ -28,8 +32,9 @@ def build_sitemap_endpoint(app, route=None):
                 pass
 
         metadata = [
+            ('Python Version', sys.version),
             ('PyBEL Version', pybel.utils.get_version()),
-            ('PyBEL Tools Version', get_version())
+            ('PyBEL Tools Version', get_version()),
         ]
         return render_template("sitemap.html",
                                metadata=metadata,

@@ -6,7 +6,7 @@ from pybel import BELGraph
 from pybel.constants import *
 from pybel_tools.orthology import HGNC, MGI
 from pybel_tools.orthology import integrate_orthologies_from_rgd, collapse_orthologies
-from tests.constants import add_simple, rgd_orthologs_path
+from tests.constants import rgd_orthologs_path
 
 
 class TestOrthology(unittest.TestCase):
@@ -18,10 +18,10 @@ class TestOrthology(unittest.TestCase):
         g3 = GENE, MGI, 'A1bg'
         g4 = GENE, MGI, 'c'
 
-        add_simple(graph, *g1)
-        add_simple(graph, *g2)
-        add_simple(graph, *g3)
-        add_simple(graph, *g4)
+        graph.add_simple_node(*g1)
+        graph.add_simple_node(*g2)
+        graph.add_simple_node(*g3)
+        graph.add_simple_node(*g4)
 
         self.assertEqual(4, graph.number_of_nodes())
         self.assertEqual(0, graph.number_of_edges())

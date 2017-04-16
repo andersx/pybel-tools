@@ -38,6 +38,19 @@ def remove_unweighted_leaves(graph, key):
     graph.remove_nodes_from(unweighted_leaves)
 
 
+def is_unweighted_source(graph, node, key):
+    """
+    
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node: A BEL node
+    :type node: tuple
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    """
+    return graph.in_degree(node) == 0 and key not in graph.node[node]
+
+
 def get_unweighted_sources(graph, key):
     """Gets unannotated nodes on the periphery of the subgraph
 
@@ -49,7 +62,7 @@ def get_unweighted_sources(graph, key):
     :rtype: iter
     """
     for node in graph.nodes_iter():
-        if graph.in_degree(node) == 0 and key not in graph.node[node]:
+        if is_unweighted_source(graph, node, key):
             yield node
 
 
@@ -68,13 +81,19 @@ def remove_unweighted_sources(graph, key):
 
 @pipeline.in_place_mutator
 def prune_mechanism_by_data(graph, key):
-    """
+    """Removes all leaves and source nodes that don't have weights. Is a thin wrapper around 
+    :func:`remove_unweighted_leaves` and :func:`remove_unweighted_sources`
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :param key: The key in the node data dictionary representing the experimental data. If none, does not prune
                 unannotated nodes after generation
     :type key: str
+    
+    Equivalent to:
+    
+    >>> remove_unweighted_leaves(graph, key)
+    >>> remove_unweighted_sources(graph, key)
     """
     remove_unweighted_leaves(graph, key)
     remove_unweighted_sources(graph, key)
@@ -114,6 +133,6 @@ def generate_bioprocess_mechanisms(graph, key=None):
                 unannotated nodes after generation
     :type key: str
     :return: A dictionary from {str bioprocess node: BELGraph candidate mechanism}
-    :rtype: dict
+    :rtype: dict[tuple, pybel.BELGraph]
     """
     return {bp: generate_mechanism(graph, bp, key=key) for bp in get_nodes_by_function(graph, BIOPROCESS)}

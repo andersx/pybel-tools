@@ -22,9 +22,9 @@ def left_merge(g, h):
     :param h: A BEL Graph
     :type h: pybel.BELGraph
     """
-    for node, data in h.nodes_iter(data=True):
+    for node in h.nodes_iter():
         if node not in g:
-            g.add_node(node, data)
+            g.add_node(node, attr_dict=h.node[node])
 
     for u, v, k, d in h.edges_iter(keys=True, data=True):
         if k < 0:  # unqualified edge that's not in G yet

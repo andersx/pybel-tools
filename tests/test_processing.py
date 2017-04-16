@@ -23,10 +23,10 @@ class TestProcessing(unittest.TestCase):
         n2 = RNA, 'HGNC', 'EGFR'
 
         n3 = GENE, 'HGNC', 'DUMMY1'
-        self.graph.add_node(n3, attr_dict={FUNCTION: GENE, NAMESPACE: 'HGNC', NAME: 'DUMMY1'})
+        self.graph.add_simple_node(*n3)
 
         n4 = GENE, 'HGNC', 'DUMMY2'
-        self.graph.add_node(n4, attr_dict={FUNCTION: RNA, NAMESPACE: 'HGNC', NAME: 'DUMMY2'})
+        self.graph.add_simple_node(*n4)
 
         self.graph.add_edge(n1, n3)
         self.graph.add_edge(n2, n4)
@@ -34,10 +34,6 @@ class TestProcessing(unittest.TestCase):
     def test_base(self):
         self.assertEqual(14, self.graph.number_of_nodes())
         self.assertEqual(16, self.graph.number_of_edges())
-
-    def test_prune_by_type(self):
-        remove_leaves_by_type(self.graph, GENE)
-        self.assertEqual(10, self.graph.number_of_nodes())
 
     def test_prune(self):
         prune_central_dogma(self.graph)

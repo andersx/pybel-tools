@@ -21,8 +21,8 @@ from ..utils import check_has_annotation
 
 __all__ = [
     'keep_edge_permissive',
-    'keep_causal_edges',
-    'keep_has_author',
+    'edge_is_causal',
+    'edge_has_author_annotation',
     'build_inverse_filter',
     'build_annotation_value_filter',
     'build_annotation_dict_filter',
@@ -56,7 +56,7 @@ def keep_edge_permissive(graph, u, v, k, d):
     return True
 
 
-def keep_causal_edges(graph, u, v, k, d):
+def edge_is_causal(graph, u, v, k, d):
     """Only passes on causal edges, belonging to the set :data:`pybel.constants.CAUSAL_RELATIONS`
 
     :param graph: A BEL Graph
@@ -75,14 +75,42 @@ def keep_causal_edges(graph, u, v, k, d):
     return graph.edge[u][v][k][RELATION] in CAUSAL_RELATIONS
 
 
-def keep_has_author(graph, u, v, k, d):
-    """Passes for edges that have citations with authors"""
-    return CITATION in d and CITATION_AUTHORS in d[CITATION]
+def edge_has_author_annotation(graph, u, v, k, d):
+    """Passes for edges that have citations with authors
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param u: A BEL node
+    :type u: tuple
+    :param v: A BEL node
+    :type v: tuple
+    :param k: The edge key between the given nodes
+    :type k: int
+    :param d: The edge data dictionary
+    :type d: dict
+    :return: Does the edge's citation data dictionary have authors included?
+    :rtype: bool
+    """
+    return CITATION in graph.edge[u][v][k] and CITATION_AUTHORS in graph.edge[u][v][k][CITATION]
 
 
-def keep_has_pubmed_citation(graph, u, v, k, d):
-    """Passes for edges that have PubMed citations"""
-    return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE]
+def edge_has_pubmed_citation(graph, u, v, k, d):
+    """Passes for edges that have PubMed citations
+    
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param u: A BEL node
+    :type u: tuple
+    :param v: A BEL node
+    :type v: tuple
+    :param k: The edge key between the given nodes
+    :type k: int
+    :param d: The edge data dictionary
+    :type d: dict
+    :return: Is the edge's citation from :data:`PUBMED`?
+    :rtype: bool
+    """
+    return CITATION in graph.edge[u][v][k] and PUBMED == graph.edge[u][v][k][CITATION][CITATION_TYPE]
 
 
 def build_inverse_filter(f):
@@ -200,6 +228,7 @@ def build_relation_filter(relations):
         return relation_filter
     elif isinstance(relations, (list, tuple, set)):
         relation_set = set(relations)
+
         def relation_filter(graph, u, v, k, d):
             """Only passes for edges with one of the contained relations
 
@@ -249,7 +278,10 @@ def build_pmid_inclusion_filter(pmids):
             :return: True if the edge has a PubMed citation with the contained PubMed identifier
             :rtype: bool
             """
-            return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] == pmids
+            if not edge_has_pubmed_citation(graph, u, v, k, d):
+                return False
+
+            return d[CITATION][CITATION_REFERENCE] == pmids
 
         return pmid_inclusion_filter
 
@@ -272,7 +304,10 @@ def build_pmid_inclusion_filter(pmids):
             :return: True if the edge has a PubMed citation with one of the contained PubMed identifiers
             :rtype: bool
             """
-            return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] in pmids
+            if not edge_has_pubmed_citation(graph, u, v, k, d):
+                return False
+
+            return d[CITATION][CITATION_REFERENCE] in pmids
 
         return pmid_inclusion_filter
 
@@ -303,7 +338,9 @@ def build_pmid_exclusion_filter(pmids):
             :return: True if the edge has a PubMed citation with the contained PubMed identifier
             :rtype: bool
             """
-            return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][CITATION_REFERENCE] != pmids
+            if not edge_has_pubmed_citation(graph, u, v, k, d):
+                return False
+            return d[CITATION][CITATION_REFERENCE] != pmids
 
         return pmid_exclusion_filter
 
@@ -326,8 +363,9 @@ def build_pmid_exclusion_filter(pmids):
             :return: True if the edge has a PubMed citation with one of the contained PubMed identifiers
             :rtype: bool
             """
-            return CITATION in d and PUBMED == d[CITATION][CITATION_TYPE] and d[CITATION][
-                                                                                  CITATION_REFERENCE] not in pmids
+            if not edge_has_pubmed_citation(graph, u, v, k, d):
+                return False
+            return d[CITATION][CITATION_REFERENCE] not in pmids
 
         return pmid_exclusion_filter
 
@@ -357,7 +395,9 @@ def build_author_inclusion_filter(authors):
             :return: True if the edge has a citation with an author that matches the the contained author
             :rtype: bool
             """
-            return CITATION in d and CITATION_AUTHORS in d[CITATION] and authors in d[CITATION][CITATION_AUTHORS]
+            if not edge_has_author_annotation(graph, u, v, k, d):
+                return False
+            return authors in d[CITATION][CITATION_AUTHORS]
 
         return author_filter
 
@@ -380,8 +420,9 @@ def build_author_inclusion_filter(authors):
             :return: True if the edge has a citation with an author that matches one or more of the contained authors
             :rtype: bool
             """
-            return CITATION in d and CITATION_AUTHORS in d[CITATION] and any(
-                author in d[CITATION][CITATION_AUTHORS] for author in author_set)
+            if not edge_has_author_annotation(graph, u, v, k, d):
+                return False
+            return any(author in d[CITATION][CITATION_AUTHORS] for author in author_set)
 
         return author_filter
 

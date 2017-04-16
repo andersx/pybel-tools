@@ -1,77 +1,72 @@
 # -*- coding: utf-8 -*-
 
+import logging
+import traceback
+
 import flask
+from flask import render_template, jsonify, Flask
+from flask_bootstrap import Bootstrap
+from sqlalchemy.exc import IntegrityError
 
-from pybel.manager.cache import build_manager
-from pybel.parser.parse_metadata import MetadataParser
-from .constants import PYBEL_CACHE_CONNECTION, PYBEL_DEFINITION_MANAGER, PYBEL_METADATA_PARSER
-from ..utils import build_template_renderer
-
-__all__ = [
-    'get_cache_connection',
-    'set_cache_manager',
-    'get_cache_manager',
-    'set_metadata_parser',
-    'get_metadata_parser',
-]
-
-render_template = build_template_renderer(__file__)
+log = logging.getLogger(__name__)
 
 
-def get_cache_connection(app):
-    """Gets the connection string from the configuration of the Flask app
+def render_upload_error(exc):
+    """Builds a flask Response for an exception.
     
-    :param app: A Flask application
-    :type app: flask.Flask
+    :type exc: Exception
     """
-    return app.config.get(PYBEL_CACHE_CONNECTION)
+    traceback_lines = traceback.format_exc().split('\n')
+    return render_template(
+        'parse_error.html',
+        error_title='Upload Error',
+        error_text=str(exc),
+        traceback_lines=traceback_lines
+    )
 
 
-def set_cache_manager(app, definition_manager):
-    """Sets the definition cache manager associated with a given Flask app
+def try_insert_graph(manager, graph):
+    """Inserts a graph and sends an okay message if success. else renders upload page
     
-    :param app: A Flask application
-    :type app: flask.Flask
-    :type definition_manager: pybel.manager.cache.CacheManager
+    :param manager: 
+    :type manager: pybel.manager.cache.CacheManager
+    :param graph: 
+    :type graph: pybel.BELGraph
+    :return: HTTP response for flask rote
     """
-    app.config[PYBEL_DEFINITION_MANAGER] = definition_manager
+    try:
+        network = manager.insert_graph(graph)
+        return jsonify({
+            'status': 200,
+            'network_id': network.id
+        })
+    except IntegrityError as e:
+        flask.flash("Graph with same Name/Version already exists. Try bumping the version number.")
+        log.exception('Integrity error')
+        manager.rollback()
+        return render_upload_error(e)
+    except Exception as e:
+        flask.flash("Error storing in database")
+        log.exception('Upload error')
+        return render_upload_error(e)
 
 
-def get_cache_manager(app):
-    """Gets the definition cache manager associated with a given Flask app
+def get_app():
+    """Builds a Flask app for the PyBEL web service
     
-    :param app: A Flask application
-    :type app: flask.Flask
-    :return: The app's definition manager
-    :rtype: pybel.manager.cache.CacheManager
+    :rtype: flask.Flask
     """
-    if PYBEL_DEFINITION_MANAGER not in app.config:
-        manager = build_manager(get_cache_connection(app))
-        set_cache_manager(app, manager)
+    app = Flask(__name__)
+    log.debug('made app %s', app)
+    Bootstrap(app)
+    log.debug('added bootstrap to app %s', app)
+    return app
 
-    return app.config.get(PYBEL_DEFINITION_MANAGER)
 
-
-def set_metadata_parser(app, metadata_parser):
-    """Sets the metadata parser associated with a given Flask app
-
-    :param app: A Flask application
-    :type app: flask.Flask
-    :type metadata_parser: pybel.parser.parse_metadata.MetadataParser
+def sanitize_list_of_str(l):
+    """Strips all strings in a list and filters to the non-empty ones
+    
+    :type l: list[str]
+    :rtype: list[str]
     """
-    app.config[PYBEL_METADATA_PARSER] = metadata_parser
-
-
-def get_metadata_parser(app):
-    """Gets the metadata parser associated with a given Flask app
-
-    :param app: A Flask application 
-    :type app: flask.Flask
-    :return: The app's metadata parser
-    :rtype: pybel.parser.parse_metadata.MetadataParser
-    """
-    if PYBEL_METADATA_PARSER not in app.config:
-        mdp = MetadataParser(get_cache_manager(app))
-        set_metadata_parser(app, mdp)
-
-    return app.config.get(PYBEL_METADATA_PARSER)
+    return [e for e in (e.strip() for e in l) if e]

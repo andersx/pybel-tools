@@ -7,7 +7,7 @@ from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
-    keep_causal_edges, build_annotation_value_filter, build_annotation_dict_filter
+    edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
 from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
 from ..mutation.merge import left_merge
@@ -161,7 +161,7 @@ def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
     :rtype: pybel.BELGraph
     """
     result = get_subgraph_by_edge_filter(graph, build_annotation_value_filter(annotation, value))
-    result.graph[GRAPH_METADATA][METADATA_NAME] = '{} - ({}: {})'.format(graph.name, annotation, value)
+    result.name = '{} - ({}: {})'.format(graph.name, annotation, value)
     return result
 
 
@@ -203,7 +203,7 @@ def get_causal_subgraph(graph):
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    result = get_subgraph_by_edge_filter(graph, keep_causal_edges)
+    result = get_subgraph_by_edge_filter(graph, edge_is_causal)
     result.graph[GRAPH_METADATA][METADATA_NAME] = '{} - Induced Causal Subgraph'.format(graph.name)
     return result
 
@@ -274,19 +274,28 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
 
 @pipeline.mutator
 def get_subgraph_by_pubmed(graph, pmids):
-    """Induces a subgraph over the edges retrieved from the given PubMed identifier(s)"""
+    """Induces a subgraph over the edges retrieved from the given PubMed identifier(s)
+    
+    :rtype: pybel.BELGraph
+    """
     return get_subgraph_by_edge_filter(graph, build_pmid_inclusion_filter(pmids))
 
 
 @pipeline.mutator
 def get_subgraph_by_authors(graph, authors):
-    """Induces a subgraph over the edges retrieved publications by the given author(s)"""
+    """Induces a subgraph over the edges retrieved publications by the given author(s)
+    
+    :rtype: pybel.BELGraph
+    """
     return get_subgraph_by_edge_filter(graph, build_author_inclusion_filter(authors))
 
 
 @pipeline.mutator
 def get_subgraph_by_provenance(graph, kwargs):
-    """Thin wrapper around :func:`get_subgraph_by_provenance_helper` by splatting keyword arguments"""
+    """Thin wrapper around :func:`get_subgraph_by_provenance_helper` by splatting keyword arguments
+    
+    :rtype: pybel.BELGraph
+    """
     # TODO get rid of this function
     return get_subgraph_by_provenance_helper(graph, **kwargs)
 

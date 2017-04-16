@@ -21,23 +21,26 @@ from getpass import getuser
 
 import click
 
-import pybel.utils
+import pybel
 from pybel import from_pickle, to_database, from_lines
-from pybel.constants import DEFAULT_CACHE_LOCATION
+from pybel.constants import DEFAULT_CACHE_LOCATION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
+from pybel.manager.cache import build_manager
+from pybel.utils import get_version as pybel_version
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 from .ioutils import convert_recursive, upload_recusive
-from .service.compilation_service import build_synchronous_compiler_service
-from .service.database_service import build_database_service
-from .service.database_service import get_app as get_database_service_app
-from .service.dict_service import build_dictionary_service
-from .service.dict_service import get_app as get_dict_service_app
-from .service.summary_service import build_summary_service
-from .service.upload_service import build_pickle_uploader_service
 from .utils import get_version
-from .web.constants import SECRET_KEY, PYBEL_CACHE_CONNECTION
+from .web import receiver_service
+from .web.compilation_service import build_synchronous_compiler_service
+from .web.constants import SECRET_KEY
+from .web.database_service import build_database_service
+from .web.dict_service import build_dictionary_service
 from .web.parser_endpoint import build_parser_service
+from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
 from .web.sitemap_endpoint import build_sitemap_endpoint
+from .web.summary_service import build_summary_service
+from .web.upload_service import build_pickle_uploader_service
+from .web.utils import get_app
 
 log = logging.getLogger(__name__)
 
@@ -49,10 +52,48 @@ def set_debug(level):
     log.setLevel(level)
 
 
+def set_debug_param(debug):
+    if debug == 1:
+        set_debug(20)
+    elif debug == 2:
+        set_debug(10)
+
+
 @click.group(help="PyBEL-Tools Command Line Utilities on {}".format(sys.executable))
 @click.version_option()
 def main():
     pass
+
+
+@main.group()
+def ensure():
+    """Utilities for ensuring data"""
+
+
+@ensure.command()
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('--use-edge-store', is_flag=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+def small_corpus(connection, use_edge_store, debug):
+    """Caches the Selventa Small Corpus"""
+    set_debug_param(debug)
+
+    manager = build_manager(connection)
+    graph = pybel.from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    manager.insert_graph(graph, store_parts=use_edge_store)
+
+
+@ensure.command()
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('--use-edge-store', is_flag=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+def large_corpus(connection, use_edge_store, debug):
+    """Caches the Selventa Large Corpus"""
+    set_debug_param(debug)
+
+    manager = build_manager(connection)
+    graph = pybel.from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    manager.insert_graph(graph, store_parts=use_edge_store)
 
 
 @main.group()
@@ -65,19 +106,31 @@ def io():
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('-r', '--recursive', help='Recursively upload all gpickles in the directory given as the path')
 @click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+@click.option('--to-service', is_flag=True, help='Sends to PyBEL web service')
+@click.option('--service-url', help='Service location. Defaults to {}'.format(DEFAULT_SERVICE_URL))
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def upload(path, connection, recursive, skip_check_version, debug):
+def upload(path, connection, recursive, skip_check_version, to_service, service_url, debug):
     """Quick uploader"""
-    if debug == 1:
-        set_debug(20)
-    elif debug == 2:
-        set_debug(10)
+    set_debug_param(debug)
 
-    if not recursive:
-        graph = from_pickle(path, check_version=(not skip_check_version))
-        to_database(graph, connection=connection)
-    else:
+    if recursive:
         upload_recusive(path, connection=connection)
+    else:
+        graph = from_pickle(path, check_version=(not skip_check_version))
+        if to_service:
+            receiver_service.post(graph, service_url)
+        else:
+            to_database(graph, connection=connection)
+
+
+@io.command()
+@click.argument('path')
+@click.option('-u', '--url', help='Service location. Defaults to {}'.format(DEFAULT_SERVICE_URL))
+@click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+def post(path, url, skip_check_version):
+    """Posts the given graph to the PyBEL Web Service via JSON"""
+    graph = from_pickle(path, check_version=(not skip_check_version))
+    receiver_service.post(graph, url)
 
 
 @io.command()
@@ -88,62 +141,73 @@ def upload(path, connection, recursive, skip_check_version, debug):
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 def convert(connection, upload, directory, debug):
     """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
-    if debug == 1:
-        set_debug(20)
-    elif debug == 2:
-        set_debug(10)
+    set_debug_param(debug)
     convert_recursive(directory, connection=connection, upload=upload, pickle=True)
 
 
 @main.command()
 @click.option('-c', '--connection', help='Cache connection string. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('--host', help='Flask host. Defaults to localhost')
-@click.option('--port', help='Flask port. Defaults to 5000')
+@click.option('--port', type=int, help='Flask port. Defaults to 5000')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 @click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-@click.option('--run-database-service', is_flag=True, help='Use the database service')
+@click.option('--run-database-service', is_flag=True, help='Enable the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
 @click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
 @click.option('--run-compiler-service', is_flag=True, help='Enable the compiler page')
-@click.option('--run-summary-service', is_flag=True, help='Enable the graph summary page')
+@click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
+@click.option('--admin-password', help='Set admin password and enable admin services')
+@click.option('--echo-sql', is_flag=True)
 def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
-        run_uploader_service, run_compiler_service, run_summary_service, run_all, secret_key):
+        run_uploader_service, run_compiler_service, run_receiver_service, run_all, secret_key, admin_password,
+        echo_sql):
     """Runs PyBEL Web"""
-    if debug == 1:
-        set_debug(20)
-    elif debug == 2:
-        set_debug(10)
+    set_debug_param(debug)
 
-    log.info('Running PyBEL v%s', pybel.utils.get_version())
+    log.info('Running PyBEL v%s', pybel_version())
     log.info('Running PyBEL Tools v%s', get_version())
 
-    if run_database_service:
-        app = get_database_service_app()
-        app.config[PYBEL_CACHE_CONNECTION] = connection
-        build_database_service(app)
-    else:
-        app = get_dict_service_app()
-        app.config[PYBEL_CACHE_CONNECTION] = connection
-        build_dictionary_service(app, check_version=(not skip_check_version))
+    if host is not None:
+        log.info('Running on host: %s', host)
 
+    if port is not None:
+        log.info('Running on port: %d', port)
+
+    app = get_app()
     app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
+
+    manager = build_manager(connection, echo=echo_sql)
+
+    build_sitemap_endpoint(app)
+
+    build_dictionary_service(
+        app,
+        manager=manager,
+        check_version=(not skip_check_version),
+        admin_password=admin_password
+    )
+
+    build_summary_service(app, manager=manager)
+
+    if run_database_service:
+        build_database_service(app, manager)
 
     if run_parser_service or run_all:
         build_parser_service(app)
 
     if run_uploader_service or run_all:
-        build_pickle_uploader_service(app)
-
-    if run_summary_service or run_all:
-        build_summary_service(app)
+        build_pickle_uploader_service(app, manager=manager)
 
     if run_compiler_service or run_all:
-        build_synchronous_compiler_service(app)
+        build_synchronous_compiler_service(app, manager=manager)
 
-    build_sitemap_endpoint(app)
+    if run_receiver_service or run_all:
+        build_receiver_service(app, manager=manager)
+
+    log.info('Done building %s', app)
 
     app.run(debug=flask_debug, host=host, port=port)
 

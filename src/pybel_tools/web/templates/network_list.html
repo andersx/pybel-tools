@@ -9,6 +9,9 @@
 {% block styles %}
     {{ super() }}
     <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
+    <link rel="stylesheet" type="text/css"
+          href='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'/>
+
 {% endblock %}
 
 {% block head %}
@@ -23,8 +26,12 @@
 
 {% block scripts %}
     {{ super() }}
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/home_controller/home_controller.js') }}"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.full.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/home_controller/home_controller.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -38,10 +45,16 @@
             </div>
             <div class="list-group">
                 {% for nid, name, vers, descr in data %}
-                    <a href="/explore/{{ nid }}" class="list-group-item">
+                    <div class="list-group-item">
                         <h4 class="list-group-item-heading">{{ name }} v{{ vers }}</h4>
-                        <p class="list-group-item-text">{{ descr }}</p>
-                    </a>
+                        <div class="list-group-item-text">
+                            <p>{{ descr }}</p>
+                            <ul class="list-inline">
+                                <li><a href="/summary/{{ nid }}">Summarize</a></li>
+                                <li><a href="/explore/?graphid={{ nid }}">Explore</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 {% endfor %}
             </div>
         </div>
@@ -50,8 +63,13 @@
                 <h3 class="panel-title">Network Seeding by Nodes</h3>
             </div>
             <div class="panel-body">
-                <p>This method of seeding will acquire the given nodes and expand around them using given seed method.</p>
-                {{ wtf.quick_form(subgraph_form, form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
+                <p>This method of seeding will acquire the given nodes and expand around them using given seed
+                    method.</p>
+
+                <select style="width: 100%" multiple="multiple"
+                        id="node_selection"></select>
+
+                {{ wtf.quick_form(subgraph_form, id='subgraph_form', form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
             </div>
         </div>
         <div class="panel panel-default">

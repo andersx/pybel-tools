@@ -2,6 +2,8 @@
 
 """This module assists in running complex workflows on BEL graphs"""
 
+from __future__ import print_function
+
 import logging
 import pickle
 from functools import wraps
@@ -116,6 +118,10 @@ class PipelineBuilder:
         return pipeline_builder
 
 
+universe_cache = {}
+in_place_cache = {}
+
+
 def mutator_decorator_builder(wrap_universe, wrap_in_place):
     """Builds a decorator function to tag mutator functions"""
 
@@ -128,6 +134,12 @@ def mutator_decorator_builder(wrap_universe, wrap_in_place):
 
         wrapper.wrap_universe = wrap_universe
         wrapper.wrap_in_place = wrap_in_place
+
+        if wrap_universe:
+            universe_cache[wrapper.__name__] = wrapper
+
+        if wrap_in_place:
+            in_place_cache[wrapper.__name__] = wrapper
 
         return wrapper
 

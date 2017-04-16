@@ -10,7 +10,7 @@ from flask import request, jsonify
 from pybel import BELGraph
 from pybel.constants import *
 from pybel.parser import BelParser
-from ..service.send_utils import serve_network
+from .send_utils import serve_network
 
 __all__ = [
     'build_parser_service',

@@ -57,7 +57,7 @@ def has_pubmed_citation(edge_data_dictionary):
     return CITATION in edge_data_dictionary and PUBMED == edge_data_dictionary[CITATION][CITATION_TYPE]
 
 
-def _iter_pmids(graph):
+def iter_pmids(graph):
     return (d[CITATION][CITATION_REFERENCE].strip() for d in graph_edge_data_iter(graph) if has_pubmed_citation(d))
 
 
@@ -69,7 +69,7 @@ def get_pmids(graph):
     :return: A set of all PubMed identifiers cited in the construction of this graph
     :rtype: set[str]
     """
-    return set(_iter_pmids(graph))
+    return set(iter_pmids(graph))
 
 
 def get_pmid_by_keyword(graph, keyword, pmids=None):
@@ -84,7 +84,7 @@ def get_pmid_by_keyword(graph, keyword, pmids=None):
     :return: A set of PMIDs starting with the given string
     :rtype: set[str]
     """
-    pmids = pmids if pmids is not None else _iter_pmids(graph)
+    pmids = pmids if pmids is not None else iter_pmids(graph)
     return {pmid for pmid in pmids if pmid.startswith(keyword)}
 
 
@@ -96,7 +96,7 @@ def count_pmids(graph):
     :return: A Counter from {(pmid, name): frequency}
     :rtype: collections.Counter
     """
-    return Counter(_iter_pmids(graph))
+    return Counter(iter_pmids(graph))
 
 
 def count_citations(graph, **annotations):
@@ -182,7 +182,7 @@ def count_author_publications(graph):
 
     return Counter(count_dict_values(count_defaultdict(authors)))
 
-
+# TODO switch to use node filters
 def get_authors(graph):
     """Gets the set of all authors in the given graph
 

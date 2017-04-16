@@ -1,7 +1,10 @@
-from ..filters.node_filters import filter_nodes, build_node_name_search
+# -*- coding: utf-8 -*-
+
+from ..filters.node_filters import filter_nodes, build_node_name_search, build_node_cname_search
 
 __all__ = [
-    'search_node_names'
+    'search_node_names',
+    'search_node_cnames'
 ]
 
 
@@ -26,7 +29,7 @@ def search_node_cnames(graph, query):
     :type graph: pybel.BELGraph
     :param query: The search query
     :type query: str or iter[str]
-    :return: An iterator over nodes whose names match the search query
+    :return: An iterator over nodes whose canonical names match the search query
     :rtype: iter
     """
-    return filter_nodes(graph, build_node_name_search(query))
+    return filter_nodes(graph, build_node_cname_search(query))
