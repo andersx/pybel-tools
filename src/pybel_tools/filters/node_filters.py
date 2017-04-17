@@ -328,10 +328,10 @@ def data_missing_key_builder(key):
 
 
 #: Passes for nodes that have been annotated with a canonical name
-keep_contains_cname = data_contains_key_builder(CNAME)
+node_has_cname = data_contains_key_builder(CNAME)
 
 #: Fails for nodes that have been annotated with a canonical name
-keep_missing_cname = data_missing_key_builder(CNAME)
+node_is_missing_cname = data_missing_key_builder(CNAME)
 
 
 # Filter Builders

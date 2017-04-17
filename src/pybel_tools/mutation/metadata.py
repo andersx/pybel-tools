@@ -8,7 +8,7 @@ from .. import pipeline
 from ..citation_utils import get_citations_by_pmids
 from ..constants import CNAME
 from ..filters.edge_filters import edge_has_author_annotation, filter_edges, edge_has_pubmed_citation
-from ..filters.node_filters import keep_missing_cname, filter_nodes
+from ..filters.node_filters import node_is_missing_cname, filter_nodes
 from ..summary.edge_summary import get_annotations
 from ..summary.node_summary import get_namespaces
 from ..summary.provenance import get_pmids
@@ -74,7 +74,7 @@ def add_canonical_names(graph):
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     """
-    for node in filter_nodes(graph, keep_missing_cname):
+    for node in filter_nodes(graph, node_is_missing_cname):
         graph.node[node][CNAME] = calculate_canonical_name(graph, node)
 
 
