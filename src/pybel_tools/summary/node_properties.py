@@ -3,6 +3,7 @@
 """This module contains functions that calculate properties of nodes"""
 
 from pybel.constants import RELATION, CAUSAL_RELATIONS, FUNCTION
+from ..filters.node_filters import get_nodes, node_has_molecular_activity, node_is_degraded, node_is_translocated
 
 __all__ = [
     'is_causal_relation',
@@ -16,6 +17,9 @@ __all__ = [
     'get_causal_source_nodes',
     'get_causal_central_nodes',
     'get_causal_sink_nodes',
+    'get_degradations',
+    'get_active',
+    'get_translocated',
 ]
 
 
@@ -129,3 +133,33 @@ def get_causal_sink_nodes(graph, function):
     :rtype: set
     """
     return {n for n, d in graph.nodes_iter(data=True) if d[FUNCTION] == function and is_causal_sink(graph, n)}
+
+
+def get_degradations(graph):
+    """Gets all nodes that are degraded
+
+    :param pybel.BELGraph graph: A BEL graph
+    :return: A set of nodes that are degraded
+    :rtype: set
+    """
+    return get_nodes(graph, node_is_degraded)
+
+
+def get_active(graph):
+    """Gets all nodes that have molecular activities
+
+    :param pybel.BELGraph graph: A BEL graph
+    :return: A set of nodes that have molecular activities
+    :rtype: set
+    """
+    return get_nodes(graph, node_has_molecular_activity)
+
+
+def get_translocated(graph):
+    """Gets all nodes that are translocated
+
+    :param pybel.BELGraph graph: A BEL graph
+    :return: A set of nodes that are translocated
+    :rtype: set
+    """
+    return get_nodes(graph, node_is_translocated)

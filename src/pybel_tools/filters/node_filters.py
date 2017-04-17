@@ -34,6 +34,7 @@ __all__ = [
     'filter_nodes',
     'count_passed_node_filter',
     'summarize_node_filter',
+    'get_nodes',
 ]
 
 
@@ -57,6 +58,11 @@ def filter_nodes(graph, node_filters=None):
         for node in graph.nodes_iter():
             if concatenated_filter(graph, node):
                 yield node
+
+
+def get_nodes(graph, node_filters=None):
+    """Gets the set of all nodes that pass the filters"""
+    return set(filter_nodes(graph, node_filters))
 
 
 def count_passed_node_filter(graph, node_filters):
