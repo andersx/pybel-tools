@@ -26,6 +26,7 @@ from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
 from pybel.manager.cache import build_manager
 from pybel.utils import get_version as pybel_version
+from .constants import GENE_FAMILIES, NAMED_COMPLEXES
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 from .ioutils import convert_recursive, upload_recusive
@@ -77,7 +78,6 @@ def ensure():
 def small_corpus(connection, use_edge_store, debug):
     """Caches the Selventa Small Corpus"""
     set_debug_param(debug)
-
     manager = build_manager(connection)
     graph = pybel.from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
     manager.insert_graph(graph, store_parts=use_edge_store)
@@ -90,9 +90,32 @@ def small_corpus(connection, use_edge_store, debug):
 def large_corpus(connection, use_edge_store, debug):
     """Caches the Selventa Large Corpus"""
     set_debug_param(debug)
-
     manager = build_manager(connection)
     graph = pybel.from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    manager.insert_graph(graph, store_parts=use_edge_store)
+
+
+@ensure.command()
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('--use-edge-store', is_flag=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+def gene_families(connection, use_edge_store, debug):
+    """Caches the HGNC Gene Family memberships"""
+    set_debug_param(debug)
+    manager = build_manager(connection)
+    graph = pybel.from_url(GENE_FAMILIES, manager=manager)
+    manager.insert_graph(graph, store_parts=use_edge_store)
+
+
+@ensure.command()
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('--use-edge-store', is_flag=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+def named_complexes(connection, use_edge_store, debug):
+    """Caches GO Named Protein Complexes memberships"""
+    set_debug_param(debug)
+    manager = build_manager(connection)
+    graph = pybel.from_url(NAMED_COMPLEXES, manager=manager)
     manager.insert_graph(graph, store_parts=use_edge_store)
 
 

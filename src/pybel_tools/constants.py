@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from pybel.constants import FRAUNHOFER_RESOURCES
 from pybel.constants import HAS_PRODUCT, HAS_REACTANT, HAS_VARIANT, HAS_COMPONENT, TRANSCRIBED_TO, TRANSLATED_TO
 
 IS_PRODUCT_OF = 'isProductOf'
@@ -97,3 +98,7 @@ evidence_format = 'SET Evidence = "{}"\n\n\n'
 CNAME = 'cname'
 PUBMED = 'PubMed'
 DATA_WEIGHT = 'weight'
+
+# Resources
+GENE_FAMILIES = FRAUNHOFER_RESOURCES + 'gfam_members.bel'
+NAMED_COMPLEXES = 'http://resources.openbel.org/belframework/20150611/resource/named-complexes.bel'
