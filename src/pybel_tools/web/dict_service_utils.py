@@ -15,7 +15,8 @@ from pybel.constants import *
 from pybel.manager.models import Network
 from .base_service import BaseService
 from ..mutation.merge import left_merge
-from ..mutation.metadata import parse_authors, add_canonical_names
+from ..mutation.metadata import parse_authors, add_canonical_names, update_context
+from ..mutation.inference import infer_central_dogma
 from ..selection.induce_subgraph import get_subgraph
 from ..summary.provenance import get_authors, iter_pmids
 
@@ -91,13 +92,12 @@ class DictionaryService(BaseService):
 
         graph.graph['PYBEL_RELABELED'] = True
 
-    def relabel_nodes_to_bel(self, graph):
+    def relabel_nodes_to_pybel(self, graph):
         """Relabels all nodes to their original BEL identifiers, in place. This function is a thin wrapper around
         :func:`networkx.relabel.relabel_nodes` with the module level variable :data:`nid_node` used as the mapping. It
         is the inverse function to :meth:`relabel_nodes_to_identifiers`
         
-        :param graph: A BEL Graph
-        :type graph: pybel.BELGraph
+        :param pybel.BELGraph graph: A BEL Graph
         """
         if 'PYBEL_RELABELED' not in graph.graph:
             log.warning('%s has not been relabeled to identifiers', graph.name)
@@ -111,35 +111,37 @@ class DictionaryService(BaseService):
     def add_network(self, gid, graph, force_reload=False):
         """Adds a network to the module-level cache from the underlying database
 
-        :param gid: The identifier for the graph
-        :type gid: int
-        :param graph: A BEL Graph
-        :type graph: pybel.BELGraph
-        :param force_reload: Should the graphs be reloaded even if it has already been cached?
-        :type force_reload: bool
+        :param int gid: The identifier for the graph
+        :param pybel.BELGraph graph: A BEL Graph
+        :param bool force_reload: Should the graphs be reloaded even if it has already been cached?
         """
         if gid in self.networks and not force_reload:
-            log.info('tried adding graph [%s] again')
+            log.info('tried re-adding graph [%s] %s', gid, graph.name)
             return
 
-        log.debug('parsing authors from [%s]', gid)
+        log.info('loading network [%s] %s', gid, graph.name)
+
+        log.debug('parsing authors')
         parse_authors(graph)
 
-        log.debug('adding canonical names to [%s]', gid)
+        log.debug('adding central dogma')
+        infer_central_dogma(graph)
+
+        log.debug('adding canonical names')
         add_canonical_names(graph)
 
-        log.debug('updating node indexes from [%s]', gid)
+        log.debug('updating node indexes')
         self.update_node_indexes(graph)
 
-        log.debug('relabeling nodes by index from [%s]', gid)
+        log.debug('relabeling nodes by index')
         self.relabel_nodes_to_identifiers(graph)
 
-        log.debug('adding [%s] to the universe', gid)
+        log.debug('adding to the universe')
         left_merge(self.universe, graph)
 
         self.networks[gid] = graph
 
-        log.info('loaded network [%s] %s ', gid, graph.document.get(METADATA_NAME, 'UNNAMED'))
+        log.info('loaded network')
 
     def load_networks(self, check_version=True, force_reload=False):
         """This function needs to get all networks from the graph cache manager and make a dictionary
@@ -150,9 +152,8 @@ class DictionaryService(BaseService):
         :type force_reload: bool
         """
         for network_id, network_blob in self.manager.session.query(Network.id, Network.blob).all():
-            log.debug('getting bytes from [%s]', network_id)
-
             try:
+                log.debug('getting bytes from [%s]', network_id)
                 graph = from_bytes(network_blob, check_version=check_version)
             except:
                 log.exception("couldn't load from bytes [%s]", network_id)

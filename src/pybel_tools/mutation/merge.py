@@ -17,10 +17,8 @@ __all__ = [
 def left_merge(g, h):
     """Adds nodes and edges from H to G, in-place for G
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: A BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: A BEL Graph
     """
     for node in h.nodes_iter():
         if node not in g:
