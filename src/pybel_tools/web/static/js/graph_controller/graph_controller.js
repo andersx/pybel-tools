@@ -819,7 +819,7 @@ function initD3Force(graph, tree) {
 
     function displayNodeInfo(node) {
         $("#table-11").html("Node");
-        $("#table-12").html(node.cname);
+        $("#table-12").html(node.cname + " (ID: " + node.id + ")");
         $("#table-21").html("Function");
         $("#table-22").html(node.function);
         $("#table-31").html("Namespace");
