@@ -30,8 +30,6 @@ def left_merge(g, h):
         if k < 0:  # unqualified edge that's not in G yet
             if v not in g.edge[u] or k not in g.edge[u][v]:
                 g.add_edge(u, v, key=k, attr_dict=d)
-        elif v not in g.edge[u]:
-            g.add_edge(u, v, attr_dict=d)
         elif any(0 <= gk and d == gd for gk, gd in g.edge[u][v].items()):
             continue
         else:
