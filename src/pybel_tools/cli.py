@@ -32,6 +32,7 @@ from .document_utils import write_boilerplate
 from .ioutils import convert_recursive, upload_recusive
 from .utils import get_version
 from .web import receiver_service
+from .web.analysis_service import build_analysis_service
 from .web.compilation_service import build_synchronous_compiler_service
 from .web.constants import SECRET_KEY
 from .web.database_service import build_database_service
@@ -180,13 +181,14 @@ def convert(connection, upload, directory, debug):
 @click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
 @click.option('--run-compiler-service', is_flag=True, help='Enable the compiler page')
 @click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
+@click.option('--run-analysis-service', is_flag=True, help='Enable the analysis service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
 @click.option('--admin-password', help='Set admin password and enable admin services')
 @click.option('--echo-sql', is_flag=True)
 def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
-        run_uploader_service, run_compiler_service, run_receiver_service, run_all, secret_key, admin_password,
-        echo_sql):
+        run_uploader_service, run_compiler_service, run_receiver_service, run_analysis_service, run_all, secret_key,
+        admin_password, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
 
@@ -210,7 +212,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
         app,
         manager=manager,
         check_version=(not skip_check_version),
-        admin_password=admin_password
+        admin_password=admin_password,
+        analysis_enabled=run_analysis_service,
     )
 
     build_summary_service(app, manager=manager)
@@ -229,6 +232,9 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
 
     if run_receiver_service or run_all:
         build_receiver_service(app, manager=manager)
+
+    if run_analysis_service or run_all:
+        build_analysis_service(app, manager=manager)
 
     log.info('Done building %s', app)
 

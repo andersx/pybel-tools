@@ -52,6 +52,9 @@
                             <ul class="list-inline">
                                 <li><a href="/summary/{{ nid }}">Summarize</a></li>
                                 <li><a href="/explore/?graphid={{ nid }}">Explore</a></li>
+                                {% if analysis_enabled %}
+                                    <li><a href="/analysis/{{ nid }}">Run NPA</a></li>
+                                {% endif %}
                             </ul>
                         </div>
                     </div>
@@ -64,8 +67,15 @@
             </div>
             <div class="panel-body">
                 <p>This method of seeding will acquire the given nodes and expand around them using given seed
-                    method.</p>
-
+                    method.
+                </p>
+                <p><strong>Use Case:</strong> The leukemia drug, nilotinib, triggers cells to get rid of faulty
+                    components — including the ones associated with several brain diseases. In 2015, Georgetown
+                    University Medical Center <a
+                            href="http://content.iospress.com/articles/journal-of-parkinsons-disease/jpd160867">published</a>
+                    findings that the drug had a helpful effect on patients in
+                    Alzheimer's and Parkinson's diseases. Though it is currently unknown, a search of the paths between
+                    this drug and these diseases could provide insight to nilotinib's mechanism of action.</p>
                 <select style="width: 100%" multiple="multiple"
                         id="node_selection"></select>
 

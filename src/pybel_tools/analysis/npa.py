@@ -8,6 +8,8 @@ import logging
 import random
 from operator import itemgetter
 
+import numpy as np
+
 from pybel.constants import BIOPROCESS
 from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS
 from ..generation import generate_mechanism
@@ -16,7 +18,7 @@ from ..selection.utils import get_nodes_by_function
 __all__ = [
     'NpaRunner',
     'multirun',
-    'multirun_average',
+    'workflow_average',
     'workflow',
     'workflow_all',
     'workflow_all_average',
@@ -59,7 +61,7 @@ class NpaRunner:
         for node, data in self.graph.nodes_iter(data=True):
             if not self.graph.predecessors(node):
                 self.graph.node[node][self.tag] = data.get(key, 0)
-                log.debug('initializing %s with %s', target_node, self.graph.node[node][self.tag])
+                log.log(5, 'initializing %s with %s', target_node, self.graph.node[node][self.tag])
 
     def iter_leaves(self):
         """Returns an iterable over all nodes that are leaves. A node is a leaf if either:
@@ -135,7 +137,7 @@ class NpaRunner:
     def remove_random_edge(self):
         """Removes a random in-edge from the node with the lowest in/out degree ratio"""
         u, v, k = self.get_random_edge()
-        log.debug('removing %s, %s (%s)', u, v, k)
+        log.log(5, 'removing %s, %s (%s)', u, v, k)
         self.graph.remove_edge(u, v, k)
 
     def remove_random_edge_until_has_leaves(self):
@@ -160,7 +162,7 @@ class NpaRunner:
 
         for leaf in leaves:
             self.graph.node[leaf][self.tag] = self.calculate_score(leaf)
-            log.debug('chomping %s', leaf)
+            log.log(5, 'chomping %s', leaf)
 
         return leaves
 
@@ -266,7 +268,34 @@ def multirun(graph, node, key, tag=None, default_score=None, runs=None):
             log.debug('Run %s failed for %s', i, node)
 
 
-def multirun_average(graph, node, key, tag=None, default_score=None, runs=None):
+def workflow(graph, node, key, tag=None, default_score=None, runs=None):
+    """Generates candidate mechanism and runs NPA.
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node: The BEL node that is the focus of this analysis
+    :type node: tuple
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
+    :type tag: str
+    :param default_score: The initial NPA score for all nodes. This number can go up or down.
+    :type default_score: float
+    :param runs: The number of times to run the NPA algorithm. Defaults to 1000.
+    :type runs: int
+    :return: A list of runners
+    :rtype: list
+    """
+    sg = generate_mechanism(graph, node, key)
+
+    if sg.number_of_nodes() <= 1:  # Don't even bother trying to get reasonable scores if it's too small
+        return []
+
+    runners = multirun(sg, node, key, tag=tag, default_score=default_score, runs=runs)
+    return list(runners)
+
+
+def workflow_average(graph, node, key, tag=None, default_score=None, runs=None):
     """Gets the average NPA score over multiple runs.
 
     This function is very simple, and can be copied to do more interesting statistics over the :class:`NpaRunner`
@@ -287,37 +316,14 @@ def multirun_average(graph, node, key, tag=None, default_score=None, runs=None):
     :return: The average score for the target node
     :rtype: float
     """
-    runners = multirun(graph, node, key, tag, default_score=default_score, runs=runs)
+    runners = workflow(graph, node, key, tag=tag, default_score=default_score, runs=runs)
     scores = [runner.get_final_score() for runner in runners]
 
     if not scores:
         log.warning('Unable to run NPA on %s', node)
         return None
 
-    return sum(scores) / len(scores)
-
-
-def workflow(graph, node, key, tag=None, default_score=None, runs=None):
-    """Generates candidate mechanism and runs NPA. retun
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param node: The BEL node that is the focus of this analysis
-    :type node: tuple
-    :param key: The key in the node data dictionary representing the experimental data
-    :type key: str
-    :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
-    :type tag: str
-    :param default_score: The initial NPA score for all nodes. This number can go up or down.
-    :type default_score: float
-    :param runs: The number of times to run the NPA algorithm. Defaults to 1000.
-    :type runs: int
-    :return: A list of runners
-    :rtype: list
-    """
-    sg = generate_mechanism(graph, node, key)
-    runners = multirun(sg, node, key, tag=tag, default_score=default_score, runs=runs)
-    return list(runners)
+    return np.average(scores)
 
 
 def workflow_all(graph, key, tag=None, default_score=None, runs=None):
@@ -369,16 +375,18 @@ def workflow_all_average(graph, key, tag=None, default_score=None, runs=None):
     :rtype: dict
     """
     results = {}
+
     for node in get_nodes_by_function(graph, BIOPROCESS):
         sg = generate_mechanism(graph, node, key)
         try:
-            results[node] = multirun_average(sg, node, key, tag=tag, default_score=default_score, runs=runs)
+            results[node] = workflow_average(sg, node, key, tag=tag, default_score=default_score, runs=runs)
         except:
             log.exception('could not run on %', node)
+
     return results
 
 
-def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, default_score, runs):
+def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, default_score=None, runs=None):
     """
     
     :param candidate_mechanisms: 
@@ -395,24 +403,31 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, default_score,
     >>> key = ...
     >>> graph = ...
     >>> candidate_mechanisms = pbt.generation.generate_bioprocess_mechanisms(graph, key)
-    >>> calculate_average_npa_on_subgraphs(candidate_mechanisms)
-    >>> pd.DataFrame.from_items(scores.items(), orient='index', columns=['Average NPA Score','Number First Neighbors','Subgraph Size'])
+    >>> scores = calculate_average_npa_on_subgraphs(candidate_mechanisms, key)
+    >>> pd.DataFrame.from_items(scores.items(), orient='index', columns=['NPA Average','NPA Stddev','NPA Median','Number First Neighbors','Subgraph Size'])
     """
+    results = {}
 
-    scores = {}
     for node, subgraph in candidate_mechanisms.items():
+        number_first_neighbors = subgraph.in_degree(node)
+        number_first_neighbors = 0 if isinstance(number_first_neighbors, dict) else number_first_neighbors
+        mechanism_size = subgraph.number_of_nodes()
 
-        fneighbors = subgraph.in_degree(node)
-        fneighbors = 0 if isinstance(fneighbors, dict) else fneighbors
-        size = subgraph.number_of_nodes()
+        runners = workflow(subgraph, node, key, tag=tag, default_score=default_score, runs=runs)
+        scores = [runner.get_final_score() for runner in runners]
 
-        if size <= 1:  # Can't calculate a score for empty subgraphs
-            score = None
-        else:
-            score = multirun_average(subgraph, node, key=key, runs=runs, default_score=default_score)
+        if not scores:
+            results[node] = None, None, None, number_first_neighbors, mechanism_size
+            continue
 
-        scores[node] = (score, fneighbors, size)
-    return scores
+        npa_average = np.average(scores)
+        npa_std = np.std(scores)
+        npa_median = np.median(scores)
+
+        results[node] = npa_average, npa_std, npa_median, number_first_neighbors, mechanism_size
+
+    return results
+
 
 # TODO implement
 def calculate_average_npa_by_annotation(graph, key, annotation='Subgraph'):

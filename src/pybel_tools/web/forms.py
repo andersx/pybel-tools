@@ -56,3 +56,20 @@ class CompileForm(FlaskForm):
         ],
         default='utf-8')
     submit = fields.SubmitField('Validate')
+
+
+class DifferentialGeneExpressionForm(FlaskForm):
+    """Builds the form for uploading differential gene expression data"""
+    file = FileField('Differential gene expression file', validators=[DataRequired()])
+    gene_symbol_column = fields.StringField('Gene Symbol Column Name', default='Gene.symbol')
+    log_fold_change_column = fields.StringField('Log Fold Change Column Name', default='logFC')
+    permutations = fields.IntegerField('Number of permutations', default=1000)
+    seperator = RadioField(
+        'Seperator',
+        choices=[
+            ('\t', 'My document is a TSV file'),
+            (',', 'My document is a CSV file'),
+        ],
+        default='\t')
+    submit = fields.SubmitField('Upload')
+

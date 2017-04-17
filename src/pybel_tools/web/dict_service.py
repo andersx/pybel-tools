@@ -73,7 +73,7 @@ def get_tree_annotations(graph):
             sorted(annotations.items())]
 
 
-def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None):
+def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None, analysis_enabled=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -237,7 +237,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             'network_list.html',
             data=data,
             provenance_form=seed_provenance_form,
-            subgraph_form=seed_subgraph_form
+            subgraph_form=seed_subgraph_form,
+            analysis_enabled=analysis_enabled
         )
 
     @app.route('/explore/', methods=['GET'])

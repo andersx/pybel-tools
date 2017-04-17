@@ -1,0 +1,27 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}Analyze{% endblock %}
+
+{% block content %}
+    {{ util.flashed_messages(dismissible=True) }}
+    <div class="container" style="padding-top:50px">
+        <div class="jumbotron">
+            <h1>PyBEL Web - Analysis</h1>
+            <p>This web application is built with PyBEL. It will run an analysis on <code>{{ network_name }}</code>
+            </p>
+            <p>For more information on how this app works, see the <a href="http://pybel.readthedocs.io/">PyBEL</a> and
+                <a href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> documentation.
+            </p>
+        </div>
+        {{ wtf.quick_form(form, form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
+    </div>
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    {{ fixes.ie8() }}
+{% endblock %}
