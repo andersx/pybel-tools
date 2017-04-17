@@ -1,15 +1,51 @@
 # -*- coding: utf-8 -*-
 
+import logging
+
 from flask import send_file, Response, jsonify
 from six import BytesIO, StringIO
 
-from pybel import to_json_dict, to_cx_json, to_bel_lines, to_graphml, to_bytes, to_csv
+from pybel import to_cx_json, to_bel_lines, to_graphml, to_bytes, to_csv
+
+log = logging.getLogger(__name__)
+
+
+def to_json_custom(graph, _id='id', source='source', target='target', key='key'):
+    if 'PYBEL_RELABELED' not in graph.graph:
+        raise ValueError('Needs to be relabeled first by PyBEL')
+
+    result = {
+        'directed': graph.is_directed(),
+        'multigraph': graph.is_multigraph(),
+        'graph': graph.graph
+    }
+
+    mapping = {}
+
+    result['nodes'] = []
+    for i, node in enumerate(sorted(graph.nodes_iter())):
+        nd = graph.node[node].copy()
+        nd[_id] = node
+        result['nodes'].append(nd)
+        mapping[node] = i
+
+    result['links'] = []
+    for u, v, k, d in graph.edges_iter(keys=True, data=True):
+        ed = {
+            source: mapping[u],
+            target: mapping[v],
+            key: k
+        }
+        ed.update(d)
+        result['links'].append(ed)
+
+    return result
 
 
 def serve_network(graph, serve_format=None):
     """A helper function to serialize a graph and download as a file"""
     if serve_format is None or serve_format == 'json':
-        data = to_json_dict(graph)
+        data = to_json_custom(graph)
         return jsonify(data)
 
     if serve_format == 'cx':
