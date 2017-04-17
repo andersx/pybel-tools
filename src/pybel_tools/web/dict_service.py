@@ -73,7 +73,8 @@ def get_tree_annotations(graph):
             sorted(annotations.items())]
 
 
-def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None, analysis_enabled=False):
+def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None,
+                             analysis_enabled=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -231,7 +232,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             log.info('redirecting to %s', url)
             return redirect(url)
 
-        data = [(nid, n.name, n.version, n.document[METADATA_DESCRIPTION]) for nid, n in api.networks.items()]
+        data = [(nid, n.name, n.version, n.description) for nid, n in api.networks.items()]
 
         return flask.render_template(
             'network_list.html',
@@ -249,8 +250,8 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/definitions')
     def view_definitions():
         """Displays a page listing the namespaces and annotations."""
-        return render_template('definitions_list.html', namespaces=manager.list_namespaces(),
-                               annotations=manager.list_annotations())
+        return render_template('definitions_list.html', namespaces=sorted(manager.list_namespaces()),
+                               annotations=sorted(manager.list_annotations()))
 
     # Data Service
     @app.route('/api/network/', methods=['GET'])
