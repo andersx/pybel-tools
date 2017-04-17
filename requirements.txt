@@ -11,3 +11,4 @@ pygments
 pandas
 fuzzywuzzy
 ipython
+numpy
