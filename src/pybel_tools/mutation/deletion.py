@@ -4,7 +4,7 @@
 
 from .. import pipeline
 from ..filters.edge_filters import filter_edges
-from ..filters.node_filters import filter_nodes, function_namespace_inclusion_builder
+from ..filters.node_filters import filter_nodes, function_namespace_inclusion_builder, namespace_inclusion_builder
 from ..selection.leaves import get_gene_leaves, get_rna_leaves
 from ..selection.utils import get_leaves_by_type
 from ..summary.edge_summary import get_inconsistent_edges
@@ -13,7 +13,7 @@ from ..utils import all_edges_iter
 __all__ = [
     'remove_filtered_nodes',
     'remove_filtered_edges',
-    'remove_nodes_by_namespace',
+    'remove_nodes_by_function_namespace',
     'remove_leaves_by_type',
     'prune_central_dogma',
 
@@ -49,7 +49,7 @@ def remove_filtered_edges(graph, edge_filters):
 
 
 @pipeline.in_place_mutator
-def remove_nodes_by_namespace(graph, function, namespace):
+def remove_nodes_by_function_namespace(graph, function, namespace):
     """Removes nodes with the given function and namespace.
 
     This might be useful to exclude information learned about distant species, such as excluding all information
@@ -59,10 +59,26 @@ def remove_nodes_by_namespace(graph, function, namespace):
     :type: graph: pybel.BELGraph
     :param function: The function to filter
     :type function: str
-    :param namespace: The namespace to filter
-    :type namespace: str
+    :param namespace: The namespace to filter or iterable of namespaces
+    :type namespace: str or iter[str]
     """
     nodes = list(filter_nodes(graph, function_namespace_inclusion_builder(function, namespace)))
+    graph.remove_nodes_from(nodes)
+
+
+@pipeline.in_place_mutator
+def remove_nodes_by_namespace(graph, namespace):
+    """Removes nodes with the given  namespace.
+
+    This might be useful to exclude information learned about distant species, such as excluding all information
+    from MGI and RGD in diseases where mice and rats don't give much insight to the human disease mechanism.
+
+    :param graph: A BEL graph
+    :type: graph: pybel.BELGraph
+    :param namespace: The namespace to filter or iterable of namespaces
+    :type namespace: str or iter[str]
+    """
+    nodes = list(filter_nodes(graph, namespace_inclusion_builder(namespace)))
     graph.remove_nodes_from(nodes)
 
 
