@@ -158,7 +158,7 @@ $(document).ready(function () {
         // data:data
         minimumInputLength: 2,
         multiple: true,
-        placeholder: 'Please type here your nodes of interest',
+        placeholder: 'Please type your nodes of interest here',
         ajax: {
             url: function (params) {
                 return "/api/suggestion/nodes/";
