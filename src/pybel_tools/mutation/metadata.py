@@ -9,6 +9,8 @@ from ..citation_utils import get_citations_by_pmids
 from ..constants import CNAME
 from ..filters.edge_filters import edge_has_author_annotation, filter_edges, edge_has_pubmed_citation
 from ..filters.node_filters import keep_missing_cname, filter_nodes
+from ..summary.edge_summary import get_annotations
+from ..summary.node_summary import get_namespaces
 from ..summary.provenance import get_pmids
 
 __all__ = [
@@ -108,3 +110,31 @@ def fix_pubmed_citations(graph, stringify_authors=False):
         serialize_authors(graph)
 
     return errors
+
+
+@pipeline.uni_in_place_mutator
+def update_context(universe, graph):
+    """Updates the context of a subgraph from the universe of all knowledge
+    
+    :param pybel.BELGraph universe: The universe of knowledge
+    :param pybel.BELGraph graph: A BEL graph
+    """
+    for namespace in get_namespaces(graph):
+        if namespace in universe.namespace_url:
+            graph.namespace_url[namespace] = universe.namespace_url[namespace]
+        elif namespace in universe.namespace_owl:
+            graph.namespace_owl[namespace] = universe.namespace_owl[namespace]
+        elif namespace in universe.namespace_owl:
+            graph.namespace_pattern[namespace] = universe.namespace_pattern[namespace]
+        else:
+            log.warning('namespace: %s missing from universe', namespace)
+
+    for annotation in get_annotations(graph):
+        if annotation in universe.annotation_url:
+            graph.annotation_url[annotation] = universe.annotation_url[annotation]
+        elif annotation in universe.annotation_owl:
+            graph.annotation_owl[annotation] = universe.annotation_owl[annotation]
+        elif annotation in universe.annotation_owl:
+            graph.annotation_pattern[annotation] = universe.annotation_pattern[annotation]
+        else:
+            log.warning('annotation: %s missing from universe', annotation)
