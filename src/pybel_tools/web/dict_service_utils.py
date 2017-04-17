@@ -11,14 +11,13 @@ import networkx as nx
 
 from pybel import from_bytes, BELGraph
 from pybel.canonicalize import decanonicalize_node
-from pybel.constants import *
 from pybel.manager.models import Network
 from .base_service import BaseService
-from ..mutation.merge import left_merge
-from ..mutation.metadata import parse_authors, add_canonical_names, update_context
 from ..mutation.inference import infer_central_dogma
+from ..mutation.merge import left_merge
+from ..mutation.metadata import parse_authors, add_canonical_names
 from ..selection.induce_subgraph import get_subgraph
-from ..summary.provenance import get_authors, iter_pmids
+from ..summary.provenance import get_authors, get_pmid_by_keyword, get_authors_by_keyword, get_pmids
 
 log = logging.getLogger(__name__)
 
@@ -50,6 +49,9 @@ class DictionaryService(BaseService):
 
         #: The complete graph of all knowledge stored in the cache
         self.universe = BELGraph()
+
+        self.universe_pmids = set()
+        self.universe_authors = set()
 
         log.info('initialized dictionary service')
 
@@ -138,6 +140,9 @@ class DictionaryService(BaseService):
 
         log.debug('adding to the universe')
         left_merge(self.universe, graph)
+
+        self.universe_authors |= get_authors(graph)
+        self.universe_pmids |= get_pmids(graph)
 
         self.networks[gid] = graph
 
@@ -301,21 +306,16 @@ class DictionaryService(BaseService):
         """Gets a list with all cnames that contain a certain keyword adding to the duplicates their function"""
         return [{"text": bel, "id": str(nid)} for bel, nid in self.bel_id.items() if keyword.lower() in bel.lower()]
 
-    # TODO save pmids in a cache
-    # TODO use ..summary.provenance.get_pmid_by_keyword
     def get_pubmed_containing_keyword(self, keyword):
         """Gets a list with pubmed_ids that contain a certain keyword
         
         :rtype: list[str]
         """
-        return [pubmed_id for pubmed_id in iter_pmids(self.universe) if pubmed_id.startswith(keyword)]
+        return list(get_pmid_by_keyword(keyword, pmids=self.universe_pmids))
 
-    # TODO save authors in a cache
-    # TODO use ..summary.provenance.get_authors_by_keyword
     def get_authors_containing_keyword(self, keyword):
         """Gets a list with authors that contain a certain keyword
         
         :rtype: list[str]
         """
-        # Case insensitive comparison
-        return [author for author in get_authors(self.universe) if keyword.lower() in author.lower()]
+        return get_authors_by_keyword(keyword, authors=self.universe_authors)
