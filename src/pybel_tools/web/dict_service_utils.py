@@ -48,7 +48,7 @@ class DictionaryService(BaseService):
         self.id_bel = {}
 
         #: The complete graph of all knowledge stored in the cache
-        self.universe = BELGraph()
+        self.universe = BELGraph(**{'PYBEL_RELABELED': True})
 
         self.universe_pmids = set()
         self.universe_authors = set()
