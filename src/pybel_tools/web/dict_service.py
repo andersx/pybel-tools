@@ -316,6 +316,16 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
                                annotations=sorted(manager.list_annotations()))
 
     # Data Service
+
+    @app.route('/api/network/list', methods=['GET'])
+    def get_network_list():
+        return jsonify(api.list_graphs())
+
+    @app.route('/api/summary/<int:network_id>')
+    def get_number_nodes(network_id):
+        """Gets a summary of the given network"""
+        return jsonify(info_json(api.get_network_by_id(network_id)))
+
     @app.route('/api/network/', methods=['GET'])
     def get_network():
         """Builds a graph from the given network id and sends it in the given format"""
@@ -413,11 +423,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     def get_node_hash(nid):
         """Gets the pybel node tuple"""
         return jsonify(api.get_node_by_id(nid))
-
-    @app.route('/api/summary/<int:network_id>')
-    def get_number_nodes(network_id):
-        """Gets a summary of the given network"""
-        return jsonify(info_json(api.get_network_by_id(network_id)))
 
     @app.route('/api/suggestion/nodes/')
     def get_node_suggestion():
