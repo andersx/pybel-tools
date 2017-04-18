@@ -27,7 +27,7 @@
     {{ util.flashed_messages(dismissible=True) }}
     <div class="container">
         <div class="page-header">
-            <h1>Summary for {{ filename }}</h1>
+            <h1>Summary of {{ graph.name }} <small class="text-muted">{{ graph.version }}</small></h1>
         </div>
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -415,7 +415,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Top Hubs'
+                text: 'Top Nodes by Degree'
             },
             axis: {
                 rotated: true,
@@ -443,7 +443,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Top Centrality'
+                text: 'Top Nodes by Centrality'
             },
             axis: {
                 rotated: true,
@@ -471,7 +471,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Comorbidities'
+                text: 'Diseases'
             },
             axis: {
                 rotated: true,

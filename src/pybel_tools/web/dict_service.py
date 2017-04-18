@@ -277,8 +277,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
             chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
             graph=graph,
-            filename='{} (v{})'.format(graph.name, graph.version),
-            time=None
+            time=None,
         )
 
     @app.route('/definitions')

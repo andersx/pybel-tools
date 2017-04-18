@@ -158,7 +158,7 @@ class DictionaryService(BaseService):
         log.debug('calculating betweenness centralities (be patient)')
         t = time.time()
         self.node_centralities[gid] = Counter(nx.betweenness_centrality(graph))
-        log.debug('done with betweenness centrality in %s', time.time() - t)
+        log.debug('done with betweenness centrality in %.2f seconds', time.time() - t)
 
         log.debug('calculating node degrees')
         self.node_degrees[gid] = Counter(graph.degree())
