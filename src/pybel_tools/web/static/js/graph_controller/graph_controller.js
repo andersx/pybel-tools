@@ -818,6 +818,7 @@ function initD3Force(graph, tree) {
     // Box info in table
 
     function displayNodeInfo(node) {
+
         $("#table-11").html("Node");
         $("#table-12").html(node.cname + " (ID: " + node.id + ")");
         $("#table-21").html("Function");
@@ -826,6 +827,10 @@ function initD3Force(graph, tree) {
         $("#table-32").html(node.namespace);
         $("#table-41").html("Name");
         $("#table-42").html(node.name);
+        $("#table-51").html("");
+        $("#table-52").html("");
+        $("#table-61").html("");
+        $("#table-62").html("");
     }
 
 
@@ -841,6 +846,10 @@ function initD3Force(graph, tree) {
         $("#table-41").html("Annotations");
         // Objects to string represented as JSON {key-value pairs}
         $("#table-42").html(JSON.stringify(edge.annotations));
+        $("#table-51").html("Source");
+        $("#table-52").html(edge.source.cname+ " (ID: " + edge.source.id + ")");
+        $("#table-61").html("Target");
+        $("#table-62").html(edge.target.cname+ " (ID: " + edge.target.id + ")");
     }
 
 
