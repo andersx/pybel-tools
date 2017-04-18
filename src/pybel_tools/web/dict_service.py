@@ -165,14 +165,21 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         @basic_auth.required
         def nuke():
             """Destroys the database and recreates it"""
+            log.info('nuking database')
             manager.drop_database()
             manager.create_database()
+            log.info('restarting dictionary service')
+            api.load_networks(force_reload=True)
+            log.info('... the dust settles')
+            return jsonify({'status': 200})
 
         @app.route('/admin/drop/graphs')
         @basic_auth.required
         def drop_graphs():
             """Drops all graphs"""
+            log.info('dropping all graphs')
             manager.drop_graphs()
+            return jsonify({'status': 200})
 
         log.info('added admin functions to dict service')
 
