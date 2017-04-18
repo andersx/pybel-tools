@@ -2,7 +2,11 @@
 
 """This module contains functions that calculate properties of nodes"""
 
-from pybel.constants import RELATION, CAUSAL_RELATIONS, FUNCTION
+from collections import Counter
+
+import networkx as nx
+
+from pybel.constants import *
 from ..filters.node_filters import get_nodes, node_has_molecular_activity, node_is_degraded, node_is_translocated
 
 __all__ = [
@@ -18,7 +22,7 @@ __all__ = [
     'get_causal_central_nodes',
     'get_causal_sink_nodes',
     'get_degradations',
-    'get_active',
+    'get_activities',
     'get_translocated',
 ]
 
@@ -145,7 +149,7 @@ def get_degradations(graph):
     return get_nodes(graph, node_is_degraded)
 
 
-def get_active(graph):
+def get_activities(graph):
     """Gets all nodes that have molecular activities
 
     :param pybel.BELGraph graph: A BEL graph
@@ -163,3 +167,32 @@ def get_translocated(graph):
     :rtype: set
     """
     return get_nodes(graph, node_is_translocated)
+
+
+def node_has_variant(graph, node):
+    return VARIANTS in graph.node[node]
+
+
+def count_variants(graph):
+    x = []
+
+    for node, data in graph.nodes_iter(data=True):
+        if not node_has_variant(graph, node):
+            continue
+
+        for vard in data[VARIANTS]:
+            x.append(vard[KIND])
+
+    return Counter(x)
+
+
+def count_top_degrees(graph, number=30):
+    dd = graph.degree()
+    dc = Counter(dd)
+    return dict(dc.most_common(number))
+
+
+def count_top_centrality(graph, number=30):
+    dd = nx.betweenness_centrality(graph)
+    dc = Counter(dd)
+    return dict(dc.most_common(number))

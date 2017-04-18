@@ -409,11 +409,11 @@ def node_has_modifier(graph, node, modifier):
     :return: If the node has a known modifier
     :rtype: bool
     """
-    for _, _, d in graph.in_edges(node):
+    for _, _, d in graph.in_edges(node, data=True):
         if OBJECT in d and MODIFIER in d[OBJECT] and d[OBJECT][MODIFIER] == modifier:
             return True
 
-    for _, _, d in graph.out_edges(node):
+    for _, _, d in graph.out_edges(node, data=True):
         if SUBJECT in d and MODIFIER in d[SUBJECT] and d[SUBJECT][MODIFIER] == modifier:
             return True
 

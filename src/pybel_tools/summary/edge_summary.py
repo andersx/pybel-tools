@@ -5,7 +5,7 @@
 import itertools as itt
 from collections import Counter, defaultdict
 
-from pybel.constants import RELATION, ANNOTATIONS
+from pybel.constants import RELATION, ANNOTATIONS, FUNCTION, PATHOLOGY
 from ..filters.node_filters import keep_node_permissive
 from ..utils import get_value_sets, check_has_annotation
 
@@ -193,3 +193,15 @@ def get_inconsistent_edges(graph):
     for u, v in set(graph.edges_iter()):
         if not is_consistent(graph, u, v):
             yield u, v
+
+
+def _comorbidity_iterator(graph):
+    for u, v, d in graph.edges_iter(data=True):
+        if graph.node[u][FUNCTION] == PATHOLOGY:
+            yield u
+        if graph.node[v][FUNCTION] == PATHOLOGY:
+            yield v
+
+
+def count_comorbidities(graph):
+    return Counter(_comorbidity_iterator(graph))
