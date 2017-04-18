@@ -16,9 +16,9 @@ __all__ = [
 ]
 
 NODE_HIGHLIGHT = 'pybel_highlight'
-NODE_HIGHLIGHT_DEFAULT_COLOR = 'red'
+NODE_HIGHLIGHT_DEFAULT_COLOR = 'orange'
 EDGE_HIGHLIGHT = 'pybel_highlight'
-EDGE_HIGHLIGHT_DEFAULT_COLOR = 'red'
+EDGE_HIGHLIGHT_DEFAULT_COLOR = 'orange'
 
 
 @pipeline.in_place_mutator

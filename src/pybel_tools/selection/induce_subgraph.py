@@ -10,6 +10,7 @@ from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, bu
     edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
 from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
+from ..mutation.highlight import highlight_nodes
 from ..mutation.merge import left_merge
 from ..summary.edge_summary import get_annotation_values
 
@@ -325,6 +326,8 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
 
     if authors:
         left_merge(result, get_subgraph_by_authors(graph, authors))
+
+    highlight_nodes(result, result.nodes_iter())
 
     if expand_neighborhoods:
         expand_all_node_neighborhoods(graph, result)
