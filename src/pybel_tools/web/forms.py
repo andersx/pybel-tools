@@ -64,12 +64,12 @@ class DifferentialGeneExpressionForm(FlaskForm):
     gene_symbol_column = fields.StringField('Gene Symbol Column Name', default='Gene.symbol')
     log_fold_change_column = fields.StringField('Log Fold Change Column Name', default='logFC')
     permutations = fields.IntegerField('Number of permutations', default=1000)
-    seperator = RadioField(
-        'Seperator',
+    description = fields.StringField('Description of data', validators=[DataRequired()])
+    separator = RadioField(
+        'Separator',
         choices=[
             ('\t', 'My document is a TSV file'),
             (',', 'My document is a CSV file'),
         ],
         default='\t')
-    submit = fields.SubmitField('Upload')
-
+    submit = fields.SubmitField('Analyze')

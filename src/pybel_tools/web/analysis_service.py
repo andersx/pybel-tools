@@ -1,14 +1,20 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import logging
+import pickle
+from operator import itemgetter
 
 import flask
 import pandas
 import pandas as pd
 from flask import render_template
+from sqlalchemy import Column
+from sqlalchemy import Integer, String, DateTime, Binary
 
 import pybel
 from pybel.constants import GENE
+from pybel.manager.models import Base
 from pybel.manager.models import Network
 from .forms import DifferentialGeneExpressionForm
 from .. import generation
@@ -19,20 +25,55 @@ from ..mutation.deletion import remove_nodes_by_namespace
 
 log = logging.getLogger(__name__)
 
+PYBEL_EXPERIMENT_TABLE_NAME = 'pybel_experiment'
+PYBEL_EXPERIMENT_ENTRY_TABLE_NAME = 'pybel_experiment_entry'
+
 LABEL = 'dgxa'
+NPA_COLUMNS = ['NPA Average', 'NPA Standard Deviation', 'NPA Median', 'Number First Neighbors', 'Subgraph Size']
+
+
+class Experiment(Base):
+    """Represents a heat diffussion experiment run in PyBEL Web"""
+    __tablename__ = PYBEL_EXPERIMENT_TABLE_NAME
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime, default=datetime.datetime.utcnow, doc='The date on which this analysis was run')
+    description = Column(String, nullable=True, doc='A description of the purpose of the analysis')
+    network_id = Column(Integer)
+    source = Column(Binary, doc='The source document holding the data')
+    result = Column(Binary, doc='The result python dictionary')
+
+
+# def drop_experiments(manager):
+#    Experiment.__table__.drop(manager.engine)
 
 
 def build_analysis_service(app, manager):
-    """
+    """Builds the analysis service
     
     :param app: A Flask application
     :type app: flask.Flask
     :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
+    :type manager: pybel.manager.CacheManager
     """
 
-    @app.route('/analysis/<int:network_id>', methods=('GET', 'POST'))
-    def view_analysis(network_id):
+    @app.route('/analysis/')
+    def view_analyses():
+        experiments = manager.session.query(Experiment).all()
+        return render_template('analysis_list.html', experiments=experiments)
+
+    @app.route('/analysis/results/<int:aid>')
+    def view_analysis_results(aid):
+        e = manager.session.query(Experiment).get(aid)
+        r = pickle.loads(e.result)
+        return render_template(
+            'analysis_results.html',
+            experiment=e,
+            columns=NPA_COLUMNS,
+            data=sorted([(k, v) for k, v in r.items() if v[0]], key=itemgetter(1))
+        )
+
+    @app.route('/analysis/upload/<int:network_id>', methods=('GET', 'POST'))
+    def view_analysis_uploader(network_id):
         """Views the results of analysis on a given graph"""
         form = DifferentialGeneExpressionForm()
 
@@ -40,7 +81,7 @@ def build_analysis_service(app, manager):
             name, = manager.session.query(Network.name).filter(Network.id == network_id).one()
             return render_template('analyze_dgx.html', form=form, network_name=name)
 
-        log.info('Analyzing %s', form.file.data.filename)
+        log.info('Analyzing %s: %s', form.file.data.filename, form.description.data)
 
         df = pandas.read_csv(form.file.data)
 
@@ -67,10 +108,18 @@ def build_analysis_service(app, manager):
 
         candidate_mechanisms = generation.generate_bioprocess_mechanisms(graph, LABEL)
         scores = npa.calculate_average_npa_on_subgraphs(candidate_mechanisms, LABEL, runs=form.permutations.data)
-        scores_df = pd.DataFrame.from_items(scores.items(),
-                                            orient='index',
-                                            columns=['NPA Average', 'NPA Standard Deviation', 'NPA Median',
-                                                     'Number First Neighbors', 'Subgraph Size'])
+
+        e = Experiment(
+            description=form.description.data,
+            network_id=network_id,
+            source=pickle.dumps(df),
+            result=pickle.dumps(scores),
+        )
+        manager.session.add(e)
+        manager.session.commit()
+
+        scores_df = pd.DataFrame.from_items(scores.items(), orient='index', columns=NPA_COLUMNS)
+        scores_df.index.name = 'Experiment {}'.format(e.id)
 
         return scores_df.sort_values('NPA Average').to_html()
 

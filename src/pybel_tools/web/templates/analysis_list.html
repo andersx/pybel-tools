@@ -1,0 +1,43 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}Results{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>Analyses</h1>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">List</h3>
+            </div>
+            <div class="panel-body">
+                <p>All analyses are listed here</p>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Created</th>
+                    <th>Network</th>
+                    <th>Description</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for experiment in experiments %}
+                    <tr>
+                        <td><a href="/analysis/results/{{ experiment.id }}">{{ experiment.id }}</a></td>
+                        <td>{{ experiment.created }}</td>
+                        <td><a href="/networks/?graphid={{ experiment.network_id }}">{{ experiment.network_id }}</a></td>
+                        <td>{{ experiment.description }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
