@@ -4,7 +4,7 @@
 
 import logging
 from operator import itemgetter
-
+from requests.compat import unquote
 import flask
 import networkx as nx
 from flask import Flask, request, jsonify, url_for, redirect
@@ -152,9 +152,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         :rtype: pybel.BELGraph
         """
 
-        log.debug("ARGUMENTS!!!")
-        log.debug(request.args)
-
         network_id = request.args.get(GRAPH_ID)
 
         if network_id is not None:
@@ -173,8 +170,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             authors = request.args.getlist(SEED_DATA_AUTHORS)
 
             if authors:
-                # TODO: decode authors
-                seed_data['authors'] = authors
+                seed_data['authors'] = [unquote(author) for author in authors]
 
             pmids = request.args.getlist(SEED_DATA_PMIDS)
             if pmids:

@@ -1,42 +1,28 @@
 $(document).ready(function () {
 
+    function getSelectionData(select2Element, joinBy) {
+
+        var selectedElements = [];
+
+        $.each(select2Element, function (index, value) {
+            selectedElements.push(encodeURIComponent(value.text));
+        });
+
+        return selectedElements.join(joinBy)
+
+    }
+
     $("#provenance_form").submit(function (e) {
 
-        //TODO: MAKE ITS OWN FUNCTION
+        $("#pubmed_list").val(getSelectionData($("#pubmed_selection").select2("data"), ","));
 
-        var pubmedSelection = $("#pubmed_selection").select2("data");
-
-        var pubmeds = [];
-
-        $.each(pubmedSelection, function (index, value) {
-            pubmeds.push(value.id)
-        });
-
-        $("#pubmed_list").val(pubmeds.join(","));
-
-        var authorSelection = $("#author_selection").select2("data");
-
-        var authors = [];
-
-        $.each(authorSelection, function (index, value) {
-            authors.push(value.text)
-        });
-
-        $("#author_list").val(authors.join(","));
+        $("#author_list").val($("#author_selection").select2("data"), ",");
 
     });
 
     $("#subgraph_form").submit(function (e) {
 
-        var nodeSelection = $("#node_selection").select2("data");
-
-        var nodesIDs = [];
-
-        $.each(nodeSelection, function (index, value) {
-            nodesIDs.push(value.id)
-        });
-
-        $("#node_list").val(nodesIDs.join("|"));
+        $("#node_list").val($("#node_selection").select2("data"), "|");
 
     });
 

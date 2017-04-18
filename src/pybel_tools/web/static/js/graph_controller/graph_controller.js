@@ -38,7 +38,12 @@ function renderNetwork(tree, url) {
         params["seed_method"] = url["seed_method"];
 
         if ("provenance" === url["seed_method"]) {
-            params["pmids"] = url["pmids"];
+            if ("authors" in url) {
+                params["authors"] = url["authors"];
+            }
+            if ("pmids" in url) {
+                params["pmids"] = url["pmids"];
+            }
         }
         if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] || "neighbors" === url["seed_method"]) {
             params["nodes"] = url["nodes"];
@@ -47,10 +52,6 @@ function renderNetwork(tree, url) {
             params["pmids"] = url["pmids"];
         }
     }
-
-    console.log(params);
-
-    console.log($.param(params, true));
 
     node_param = $.param(params, true);
     $.getJSON("/api/network/" + "?" + node_param, function (data) {
@@ -800,9 +801,24 @@ function initD3Force(graph, tree) {
         highlightNode = null;
         if (focusNode === null) {
             if (highlightNodeBoundering !== circleColor) {
-                circle.style("stroke", circleColor);
+                circle.style("stroke", function (d) {
+                    if ("pybel_highlight" in d) {
+                        return d["pybel_highlight"]
+                    }
+                    else{
+                        return circleColor
+                    }
+                })
                 text.style("fill", "black");
-                link.style("stroke", defaultLinkColor);
+                link.style("stroke", function (d) {
+                    if ("pybel_highlight" in d) {
+                        return d["pybel_highlight"]
+                    }
+                    else{
+                        return defaultLinkColor
+                    }
+                })
+
             }
         }
     }
