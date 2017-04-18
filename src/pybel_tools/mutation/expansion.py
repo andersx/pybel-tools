@@ -465,7 +465,7 @@ def expand_node_predecessors(universe, graph, node):
         if successor in graph:
             skip_successors.add(successor)
             continue
-        graph.add_node(successor, attr_dict=universe.node[node])
+        graph.add_node(successor, attr_dict=universe.node[successor])
 
     for _, successor, k, d in universe.out_edges_iter(node, data=True, keys=True):
         if successor in skip_successors:
@@ -492,7 +492,7 @@ def expand_node_successors(universe, graph, node):
         if predecessor in graph:
             skip_predecessors.add(predecessor)
             continue
-        graph.add_node(predecessor, attr_dict=universe.node[node])
+        graph.add_node(predecessor, attr_dict=universe.node[predecessor])
 
     for predecessor, _, k, d in universe.in_edges_iter(node, data=True, keys=True):
         if predecessor in skip_predecessors:
