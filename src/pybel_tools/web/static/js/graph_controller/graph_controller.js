@@ -79,6 +79,15 @@ function doAjaxCall(url) {
     return result
 }
 
+function insertRow(table, row, column1, column2) {
+
+    var row = table.insertRow(row);
+    var cell1 = row.insertCell(0);
+    var cell2 = row.insertCell(1);
+    cell1.innerHTML = column1;
+    cell2.innerHTML = column2;
+}
+
 
 $(document).ready(function () {
 
@@ -819,37 +828,34 @@ function initD3Force(graph, tree) {
 
     function displayNodeInfo(node) {
 
-        $("#table-11").html("Node");
-        $("#table-12").html(node.cname + " (ID: " + node.id + ")");
-        $("#table-21").html("Function");
-        $("#table-22").html(node.function);
-        $("#table-31").html("Namespace");
-        $("#table-32").html(node.namespace);
-        $("#table-41").html("Name");
-        $("#table-42").html(node.name);
-        $("#table-51").html("");
-        $("#table-52").html("");
-        $("#table-61").html("");
-        $("#table-62").html("");
+        var dynamicTable = document.getElementById('info-table');
+
+        while (dynamicTable.rows.length > 0) {
+            dynamicTable.deleteRow(0);
+        }
+
+        insertRow(dynamicTable, 0, "Node", node.cname + " (ID: " + node.id + ")")
+        insertRow(dynamicTable, 1, "Function", node.function)
+        insertRow(dynamicTable, 2, "Namespace", node.namespace)
+        insertRow(dynamicTable, 3, "Name", node.name)
     }
 
 
     function displayEdgeInfo(edge) {
 
-        $("#table-11").html("Evidence");
-        $("#table-12").html(edge.evidence);
-        $("#table-21").html("Citation");
-        $("#table-22").html("<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
-            "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>");
-        $("#table-31").html("Relation");
-        $("#table-32").html(edge.relation);
-        $("#table-41").html("Annotations");
-        // Objects to string represented as JSON {key-value pairs}
-        $("#table-42").html(JSON.stringify(edge.annotations));
-        $("#table-51").html("Source");
-        $("#table-52").html(edge.source.cname+ " (ID: " + edge.source.id + ")");
-        $("#table-61").html("Target");
-        $("#table-62").html(edge.target.cname+ " (ID: " + edge.target.id + ")");
+        var dynamicTable = document.getElementById('info-table');
+
+        while (dynamicTable.rows.length > 0) {
+            dynamicTable.deleteRow(0);
+        }
+
+        insertRow(dynamicTable, 0, "Evidence", edge.evidence)
+        insertRow(dynamicTable, 1, "Citation", "<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
+            "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>")
+        insertRow(dynamicTable, 2, "Citas", edge.relation)
+        insertRow(dynamicTable, 3, "Annotations", JSON.stringify(edge.annotations))
+        insertRow(dynamicTable, 4, "Source", edge.source.cname + " (ID: " + edge.source.id + ")")
+        insertRow(dynamicTable, 5, "Target", edge.target.cname + " (ID: " + edge.target.id + ")")
     }
 
 
