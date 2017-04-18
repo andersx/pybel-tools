@@ -139,7 +139,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
             return try_insert_graph(manager, graph)
 
-        @app.route('/admin/ensure/small')
+        @app.route('/admin/ensure/large')
         @basic_auth.required
         def ensure_large_corpus():
             """Parses the large corpus"""
