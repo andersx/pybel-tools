@@ -34,6 +34,7 @@ function parameterFilters(tree) {
 function renderNetwork(tree, url) {
     var params = parameterFilters(tree);
 
+    // Checking if seed_methods are present in the URL and adding it to the parameters
     if ("seed_method" in url) {
         params["seed_method"] = url["seed_method"];
 
@@ -53,13 +54,17 @@ function renderNetwork(tree, url) {
         }
     }
 
+    // Checking if methods for pipeline analysis are present
+    if ("pipeline" in url) {
+        params["pipeline"] = url["pipeline"];
+    }
+
     node_param = $.param(params, true);
     $.getJSON("/api/network/" + "?" + node_param, function (data) {
         initD3Force(data, tree);
     });
     // reset window variables (window.expand/delete/method)
     resetGlobals();
-    // TODO: change window.networkID to another variable
     window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
 }
 
@@ -805,7 +810,7 @@ function initD3Force(graph, tree) {
                     if ("pybel_highlight" in d) {
                         return d["pybel_highlight"]
                     }
-                    else{
+                    else {
                         return circleColor
                     }
                 })
@@ -814,7 +819,7 @@ function initD3Force(graph, tree) {
                     if ("pybel_highlight" in d) {
                         return d["pybel_highlight"]
                     }
-                    else{
+                    else {
                         return defaultLinkColor
                     }
                 })

@@ -49,6 +49,7 @@ SEED_DATA_AUTHORS = 'authors'
 SEED_DATA_PMIDS = 'pmids'
 SEED_DATA_NODES = 'nodes'
 PATHS_METHOD = 'paths_method'
+PIPELINE = 'pipeline'
 
 BLACK_LIST = {
     GRAPH_ID,
@@ -64,6 +65,7 @@ BLACK_LIST = {
     SEED_DATA_PMIDS,
     SEED_DATA_NODES,
     PATHS_METHOD,
+    PIPELINE,
 }
 
 

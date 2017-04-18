@@ -1,11 +1,23 @@
 $(document).ready(function () {
 
-    function getSelectionData(select2Element, joinBy) {
+    function getSelectionText(select2Element, joinBy) {
 
         var selectedElements = [];
 
         $.each(select2Element, function (index, value) {
-            selectedElements.push(encodeURIComponent(value.text));
+            selectedElements.push(value.text);
+        });
+
+        return selectedElements.join(joinBy)
+
+    }
+
+    function getSelectionID(select2Element, joinBy) {
+
+        var selectedElements = [];
+
+        $.each(select2Element, function (index, value) {
+            selectedElements.push(encodeURIComponent(value.id));
         });
 
         return selectedElements.join(joinBy)
@@ -14,15 +26,15 @@ $(document).ready(function () {
 
     $("#provenance_form").submit(function (e) {
 
-        $("#pubmed_list").val(getSelectionData($("#pubmed_selection").select2("data"), ","));
+        $("#pubmed_list").val(getSelectionText($("#pubmed_selection").select2("data"), ","));
 
-        $("#author_list").val($("#author_selection").select2("data"), ",");
+        $("#author_list").val(getSelectionText($("#author_selection").select2("data")), ",");
 
     });
 
     $("#subgraph_form").submit(function (e) {
 
-        $("#node_list").val($("#node_selection").select2("data"), "|");
+        $("#node_list").val(getSelectionID($("#node_selection").select2("data")), "|");
 
     });
 
