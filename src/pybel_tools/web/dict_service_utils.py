@@ -120,18 +120,18 @@ class DictionaryService(BaseService):
 
         del graph.graph['PYBEL_RELABELED']
 
-    def add_network(self, gid, graph, force_reload=False):
+    def add_network(self, graph_id, graph, force_reload=False):
         """Adds a network to the module-level cache from the underlying database
 
-        :param int gid: The identifier for the graph
+        :param int graph_id: The identifier for the graph
         :param pybel.BELGraph graph: A BEL Graph
         :param bool force_reload: Should the graphs be reloaded even if it has already been cached?
         """
-        if gid in self.networks and not force_reload:
-            log.info('tried re-adding graph [%s] %s', gid, graph.name)
+        if graph_id in self.networks and not force_reload:
+            log.info('tried re-adding graph [%s] %s', graph_id, graph.name)
             return
 
-        log.info('loading network [%s] %s', gid, graph.name)
+        log.info('loading network [%s] %s', graph_id, graph.name)
 
         log.debug('parsing authors')
         parse_authors(graph)
@@ -157,13 +157,13 @@ class DictionaryService(BaseService):
 
         log.debug('calculating betweenness centralities (be patient)')
         t = time.time()
-        #self.node_centralities[gid] = Counter(nx.betweenness_centrality(graph))
+        self.node_centralities[graph_id] = Counter(nx.betweenness_centrality(graph))
         log.debug('done with betweenness centrality in %.2f seconds', time.time() - t)
 
         log.debug('calculating node degrees')
-        self.node_degrees[gid] = Counter(graph.degree())
+        self.node_degrees[graph_id] = Counter(graph.degree())
 
-        self.networks[gid] = graph
+        self.networks[graph_id] = graph
 
         log.info('loaded network')
 
@@ -348,9 +348,13 @@ class DictionaryService(BaseService):
         return self.universe.node[nid][CNAME]
 
     def get_top_centrality(self, graph_id, n=20):
+        if graph_id not in self.node_centralities:
+            self.node_centralities[graph_id] = Counter(nx.betweenness_centrality(self.networks[graph_id]))
         return {self.get_cname(n): v for n, v in self.node_centralities[graph_id].most_common(n)}
 
     def get_top_degree(self, graph_id, n=20):
+        if graph_id not in self.node_degrees:
+            self.node_degrees[graph_id] = Counter(self.networks[graph_id].degree())
         return {self.get_cname(n): v for n, v in self.node_degrees[graph_id].most_common(n)}
 
     def get_top_comorbidities(self, graph_id, n=20):
