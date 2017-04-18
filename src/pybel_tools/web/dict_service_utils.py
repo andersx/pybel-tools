@@ -280,6 +280,8 @@ class DictionaryService(BaseService):
             **annotations
         )
 
+        result.graph['PYBEL_RELABELED'] = True
+
         log.debug('query returned (%s nodes/%s edges)', result.number_of_nodes(), result.number_of_edges())
 
         return result
