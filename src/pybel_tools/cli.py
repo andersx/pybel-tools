@@ -49,6 +49,7 @@ log = logging.getLogger(__name__)
 datefmt = '%H:%M:%S'
 fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
+
 def set_debug(level):
     logging.basicConfig(level=level, format=fmt, datefmt=datefmt)
     pybel_log = logging.getLogger('pybel')
@@ -222,7 +223,9 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
 
     manager = build_manager(connection, echo=echo_sql)
 
-    build_sitemap_endpoint(app)
+    admin_password = admin_password or (('PYBEL_ADMIN_PASS' in os.environ) and os.environ['PYBEL_ADMIN_PASS'])
+
+    build_sitemap_endpoint(app, show_admin=admin_password)
 
     build_dictionary_service(
         app,
