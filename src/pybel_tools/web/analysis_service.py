@@ -10,7 +10,7 @@ import pandas
 import pandas as pd
 from flask import render_template
 from sqlalchemy import Column
-from sqlalchemy import Integer, String, DateTime, Binary
+from sqlalchemy import Integer, DateTime, Binary, Text
 
 import pybel
 from pybel.constants import GENE
@@ -37,7 +37,7 @@ class Experiment(Base):
     __tablename__ = PYBEL_EXPERIMENT_TABLE_NAME
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.datetime.utcnow, doc='The date on which this analysis was run')
-    description = Column(String, nullable=True, doc='A description of the purpose of the analysis')
+    description = Column(Text, nullable=True, doc='A description of the purpose of the analysis')
     network_id = Column(Integer)
     source = Column(Binary, doc='The source document holding the data')
     result = Column(Binary, doc='The result python dictionary')
