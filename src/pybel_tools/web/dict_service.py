@@ -147,12 +147,18 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
             return try_insert_graph(manager, graph)
 
-        @app.route('/admin/nuke')
+        @app.route('/admin/drop/all')
         @basic_auth.required
         def nuke():
             """Destroys the database and recreates it"""
             manager.drop_database()
             manager.create_database()
+
+        @app.route('/admin/drop/graphs')
+        @basic_auth.required
+        def drop_graphs():
+            """Drops all graphs"""
+            manager.drop_graphs()
 
         log.info('added admin functions to dict service')
 
