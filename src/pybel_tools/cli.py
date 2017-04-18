@@ -41,17 +41,20 @@ from .web.dict_service import build_dictionary_service
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
 from .web.sitemap_endpoint import build_sitemap_endpoint
-from .web.summary_service import build_summary_service
 from .web.upload_service import build_pickle_uploader_service
 from .web.utils import get_app
 
 log = logging.getLogger(__name__)
 
+datefmt = '%H:%M:%S'
+fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 def set_debug(level):
-    logging.basicConfig(level=level)
-    logging.getLogger('pybel').setLevel(level)
-    logging.getLogger('pybel_tools').setLevel(level)
+    logging.basicConfig(level=level, format=fmt, datefmt=datefmt)
+    pybel_log = logging.getLogger('pybel')
+    pybel_log.setLevel(level)
+    pbt_log = logging.getLogger('pybel_tools')
+    pbt_log.setLevel(level)
     log.setLevel(level)
 
 
@@ -228,8 +231,6 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
         admin_password=admin_password,
         analysis_enabled=run_analysis_service,
     )
-
-    build_summary_service(app, manager=manager)
 
     if run_database_service:
         build_database_service(app, manager)

@@ -6,6 +6,8 @@ dictionary
 """
 
 import logging
+import time
+from collections import Counter
 
 import networkx as nx
 
@@ -13,10 +15,12 @@ from pybel import from_bytes, BELGraph
 from pybel.canonicalize import decanonicalize_node
 from pybel.manager.models import Network
 from .base_service import BaseService
+from ..constants import CNAME
 from ..mutation.inference import infer_central_dogma
 from ..mutation.merge import left_merge
 from ..mutation.metadata import parse_authors, add_canonical_names
 from ..selection.induce_subgraph import get_subgraph
+from ..summary.edge_summary import count_comorbidities
 from ..summary.provenance import get_authors, get_pmid_by_keyword, get_authors_by_keyword, get_pmids
 
 log = logging.getLogger(__name__)
@@ -52,6 +56,12 @@ class DictionaryService(BaseService):
 
         self.universe_pmids = set()
         self.universe_authors = set()
+
+        #: A dictionary from {int id: {tuple node: float centrality}}
+        self.node_centralities = {}
+
+        #: A dictionary from {int id: {tuple node: int degree}}
+        self.node_degrees = {}
 
         log.info('initialized dictionary service')
 
@@ -141,8 +151,17 @@ class DictionaryService(BaseService):
         log.debug('adding to the universe')
         left_merge(self.universe, graph)
 
+        log.debug('caching provenance')
         self.universe_authors |= get_authors(graph)
         self.universe_pmids |= get_pmids(graph)
+
+        log.debug('calculating betweenness centralities (be patient)')
+        t = time.time()
+        self.node_centralities[gid] = Counter(nx.betweenness_centrality(graph))
+        log.debug('done with betweenness centrality in %s', time.time() - t)
+
+        log.debug('calculating node degrees')
+        self.node_degrees[gid] = Counter(graph.degree())
 
         self.networks[gid] = graph
 
@@ -167,6 +186,9 @@ class DictionaryService(BaseService):
             self.add_network(network_id, graph, force_reload=force_reload)
 
     # Graph selection functions
+
+    def list_graphs(self):
+        return [(nid, n.name, n.version, n.description) for nid, n in self.networks.items()]
 
     def get_network_ids(self):
         """Returns a list of all network IDs
@@ -321,3 +343,16 @@ class DictionaryService(BaseService):
         :rtype: list[str]
         """
         return get_authors_by_keyword(keyword, authors=self.universe_authors)
+
+    def get_cname(self, nid):
+        return self.universe.node[nid][CNAME]
+
+    def get_top_centrality(self, graph_id, n=20):
+        return {self.get_cname(n): v for n, v in self.node_centralities[graph_id].most_common(n)}
+
+    def get_top_degree(self, graph_id, n=20):
+        return {self.get_cname(n): v for n, v in self.node_degrees[graph_id].most_common(n)}
+
+    def get_top_comorbidities(self, graph_id, n=20):
+        cm = count_comorbidities(self.get_network_by_id(graph_id))
+        return {self.get_cname(n): v for n, v in cm.most_common(n)}

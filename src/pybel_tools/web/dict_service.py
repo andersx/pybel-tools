@@ -7,20 +7,27 @@ from operator import itemgetter
 
 import flask
 import networkx as nx
-from flask import Flask, request, jsonify, render_template, url_for, redirect
+from flask import Flask, request, jsonify, url_for, redirect
+from flask import render_template
 from flask_basicauth import BasicAuth
 
+from pybel import from_bytes
 from pybel import from_url
-from pybel.constants import METADATA_DESCRIPTION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
+from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
 from .utils import try_insert_graph, sanitize_list_of_str
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
+from ..summary.edge_summary import count_relations, count_comorbidities
 from ..summary.edge_summary import get_annotation_values_by_annotation
+from ..summary.error_summary import count_error_types
 from ..summary.export import info_json
+from ..summary.node_properties import get_translocated, get_activities, get_degradations, count_variants
+from ..summary.node_summary import count_functions, count_namespaces
 from ..summary.provenance import get_authors, get_pmids
+from ..utils import prepare_c3
 
 log = logging.getLogger(__name__)
 
@@ -232,7 +239,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             log.info('redirecting to %s', url)
             return redirect(url)
 
-        data = [(nid, n.name, n.version, n.description) for nid, n in api.networks.items()]
+        data = api.list_graphs()
 
         return flask.render_template(
             'network_list.html',
@@ -246,6 +253,33 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     def view_explorer():
         """Renders a page for the user to explore a network"""
         return flask.render_template('explorer.html')
+
+    @app.route('/summary/<int:graph_id>')
+    def view_summary(graph_id):
+        """Renders a page with the parsing errors for a given BEL script"""
+
+        graph = manager.get_graph_by_id(graph_id)
+        graph = from_bytes(graph.blob)
+
+        return render_template(
+            'summary.html',
+            chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
+            chart_2_data=prepare_c3(count_relations(graph), 'Relationship Type'),
+            chart_3_data=prepare_c3(count_error_types(graph), 'Error Type'),
+            chart_4_data=prepare_c3({
+                'Translocations': len(get_translocated(graph)),
+                'Degradations': len(get_degradations(graph)),
+                'Molecular Activities': len(get_activities(graph))
+            }, 'Modifier Type'),
+            chart_5_data=prepare_c3(count_variants(graph), 'Node Variants'),
+            chart_6_data=prepare_c3(count_namespaces(graph), 'Namespaces'),
+            chart_7_data=prepare_c3(api.get_top_degree(graph_id), 'Top Hubs'),
+            chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
+            chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
+            graph=graph,
+            filename='{} (v{})'.format(graph.name, graph.version),
+            time=None
+        )
 
     @app.route('/definitions')
     def view_definitions():
