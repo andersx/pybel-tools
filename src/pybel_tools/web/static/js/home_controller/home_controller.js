@@ -1,152 +1,38 @@
 $(document).ready(function () {
 
-    // Required for multiple autocompletion
-    function splitByPipes(val) {
-        return val.split(/\|/);
-    }
+    $("#provenance_form").submit(function (e) {
 
-    function splitByCommas(val) {
-        return val.split(/,\s*/);
-    }
+        //TODO: MAKE ITS OWN FUNCTION
 
-    function extractLastCommas(term) {
-        return splitByCommas(term).pop();
-    }
+        var pubmedSelection = $("#pubmed_selection").select2("data");
 
-    function extractLastPipes(term) {
-        return splitByPipes(term).pop();
-    }
+        var pubmeds = [];
 
-    // LICENSE: http://www.devthought.com/projects/mootools/textboxlist/
+        $.each(pubmedSelection, function (index, value) {
+            pubmeds.push(value.id)
+        });
 
-    // Node autocompletion
-    $("#node_list").autocomplete({
+        $("#pubmed_list").val(pubmeds.join(","));
 
-        source: function (request, response) {
-            $.ajax({
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-                type: 'GET',
-                url: "/api/suggestion/nodes/" + request.term,
-                success: function (data) {
-                    // Only gives the first 20 matches
-                    response(data.slice(0, 20));
-                }
-            });
-        },
-        search: function () {
-            // custom minLength
-            var term = extractLastPipes(this.value);
-            if (term.length < 1) {
-                return false;
-            }
-        },
-        focus: function () {
-            // prevent value inserted on focus
-            return false;
-        },
-        select: function (event, ui) {
-            var terms = splitByPipes(this.value);
-            // remove the current input
-            terms.pop();
-            // add the selected item
-            terms.push(ui.item.value);
-            // add placeholder to get the comma-and-space at the end
-            terms.push("");
-            this.value = terms.join("|");
-            return false;
-        },
-        minLength: 2
+        var authorSelection = $("#author_selection").select2("data");
+
+        var authors = [];
+
+        $.each(authorSelection, function (index, value) {
+            authors.push(value.text)
+        });
+
+        $("#author_list").val(authors.join(","));
+
     });
 
-    // Author autocompletion
-    $("#author_list").autocomplete({
+    $("#subgraph_form").submit(function (e) {
 
-        source: function (request, response) {
-            $.ajax({
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-                type: 'GET',
-                url: "/api/suggestion/authors/" + request.term,
-                success: function (data) {
-                    // Only gives the first 20 matches
-                    response(data.slice(0, 20));
-                }
-            });
-        },
-        search: function () {
-            // custom minLength
-            var term = extractLastCommas(this.value);
-            if (term.length < 1) {
-                return false;
-            }
-        },
-        focus: function () {
-            // prevent value inserted on focus
-            return false;
-        },
-        select: function (event, ui) {
-            var terms = splitByCommas(this.value);
-            // remove the current input
-            terms.pop();
-            // add the selected item
-            terms.push(ui.item.value);
-            // add placeholder to get the comma-and-space at the end
-            terms.push("");
-            this.value = terms.join(",");
-            return false;
-        },
-        minLength: 2
-    });
-
-    // PubMed IDs autocompletion
-    $("#pubmed_list").autocomplete({
-
-        source: function (request, response) {
-            $.ajax({
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-                type: 'GET',
-                url: "/api/suggestion/pubmed/" + request.term,
-                success: function (data) {
-                    // Only gives the first 20 matches
-                    response(data.slice(0, 20));
-                }
-            });
-        },
-        search: function () {
-            // custom minLength
-            var term = extractLastCommas(this.value);
-            if (term.length < 1) {
-                return false;
-            }
-        },
-        focus: function () {
-            // prevent value inserted on focus
-            return false;
-        },
-        select: function (event, ui) {
-            var terms = splitByCommas(this.value);
-            // remove the current input
-            terms.pop();
-            // add the selected item
-            terms.push(ui.item.value);
-            // add placeholder to get the comma-and-space at the end
-            terms.push("");
-            this.value = terms.join(",");
-            return false;
-        },
-        minLength: 2
-    });
-
-
-    $('#subgraph_form').submit(function (e) {
-
-        var data = $("#node_selection").select2('data');
+        var nodeSelection = $("#node_selection").select2("data");
 
         var nodesIDs = [];
 
-        $.each(data, function (index, value) {
+        $.each(nodeSelection, function (index, value) {
             nodesIDs.push(value.id)
         });
 
@@ -184,7 +70,69 @@ $(document).ready(function () {
                 };
             }
         }
-    })
+    });
+
+    $("#author_selection").select2({
+        minimumInputLength: 2,
+        multiple: true,
+        placeholder: "Please type here authors",
+        ajax: {
+            url: function (params) {
+                return "/api/suggestion/authors/";
+            },
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            data: function (params) {
+                return {
+                    search: params.term
+                };
+            },
+            delay: 250,
+            processResults: function (data) {
+                return {
+                    results: data.map(function (item) {
+                            return {
+                                id: item.id,
+                                text: item.text
+                            };
+                        }
+                    )
+                };
+            }
+        }
+    });
+
+    $("#pubmed_selection").select2({
+        minimumInputLength: 2,
+        multiple: true,
+        placeholder: "Please type here your PubMeds",
+        ajax: {
+            url: function (params) {
+                return "/api/suggestion/pubmed/";
+            },
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            data: function (params) {
+                return {
+                    search: params.term
+                };
+            },
+            delay: 250,
+            processResults: function (data) {
+                return {
+                    results: data.map(function (item) {
+                            return {
+                                id: item.id,
+                                text: item.text
+                            };
+                        }
+                    )
+                };
+            }
+        }
+    });
 
 
 });

@@ -34,8 +34,8 @@ class SeedSubgraphForm(FlaskForm):
 
 class SeedProvenanceForm(FlaskForm):
     """Builds the form for seeding by author/citation"""
-    author_list = fields.StringField('Authors')
-    pubmed_list = fields.StringField('PubMed Identifiers')
+    author_list = HiddenField('Nodes')
+    pubmed_list = HiddenField('Nodes')
     submit_provenance = fields.SubmitField('Submit Provenance')
 
 

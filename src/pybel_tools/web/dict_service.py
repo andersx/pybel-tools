@@ -152,6 +152,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         :rtype: pybel.BELGraph
         """
 
+        log.debug("ARGUMENTS!!!")
+        log.debug(request.args)
+
         network_id = request.args.get(GRAPH_ID)
 
         if network_id is not None:
@@ -396,33 +399,25 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         if not request.args['search']:
             return jsonify([])
 
-        keywords = [entry.strip() for entry in request.args['search'].split(TAB_DELIMITER)]
-
-        log.debug('Searching nodes by keywords: %s', keywords)
-
-        autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
+        autocompletion_set = api.get_nodes_containing_keyword(request.args['search'])
 
         return jsonify(autocompletion_set)
 
-    @app.route('/api/suggestion/authors/<author>')
-    def get_author_suggestion(author):
+    @app.route('/api/suggestion/authors/')
+    def get_author_suggestion():
         """Return list of authors matching the author keyword"""
-        keywords = [entry.strip() for entry in author.split(COMMA_DELIMITER)]
 
-        autocompletion_set = api.get_authors_containing_keyword(keywords[-1])
+        autocompletion_set = api.get_authors_containing_keyword(request.args['search'])
 
-        # {k: v for v, k in enumerate(lst)}
+        return jsonify([{"text": pubmed, "id": index} for index, pubmed in enumerate(autocompletion_set)])
 
-        return jsonify(list(autocompletion_set))
-
-    @app.route('/api/suggestion/pubmed/<pubmed>')
-    def get_pubmed_suggestion(pubmed):
+    @app.route('/api/suggestion/pubmed/')
+    def get_pubmed_suggestion():
         """Return list of pubmedids matching the integer keyword"""
-        keywords = [entry.strip() for entry in pubmed.split(COMMA_DELIMITER)]
 
-        autocompletion_set = api.get_pubmed_containing_keyword(keywords[-1])
+        autocompletion_set = api.get_pubmed_containing_keyword(request.args['search'])
 
-        return jsonify(list(autocompletion_set))
+        return jsonify([{"text": pubmed, "id": index} for index, pubmed in enumerate(autocompletion_set)])
 
     @app.route('/api/edges/provenance/<int:sid>/<int:tid>')
     def get_edges(sid, tid):
