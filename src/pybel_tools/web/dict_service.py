@@ -4,12 +4,13 @@
 
 import logging
 from operator import itemgetter
-from requests.compat import unquote
+
 import flask
 import networkx as nx
 from flask import Flask, request, jsonify, url_for, redirect
 from flask import render_template
 from flask_basicauth import BasicAuth
+from requests.compat import unquote
 
 from pybel import from_bytes
 from pybel import from_url
@@ -20,7 +21,7 @@ from .send_utils import serve_network
 from .utils import try_insert_graph, sanitize_list_of_str
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
-from ..summary.edge_summary import count_relations, count_comorbidities
+from ..summary.edge_summary import count_relations
 from ..summary.edge_summary import get_annotation_values_by_annotation
 from ..summary.error_summary import count_error_types
 from ..summary.export import info_json
