@@ -14,7 +14,7 @@ from requests.compat import unquote
 
 from pybel import from_bytes
 from pybel import from_url
-from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL
+from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, FRAUNHOFER_RESOURCES
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
@@ -145,6 +145,20 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         def ensure_large_corpus():
             """Parses the large corpus"""
             graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+            return try_insert_graph(manager, graph)
+
+        @app.route('/admin/ensure/abstract3')
+        @basic_auth.required
+        def ensure_abstract3():
+            """Ensures Selventa Example 3"""
+            url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
+            graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
+            return try_insert_graph(manager, graph)
+
+        @app.route('/admin/ensure/gfam')
+        @basic_auth.required
+        def ensure_gfam():
+            graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
             return try_insert_graph(manager, graph)
 
         @app.route('/admin/drop/all')
