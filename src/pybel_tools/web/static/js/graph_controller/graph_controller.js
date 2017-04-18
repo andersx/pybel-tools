@@ -1205,11 +1205,11 @@ function initD3Force(graph, tree) {
     $("#button-paths").on("click", function () {
         if (pathForm.valid()) {
 
-            var checkbox = pathForm.find("input[name='visualization-options'']").is(":checked");
+            var checkbox = pathForm.find("input[name='visualization-options']").is(":checked");
 
             var args = parameterFilters(tree);
             args["source"] = nodeNamesToId[pathForm.find("input[name='source']").val()];
-            args["target"] = nodeNamesToId[pathForm.find("input[name='target'']").val()];
+            args["target"] = nodeNamesToId[pathForm.find("input[name='target']").val()];
             args["paths_method"] = $("input[name=paths_method]:checked", pathForm).val();
             args["graphid"] = window.networkID;
 
@@ -1234,7 +1234,7 @@ function initD3Force(graph, tree) {
                         resetAttributes();
 
                         // Apply changes in style for select paths
-                        hideNodesTextInPaths(paths, false);
+                        hideNodesTextInPaths(paths, checkbox);
                         colorPaths(paths, checkbox);
                         resetAttributesDoubleClick()
                     }
