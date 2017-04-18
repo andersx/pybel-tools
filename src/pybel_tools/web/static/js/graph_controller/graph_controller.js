@@ -701,8 +701,15 @@ function initD3Force(graph, tree) {
     var link = g.selectAll(".link")
         .data(graph.links)
         .enter().append("line")
+        .style("stroke", function (d) {
+            if ('pybel_highlight' in d) {
+                return d['pybel_highlight']
+            }
+            else {
+                return defaultLinkColor
+            }
+        })
         .style("stroke-width", nominalStroke)
-        .style("stroke", defaultLinkColor)
         .on("click", function (d) {
             displayEdgeInfo(d);
         })
@@ -760,7 +767,14 @@ function initD3Force(graph, tree) {
             return d.function
         })
         .style("stroke-width", nominalStroke)
-        .style("stroke", circleColor);
+        .style("stroke", function (d) {
+            if ('pybel_highlight' in d) {
+                return d['pybel_highlight']
+            }
+            else {
+                return circleColor
+            }
+        });
 
     var text = node.append("text")
         .attr("class", "node-name")
