@@ -27,7 +27,9 @@
     {{ util.flashed_messages(dismissible=True) }}
     <div class="container">
         <div class="page-header">
-            <h1>Summary of {{ graph.name }} <small class="text-muted">{{ graph.version }}</small></h1>
+            <h1>Summary of {{ graph.name }}
+                <small class="text-muted">{{ graph.version }}</small>
+            </h1>
         </div>
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -115,6 +117,41 @@
                 <ul class="pagination pagination pagination-sm" style="margin:0;" id="myPager"></ul>
             </div>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Contradictory Nodes</h3>
+            </div>
+            <div class="panel-body">
+                <p>These pairs of nodes have a contradiction in their causal relationships, meaning they have more than
+                    one of <code>INCREASES</code>, <code>DECREASES</code>, or <code>CAUSES NO CHANGE</code>. This may be
+                    due to different experimental conditions, so these edges need to be carefully considered in
+                    analyses.
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>Relations</th>
+                            <th>Target</th>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for source, target, relations in contradictions %}
+                            <tr>
+                                <td>{{ source }}</td>
+                                <td>{{ ','.join(relations) }}</td>
+                                <td>{{ target }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 {% endblock %}
 
@@ -226,7 +263,7 @@
 
         $(document).ready(function () {
 
-            $('#myTable').pageMe({pagerSelector: '#myPager', showPrevNext: true, hidePageNumbers: false, perPage: 25});
+            $('#myTable').pageMe({pagerSelector: '#myPager', showPrevNext: true, hidePageNumbers: false, perPage: 20});
 
         });
     </script>

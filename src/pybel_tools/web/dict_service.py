@@ -21,7 +21,7 @@ from .send_utils import serve_network
 from .utils import try_insert_graph, sanitize_list_of_str
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
-from ..summary.edge_summary import count_relations
+from ..summary.edge_summary import count_relations, get_contradiction_summary
 from ..summary.edge_summary import get_annotation_values_by_annotation
 from ..summary.error_summary import count_error_types
 from ..summary.export import info_json
@@ -306,6 +306,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             chart_7_data=prepare_c3(api.get_top_degree(graph_id), 'Top Hubs'),
             chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
             chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
+            contradictions=get_contradiction_summary(graph),
             graph=graph,
             time=None,
         )

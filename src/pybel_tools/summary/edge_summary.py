@@ -169,6 +169,17 @@ def _iter_pairs(graph):
         yield u, v
 
 
+def get_all_relations(graph, u, v):
+    """Returns the set of all relations between a given pair of nodes
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :param tuple u: The source BEL node
+    :param tuple v: The target BEL node
+    :rtype: set
+    """
+    return {d[RELATION] for d in graph.edge[u][v].values()}
+
+
 def pair_is_consistent(graph, u, v):
     """Returns if the edges between the given nodes are constitient, meaning they all have the same relation
 
@@ -178,8 +189,15 @@ def pair_is_consistent(graph, u, v):
     :return: Do the edges between these nodes all have the same relation
     :rtype: bool
     """
-    relations = {d[RELATION] for d in graph.edge[u][v].values()}
+    relations = get_all_relations(graph, u, v)
     return 1 == len(relations)
+
+
+def _pair_has_contradiction_helper(relations):
+    has_increases = any(relation in CAUSAL_INCREASE_RELATIONS for relation in relations)
+    has_decreases = any(relation in CAUSAL_DECREASE_RELATIONS for relation in relations)
+    has_cnc = any(relation == CAUSES_NO_CHANGE for relation in relations)
+    return 1 < sum([has_cnc, has_decreases, has_increases])
 
 
 def pair_has_contradiction(graph, u, v):
@@ -191,11 +209,8 @@ def pair_has_contradiction(graph, u, v):
     :return: Do the edges between these nodes have a contradiction?
     :rtype: bool
     """
-    relations = {d[RELATION] for d in graph.edge[u][v].values()}
-    has_increases = any(relation in CAUSAL_INCREASE_RELATIONS for relation in relations)
-    has_decreases = any(relation in CAUSAL_DECREASE_RELATIONS for relation in relations)
-    has_cnc = any(relation == CAUSES_NO_CHANGE for relation in relations)
-    return 1 <= sum([has_cnc, has_decreases, has_increases])
+    relations = get_all_relations(graph, u, v)
+    return _pair_has_contradiction_helper(relations)
 
 
 def get_contradictory_pairs(graph):
@@ -208,6 +223,13 @@ def get_contradictory_pairs(graph):
     for u, v in _iter_pairs(graph):
         if pair_has_contradiction(graph, u, v):
             yield u, v
+
+
+def get_contradiction_summary(graph):
+    for u, v in _iter_pairs(graph):
+        relations = get_all_relations(graph, u, v)
+        if _pair_has_contradiction_helper(relations):
+            yield u, v, relations
 
 
 def get_consistent_edges(graph):
