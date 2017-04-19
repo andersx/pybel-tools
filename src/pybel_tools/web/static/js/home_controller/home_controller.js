@@ -13,7 +13,7 @@ $(document).ready(function () {
 
     }
 
-    $("#provenance_form").submit(function (e) {
+    $("#provenance_form").submit(function () {
 
         $("#pubmed_list").val(getSelection($("#pubmed_selection").select2("data"), "text", ","));
 
@@ -21,7 +21,7 @@ $(document).ready(function () {
 
     });
 
-    $("#subgraph_form").submit(function (e) {
+    $("#subgraph_form").submit(function () {
 
         $("#node_list").val(getSelection($("#node_selection").select2("data"), "id", ","));
 
@@ -63,7 +63,7 @@ $(document).ready(function () {
         multiple: true,
         placeholder: "Please type authors here",
         ajax: {
-            url: function (params) {
+            url: function () {
                 return "/api/suggestion/authors/";
             },
             type: "GET",
@@ -94,7 +94,7 @@ $(document).ready(function () {
         multiple: true,
         placeholder: "Please type PubMed Identifiers here",
         ajax: {
-            url: function (params) {
+            url: function () {
                 return "/api/suggestion/pubmed/";
             },
             type: "GET",
