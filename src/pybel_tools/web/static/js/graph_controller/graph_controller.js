@@ -105,8 +105,6 @@ function renderNetwork(tree, url) {
 
     var renderParameters = $.param(args, true);
 
-    console.log(renderParameters)
-
     $.getJSON("/api/network/" + "?" + renderParameters, function (data) {
         initD3Force(data, tree);
     });
@@ -1290,7 +1288,7 @@ function initD3Force(graph, tree) {
                 success: function (paths) {
 
                     if (args["paths_method"] === "all") {
-                        if (paths.length == 0) {
+                        if (paths.length === 0) {
                             alert("No paths between the selected nodes");
                         }
 
@@ -1311,11 +1309,11 @@ function initD3Force(graph, tree) {
                         var edgesNotInPath = g.selectAll(".link").filter(function (el) {
                             // Source and target should be present in the edge and the distance in the array should be one
                             return !((paths.indexOf(el.source.id) >= 0 && paths.indexOf(el.target.id) >= 0)
-                            && (Math.abs(paths.indexOf(el.source.id) - paths.indexOf(el.target.id)) == 1));
+                            && (Math.abs(paths.indexOf(el.source.id) - paths.indexOf(el.target.id)) === 1));
                         });
 
                         // If checkbox is True -> Hide all, Else -> Opacity 0.1
-                        if (checkbox == true) {
+                        if (checkbox === true) {
                             nodesNotInPath.style("visibility", "hidden");
                             edgesNotInPath.style("visibility", "hidden");
                         } else {
