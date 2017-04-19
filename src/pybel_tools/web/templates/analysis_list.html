@@ -22,18 +22,21 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Created</th>
                     <th>Network</th>
+                    <th>Version</th>
                     <th>Description</th>
+                    <th>Created</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for experiment in experiments %}
                     <tr>
                         <td><a href="/analysis/results/{{ experiment.id }}">{{ experiment.id }}</a></td>
-                        <td>{{ experiment.created }}</td>
-                        <td><a href="/networks/?graphid={{ experiment.network_id }}">{{ experiment.network_id }}</a></td>
+                        <td><a href="/networks/?graphid={{ experiment.network_id }}">{{ experiment.network.name }}</a>
+                        </td>
+                        <td>{{ experiment.network.version }}</td>
                         <td>{{ experiment.description }}</td>
+                        <td>{{ experiment.created }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>

@@ -7,15 +7,13 @@ from operator import itemgetter
 
 import flask
 import pandas
-import pandas as pd
-from flask import render_template
-from sqlalchemy import Column
-from sqlalchemy import Integer, DateTime, Binary, Text
+from flask import render_template, redirect, url_for
+from sqlalchemy import Column, Integer, DateTime, Binary, Text, ForeignKey
+from sqlalchemy.orm import relationship
 
 import pybel
 from pybel.constants import GENE
-from pybel.manager.models import Base
-from pybel.manager.models import Network
+from pybel.manager.models import Base, Network, NETWORK_TABLE_NAME
 from .forms import DifferentialGeneExpressionForm
 from .. import generation
 from ..analysis import npa
@@ -38,7 +36,8 @@ class Experiment(Base):
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.datetime.utcnow, doc='The date on which this analysis was run')
     description = Column(Text, nullable=True, doc='A description of the purpose of the analysis')
-    network_id = Column(Integer)
+    network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)))
+    network = relationship('Network', foreign_keys=[network_id])
     source = Column(Binary, doc='The source document holding the data')
     result = Column(Binary, doc='The result python dictionary')
 
@@ -61,9 +60,9 @@ def build_analysis_service(app, manager):
         experiments = manager.session.query(Experiment).all()
         return render_template('analysis_list.html', experiments=experiments)
 
-    @app.route('/analysis/results/<int:aid>')
-    def view_analysis_results(aid):
-        e = manager.session.query(Experiment).get(aid)
+    @app.route('/analysis/results/<analysis_id>')
+    def view_analysis_results(analysis_id):
+        e = manager.session.query(Experiment).get(analysis_id)
         r = pickle.loads(e.result)
         return render_template(
             'analysis_results.html',
@@ -98,7 +97,8 @@ def build_analysis_service(app, manager):
 
         data = {k: v for _, k, v in df.itertuples()}
 
-        graph = pybel.from_bytes(manager.get_graph_by_id(network_id).blob)
+        network = manager.get_graph_by_id(network_id)
+        graph = pybel.from_bytes(network.blob)
 
         remove_nodes_by_namespace(graph, {'MGI', 'RGD'})
         opening_on_central_dogma(graph)
@@ -109,18 +109,16 @@ def build_analysis_service(app, manager):
         candidate_mechanisms = generation.generate_bioprocess_mechanisms(graph, LABEL)
         scores = npa.calculate_average_npa_on_subgraphs(candidate_mechanisms, LABEL, runs=form.permutations.data)
 
-        e = Experiment(
+        experiment = Experiment(
             description=form.description.data,
-            network_id=network_id,
             source=pickle.dumps(df),
             result=pickle.dumps(scores),
         )
-        manager.session.add(e)
+        experiment.network = network
+
+        manager.session.add(experiment)
         manager.session.commit()
 
-        scores_df = pd.DataFrame.from_items(scores.items(), orient='index', columns=NPA_COLUMNS)
-        scores_df.index.name = 'Experiment {}'.format(e.id)
-
-        return scores_df.sort_values('NPA Average').to_html()
+        return redirect(url_for('view_analysis_results', analysis_id=experiment.id))
 
     log.info('Added analysis service to %s', app)

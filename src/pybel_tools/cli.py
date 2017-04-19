@@ -232,7 +232,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
         manager=manager,
         check_version=(not skip_check_version),
         admin_password=admin_password,
-        analysis_enabled=run_analysis_service,
+        analysis_enabled=(run_analysis_service or run_all),
     )
 
     if run_database_service:

@@ -207,9 +207,9 @@ class DictionaryService(BaseService):
             return self.universe
 
         if network_id not in self.networks:
-            network_blob = self.manager.session.query(Network.blob).get(network_id)
+            network = self.manager.session.query(Network).get(network_id)
             log.debug('getting bytes from [%s]', network_id)
-            self.add_network(network_id, from_bytes(network_blob))
+            self.add_network(network_id, from_bytes(network.blob))
 
         result = self.networks[network_id]
         log.debug('got network [%s] (%s nodes/%s edges)', network_id, result.number_of_nodes(),
@@ -336,15 +336,18 @@ class DictionaryService(BaseService):
     def get_top_centrality(self, network_id, count=20):
         if network_id not in self.node_centralities:
             log.info('lazy loading centralities for [%s]', network_id)
-            self.node_centralities[network_id] = Counter(nx.betweenness_centrality(self.get_network(network_id)))
+            graph = self.get_network(network_id)
+            self.node_centralities[network_id] = Counter(nx.betweenness_centrality(graph))
         return {self.get_cname(node): v for node, v in self.node_centralities[network_id].most_common(count)}
 
     def get_top_degree(self, network_id, count=20):
         if network_id not in self.node_degrees:
             log.info('lazy loading degrees for [%s]', network_id)
-            self.node_degrees[network_id] = Counter(self.get_network(network_id).degree())
+            graph = self.get_network(network_id)
+            self.node_degrees[network_id] = Counter(graph.degree())
         return {self.get_cname(node): v for node, v in self.node_degrees[network_id].most_common(count)}
 
     def get_top_comorbidities(self, network_id, count=20):
-        cm = count_comorbidities(self.get_network(network_id))
+        graph = self.get_network(network_id)
+        cm = count_comorbidities(graph)
         return {self.get_cname(node): v for node, v in cm.most_common(count)}

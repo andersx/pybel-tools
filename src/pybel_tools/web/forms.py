@@ -51,8 +51,8 @@ class CompileForm(FlaskForm):
     encoding = RadioField(
         'Encoding',
         choices=[
-            ('utf-8', 'My document is encoded in utf-8'),
-            ('utf_8_sig', 'My document is encoded in utf-8 with a BOM')
+            ('utf-8', 'My document is encoded in UTF-8'),
+            ('utf_8_sig', 'My document is encoded in UTF-8 with a BOM')
         ],
         default='utf-8')
     submit = fields.SubmitField('Validate')

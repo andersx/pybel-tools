@@ -9,7 +9,9 @@
 {% block content %}
     <div class="container">
         <div class="page-header">
-            <h1>Analysis {{ experiment.id }} on Network {{ experiment.network_id }}</h1>
+            <h1>Analysis of {{ experiment.network.name }}
+                <small class="text-muted">{{ experiment.network.version }}</small>
+            </h1>
         </div>
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -17,6 +19,8 @@
             </div>
             <div class="panel-body">
                 <dl>
+                    <dt>Analysis ID</dt>
+                    <dd>{{ experiment.id }}</dd>
                     <dt>Created</dt>
                     <dd>{{ experiment.created }}</dd>
                     <dt>Description</dt>
@@ -34,7 +38,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for key,vals in data %}
+                {% for key, vals in data %}
                     <tr>
                         <td>{{ key[1] }}</td>
                         <td>{{ key[2] }}</td>
