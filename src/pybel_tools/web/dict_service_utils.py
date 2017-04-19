@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This module contains all of the services necessary through the PyBEL API Definition, backed by a network
-dictionary
+This module contains all of the services necessary through the PyBEL API Definition, backed by a network dictionary
 """
 
 import logging
@@ -175,7 +174,9 @@ class DictionaryService(BaseService):
         :param force_reload: Should all graphs be reloaded even if they have already been cached?
         :type force_reload: bool
         """
-        for network_id, network_blob in self.manager.session.query(Network.id, Network.blob).all():
+        query = self.manager.session.query(Network.id, Network.blob)
+
+        for network_id, network_blob in query.filter(Network.id not in self.networks).all():
             try:
                 log.debug('getting bytes from [%s]', network_id)
                 graph = from_bytes(network_blob, check_version=check_version)
@@ -187,17 +188,7 @@ class DictionaryService(BaseService):
 
     # Graph selection functions
 
-    def list_graphs(self):
-        return [(nid, n.name, n.version, n.description) for nid, n in self.networks.items()]
-
-    def get_network_ids(self):
-        """Returns a list of all network IDs
-
-        :rtype: list[int]
-        """
-        return list(self.networks)
-
-    def get_network_by_id(self, network_id=None):
+    def get_network(self, network_id=None):
         """Gets a network by its ID or super network if identifier is not specified
 
         :param network_id: The internal ID of the network to get
@@ -205,7 +196,17 @@ class DictionaryService(BaseService):
         :return: A BEL Graph
         :rtype: pybel.BELGraph
         """
-        result = self.networks[network_id] if network_id is not None else self.universe
+        if network_id is None:
+            log.debug('got universe (%s nodes/%s edges)', self.universe.number_of_nodes(),
+                      self.universe.number_of_edges())
+            return self.universe
+
+        if network_id not in self.networks:
+            network_blob = self.manager.session.query(Network.blob).get(network_id)
+            log.debug('getting bytes from [%s]', network_id)
+            self.add_network(network_id, from_bytes(network_blob))
+
+        result = self.networks[network_id]
         log.debug('got network [%s] (%s nodes/%s edges)', network_id, result.number_of_nodes(),
                   result.number_of_edges())
         return result
@@ -235,26 +236,6 @@ class DictionaryService(BaseService):
 
         raise TypeError('{} is wrong type: {}'.format(node_id, type(node_id)))
 
-    def get_namespaces_in_network(self, network_id):
-        """Returns the namespaces in a given network
-
-        :param network_id: The internal ID of the network to get
-        :type network_id: int
-        :return: A list of URLs for the namespaces in the network
-        :rtype: list[str]
-        """
-        return list(self.get_network_by_id(network_id).namespace_url.values())
-
-    def get_annotations_in_network(self, network_id):
-        """Returns the annotations in a given network
-        
-        :param network_id: The internal ID of the network to get
-        :type network_id: int
-        :return: A list of URLs for the annotations in the network
-        :rtype: list[str]
-        """
-        return list(self.get_network_by_id(network_id).annotation_url.values())
-
     def query(self, network_id=None, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None,
               **annotations):
         """Filters a dictionary from the module level cache.
@@ -283,7 +264,7 @@ class DictionaryService(BaseService):
         :return: A BEL Graph
         :rtype: pybel.BELGraph
         """
-        graph = self.get_network_by_id(network_id)
+        graph = self.get_network(network_id)
 
         log.debug('query: %s', {
             'seed_method': seed_method,
@@ -349,14 +330,14 @@ class DictionaryService(BaseService):
 
     def get_top_centrality(self, graph_id, n=20):
         if graph_id not in self.node_centralities:
-            self.node_centralities[graph_id] = Counter(nx.betweenness_centrality(self.networks[graph_id]))
+            self.node_centralities[graph_id] = Counter(nx.betweenness_centrality(self.get_network(graph_id)))
         return {self.get_cname(n): v for n, v in self.node_centralities[graph_id].most_common(n)}
 
     def get_top_degree(self, graph_id, n=20):
         if graph_id not in self.node_degrees:
-            self.node_degrees[graph_id] = Counter(self.networks[graph_id].degree())
+            self.node_degrees[graph_id] = Counter(self.get_network(graph_id).degree())
         return {self.get_cname(n): v for n, v in self.node_degrees[graph_id].most_common(n)}
 
     def get_top_comorbidities(self, graph_id, n=20):
-        cm = count_comorbidities(self.get_network_by_id(graph_id))
+        cm = count_comorbidities(self.get_network(graph_id))
         return {self.get_cname(n): v for n, v in cm.most_common(n)}

@@ -138,14 +138,14 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         def ensure_small_corpus():
             """Parses the small corpus"""
             graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph)
+            return try_insert_graph(manager, graph, api)
 
         @app.route('/admin/ensure/large')
         @basic_auth.required
         def ensure_large_corpus():
             """Parses the large corpus"""
             graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph)
+            return try_insert_graph(manager, graph, api)
 
         @app.route('/admin/ensure/abstract3')
         @basic_auth.required
@@ -153,13 +153,13 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             """Ensures Selventa Example 3"""
             url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
             graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph)
+            return try_insert_graph(manager, graph, api)
 
         @app.route('/admin/ensure/gfam')
         @basic_auth.required
         def ensure_gfam():
             graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
-            return try_insert_graph(manager, graph)
+            return try_insert_graph(manager, graph, api)
 
         @app.route('/admin/drop/all')
         @basic_auth.required
@@ -275,11 +275,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             log.info('redirecting to %s', url)
             return redirect(url)
 
-        data = api.list_graphs()
-
         return flask.render_template(
             'network_list.html',
-            data=data,
+            data=manager.list_graphs(),
             provenance_form=seed_provenance_form,
             subgraph_form=seed_subgraph_form,
             analysis_enabled=analysis_enabled
@@ -293,7 +291,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/summary/<int:graph_id>')
     def view_summary(graph_id):
         """Renders a page with the parsing errors for a given BEL script"""
-
         graph = manager.get_graph_by_id(graph_id)
         graph = from_bytes(graph.blob)
 
@@ -326,12 +323,12 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
 
     @app.route('/api/network/list', methods=['GET'])
     def get_network_list():
-        return jsonify(api.list_graphs())
+        return jsonify(manager.list_graphs())
 
     @app.route('/api/summary/<int:network_id>')
     def get_number_nodes(network_id):
         """Gets a summary of the given network"""
-        return jsonify(info_json(api.get_network_by_id(network_id)))
+        return jsonify(info_json(api.get_network(network_id)))
 
     @app.route('/api/network/', methods=['GET'])
     def get_network():
