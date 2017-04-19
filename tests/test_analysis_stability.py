@@ -67,7 +67,7 @@ class TestUnstableTriplets(unittest.TestCase):
 
         infer_missing_two_way_edges(g)
 
-        result = tuple(get_separate_unstable_correlation_triples(g))
+        result = tuple(get_mutually_unstable_correlation_triples(g))
 
         self.assertEqual(1, len(result))
         self.assertEqual((a, b, c), result[0])
