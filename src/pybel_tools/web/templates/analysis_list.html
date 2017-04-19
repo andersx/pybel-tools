@@ -24,6 +24,7 @@
                     <th>ID</th>
                     <th>Network</th>
                     <th>Version</th>
+                    <th>Source Data</th>
                     <th>Description</th>
                     <th>Created</th>
                 </tr>
@@ -35,6 +36,7 @@
                         <td><a href="/networks/?graphid={{ experiment.network_id }}">{{ experiment.network.name }}</a>
                         </td>
                         <td>{{ experiment.network.version }}</td>
+                        <td>{{ experiment.source_name }}</td>
                         <td>{{ experiment.description }}</td>
                         <td>{{ experiment.created }}</td>
                     </tr>

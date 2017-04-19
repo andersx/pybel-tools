@@ -18,7 +18,7 @@ from .forms import DifferentialGeneExpressionForm
 from .. import generation
 from ..analysis import npa
 from ..integration import overlay_type_data
-from ..mutation.collapse import opening_on_central_dogma, collapse_variants_to_genes
+from ..mutation.collapse import opening_on_central_dogma, collapse_variants_to_genes, collapse_by_central_dogma_to_genes
 from ..mutation.deletion import remove_nodes_by_namespace
 
 log = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ class Experiment(Base):
     description = Column(Text, nullable=True, doc='A description of the purpose of the analysis')
     network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)))
     network = relationship('Network', foreign_keys=[network_id])
+    source_name = Column(Text, doc='The name of the source file')
     source = Column(Binary, doc='The source document holding the data')
     result = Column(Binary, doc='The result python dictionary')
 
@@ -102,6 +103,7 @@ def build_analysis_service(app, manager):
 
         remove_nodes_by_namespace(graph, {'MGI', 'RGD'})
         opening_on_central_dogma(graph)
+        collapse_by_central_dogma_to_genes(graph)
         collapse_variants_to_genes(graph)
 
         overlay_type_data(graph, data, LABEL, GENE, 'HGNC', overwrite=False, impute=0)
@@ -112,6 +114,7 @@ def build_analysis_service(app, manager):
         experiment = Experiment(
             description=form.description.data,
             source=pickle.dumps(df),
+            source_name=form.file.data.filename,
             result=pickle.dumps(scores),
         )
         experiment.network = network
