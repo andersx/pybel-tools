@@ -183,7 +183,7 @@ def pair_is_consistent(graph, u, v):
 
 
 def pair_has_contradiction(graph, u, v):
-    """Checks if a pair of nodes have any contradictions
+    """Checks if a pair of nodes has any contradictions in their causal relationships.
     
     :param pybel.BELGraph graph: A BEL graph
     :param tuple u: The source BEL node
@@ -199,7 +199,7 @@ def pair_has_contradiction(graph, u, v):
 
 
 def get_contradictory_pairs(graph):
-    """Iterates over contraditory node pairs in the graph based on their causal relationships
+    """Iterates over contradictory node pairs in the graph based on their causal relationships
     
     :param graph: 
     :return: An iterator over (source, target) node pairs that have contradictory causal edges
