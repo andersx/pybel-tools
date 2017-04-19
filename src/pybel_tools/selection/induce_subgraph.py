@@ -21,6 +21,7 @@ __all__ = [
     'get_subgraph_by_edge_filter',
     'get_subgraph_by_node_filter',
     'get_subgraph_by_neighborhood',
+    'get_subgraph_by_second_neighbors',
     'get_subgraph_by_shortest_paths',
     'get_subgraph_by_annotation_value',
     'get_subgraph_by_data',
@@ -35,12 +36,14 @@ __all__ = [
 
 SEED_TYPE_INDUCTION = 'induction'
 SEED_TYPE_NEIGHBORS = 'neighbors'
+SEED_TYPE_DOUBLE_NEIGHBORS = 'dneighbors'
 SEED_TYPE_PATHS = 'shortest_paths'
 SEED_TYPE_PROVENANCE = 'provenance'
 
 SEED_TYPES = {
     SEED_TYPE_INDUCTION,
     SEED_TYPE_NEIGHBORS,
+    SEED_TYPE_DOUBLE_NEIGHBORS,
     SEED_TYPE_PATHS,
     SEED_TYPE_PROVENANCE,
 }
@@ -102,6 +105,22 @@ def get_subgraph_by_neighborhood(graph, nodes):
     for node in result.nodes_iter():
         result.node[node].update(graph.node[node])
 
+    return result
+
+
+@pipeline.mutator
+def get_subgraph_by_second_neighbors(graph, nodes):
+    """Gets a BEL graph around the neighborhoods of the given nodes, and expands to the neighborhood of those nodes
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param nodes: An iterable of BEL nodes
+    :type nodes: iter
+    :return: A BEL graph induced around the neighborhoods of the given nodes
+    :rtype: pybel.BELGraph
+    """
+    result = get_subgraph_by_neighborhood(graph, nodes)
+    expand_all_node_neighborhoods(graph, result)
     return result
 
 
@@ -244,6 +263,8 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
         result = get_subgraph_by_neighborhood(graph, seed_data)
     elif seed_method == SEED_TYPE_PROVENANCE:
         result = get_subgraph_by_provenance(graph, seed_data)
+    elif seed_method == SEED_TYPE_DOUBLE_NEIGHBORS:
+        result = get_subgraph_by_second_neighbors(graph, seed_data)
     elif not seed_method:  # Otherwise, don't seed a subgraph
         result = graph.copy()
         log.debug('no seed function - using full network: %s', result.name)

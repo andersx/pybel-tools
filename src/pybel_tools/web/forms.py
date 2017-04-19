@@ -6,7 +6,8 @@ from wtforms import fields
 from wtforms.fields import BooleanField, RadioField, HiddenField
 from wtforms.validators import DataRequired
 
-from ..selection.induce_subgraph import SEED_TYPE_INDUCTION, SEED_TYPE_PATHS, SEED_TYPE_NEIGHBORS
+from ..selection.induce_subgraph import SEED_TYPE_INDUCTION, SEED_TYPE_PATHS, SEED_TYPE_NEIGHBORS, \
+    SEED_TYPE_DOUBLE_NEIGHBORS
 
 
 class UploadForm(FlaskForm):
@@ -26,6 +27,7 @@ class SeedSubgraphForm(FlaskForm):
         choices=[
             (SEED_TYPE_INDUCTION, 'Induce a subgraph over the given nodes'),
             (SEED_TYPE_NEIGHBORS, 'Induce a subgraph over the given nodes and expand to their first neighbors'),
+            (SEED_TYPE_DOUBLE_NEIGHBORS, 'Induce a subgraph over the given nodes and expand to their second neighbors'),
             (SEED_TYPE_PATHS, 'Induce a subgraph over the nodes in all shortest paths between the given nodes'),
         ],
         default=SEED_TYPE_INDUCTION)
