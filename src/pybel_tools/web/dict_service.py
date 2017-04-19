@@ -2,6 +2,7 @@
 
 """This module runs the dictionary-backed PyBEL API"""
 
+import itertools as itt
 import logging
 from operator import itemgetter
 
@@ -19,6 +20,7 @@ from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
 from .utils import try_insert_graph, sanitize_list_of_str
+from ..analysis.stability import get_chaotic_pairs, get_dampened_pairs
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary.edge_summary import count_relations, get_contradiction_summary
@@ -291,6 +293,11 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         graph = manager.get_graph_by_id(graph_id)
         graph = from_bytes(graph.blob)
 
+        unstable_pairs = itt.chain.from_iterable([
+            ((u, v, 'Chaotic') for u, v, in get_chaotic_pairs(graph)),
+            ((u, v, 'Dampened') for u, v, in get_dampened_pairs(graph)),
+        ])
+
         return render_template(
             'summary.html',
             chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
@@ -307,6 +314,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
             chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
             contradictions=get_contradiction_summary(graph),
+            unstable_pairs=unstable_pairs,
             graph=graph,
             time=None,
         )
