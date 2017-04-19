@@ -120,7 +120,7 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Contradictory Nodes</h3>
+                <h3 class="panel-title">Contradictory Edges</h3>
             </div>
             <div class="panel-body">
                 <p>These pairs of nodes have a contradiction in their causal relationships, meaning they have more than
@@ -158,17 +158,25 @@
                 <h3 class="panel-title">Unstable Pairs</h3>
             </div>
             <div class="panel-body">
-                <p>Chaotic pairs of nodes mutually increase each other, while dampened pairs mutually decrease each
-                    other. These unstable pairs don't violate biological rules, but beg the question of
-                    what underlying processes regulate them. Note: these pairs do not have an ordering.
-                </p>
+                <dl>
+                    <dt>Chaotic Pairs</dt>
+                    <dd>Nodes that mutually increase each other, such as when both <code>A increases B</code> and <code>B
+                        increases A</code>.
+                    </dd>
+                    <dt>Dampened Pairs</dt>
+                    <dd>Nodes that mutually decrease each other, such as when both <code>A decreases B</code> and <code>B
+                        decreases A</code>.
+                    </dd>
+                </dl>
+                <p>While neither chaotic nor dampened pairs are biogically invalid, they require additional context to
+                    understand their regulation.</p>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                         <tr>
-                            <th>Pair A</th>
-                            <th>Pair B</th>
-                            <th>Instability Type</th>
+                            <th>Node A</th>
+                            <th>Node B</th>
+                            <th>Type</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -184,8 +192,6 @@
                 </div>
             </div>
         </div>
-
-
     </div>
 {% endblock %}
 
