@@ -1,3 +1,26 @@
+function getCurrentURL() {
+    // Get the URL parameters (except for the int after /explore/ representing the network_id)
+
+    var query_string = {};
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        // If first entry with this name
+        if (typeof query_string[pair[0]] === "undefined") {
+            query_string[pair[0]] = decodeURIComponent(pair[1]);
+            // If second entry with this name
+        } else if (typeof query_string[pair[0]] === "string") {
+            var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
+            query_string[pair[0]] = arr;
+            // If third or later entry with this name
+        } else {
+            query_string[pair[0]].push(decodeURIComponent(pair[1]));
+        }
+    }
+    return query_string;
+}
+
 function getSelectedNodesFromTree(tree) {
     var selectedNodes = tree.selected(true);
 
@@ -25,9 +48,16 @@ function resetGlobals() {
 
 function parameterFilters(tree) {
     var args = getSelectedNodesFromTree(tree);
-    args["remove"] = window.deleteNodes.join();
-    args["append"] = window.expandNodes.join();
-    args["graphid"] = window.networkID;
+
+    if (window.deleteNodes.length > 0) {
+        args["remove"] = window.deleteNodes.join();
+    }
+    if (window.expandNodes.length > 0) {
+        args["append"] = window.expandNodes.join();
+    }
+    if (window.networkID === 0) {
+        args["graphid"] = window.networkID;
+    }
     return args
 }
 
@@ -60,9 +90,11 @@ function renderNetwork(tree, url) {
     }
 
     node_param = $.param(params, true);
+
     $.getJSON("/api/network/" + "?" + node_param, function (data) {
         initD3Force(data, tree);
     });
+
     // reset window variables (window.expand/delete/method)
     resetGlobals();
     window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
@@ -97,29 +129,7 @@ function insertRow(table, row, column1, column2) {
 
 $(document).ready(function () {
 
-    // Get the URL parameters (except for the int after /explore/ representing the network_id)
-    var URLString = function () {
-        // This function is anonymous, is executed immediately and
-        // the return value is assigned to QueryString!
-        var query_string = {};
-        var query = window.location.search.substring(1);
-        var vars = query.split("&");
-        for (var i = 0; i < vars.length; i++) {
-            var pair = vars[i].split("=");
-            // If first entry with this name
-            if (typeof query_string[pair[0]] === "undefined") {
-                query_string[pair[0]] = decodeURIComponent(pair[1]);
-                // If second entry with this name
-            } else if (typeof query_string[pair[0]] === "string") {
-                var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
-                query_string[pair[0]] = arr;
-                // If third or later entry with this name
-            } else {
-                query_string[pair[0]].push(decodeURIComponent(pair[1]));
-            }
-        }
-        return query_string;
-    }();
+    var URLString = getCurrentURL();
 
     // if graphid not in arguments check if it is after /explore/
     if (!("graphid" in URLString)) {
@@ -294,17 +304,15 @@ function renderEmptyFrame() {
 }
 
 function clearUsedDivs() {
-    // Force div
-    var graphDiv = $("#graph-chart");
-    // Node search div
-    var nodePanel = $("#node-list");
-    // Edge search div
-    var edgePanel = $("#edge-list");
+    // Clean divs to repopulate them with the new network
 
-    // Clean the current frame
-    graphDiv.empty();
-    nodePanel.empty();
-    edgePanel.empty();
+    // Force div
+    $("#graph-chart").empty();
+    // Node search div
+    $("#node-list").empty();
+    // Edge search div
+    $("#edge-list").empty();
+
 }
 
 ///////////////////////////////////////
