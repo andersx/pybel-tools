@@ -19,7 +19,7 @@ from ..mutation.inference import infer_central_dogma
 from ..mutation.merge import left_merge
 from ..mutation.metadata import parse_authors, add_canonical_names
 from ..selection.induce_subgraph import get_subgraph
-from ..summary.edge_summary import count_comorbidities
+from ..summary.edge_summary import count_diseases
 from ..summary.provenance import get_authors, get_pmid_by_keyword, get_authors_by_keyword, get_pmids
 
 log = logging.getLogger(__name__)
@@ -349,5 +349,5 @@ class DictionaryService(BaseService):
 
     def get_top_comorbidities(self, network_id, count=20):
         graph = self.get_network(network_id)
-        cm = count_comorbidities(graph)
+        cm = count_diseases(graph)
         return {self.get_cname(node): v for node, v in cm.most_common(count)}
