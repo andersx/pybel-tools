@@ -16,6 +16,56 @@ function getSelectedNodesFromTree(tree) {
     return selectionHashMap;
 }
 
+function selectNodesInTreeFromURL(tree, url, blackList) {
+    // Select in the tree the tree-nodes in the URL
+    var selectedNodes = {};
+
+    $.each(url, function (index, value) {
+        if (!(index in blackList)) {
+            if (Array.isArray(value)) {
+                $.each(value, function (childIndex, child) {
+                    if (index in selectedNodes) {
+                        selectedNodes[index].push(child.replace(/\+/g, " "))
+                    }
+                    else {
+                        selectedNodes[index] = [child.replace(/\+/g, " ")];
+                    }
+                });
+            }
+            else {
+                if (index in selectedNodes) {
+                    selectedNodes[index].push(value.replace(/\+/g, " "))
+                }
+                else {
+                    selectedNodes[index] = [value.replace(/\+/g, " ")];
+                }
+            }
+        }
+    });
+
+    var treeNodes = tree.nodes();
+
+    $.each(treeNodes, function (index, value) {
+        if (value.text in selectedNodes) {
+            $.each(value.children, function (child, childValue) {
+
+                if (selectedNodes[value.text].indexOf(childValue.text) >= 0) {
+                    childValue.check();
+                }
+            });
+        }
+    });
+}
+
+function getAnnotationForTree(URLString) {
+    // get all annotations for building the tree using the graphid parameter in the URL if exists or the whole supernetwork if none
+    if ("graphid" in URLString) {
+        return doAjaxCall("/api/tree/?graphid=" + URLString["graphid"]);
+    } else {
+        return doAjaxCall("/api/tree/");
+    }
+}
+
 function resetGlobals() {
     // Arrays with selected nodes to expand/delete
     window.deleteNodes = [];
@@ -145,7 +195,7 @@ $(document).ready(function () {
 
     var URLString = getCurrentURL();
 
-    // Set global variable
+    // Set networkid as a global variable
     if ("graphid" in URLString) {
         window.networkID = URLString["graphid"];
     }
@@ -153,73 +203,23 @@ $(document).ready(function () {
         window.networkID = "0";
     }
 
-    // Get the annotations for the queried graph
-    var annotationFilter = null;
-
-    // get tree for graph id or supernetwork if none
-    if ("graphid" in URLString) {
-        annotationFilter = doAjaxCall("/api/tree/?graphid=" + URLString["graphid"]);
-    } else {
-        annotationFilter = doAjaxCall("/api/tree/");
-    }
-
-    // TODO: do this its own function
-    // Initiate the tree
+    // Initiate the tree and expands it with the annotations given the graphid in URL
     var tree = new InspireTree({
         target: "#tree",
         selection: {
             mode: "checkbox",
             multiple: true
         },
-        data: annotationFilter
+        data: getAnnotationForTree(URLString)
     });
 
     tree.on("model.loaded", function () {
         tree.expand();
     });
 
-    var blackList = doAjaxCall("/api/meta/blacklist");
+    selectNodesInTreeFromURL(tree, URLString, doAjaxCall("/api/meta/blacklist"))
 
-    // Select in the tree the tree-nodes in URL
-    var selectedNodes = {};
-
-    $.each(URLString, function (index, value) {
-        if (!(index in blackList)) {
-            if (Array.isArray(value)) {
-                $.each(value, function (childIndex, child) {
-                    if (index in selectedNodes) {
-                        selectedNodes[index].push(child.replace(/\+/g, " "))
-                    }
-                    else {
-                        selectedNodes[index] = [child.replace(/\+/g, " ")];
-                    }
-                });
-            }
-            else {
-                if (index in selectedNodes) {
-                    selectedNodes[index].push(value.replace(/\+/g, " "))
-                }
-                else {
-                    selectedNodes[index] = [value.replace(/\+/g, " ")];
-                }
-            }
-        }
-    });
-
-    var treeNodes = tree.nodes();
-
-    $.each(treeNodes, function (index, value) {
-        if (value.text in selectedNodes) {
-            $.each(value.children, function (child, childValue) {
-
-                if (selectedNodes[value.text].indexOf(childValue.text) >= 0) {
-                    childValue.check();
-                }
-            });
-        }
-    });
-
-
+    // Loads the network if autoload is an argument in the URL or render empty frame if not
     if (window.location.search.indexOf("autoload=yes") > -1) {
         renderNetwork(tree, URLString);
     }
@@ -231,7 +231,7 @@ $(document).ready(function () {
         renderNetwork(tree, URLString);
     });
 
-
+    // Export network as an image
     d3.select("#save-svg-graph").on("click", downloadSvg);
 
     // Export to BEL
@@ -689,7 +689,7 @@ function initD3Force(graph, tree) {
     });
 
     function isConnected(a, b) {
-        return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index == b.index;
+        return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index === b.index;
     }
 
     function ticked() {
@@ -749,10 +749,10 @@ function initD3Force(graph, tree) {
             }
         })
         .attr("marker-start", function (d) {
-            if ("positiveCorrelation" == d.relation) {
+            if ("positiveCorrelation" === d.relation) {
                 return "url(#arrowhead)"
             }
-            else if ("negativeCorrelation" == d.relation) {
+            else if ("negativeCorrelation" === d.relation) {
                 return "url(#stub)"
             }
             else {
@@ -860,7 +860,7 @@ function initD3Force(graph, tree) {
             });
             link.style("stroke", function (o) {
                 // All links connected to the node you hover on
-                return o.source.index == d.index || o.target.index == d.index ? highlightedLinkColor : defaultLinkColor;
+                return o.source.index === d.index || o.target.index === d.index ? highlightedLinkColor : defaultLinkColor;
             });
         }
     }
@@ -869,7 +869,7 @@ function initD3Force(graph, tree) {
     link.on("mouseenter", function (d) {
         link.style("stroke", function (o) {
             // Specifically the link you hover on
-            return o.source.index == d.source.index && o.target.index == d.target.index ? highlightedLinkColor : defaultLinkColor;
+            return o.source.index === d.source.index && o.target.index === d.target.index ? highlightedLinkColor : defaultLinkColor;
         });
     })
         .on("mousedown", function () {
@@ -916,7 +916,7 @@ function initD3Force(graph, tree) {
     // Freeze the graph when space is pressed
     function freezeGraph() {
         // Space button Triggers STOP
-        if (d3.event.keyCode == 32) {
+        if (d3.event.keyCode === 32) {
             simulation.stop();
         }
     }
@@ -993,7 +993,7 @@ function initD3Force(graph, tree) {
             return nodeList.indexOf(d.id) < 0;
         });
 
-        if (visualization != true) {
+        if (visualization !== true) {
             //noinspection JSDuplicatedDeclaration
             var visualizationOption = "opacity", on = "1", off = "0.1";
         } else {
@@ -1023,7 +1023,7 @@ function initD3Force(graph, tree) {
             return nodesInPaths.indexOf(d.id) < 0;
         });
 
-        if (visualization != true) {
+        if (visualization !== true) {
             //noinspection JSDuplicatedDeclaration
             var visualizationOption = "opacity", on = "1", off = "0.1";
         } else {
@@ -1114,7 +1114,7 @@ function initD3Force(graph, tree) {
             return nodesInPaths.indexOf(el.id) < 0;
         });
 
-        if (visualization != true) {
+        if (visualization !== true) {
             //noinspection JSDuplicatedDeclaration
             var visualizationOption = "opacity", on = "1", off = "0.1";
         } else {
@@ -1153,7 +1153,7 @@ function initD3Force(graph, tree) {
             var path = link.filter(function (el) {
                 // Source and target should be present in the edge and the distance in the array should be one
                 return ((data[x].indexOf(el.source.id) >= 0 && data[x].indexOf(el.target.id) >= 0)
-                && (Math.abs(data[x].indexOf(el.source.id) - data[x].indexOf(el.target.id)) == 1));
+                && (Math.abs(data[x].indexOf(el.source.id) - data[x].indexOf(el.target.id)) === 1));
             });
 
             edgesInPaths.push(path);
@@ -1169,7 +1169,7 @@ function initD3Force(graph, tree) {
             var edgesInPath = link.filter(function (el) {
                 // Source and target should be present in the edge and the distance in the array should be one
                 return ((data[i].indexOf(el.source.id) >= 0 && data[i].indexOf(el.target.id) >= 0)
-                && (Math.abs(data[i].indexOf(el.source.id) - data[i].indexOf(el.target.id)) == 1));
+                && (Math.abs(data[i].indexOf(el.source.id) - data[i].indexOf(el.target.id)) === 1));
             });
 
             // Select randomly a color and apply to this path

@@ -389,6 +389,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             graph = graph.to_undirected()
 
         if method == 'all':
+            # TODO: Think about increasing the cutoff
             all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
             # all_paths is a generator -> convert to list and create a list of lists (paths)
             return jsonify(list(all_paths))
