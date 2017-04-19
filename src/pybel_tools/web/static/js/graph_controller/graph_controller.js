@@ -131,17 +131,6 @@ $(document).ready(function () {
 
     var URLString = getCurrentURL();
 
-    // if graphid not in arguments check if it is after /explore/
-    if (!("graphid" in URLString)) {
-        // grab the last part of the URL after /explore/...
-        var lastPartURL = window.location.href.substring(window.location.href.lastIndexOf("/") + 1);
-        // if there is anything after the last slash and not starts with "?" is the network_id
-        if ((lastPartURL) && ("?" !== lastPartURL.substring(0, 1) )) {
-            // split by ? get the int representing the network_id
-            URLString["graphid"] = lastPartURL.split("?")[0];
-        }
-    }
-
     // Set global variable
     if ("graphid" in URLString) {
         window.networkID = URLString["graphid"];

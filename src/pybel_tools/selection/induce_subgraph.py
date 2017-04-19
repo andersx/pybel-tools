@@ -328,7 +328,7 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
         left_merge(result, get_subgraph_by_authors(graph, authors))
 
     highlight_nodes(result, result.nodes_iter())
-    highlight_edges(result, result.edges_iter())
+    highlight_edges(result, result.edges_iter(keys=True, data=True))
 
     if expand_neighborhoods:
         expand_all_node_neighborhoods(graph, result)
