@@ -25,7 +25,7 @@ function selectNodesInTreeFromURL(tree, url, blackList) {
             if (Array.isArray(value)) {
                 $.each(value, function (childIndex, child) {
                     if (index in selectedNodes) {
-                        selectedNodes[index].push(child.replace(/\+/g, " "))
+                        selectedNodes[index].push(child.replace(/\+/g, " "));
                     }
                     else {
                         selectedNodes[index] = [child.replace(/\+/g, " ")];
@@ -34,7 +34,7 @@ function selectNodesInTreeFromURL(tree, url, blackList) {
             }
             else {
                 if (index in selectedNodes) {
-                    selectedNodes[index].push(value.replace(/\+/g, " "))
+                    selectedNodes[index].push(value.replace(/\+/g, " "));
                 }
                 else {
                     selectedNodes[index] = [value.replace(/\+/g, " ")];
