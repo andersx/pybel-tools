@@ -67,7 +67,7 @@ def get_paths_recursive(directory, extension='.bel'):
                 yield os.path.join(root, file)
 
 
-def convert_recursive(directory, connection=None, upload=False, pickle=False):
+def convert_recursive(directory, connection=None, upload=False, pickle=False, store_parts=False):
     metadata_parser = build_metadata_parser(connection)
     paths = list(get_paths_recursive(directory))
     log.info('Paths to parse: %s', paths)
@@ -80,7 +80,7 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False):
 
         if upload:
             try:
-                metadata_parser.manager.insert_graph(graph)
+                metadata_parser.manager.insert_graph(graph, store_parts=store_parts)
             except IntegrityError as e:
                 log.exception('Integrity problem')
                 metadata_parser.manager.rollback()

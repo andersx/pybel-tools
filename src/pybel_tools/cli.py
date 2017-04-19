@@ -178,13 +178,15 @@ def post(path, url, skip_check_version):
 @io.command()
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('-u', '--upload', is_flag=True, help='Enable automatic database uploading')
+@click.option('--store-parts', is_flag=True, help='Automatically upload to database and edge store')
 @click.option('-d', '--directory', default=os.getcwd(),
               help='The directory to search. Defaults to current working directory')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def convert(connection, upload, directory, debug):
+def convert(connection, upload, store_parts, directory, debug):
     """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
     set_debug_param(debug)
-    convert_recursive(directory, connection=connection, upload=upload, pickle=True)
+    convert_recursive(directory, connection=connection, upload=(upload or store_parts), pickle=True,
+                      store_parts=store_parts)
 
 
 @main.command()
