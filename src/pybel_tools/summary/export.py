@@ -107,7 +107,6 @@ def info_list(graph):
     """
     number_nodes = graph.number_of_nodes()
     return [
-        ('Name', graph.name),
         ('Number of nodes', number_nodes),
         ('Number of edges', graph.number_of_edges()),
         ('Network density', nx.density(graph)),

@@ -31,6 +31,7 @@
                 <small class="text-muted">{{ graph.version }}</small>
             </h1>
         </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Metadata</h3>
@@ -44,6 +45,21 @@
                 </dl>
             </div>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Network Statistics</h3>
+            </div>
+            <div class="panel-body">
+                <dl>
+                    {% for key, value in info_list %}
+                        <dt>{{ key }}</dt>
+                        <dd>{{ value }}</dd>
+                    {% endfor %}
+                </dl>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Statistics</h3>
@@ -87,6 +103,7 @@
                 </div>
             </div>
         </div>
+
         <div class="panel panel-default panel-table">
             <div class="panel-heading">
                 <h3 class="panel-title">Errors</h3>
@@ -151,7 +168,6 @@
                 </div>
             </div>
         </div>
-
 
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -230,7 +246,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 {% endblock %}
 
