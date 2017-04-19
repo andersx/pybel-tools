@@ -91,7 +91,8 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False):
             new_path = '{}.gpickle'.format(path[:-4])
             to_pickle(graph, new_path)
 
-def upload_recusive(directory, connection=None):
+
+def upload_recursive(directory, connection=None):
     manager = build_manager(connection)
     paths = list(get_paths_recursive(directory, extension='.gpickle'))
     log.info('Paths to parse: %s', paths)
@@ -102,11 +103,10 @@ def upload_recusive(directory, connection=None):
         try:
             manager.insert_graph(graph)
         except IntegrityError as e:
-            log.exception('Integrity problem')
+            log.info("Duplicate name/version - couldn't upload %s v%s", graph.name, graph.version)
             manager.rollback()
         except Exception as e:
             log.exception('Problem uploading %s', graph.name)
-
 
 
 def subgraphs_to_pickles(graph, directory=None, annotation='Subgraph'):

@@ -29,7 +29,7 @@ from pybel.utils import get_version as pybel_version
 from .constants import GENE_FAMILIES, NAMED_COMPLEXES
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
-from .ioutils import convert_recursive, upload_recusive
+from .ioutils import convert_recursive, upload_recursive
 from .mutation.metadata import fix_pubmed_citations
 from .utils import get_version
 from .web import receiver_service
@@ -143,9 +143,10 @@ def io():
 
 
 @io.command()
-@click.argument('path')
+@click.option('-p', '--path', default=os.getcwd())
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
-@click.option('-r', '--recursive', help='Recursively upload all gpickles in the directory given as the path')
+@click.option('-r', '--recursive', is_flag=True,
+              help='Recursively upload all gpickles in the directory given as the path')
 @click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
 @click.option('--to-service', is_flag=True, help='Sends to PyBEL web service')
 @click.option('--service-url', help='Service location. Defaults to {}'.format(DEFAULT_SERVICE_URL))
@@ -153,9 +154,9 @@ def io():
 def upload(path, connection, recursive, skip_check_version, to_service, service_url, debug):
     """Quick uploader"""
     set_debug_param(debug)
-
     if recursive:
-        upload_recusive(path, connection=connection)
+        log.info('uploading recursively from: %s', path)
+        upload_recursive(path, connection=connection)
     else:
         graph = from_pickle(path, check_version=(not skip_check_version))
         if to_service:
