@@ -34,8 +34,6 @@ log = logging.getLogger(__name__)
 
 DICTIONARY_SERVICE = 'dictionary_service'
 DEFAULT_TITLE = 'Biological Network Explorer'
-TAB_DELIMITER = '|'
-COMMA_DELIMITER = ','
 
 APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
@@ -249,8 +247,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         seed_provenance_form = SeedProvenanceForm()
 
         if seed_subgraph_form.validate_on_submit() and seed_subgraph_form.submit_subgraph.data:
-            # nodes = sanitize_list_of_str()
-            seed_data_nodes = seed_subgraph_form.node_list.data.split('|')
+            seed_data_nodes = seed_subgraph_form.node_list.data.split(',')
             seed_method = seed_subgraph_form.seed_method.data
             log.info('got subgraph seed: %s', dict(nodes=seed_data_nodes, method=seed_method))
             url = url_for('view_explorer', **{

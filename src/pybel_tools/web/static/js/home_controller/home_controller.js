@@ -34,7 +34,7 @@ $(document).ready(function () {
 
     $("#subgraph_form").submit(function (e) {
 
-        $("#node_list").val(getSelectionID($("#node_selection").select2("data")), "|");
+        $("#node_list").val(getSelectionID($("#node_selection").select2("data")), ",");
 
     });
 
