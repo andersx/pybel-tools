@@ -15,6 +15,7 @@ from requests.compat import unquote
 
 from pybel import from_bytes
 from pybel import from_url
+from pybel.canonicalize import decanonicalize_node
 from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, FRAUNHOFER_RESOURCES
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
@@ -294,9 +295,14 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         graph = from_bytes(graph.blob)
 
         unstable_pairs = itt.chain.from_iterable([
-            ((u, v, 'Chaotic') for u, v, in get_chaotic_pairs(graph)),
-            ((u, v, 'Dampened') for u, v, in get_dampened_pairs(graph)),
+            ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
+             get_chaotic_pairs(graph)),
+            ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Dampened') for u, v, in
+             get_dampened_pairs(graph)),
         ])
+
+        contradictory_pairs = ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), rels) for u, v, rels in
+                               get_contradiction_summary(graph))
 
         return render_template(
             'summary.html',
@@ -313,7 +319,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             chart_7_data=prepare_c3(api.get_top_degree(graph_id), 'Top Hubs'),
             chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
             chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
-            contradictions=get_contradiction_summary(graph),
+            contradictions=contradictory_pairs,
             unstable_pairs=unstable_pairs,
             graph=graph,
             time=None,
