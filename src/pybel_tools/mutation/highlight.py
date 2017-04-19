@@ -88,8 +88,8 @@ def highlight_subgraph(universe, graph):
     :type universe: pybel.BELGraph
     :type graph: pybel.BELGraph
     """
-    highlight_nodes(universe, graph.nodes())
-    highlight_edges(universe, graph.edges)
+    highlight_nodes(universe, graph.nodes_iter())
+    highlight_edges(universe, graph.edges_iter())
 
 
 def remove_highlight_subgraph(graph, subgraph):
