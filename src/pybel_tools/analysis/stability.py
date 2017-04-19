@@ -84,53 +84,76 @@ def get_dampened_pairs(graph):
     return results
 
 
-def iter_correlation_triangles(graph):
-    """Yields all triangles pointed by the given node
-
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param node: The source node
-    :type node: tuple
-    """
-
-    g = Graph()
+def get_correlation_graph(graph):
+    result = Graph()
 
     for u, v, d in graph.edges_iter(data=True):
         if CORRELATIVE_RELATIONS != d[RELATION]:
             continue
 
-        if g.has_edge(u, v) and g.edge[u][v][RELATION] != d[RELATION]:
-            log.warning('broken correlation relation for %s, %s', u, v)
+        if not result.has_edge(u, v):
+            result.add_edge(u, v, **{d[RELATION]: True})
             continue
 
-        g.add_edge(u, v, **{RELATION: d[RELATION]})
-
-    for node in g:
-        for a, b in combinations(graph.edge[node], 2):
-            if b in graph.edge[a]:
-                yield tuple(sorted([g, a, b], key=str))
+        if d[RELATION] not in result.edge[u][v]:
+            log.warning('broken correlation relation for %s, %s', u, v)
+            result.edge[u][v][d[RELATION]] = True
+    return result
 
 
-# TODO implement
+def get_correlation_triangles(correlation_graph):
+    """Yields all triangles pointed by the given node
+
+    :param graph: A correlation graph
+    :type graph: network.Graph
+    :param node: The source node
+    :type node: tuple
+    """
+    results = set()
+
+    for node in correlation_graph.nodes_iter():
+        for a, b in combinations(correlation_graph.edge[node], 2):
+            if b in correlation_graph.edge[a]:
+                results.add(tuple(sorted([correlation_graph, a, b], key=str)))
+
+    return results
+
+
 def get_unstable_correlation_triples(graph):
     """Find all triples of nodes A, B, C such that A pos B, A pos C, and B neg C
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :return:
+    :return: An iterator over triples of unstable graphs, where the second two are negative
+    :rtype: iter[tuple]
     """
-    raise NotImplementedError
+    cg = get_correlation_graph(graph)
+
+    for a, b, c in get_correlation_triangles(cg):
+        if POSITIVE_CORRELATION in cg.edge[a][b] and POSITIVE_CORRELATION in cg.edge[b][c] and NEGATIVE_CORRELATION in \
+                cg.edge[a][c]:
+            yield b, a, c
+        if POSITIVE_CORRELATION in cg.edge[a][b] and NEGATIVE_CORRELATION in cg.edge[b][c] and POSITIVE_CORRELATION in \
+                cg.edge[a][c]:
+            yield a, b, c
+        if NEGATIVE_CORRELATION in cg.edge[a][b] and POSITIVE_CORRELATION in cg.edge[b][c] and POSITIVE_CORRELATION in \
+                cg.edge[a][c]:
+            yield c, a, b
 
 
-# TODO implement
 def get_mutually_unstable_correlation_triples(graph):
     """Find all triples of nodes A, B, C such that A neg B, A neg C, and B neg C
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return:
+    :rtype: iter[tuple]
     """
-    raise NotImplementedError
+    cg = get_correlation_graph(graph)
+
+    for a, b, c in get_correlation_triangles(cg):
+        if all(NEGATIVE_CORRELATION in x for x in (cg.edge[a][b], cg.edge[b][c], cg.edge[a][c])):
+            yield a, b, c
 
 
 def jens_transformation(graph):
