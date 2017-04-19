@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
     function getSelectionText(select2Element, joinBy) {
-
+        //TODO switch to a logical filter
         var selectedElements = [];
 
         $.each(select2Element, function (index, value) {
@@ -13,7 +13,7 @@ $(document).ready(function () {
     }
 
     function getSelectionID(select2Element, joinBy) {
-
+        //TODO switch to a logical filter?
         var selectedElements = [];
 
         $.each(select2Element, function (index, value) {
@@ -73,7 +73,7 @@ $(document).ready(function () {
     $("#author_selection").select2({
         minimumInputLength: 2,
         multiple: true,
-        placeholder: "Please type here authors",
+        placeholder: "Please type authors here",
         ajax: {
             url: function (params) {
                 return "/api/suggestion/authors/";
@@ -104,7 +104,7 @@ $(document).ready(function () {
     $("#pubmed_selection").select2({
         minimumInputLength: 2,
         multiple: true,
-        placeholder: "Please type here your PubMeds",
+        placeholder: "Please type PubMed Identifiers here",
         ajax: {
             url: function (params) {
                 return "/api/suggestion/pubmed/";
@@ -131,6 +131,4 @@ $(document).ready(function () {
             }
         }
     });
-
-
 });
