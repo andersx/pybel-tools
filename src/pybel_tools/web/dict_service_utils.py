@@ -119,18 +119,18 @@ class DictionaryService(BaseService):
 
         del graph.graph['PYBEL_RELABELED']
 
-    def add_network(self, graph_id, graph, force_reload=False):
+    def add_network(self, network_id, graph, force_reload=False, eager=False):
         """Adds a network to the module-level cache from the underlying database
 
-        :param int graph_id: The identifier for the graph
+        :param int network_id: The identifier for the graph
         :param pybel.BELGraph graph: A BEL Graph
         :param bool force_reload: Should the graphs be reloaded even if it has already been cached?
         """
-        if graph_id in self.networks and not force_reload:
-            log.info('tried re-adding graph [%s] %s', graph_id, graph.name)
+        if network_id in self.networks and not force_reload:
+            log.info('tried re-adding graph [%s] %s', network_id, graph.name)
             return
 
-        log.info('loading network [%s] %s', graph_id, graph.name)
+        log.info('loading network [%s] %s', network_id, graph.name)
 
         log.debug('parsing authors')
         parse_authors(graph)
@@ -147,22 +147,27 @@ class DictionaryService(BaseService):
         log.debug('relabeling nodes by index')
         self.relabel_nodes_to_identifiers(graph)
 
+        log.debug('calculating node degrees')
+        self.node_degrees[network_id] = Counter(graph.degree())
+
+        log.debug('caching pubmed')
+        self.universe_pmids |= get_pmids(graph)
+
+        if eager:
+            log.debug('calculating betweenness centralities (be patient)')
+            t = time.time()
+            self.node_centralities[network_id] = Counter(nx.betweenness_centrality(graph))
+            log.debug('done with betweenness centrality in %.2f seconds', time.time() - t)
+
+            # TODO pubmed processing (get pmids, build cache, download stuff, etc)
+
+        log.debug('caching authors')
+        self.universe_authors |= get_authors(graph)
+
         log.debug('adding to the universe')
         left_merge(self.universe, graph)
 
-        log.debug('caching provenance')
-        self.universe_authors |= get_authors(graph)
-        self.universe_pmids |= get_pmids(graph)
-
-        log.debug('calculating betweenness centralities (be patient)')
-        t = time.time()
-        self.node_centralities[graph_id] = Counter(nx.betweenness_centrality(graph))
-        log.debug('done with betweenness centrality in %.2f seconds', time.time() - t)
-
-        log.debug('calculating node degrees')
-        self.node_degrees[graph_id] = Counter(graph.degree())
-
-        self.networks[graph_id] = graph
+        self.networks[network_id] = graph
 
         log.info('loaded network')
 
@@ -325,19 +330,21 @@ class DictionaryService(BaseService):
         """
         return get_authors_by_keyword(keyword, authors=self.universe_authors)
 
-    def get_cname(self, nid):
-        return self.universe.node[nid][CNAME]
+    def get_cname(self, node):
+        return self.universe.node[node][CNAME]
 
-    def get_top_centrality(self, graph_id, n=20):
-        if graph_id not in self.node_centralities:
-            self.node_centralities[graph_id] = Counter(nx.betweenness_centrality(self.get_network(graph_id)))
-        return {self.get_cname(n): v for n, v in self.node_centralities[graph_id].most_common(n)}
+    def get_top_centrality(self, network_id, count=20):
+        if network_id not in self.node_centralities:
+            log.info('lazy loading centralities for [%s]', network_id)
+            self.node_centralities[network_id] = Counter(nx.betweenness_centrality(self.get_network(network_id)))
+        return {self.get_cname(node): v for node, v in self.node_centralities[network_id].most_common(count)}
 
-    def get_top_degree(self, graph_id, n=20):
-        if graph_id not in self.node_degrees:
-            self.node_degrees[graph_id] = Counter(self.get_network(graph_id).degree())
-        return {self.get_cname(n): v for n, v in self.node_degrees[graph_id].most_common(n)}
+    def get_top_degree(self, network_id, count=20):
+        if network_id not in self.node_degrees:
+            log.info('lazy loading degrees for [%s]', network_id)
+            self.node_degrees[network_id] = Counter(self.get_network(network_id).degree())
+        return {self.get_cname(node): v for node, v in self.node_degrees[network_id].most_common(count)}
 
-    def get_top_comorbidities(self, graph_id, n=20):
-        cm = count_comorbidities(self.get_network(graph_id))
-        return {self.get_cname(n): v for n, v in cm.most_common(n)}
+    def get_top_comorbidities(self, network_id, count=20):
+        cm = count_comorbidities(self.get_network(network_id))
+        return {self.get_cname(node): v for node, v in cm.most_common(count)}
