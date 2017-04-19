@@ -6,7 +6,7 @@ $(document).ready(function () {
         var selectedElements = [];
 
         $.each(select2Element, function (index, value) {
-            selectedElements.push(value[selectionProperty]);
+            selectedElements.push(encodeURIComponent(value[selectionProperty]));
         });
 
         return selectedElements.join(joinBy)

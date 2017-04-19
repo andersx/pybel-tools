@@ -1,26 +1,3 @@
-function getCurrentURL() {
-    // Get the URL parameters (except for the int after /explore/ representing the network_id)
-
-    var query_string = {};
-    var query = window.location.search.substring(1);
-    var vars = query.split("&");
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split("=");
-        // If first entry with this name
-        if (typeof query_string[pair[0]] === "undefined") {
-            query_string[pair[0]] = decodeURIComponent(pair[1]);
-            // If second entry with this name
-        } else if (typeof query_string[pair[0]] === "string") {
-            var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
-            query_string[pair[0]] = arr;
-            // If third or later entry with this name
-        } else {
-            query_string[pair[0]].push(decodeURIComponent(pair[1]));
-        }
-    }
-    return query_string;
-}
-
 function getSelectedNodesFromTree(tree) {
     var selectedNodes = tree.selected(true);
 
@@ -45,8 +22,30 @@ function resetGlobals() {
     window.expandNodes = [];
 }
 
+function getCurrentURL() {
+    // Get the URL parameters (except for the int after /explore/ representing the network_id)
 
-function parameterFilters(tree) {
+    var query_string = {};
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        // If first entry with this name
+        if (typeof query_string[pair[0]] === "undefined") {
+            query_string[pair[0]] = decodeURIComponent(pair[1]);
+            // If second entry with this name
+        } else if (typeof query_string[pair[0]] === "string") {
+            var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
+            query_string[pair[0]] = arr;
+            // If third or later entry with this name
+        } else {
+            query_string[pair[0]].push(decodeURIComponent(pair[1]));
+        }
+    }
+    return query_string;
+}
+
+function getFilterParameters(tree) {
     var args = getSelectedNodesFromTree(tree);
 
     if (window.deleteNodes.length > 0) {
@@ -61,9 +60,15 @@ function parameterFilters(tree) {
     return args
 }
 
-function renderNetwork(tree, url) {
-    var params = parameterFilters(tree);
+function paramInURL(params, param, url) {
+    // Checking if parameter in url and adds it to params if exists
+    if (param in url) {
+        params[param] = url[param];
+    }
+    return params
+}
 
+function getSeedMethodFromURL(params, url) {
     // Checking if seed_methods are present in the URL and adding it to the parameters
     if ("seed_method" in url) {
         params["seed_method"] = url["seed_method"];
@@ -79,17 +84,28 @@ function renderNetwork(tree, url) {
         if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] || "neighbors" === url["seed_method"]) {
             params["nodes"] = url["nodes"];
         }
-        if ("provenance" === url["seed_method"]) {
-            params["pmids"] = url["pmids"];
-        }
     }
 
     // Checking if methods for pipeline analysis are present
-    if ("pipeline" in url) {
-        params["pipeline"] = url["pipeline"];
-    }
+    params = paramInURL(params, "pipeline", url)
+
+    // Checking if autoload is present
+    params = paramInURL(params, "autoload", url)
+
+    return params
+}
+
+
+function renderNetwork(tree, url) {
+    // Store filtering parameters from tree and global variables (network_id, expand/delete nodes)
+    var params = getFilterParameters(tree);
+
+    // Store seed methods/ pipeline arguments from URL
+    var params = getSeedMethodFromURL(params, url);
 
     node_param = $.param(params, true);
+
+    console.log(node_param)
 
     $.getJSON("/api/network/" + "?" + node_param, function (data) {
         initD3Force(data, tree);
@@ -149,6 +165,7 @@ $(document).ready(function () {
         annotationFilter = doAjaxCall("/api/tree/");
     }
 
+    // TODO: do this its own function
     // Initiate the tree
     var tree = new InspireTree({
         target: "#tree",
@@ -221,7 +238,7 @@ $(document).ready(function () {
 
     // Export to BEL
     $("#bel-button").click(function () {
-        params = parameterFilters(tree);
+        params = getFilterParameters(tree);
         params["format"] = "bel";
 
         $.ajax({
@@ -235,14 +252,14 @@ $(document).ready(function () {
 
     // Export to GraphML
     $("#graphml-button").click(function () {
-        params = parameterFilters(tree);
+        params = getFilterParameters(tree);
         params["format"] = "graphml";
         window.location.href = "/api/network/" + $.param(params, true);
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
-        params = parameterFilters(tree);
+        params = getFilterParameters(tree);
         params["format"] = "bytes";
         window.location.href = "/api/network/" + $.param(params, true);
 
@@ -250,14 +267,14 @@ $(document).ready(function () {
 
     // Export to CX
     $("#cx-button").click(function () {
-        params = parameterFilters(tree);
+        params = getFilterParameters(tree);
         params["format"] = "cx";
         window.location.href = "/api/network/" + $.param(params, true);
     });
 
     // Export to CSV
     $("#csv-button").click(function () {
-        params = parameterFilters(tree);
+        params = getFilterParameters(tree);
         params["format"] = "csv";
         window.location.href = "/api/network/" + $.param(params, true);
     });
@@ -425,7 +442,8 @@ function initD3Force(graph, tree) {
 
                 // Push selected node to expand node list
                 window.expandNodes.push(d.id);
-                var args = parameterFilters(tree);
+                var args = getFilterParameters(tree);
+                var args = getSeedMethodFromURL(args, getCurrentURL());
 
                 node_param = $.param(args, true);
 
@@ -457,9 +475,10 @@ function initD3Force(graph, tree) {
 
                 // Push selected node to delete node list
                 window.deleteNodes.push(d.id);
-                var args = parameterFilters(tree);
-                node_param = $.param(args, true);
+                var args = getFilterParameters(tree);
+                var args = getSeedMethodFromURL(args, getCurrentURL());
 
+                node_param = $.param(args, true);
 
                 $.ajax({
                     url: "/api/network/",
@@ -1245,7 +1264,7 @@ function initD3Force(graph, tree) {
 
             var checkbox = pathForm.find("input[name='visualization-options']").is(":checked");
 
-            var args = parameterFilters(tree);
+            var args = getFilterParameters(tree);
             args["source"] = nodeNamesToId[pathForm.find("input[name='source']").val()];
             args["target"] = nodeNamesToId[pathForm.find("input[name='target']").val()];
             args["paths_method"] = $("input[name=paths_method]:checked", pathForm).val();
@@ -1380,7 +1399,7 @@ function initD3Force(graph, tree) {
     $("#betweenness-button").on("click", function () {
         if (betwennessForm.valid()) {
 
-            var args = parameterFilters(tree);
+            var args = getFilterParameters(tree);
             args["node_number"] = betwennessForm.find("input[name='betweenness']").val();
             args["graphid"] = window.networkID;
 

@@ -52,6 +52,7 @@ SEED_DATA_PMIDS = 'pmids'
 SEED_DATA_NODES = 'nodes'
 PATHS_METHOD = 'paths_method'
 PIPELINE = 'pipeline'
+AUTOLOAD = 'autoload'
 
 BLACK_LIST = {
     GRAPH_ID,
@@ -68,6 +69,7 @@ BLACK_LIST = {
     SEED_DATA_NODES,
     PATHS_METHOD,
     PIPELINE,
+    AUTOLOAD,
 }
 
 
