@@ -137,21 +137,24 @@ function getSeedMethodFromURL(args, url) {
     }
 
     // Checking if methods for pipeline analysis are present
-    args = argumentsInURL(args, "pipeline", url)
+    args = argumentsInURL(args, "pipeline", url);
 
     // Checking if autoload is present
-    args = argumentsInURL(args, "autoload", url)
+    args = argumentsInURL(args, "autoload", url);
 
     return args
 }
 
+function getDefaultAjaxParameters(tree) {
+    // Returns an objects with all arguments used to generated the current network
+    return getSeedMethodFromURL(getFilterParameters(tree), getCurrentURL())
+}
 
-function renderNetwork(tree, url) {
-    // Store filtering parameters from tree and global variables (network_id, expand/delete nodes)
-    var args = getFilterParameters(tree);
 
-    // Store seed methods/ pipeline arguments from URL
-    var args = getSeedMethodFromURL(args, url);
+function renderNetwork(tree) {
+    // Store filtering parameters from tree and global variables (network_id, expand/delete nodes) and
+    // store seed methods/ pipeline arguments from URL
+    var args = getDefaultAjaxParameters(tree);
 
     var renderParameters = $.param(args, true);
 
@@ -217,18 +220,18 @@ $(document).ready(function () {
         tree.expand();
     });
 
-    selectNodesInTreeFromURL(tree, URLString, doAjaxCall("/api/meta/blacklist"))
+    selectNodesInTreeFromURL(tree, URLString, doAjaxCall("/api/meta/blacklist"));
 
     // Loads the network if autoload is an argument in the URL or render empty frame if not
     if (window.location.search.indexOf("autoload=yes") > -1) {
-        renderNetwork(tree, URLString);
+        renderNetwork(tree);
     }
     else {
         renderEmptyFrame();
     }
 
     $("#submit-button").on("click", function () {
-        renderNetwork(tree, URLString);
+        renderNetwork(tree);
     });
 
     // Export network as an image
@@ -236,8 +239,7 @@ $(document).ready(function () {
 
     // Export to BEL
     $("#bel-button").click(function () {
-        var args = getFilterParameters(tree);
-        var args = getSeedMethodFromURL(args, getCurrentURL());
+        var args = getDefaultAjaxParameters(tree);
         args["format"] = "bel";
 
         $.ajax({
@@ -251,16 +253,14 @@ $(document).ready(function () {
 
     // Export to GraphML
     $("#graphml-button").click(function () {
-        var args = getFilterParameters(tree);
-        var args = getSeedMethodFromURL(args, getCurrentURL());
+        var args = getDefaultAjaxParameters(tree);
         args["format"] = "graphml";
         window.location.href = "/api/network/" + $.param(args, true);
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
-        var args = getFilterParameters(tree);
-        var args = getSeedMethodFromURL(args, getCurrentURL());
+        var args = getDefaultAjaxParameters(tree);
         args["format"] = "bytes";
         window.location.href = "/api/network/" + $.param(args, true);
 
@@ -268,16 +268,14 @@ $(document).ready(function () {
 
     // Export to CX
     $("#cx-button").click(function () {
-        var args = getFilterParameters(tree);
-        var args = getSeedMethodFromURL(args, getCurrentURL());
+        var args = getDefaultAjaxParameters(tree);
         args["format"] = "cx";
         window.location.href = "/api/network/" + $.param(args, true);
     });
 
     // Export to CSV
     $("#csv-button").click(function () {
-        var args = getFilterParameters(tree);
-        var args = getSeedMethodFromURL(args, getCurrentURL());
+        var args = getDefaultAjaxParameters(tree);
         args["format"] = "csv";
         window.location.href = "/api/network/" + $.param(args, true);
     });
@@ -445,8 +443,7 @@ function initD3Force(graph, tree) {
 
                 // Push selected node to expand node list
                 window.expandNodes.push(d.id);
-                var args = getFilterParameters(tree);
-                var args = getSeedMethodFromURL(args, getCurrentURL());
+                var args = getDefaultAjaxParameters(tree);
 
                 node_param = $.param(args, true);
 
@@ -478,8 +475,7 @@ function initD3Force(graph, tree) {
 
                 // Push selected node to delete node list
                 window.deleteNodes.push(d.id);
-                var args = getFilterParameters(tree);
-                var args = getSeedMethodFromURL(args, getCurrentURL());
+                var args = getDefaultAjaxParameters(tree);
 
                 node_param = $.param(args, true);
 
@@ -604,7 +600,7 @@ function initD3Force(graph, tree) {
         d.fy = d3.event.y;
     }
 
-    function dragEnded(d) {
+    function dragEnded() {
         if (!d3.event.active) simulation.alphaTarget(0);
     }
 
@@ -832,7 +828,7 @@ function initD3Force(graph, tree) {
                     else {
                         return circleColor
                     }
-                })
+                });
                 text.style("fill", "black");
                 link.style("stroke", function (d) {
                     if ("pybel_highlight" in d) {
@@ -888,10 +884,10 @@ function initD3Force(graph, tree) {
             dynamicTable.deleteRow(0);
         }
 
-        insertRow(dynamicTable, 0, "Node", node.cname + " (ID: " + node.id + ")")
-        insertRow(dynamicTable, 1, "Function", node.function)
-        insertRow(dynamicTable, 2, "Namespace", node.namespace)
-        insertRow(dynamicTable, 3, "Name", node.name)
+        insertRow(dynamicTable, 0, "Node", node.cname + " (ID: " + node.id + ")");
+        insertRow(dynamicTable, 1, "Function", node.function);
+        insertRow(dynamicTable, 2, "Namespace", node.namespace);
+        insertRow(dynamicTable, 3, "Name", node.name);
     }
 
 
@@ -903,13 +899,13 @@ function initD3Force(graph, tree) {
             dynamicTable.deleteRow(0);
         }
 
-        insertRow(dynamicTable, 0, "Evidence", edge.evidence)
+        insertRow(dynamicTable, 0, "Evidence", edge.evidence);
         insertRow(dynamicTable, 1, "Citation", "<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
-            "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>")
-        insertRow(dynamicTable, 2, "Citas", edge.relation)
-        insertRow(dynamicTable, 3, "Annotations", JSON.stringify(edge.annotations))
-        insertRow(dynamicTable, 4, "Source", edge.source.cname + " (ID: " + edge.source.id + ")")
-        insertRow(dynamicTable, 5, "Target", edge.target.cname + " (ID: " + edge.target.id + ")")
+            "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>");
+        insertRow(dynamicTable, 2, "Citas", edge.relation);
+        insertRow(dynamicTable, 3, "Annotations", JSON.stringify(edge.annotations));
+        insertRow(dynamicTable, 4, "Source", edge.source.cname + " (ID: " + edge.source.id + ")");
+        insertRow(dynamicTable, 5, "Target", edge.target.cname + " (ID: " + edge.target.id + ")");
     }
 
 
@@ -937,29 +933,27 @@ function initD3Force(graph, tree) {
 
     // Filter nodes in list
     function nodesNotInArray(nodeArray) {
-        var nodes = svg.selectAll(".node").filter(function (el) {
+        return svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el.id) < 0;
         });
-        return nodes
     }
 
     // Filter nodes in list
     function nodesInArray(nodeArray) {
-        var nodes = svg.selectAll(".node").filter(function (el) {
+        return svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el.id) >= 0;
         });
-        return nodes
+
     }
 
     // Filter nodes in list keeping the order of the nodeArray
     function nodesInArrayKeepOrder(nodeArray) {
-        var nodes = nodeArray.map(function (el) {
+        return nodeArray.map(function (el) {
             var nodeObject = svg.selectAll(".node").filter(function (node) {
                 return el === node.id;
             });
             return nodeObject._groups[0][0]
         });
-        return nodes
     }
 
     function resetAttributesDoubleClick() {
@@ -1267,8 +1261,7 @@ function initD3Force(graph, tree) {
 
             var checkbox = pathForm.find("input[name='visualization-options']").is(":checked");
 
-            var args = getFilterParameters(tree);
-            var args = getSeedMethodFromURL(args, getCurrentURL());
+            var args = getDefaultAjaxParameters(tree);
             args["source"] = nodeNamesToId[pathForm.find("input[name='source']").val()];
             args["target"] = nodeNamesToId[pathForm.find("input[name='target']").val()];
             args["paths_method"] = $("input[name=paths_method]:checked", pathForm).val();
@@ -1403,8 +1396,8 @@ function initD3Force(graph, tree) {
     $("#betweenness-button").on("click", function () {
         if (betwennessForm.valid()) {
 
-            var args = getFilterParameters(tree);
-            var args = getSeedMethodFromURL(args, getCurrentURL());
+            var args = getDefaultAjaxParameters(tree);
+
             args["node_number"] = betwennessForm.find("input[name='betweenness']").val();
             args["graphid"] = window.networkID;
 
