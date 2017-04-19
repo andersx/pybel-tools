@@ -60,60 +60,60 @@ function getFilterParameters(tree) {
     return args
 }
 
-function paramInURL(params, param, url) {
-    // Checking if parameter in url and adds it to params if exists
-    if (param in url) {
-        params[param] = url[param];
+function argumentsInURL(args, arg, url) {
+    // Checking if argument in url and adds it to arguments if exists
+    if (arg in url) {
+        args[arg] = url[arg];
     }
-    return params
+    return args
 }
 
-function getSeedMethodFromURL(params, url) {
+function getSeedMethodFromURL(args, url) {
     // Checking if seed_methods are present in the URL and adding it to the parameters
     if ("seed_method" in url) {
-        params["seed_method"] = url["seed_method"];
+        args["seed_method"] = url["seed_method"];
 
         if ("provenance" === url["seed_method"]) {
             if ("authors" in url) {
-                params["authors"] = url["authors"];
+                args["authors"] = url["authors"];
             }
             if ("pmids" in url) {
-                params["pmids"] = url["pmids"];
+                args["pmids"] = url["pmids"];
             }
         }
         if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] || "neighbors" === url["seed_method"]) {
-            params["nodes"] = url["nodes"];
+            args["nodes"] = url["nodes"];
         }
     }
 
     // Checking if methods for pipeline analysis are present
-    params = paramInURL(params, "pipeline", url)
+    args = argumentsInURL(args, "pipeline", url)
 
     // Checking if autoload is present
-    params = paramInURL(params, "autoload", url)
+    args = argumentsInURL(args, "autoload", url)
 
-    return params
+    return args
 }
 
 
 function renderNetwork(tree, url) {
     // Store filtering parameters from tree and global variables (network_id, expand/delete nodes)
-    var params = getFilterParameters(tree);
+    var args = getFilterParameters(tree);
 
     // Store seed methods/ pipeline arguments from URL
-    var params = getSeedMethodFromURL(params, url);
+    var args = getSeedMethodFromURL(args, url);
 
-    node_param = $.param(params, true);
+    var renderParameters = $.param(args, true);
 
-    console.log(node_param)
+    console.log(renderParameters)
 
-    $.getJSON("/api/network/" + "?" + node_param, function (data) {
+    $.getJSON("/api/network/" + "?" + renderParameters, function (data) {
         initD3Force(data, tree);
     });
 
     // reset window variables (window.expand/delete/method)
     resetGlobals();
-    window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
+    window.history.pushState("BiNE", "BiNE", "/explore/?" + renderParameters);
 }
 
 function doAjaxCall(url) {
@@ -238,13 +238,14 @@ $(document).ready(function () {
 
     // Export to BEL
     $("#bel-button").click(function () {
-        params = getFilterParameters(tree);
-        params["format"] = "bel";
+        var args = getFilterParameters(tree);
+        var args = getSeedMethodFromURL(args, getCurrentURL());
+        args["format"] = "bel";
 
         $.ajax({
             url: "/api/network/",
             dataType: "text",
-            data: $.param(params, true)
+            data: $.param(args, true)
         }).done(function (response) {
             downloadText(response, "MyGraph.bel")
         });
@@ -252,31 +253,35 @@ $(document).ready(function () {
 
     // Export to GraphML
     $("#graphml-button").click(function () {
-        params = getFilterParameters(tree);
-        params["format"] = "graphml";
-        window.location.href = "/api/network/" + $.param(params, true);
+        var args = getFilterParameters(tree);
+        var args = getSeedMethodFromURL(args, getCurrentURL());
+        args["format"] = "graphml";
+        window.location.href = "/api/network/" + $.param(args, true);
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
-        params = getFilterParameters(tree);
-        params["format"] = "bytes";
-        window.location.href = "/api/network/" + $.param(params, true);
+        var args = getFilterParameters(tree);
+        var args = getSeedMethodFromURL(args, getCurrentURL());
+        args["format"] = "bytes";
+        window.location.href = "/api/network/" + $.param(args, true);
 
     });
 
     // Export to CX
     $("#cx-button").click(function () {
-        params = getFilterParameters(tree);
-        params["format"] = "cx";
-        window.location.href = "/api/network/" + $.param(params, true);
+        var args = getFilterParameters(tree);
+        var args = getSeedMethodFromURL(args, getCurrentURL());
+        args["format"] = "cx";
+        window.location.href = "/api/network/" + $.param(args, true);
     });
 
     // Export to CSV
     $("#csv-button").click(function () {
-        params = getFilterParameters(tree);
-        params["format"] = "csv";
-        window.location.href = "/api/network/" + $.param(params, true);
+        var args = getFilterParameters(tree);
+        var args = getSeedMethodFromURL(args, getCurrentURL());
+        args["format"] = "csv";
+        window.location.href = "/api/network/" + $.param(args, true);
     });
 });
 
@@ -1265,6 +1270,7 @@ function initD3Force(graph, tree) {
             var checkbox = pathForm.find("input[name='visualization-options']").is(":checked");
 
             var args = getFilterParameters(tree);
+            var args = getSeedMethodFromURL(args, getCurrentURL());
             args["source"] = nodeNamesToId[pathForm.find("input[name='source']").val()];
             args["target"] = nodeNamesToId[pathForm.find("input[name='target']").val()];
             args["paths_method"] = $("input[name=paths_method]:checked", pathForm).val();
@@ -1400,6 +1406,7 @@ function initD3Force(graph, tree) {
         if (betwennessForm.valid()) {
 
             var args = getFilterParameters(tree);
+            var args = getSeedMethodFromURL(args, getCurrentURL());
             args["node_number"] = betwennessForm.find("input[name='betweenness']").val();
             args["graphid"] = window.networkID;
 
