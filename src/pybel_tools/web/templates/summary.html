@@ -192,6 +192,45 @@
                 </div>
             </div>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Unstable Triplets</h3>
+            </div>
+            <div class="panel-body">
+                <p>Analysis of triple stability comes from a deep graph theoretic background. It identifies triangles
+                    within the graph that have inconsitient correlations</p>
+                <dl>
+                    <dt>Separately Unstable Triplet</dt>
+                    <dd>When both <code>A pos B</code>, <code>B neg C</code>, but <code>A pos C</code>.</dd>
+                    <dt>Mutually Unstable Triplets</dt>
+                    <dd>When both <code>A neg B</code>, <code>B neg C</code>, and <code>C neg A</code>.</dd>
+                </dl>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Node A</th>
+                            <th>Node B</th>
+                            <th>Node C</th>
+                            <th>Type</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for a, b, c, label in unstable_correlation_triplets %}
+                            <tr>
+                                <td>{{ a }}</td>
+                                <td>{{ b }}</td>
+                                <td>{{ c }}</td>
+                                <td>{{ label }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 {% endblock %}
 
