@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from networkx import DiGraph
+import logging
+from itertools import combinations
+
+from networkx import DiGraph, Graph
 
 from pybel.constants import *
 from ..selection import get_causal_subgraph
@@ -11,6 +14,8 @@ __all__ = [
     'get_dampened_pairs',
     'jens_transformation',
 ]
+
+log = logging.getLogger(__name__)
 
 
 def get_regulatory_pairs(graph):
@@ -79,6 +84,33 @@ def get_dampened_pairs(graph):
     return results
 
 
+def iter_correlation_triangles(graph):
+    """Yields all triangles pointed by the given node
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param node: The source node
+    :type node: tuple
+    """
+
+    g = Graph()
+
+    for u, v, d in graph.edges_iter(data=True):
+        if CORRELATIVE_RELATIONS != d[RELATION]:
+            continue
+
+        if g.has_edge(u, v) and g.edge[u][v][RELATION] != d[RELATION]:
+            log.warning('broken correlation relation for %s, %s', u, v)
+            continue
+
+        g.add_edge(u, v, **{RELATION: d[RELATION]})
+
+    for node in g:
+        for a, b in combinations(graph.edge[node], 2):
+            if b in graph.edge[a]:
+                yield tuple(sorted([g, a, b], key=str))
+
+
 # TODO implement
 def get_unstable_correlation_triples(graph):
     """Find all triples of nodes A, B, C such that A pos B, A pos C, and B neg C
@@ -105,7 +137,7 @@ def jens_transformation(graph):
     """Applys Jens' transformation to the graph
 
     1. Induce subgraph over causal + correlative edges
-    2. Transform edges by the following ruls:
+    2. Transform edges by the following rules:
         - increases => increases
         - decreases => backwards increases
         - positive correlation => two way increases
