@@ -101,7 +101,7 @@ def infer_missing_inverse_edge(graph, relations):
 
 
 @pipeline.in_place_mutator
-def infer_missing_backwards_edge(graph, u, v, key):
+def infer_missing_backwards_edge(graph, u, v, k):
     """Adds the same edge, but in the opposite direction if not already present
 
     :param graph: A BEL graph
@@ -110,15 +110,15 @@ def infer_missing_backwards_edge(graph, u, v, key):
     :type u: tuple
     :param v: A BEL node
     :type v: tuple
-    :param key: The edge key
-    :type key: int
+    :param k: The edge key
+    :type k: int
     """
+    if u in graph.edge[v]:
+        for attr_dict in graph.edge[v][u].values():
+            if attr_dict == graph.edge[u][v][k]:
+                return
 
-    for attr_dict in graph.edge[v][u].values():
-        if attr_dict == graph.edge[u][v][k]:
-            return
-
-    safe_add_edge(graph, v, u, key=key, attr_dict=graph.edge[u][v][k])
+    safe_add_edge(graph, v, u, key=k, attr_dict=graph.edge[u][v][k])
 
 
 @pipeline.uni_in_place_mutator

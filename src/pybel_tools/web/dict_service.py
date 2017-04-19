@@ -22,7 +22,7 @@ from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
 from .utils import try_insert_graph, sanitize_list_of_str
 from ..analysis.stability import get_chaotic_pairs, get_dampened_pairs, get_mutually_unstable_correlation_triples, \
-    get_unstable_correlation_triples
+    get_separate_unstable_correlation_triples
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary.edge_summary import count_relations, get_contradiction_summary
@@ -308,7 +308,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
                                u, v, relation in get_contradiction_summary(graph))
 
         separate_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
-                                     get_unstable_correlation_triples(graph))
+                                     get_separate_unstable_correlation_triples(graph))
         mutually_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
                                      get_mutually_unstable_correlation_triples(graph))
 
