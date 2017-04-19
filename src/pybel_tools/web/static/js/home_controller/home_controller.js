@@ -1,23 +1,12 @@
 $(document).ready(function () {
 
-    function getSelectionText(select2Element, joinBy) {
-        //TODO switch to a logical filter
+    // returns joined string with the properties of the selected elements in select2Element. Property can be the text or id
+    function getSelection(select2Element, selectionProperty, joinBy) {
+
         var selectedElements = [];
 
         $.each(select2Element, function (index, value) {
-            selectedElements.push(value.text);
-        });
-
-        return selectedElements.join(joinBy)
-
-    }
-
-    function getSelectionID(select2Element, joinBy) {
-        //TODO switch to a logical filter?
-        var selectedElements = [];
-
-        $.each(select2Element, function (index, value) {
-            selectedElements.push(encodeURIComponent(value.id));
+            selectedElements.push(value[selectionProperty]);
         });
 
         return selectedElements.join(joinBy)
@@ -26,20 +15,19 @@ $(document).ready(function () {
 
     $("#provenance_form").submit(function (e) {
 
-        $("#pubmed_list").val(getSelectionText($("#pubmed_selection").select2("data"), ","));
+        $("#pubmed_list").val(getSelection($("#pubmed_selection").select2("data"), "text", ","));
 
-        $("#author_list").val(getSelectionText($("#author_selection").select2("data")), ",");
+        $("#author_list").val(getSelection($("#author_selection").select2("data"), "text", ","));
 
     });
 
     $("#subgraph_form").submit(function (e) {
 
-        $("#node_list").val(getSelectionID($("#node_selection").select2("data")), ",");
+        $("#node_list").val(getSelection($("#node_selection").select2("data"), "id", ","));
 
     });
 
     $("#node_selection").select2({
-        // data:data
         minimumInputLength: 2,
         multiple: true,
         placeholder: 'Please type your nodes of interest here',
