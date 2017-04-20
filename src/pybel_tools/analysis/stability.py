@@ -165,8 +165,8 @@ def get_mutually_unstable_correlation_triples(graph):
             yield a, b, c
 
 
-def jens_transformation(graph):
-    """Applys Jens' transformation to the graph
+def jens_transformation_alpha(graph):
+    """Applys Jens' transformation (Type 1) to the graph
 
     1. Induce subgraph over causal + correlative edges
     2. Transform edges by the following rules:
@@ -178,26 +178,62 @@ def jens_transformation(graph):
     - Search for 3-cycles, which now symbolize unstable triplets where A -> B, A -| C and B pos C
     - What do 4-cycles and 5-cycles mean?
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
+    :rtype: networkx.DiGraph
     """
-
-    bg = DiGraph()
+    result = DiGraph()
 
     for u, v, k, d in graph.edges_iter(keys=True, data=True):
         relation = d[RELATION]
 
         if relation == POSITIVE_CORRELATION:
-            bg.add_edge(u, v)
-            bg.add_edge(v, u)
+            result.add_edge(u, v)
+            result.add_edge(v, u)
 
         elif relation in CAUSAL_INCREASE_RELATIONS:
-            bg.add_edge(u, v)
+            result.add_edge(u, v)
 
         elif relation in CAUSAL_DECREASE_RELATIONS:
-            bg.add_edge(v, u)
+            result.add_edge(v, u)
 
-    for node in bg.nodes_iter():
-        bg.node[node].update(graph.node[node])
+    for node in result.nodes_iter():
+        result.node[node].update(graph.node[node])
 
-    return bg
+    return result
+
+
+def jens_transformation_beta(graph):
+    """Applys Jens' transformation (Type 2) to the graph
+
+    1. Induce subgraph over causal + correlative edges
+    2. Transform edges by the following rules:
+        - increases => backwards decreases
+        - decreases => decreases
+        - positive correlation => delete
+        - negative correlation => two way decreases
+
+    - Search for 3-cycles, which now symbolize unstable triplets where A -> B, A -| C and B neg C
+    - What do 4-cycles and 5-cycles mean?
+
+    :param pybel.BELGraph graph: A BEL graph
+    :rtype: networkx.DiGraph
+    """
+    retult = DiGraph()
+
+    for u, v, k, d in graph.edges_iter(keys=True, data=True):
+        relation = d[RELATION]
+
+        if relation == NEGATIVE_CORRELATION:
+            retult.add_edge(u, v)
+            retult.add_edge(v, u)
+
+        elif relation in CAUSAL_INCREASE_RELATIONS:
+            retult.add_edge(v, u)
+
+        elif relation in CAUSAL_DECREASE_RELATIONS:
+            retult.add_edge(u, v)
+
+    for node in retult.nodes_iter():
+        retult.node[node].update(graph.node[node])
+
+    return retult
