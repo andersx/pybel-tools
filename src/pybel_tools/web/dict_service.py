@@ -295,7 +295,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     def view_summary(graph_id):
         """Renders a page with the parsing errors for a given BEL script"""
         graph = manager.get_graph_by_id(graph_id)
-        graph = from_bytes(graph.blob)
+        graph = from_bytes(graph.blob, check_version=check_version)
 
         unstable_pairs = itt.chain.from_iterable([
             ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
