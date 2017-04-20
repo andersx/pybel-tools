@@ -131,7 +131,8 @@ function getSeedMethodFromURL(args, url) {
                 args["pmids"] = url["pmids"];
             }
         }
-        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] || "neighbors" === url["seed_method"]) {
+        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] ||
+            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
             args["nodes"] = url["nodes"];
         }
     }
