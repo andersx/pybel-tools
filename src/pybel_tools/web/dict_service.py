@@ -87,6 +87,65 @@ def get_tree_annotations(graph):
             sorted(annotations.items())]
 
 
+def get_graph_from_request(api):
+    """Process the GET request returning the filtered graph
+    
+    :param DictionaryService api: The dictionary service
+    :return: graph: A BEL graph
+    :rtype: pybel.BELGraph
+    """
+    network_id = request.args.get(GRAPH_ID)
+
+    if network_id is not None:
+        network_id = int(network_id)
+
+    if network_id == 0:
+        network_id = None
+
+    seed_method = request.args.get(SEED_TYPE)
+    if seed_method and seed_method not in SEED_TYPES:
+        raise ValueError('Invalid seed method: {}'.format(seed_method))
+
+    if seed_method and seed_method == SEED_TYPE_PROVENANCE:
+        seed_data = {}
+
+        authors = request.args.getlist(SEED_DATA_AUTHORS)
+
+        if authors:
+            seed_data['authors'] = [unquote(author) for author in authors]
+
+        pmids = request.args.getlist(SEED_DATA_PMIDS)
+        if pmids:
+            seed_data['pmids'] = pmids
+    elif seed_method:
+        seed_data = request.args.getlist(SEED_DATA_NODES)
+        seed_data = [api.decode_node(h) for h in seed_data]
+    else:
+        seed_data = None
+
+    expand_nodes = request.args.get(APPEND_PARAM)
+    remove_nodes = request.args.get(REMOVE_PARAM)
+
+    if expand_nodes:
+        expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
+
+    if remove_nodes:
+        remove_nodes = [api.decode_node(h) for h in remove_nodes.split(',')]
+
+    annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
+
+    graph = api.query(
+        network_id=network_id,
+        seed_method=seed_method,
+        seed_data=seed_data,
+        expand_nodes=expand_nodes,
+        remove_nodes=remove_nodes,
+        **annotations
+    )
+
+    return graph
+
+
 def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None,
                              analysis_enabled=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
@@ -186,63 +245,6 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             return jsonify({'status': 200})
 
         log.info('added admin functions to dict service')
-
-    def get_graph_from_request():
-        """Process the GET request returning the filtered graph
-        :return: graph: A BEL graph
-        :rtype: pybel.BELGraph
-        """
-
-        network_id = request.args.get(GRAPH_ID)
-
-        if network_id is not None:
-            network_id = int(network_id)
-
-        if network_id == 0:
-            network_id = None
-
-        seed_method = request.args.get(SEED_TYPE)
-        if seed_method and seed_method not in SEED_TYPES:
-            raise ValueError('Invalid seed method: {}'.format(seed_method))
-
-        if seed_method and seed_method == SEED_TYPE_PROVENANCE:
-            seed_data = {}
-
-            authors = request.args.getlist(SEED_DATA_AUTHORS)
-
-            if authors:
-                seed_data['authors'] = [unquote(author) for author in authors]
-
-            pmids = request.args.getlist(SEED_DATA_PMIDS)
-            if pmids:
-                seed_data['pmids'] = pmids
-        elif seed_method:
-            seed_data = request.args.getlist(SEED_DATA_NODES)
-            seed_data = [api.decode_node(h) for h in seed_data]
-        else:
-            seed_data = None
-
-        expand_nodes = request.args.get(APPEND_PARAM)
-        remove_nodes = request.args.get(REMOVE_PARAM)
-
-        if expand_nodes:
-            expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
-
-        if remove_nodes:
-            remove_nodes = [api.decode_node(h) for h in remove_nodes.split(',')]
-
-        annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
-
-        graph = api.query(
-            network_id=network_id,
-            seed_method=seed_method,
-            seed_data=seed_data,
-            expand_nodes=expand_nodes,
-            remove_nodes=remove_nodes,
-            **annotations
-        )
-
-        return graph
 
     # Web Pages
 
@@ -360,13 +362,13 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/network/', methods=['GET'])
     def get_network():
         """Builds a graph from the given network id and sends it in the given format"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
         return serve_network(graph, request.args.get(FORMAT))
 
     @app.route('/api/tree/')
     def get_tree_api():
         """Builds the annotation tree data structure for a given graph"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
         return jsonify(get_tree_annotations(graph))
 
     @app.route('/api/paths/')
@@ -374,7 +376,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         """Returns array of shortest/all paths given a source node and target node both belonging in the graph
         :return: JSON 
         """
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
 
         if SOURCE_NODE not in request.args:
             raise ValueError('no source')
@@ -418,7 +420,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/centrality/', methods=['GET'])
     def get_nodes_by_betweenness_centrality():
         """Gets a list of nodes with the top betweenness-centrality"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
 
         try:
             node_numbers = int(request.args.get(NODE_NUMBER))
@@ -437,13 +439,13 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/authors')
     def get_all_authors():
         """Gets a list of all authors in the graph produced by the given URL parameters"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
         return jsonify(sorted(get_authors(graph)))
 
     @app.route('/api/pmids')
     def get_all_pmids():
         """Gets a list of all pubmed citation identifiers in the graph produced by the given URL parameters"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
         return jsonify(sorted(get_pmids(graph)))
 
     @app.route('/api/nodes/')
@@ -493,3 +495,5 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         return jsonify(sorted(BLACK_LIST))
 
     log.info('Added dictionary service to %s', app)
+
+    return api

@@ -230,7 +230,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
 
     build_sitemap_endpoint(app, show_admin=admin_password)
 
-    build_dictionary_service(
+    api = build_dictionary_service(
         app,
         manager=manager,
         check_version=(not skip_check_version),
@@ -254,7 +254,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
         build_receiver_service(app, manager=manager)
 
     if run_analysis_service or run_all:
-        build_analysis_service(app, manager=manager)
+        build_analysis_service(app, manager=manager, api=api)
 
     log.info('Done building %s', app)
 

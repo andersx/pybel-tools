@@ -7,18 +7,19 @@ from operator import itemgetter
 
 import flask
 import pandas
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, jsonify
 from sqlalchemy import Column, Integer, DateTime, Binary, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
 import pybel
 from pybel.constants import GENE
 from pybel.manager.models import Base, Network, NETWORK_TABLE_NAME
+from .dict_service import get_graph_from_request
 from .forms import DifferentialGeneExpressionForm
 from .. import generation
 from ..analysis import npa
 from ..integration import overlay_type_data
-from ..mutation.collapse import opening_on_central_dogma, collapse_variants_to_genes, collapse_by_central_dogma_to_genes
+from ..mutation.collapse import collapse_variants_to_genes, collapse_by_central_dogma_to_genes
 from ..mutation.deletion import remove_nodes_by_namespace
 
 log = logging.getLogger(__name__)
@@ -42,34 +43,37 @@ class Experiment(Base):
     source = Column(Binary, doc='The source document holding the data')
     result = Column(Binary, doc='The result python dictionary')
 
+    @property
+    def data(self):
+        """Get unpickled data"""
+        return pickle.loads(self.result)
 
-# def drop_experiments(manager):
-#    Experiment.__table__.drop(manager.engine)
 
-
-def build_analysis_service(app, manager):
+def build_analysis_service(app, manager, api):
     """Builds the analysis service
     
     :param app: A Flask application
     :type app: flask.Flask
     :param manager: A PyBEL cache manager
     :type manager: pybel.manager.CacheManager
+    :param DictionaryService api: The dictionary service API
     """
 
     @app.route('/analysis/')
     def view_analyses():
+        """Views a list of all analyses"""
         experiments = manager.session.query(Experiment).all()
         return render_template('analysis_list.html', experiments=experiments)
 
     @app.route('/analysis/results/<analysis_id>')
     def view_analysis_results(analysis_id):
-        e = manager.session.query(Experiment).get(analysis_id)
-        r = pickle.loads(e.result)
+        """View the results of a given analysis"""
+        experiment = manager.session.query(Experiment).get(analysis_id)
         return render_template(
             'analysis_results.html',
-            experiment=e,
+            experiment=experiment,
             columns=NPA_COLUMNS,
-            data=sorted([(k, v) for k, v in r.items() if v[0]], key=itemgetter(1))
+            data=sorted([(k, v) for k, v in experiment.data.items() if v[0]], key=itemgetter(1))
         )
 
     @app.route('/analysis/upload/<int:network_id>', methods=('GET', 'POST'))
@@ -102,7 +106,6 @@ def build_analysis_service(app, manager):
         graph = pybel.from_bytes(network.blob)
 
         remove_nodes_by_namespace(graph, {'MGI', 'RGD'})
-        opening_on_central_dogma(graph)
         collapse_by_central_dogma_to_genes(graph)
         collapse_variants_to_genes(graph)
 
@@ -125,3 +128,14 @@ def build_analysis_service(app, manager):
         return redirect(url_for('view_analysis_results', analysis_id=experiment.id))
 
     log.info('Added analysis service to %s', app)
+
+    @app.route('/api/analysis/<analysis_id>')
+    def get_analysis(analysis_id):
+        """Returns data from analysis"""
+        graph = get_graph_from_request(api)
+        experiment = manager.session.query(Experiment).get(analysis_id)
+        data = experiment.data
+
+        results = {node: data[api.nid_node[node]] for node in graph.nodes_iter() if api.nid_node[node] in data}
+
+        return jsonify(results)
