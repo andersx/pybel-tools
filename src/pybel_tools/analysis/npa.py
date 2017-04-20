@@ -387,13 +387,20 @@ def workflow_all_average(graph, key, tag=None, default_score=None, runs=None):
 
 
 def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, default_score=None, runs=None):
-    """
+    """Calculates the scores over precomputed candidate mechanisms
     
-    :param candidate_mechanisms: 
-    :param key: 
-    :param default_score: 
-    :param runs: 
-    :return: 
+    :param candidate_mechanisms: A dictionary of {tuple node: pybel.BELGraph candidate mechanism}
+    :type dict[tuple, pybel.BELGraph]
+    :param key: The key in the node data dictionary representing the experimental data
+    :type key: str
+    :param tag: The key for the nodes' data dictionaries where the NPA scores will be put. Defaults to 'score'
+    :type tag: str
+    :param default_score: The initial NPA score for all nodes. This number can go up or down.
+    :type default_score: float
+    :param runs: The number of times to run the NPA algorithm. Defaults to 1000.
+    :type runs: int 
+    :return: A dictionary of {pybel node tuple: results tuple}
+    :rtype: dict[tuple, tuple]
     
     Example usage:
     
