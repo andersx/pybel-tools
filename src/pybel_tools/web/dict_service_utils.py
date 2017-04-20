@@ -191,6 +191,8 @@ class DictionaryService(BaseService):
 
             self.add_network(network_id, graph, force_reload=force_reload)
 
+        log.info('universe has (%s nodes/%s edges)', self.universe.number_of_nodes(), self.universe.number_of_edges())
+
     # Graph selection functions
 
     def get_network(self, network_id=None):
