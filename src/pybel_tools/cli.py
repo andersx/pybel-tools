@@ -196,6 +196,7 @@ def convert(connection, upload, store_parts, directory, debug):
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 @click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+@click.option('--eager', is_flag=True, help="Preload all data")
 @click.option('--run-database-service', is_flag=True, help='Enable the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
 @click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
@@ -206,7 +207,7 @@ def convert(connection, upload, store_parts, directory, debug):
 @click.option('--secret-key', help='Set the CSRF secret key')
 @click.option('--admin-password', help='Set admin password and enable admin services')
 @click.option('--echo-sql', is_flag=True)
-def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
+def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
         run_uploader_service, run_compiler_service, run_receiver_service, run_analysis_service, run_all, secret_key,
         admin_password, echo_sql):
     """Runs PyBEL Web"""
@@ -236,6 +237,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
         check_version=(not skip_check_version),
         admin_password=admin_password,
         analysis_enabled=(run_analysis_service or run_all),
+        eager=eager,
     )
 
     if run_database_service:

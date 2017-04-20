@@ -93,6 +93,10 @@ def fix_pubmed_citations(graph, stringify_authors=False):
     :return: A set of PMIDs for which the eUtils service crashed
     :rtype: set
     """
+    if 'PYBEL_ENRICHED_CITATIONS' in graph.graph:
+        log.info('already enriched citations in %s', graph.name)
+        return
+
     pmids = get_pmids(graph)
     pmid_data, errors = get_citations_by_pmids(pmids, return_errors=True)
 
@@ -109,6 +113,7 @@ def fix_pubmed_citations(graph, stringify_authors=False):
     if stringify_authors:
         serialize_authors(graph)
 
+    graph.graph['PYBEL_ENRICHED_CITATIONS'] = True
     return errors
 
 

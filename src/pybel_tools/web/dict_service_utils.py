@@ -17,7 +17,7 @@ from .base_service import BaseService
 from ..constants import CNAME
 from ..mutation.inference import infer_central_dogma
 from ..mutation.merge import left_merge
-from ..mutation.metadata import parse_authors, add_canonical_names
+from ..mutation.metadata import parse_authors, add_canonical_names, fix_pubmed_citations
 from ..selection.induce_subgraph import get_subgraph
 from ..summary.edge_summary import count_diseases
 from ..summary.provenance import get_authors, get_pmid_by_keyword, get_authors_by_keyword, get_pmids
@@ -135,7 +135,7 @@ class DictionaryService(BaseService):
         log.debug('parsing authors')
         parse_authors(graph)
 
-        log.debug('adding central dogma')
+        log.debug('inferring central dogma')
         infer_central_dogma(graph)
 
         log.debug('adding canonical names')
@@ -150,16 +150,17 @@ class DictionaryService(BaseService):
         log.debug('calculating node degrees')
         self.node_degrees[network_id] = Counter(graph.degree())
 
-        log.debug('caching pubmed')
+        log.debug('caching PubMed identifiers')
         self.universe_pmids |= get_pmids(graph)
 
         if eager:
-            log.debug('calculating betweenness centralities (be patient)')
+            log.debug('calculating centralities (be patient)')
             t = time.time()
             self.node_centralities[network_id] = Counter(nx.betweenness_centrality(graph))
             log.debug('done with betweenness centrality in %.2f seconds', time.time() - t)
 
-            # TODO pubmed processing (get pmids, build cache, download stuff, etc)
+            log.debug('enriching citations')
+            fix_pubmed_citations(graph)
 
         log.debug('caching authors')
         self.universe_authors |= get_authors(graph)
@@ -171,7 +172,7 @@ class DictionaryService(BaseService):
 
         log.info('loaded network')
 
-    def load_networks(self, check_version=True, force_reload=False):
+    def load_networks(self, check_version=True, force_reload=False, eager=False):
         """This function needs to get all networks from the graph cache manager and make a dictionary
 
         :param check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
@@ -189,7 +190,7 @@ class DictionaryService(BaseService):
                 log.exception("couldn't load from bytes [%s]", network_id)
                 continue
 
-            self.add_network(network_id, graph, force_reload=force_reload)
+            self.add_network(network_id, graph, force_reload=force_reload, eager=eager)
 
         log.info('universe has (%s nodes/%s edges)', self.universe.number_of_nodes(), self.universe.number_of_edges())
 

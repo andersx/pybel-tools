@@ -146,8 +146,7 @@ def get_graph_from_request(api):
     return graph
 
 
-def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None,
-                             analysis_enabled=False):
+def build_dictionary_service(app, manager, check_version=True, admin_password=None, analysis_enabled=False, eager=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -164,10 +163,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     """
     api = DictionaryService(manager=manager)
 
-    if preload:
-        log.info('loading networks')
-        api.load_networks(check_version=check_version)
-        log.info('pre-loaded the dict service')
+    log.info('loading networks')
+    api.load_networks(check_version=check_version, eager=eager)
+    log.info('pre-loaded the dict service')
 
     if admin_password is not None:
         app.config['BASIC_AUTH_USERNAME'] = 'pybel'
