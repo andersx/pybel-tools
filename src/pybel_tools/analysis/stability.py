@@ -16,8 +16,7 @@ __all__ = [
     'get_correlation_triangles',
     'get_separate_unstable_correlation_triples',
     'get_mutually_unstable_correlation_triples',
-    'jens_transformation_alpha',
-    'jens_transformation_beta',
+    'jens_transformation',
 ]
 
 log = logging.getLogger(__name__)
@@ -166,7 +165,7 @@ def get_mutually_unstable_correlation_triples(graph):
             yield a, b, c
 
 
-def jens_transformation_alpha(graph):
+def jens_transformation(graph):
     """Applys Jens' transformation (Type 1) to the graph
 
     1. Induce subgraph over causal + correlative edges
@@ -176,7 +175,7 @@ def jens_transformation_alpha(graph):
         - positive correlation => two way increases
         - negative correlation => delete
 
-    - Search for 3-cycles, which now symbolize unstable triplets where A -> B, A -| C and B pos C
+    - Search for 3-cycles, which now symbolize unstable triplets where ``A -> B``, ``A -| C`` and ``B pos C``
     - What do 4-cycles and 5-cycles mean?
 
     :param pybel.BELGraph graph: A BEL graph
@@ -203,38 +202,21 @@ def jens_transformation_alpha(graph):
     return result
 
 
-def jens_transformation_beta(graph):
-    """Applys Jens' transformation (Type 2) to the graph
-
-    1. Induce subgraph over causal + correlative edges
-    2. Transform edges by the following rules:
-        - increases => backwards decreases
-        - decreases => decreases
-        - positive correlation => delete
-        - negative correlation => two way decreases
-
-    - Search for 3-cycles, which now symbolize unstable triplets where A -> B, A -| C and B neg C
-    - What do 4-cycles and 5-cycles mean?
-
-    :param pybel.BELGraph graph: A BEL graph
-    :rtype: networkx.DiGraph
+def find_3_cycles_digraph(graph):
     """
-    retult = DiGraph()
+    
+    :param networkx.DiGraph graph: 
+    :return: set[tuple]
+    """
+    results = set()
+    for a in graph.nodes_iter():
+        for b in graph.edge[a]:
+            for c in graph.edge[b]:
+                if graph.has_edge(c, a) and sorted([a, b, c], key=str) not in results:
+                    results.add((a, b, c))
+    return results
 
-    for u, v, k, d in graph.edges_iter(keys=True, data=True):
-        relation = d[RELATION]
 
-        if relation == NEGATIVE_CORRELATION:
-            retult.add_edge(u, v)
-            retult.add_edge(v, u)
-
-        elif relation in CAUSAL_INCREASE_RELATIONS:
-            retult.add_edge(v, u)
-
-        elif relation in CAUSAL_DECREASE_RELATIONS:
-            retult.add_edge(u, v)
-
-    for node in retult.nodes_iter():
-        retult.node[node].update(graph.node[node])
-
-    return retult
+def get_jens_unstable_alpha(graph):
+    r = jens_transformation(graph)
+    return find_3_cycles_digraph(r)

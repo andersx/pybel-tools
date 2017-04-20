@@ -71,3 +71,24 @@ class TestUnstableTriplets(unittest.TestCase):
 
         self.assertEqual(1, len(result))
         self.assertEqual((a, b, c), result[0])
+
+    def test_jens_alpha(self):
+        g = BELGraph()
+
+        a = PROTEIN, 'HGNC', 'A'
+        b = PROTEIN, 'HGNC', 'B'
+        c = PROTEIN, 'HGNC', 'C'
+        d = PROTEIN, 'HGNC', 'D'
+        e = PROTEIN, 'HGNC', 'e'
+
+        g.add_simple_node(*a)
+        g.add_simple_node(*b)
+        g.add_simple_node(*c)
+        g.add_simple_node(*d)
+        g.add_simple_node(*e)
+
+        g.add_edge(a, b, **{RELATION: INCREASES})
+        g.add_edge(a, c, **{RELATION: DECREASES})
+        g.add_edge(c, b, **{RELATION: NEGATIVE_CORRELATION})
+        g.add_edge(e, c, **{RELATION: POSITIVE_CORRELATION})
+        g.add_edge(e, b, **{RELATION: POSITIVE_CORRELATION})
