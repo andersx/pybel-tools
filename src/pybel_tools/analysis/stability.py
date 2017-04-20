@@ -16,7 +16,8 @@ __all__ = [
     'get_correlation_triangles',
     'get_separate_unstable_correlation_triples',
     'get_mutually_unstable_correlation_triples',
-    'jens_transformation',
+    'jens_transformation_alpha',
+    'jens_transformation_beta',
 ]
 
 log = logging.getLogger(__name__)
