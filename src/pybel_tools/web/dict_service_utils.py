@@ -160,7 +160,9 @@ class DictionaryService(BaseService):
             log.debug('done with betweenness centrality in %.2f seconds', time.time() - t)
 
             log.debug('enriching citations')
+            t = time.time()
             fix_pubmed_citations(graph)
+            log.debug('done enriching citations in %.2f seconds', time.time() - t)
 
         log.debug('caching authors')
         self.universe_authors |= get_authors(graph)
