@@ -54,6 +54,7 @@ SEED_DATA_NODES = 'nodes'
 PATHS_METHOD = 'paths_method'
 PIPELINE = 'pipeline'
 AUTOLOAD = 'autoload'
+FILTERS = 'filters'
 
 BLACK_LIST = {
     GRAPH_ID,
@@ -71,6 +72,7 @@ BLACK_LIST = {
     PATHS_METHOD,
     PIPELINE,
     AUTOLOAD,
+    FILTERS,
 }
 
 
@@ -125,6 +127,7 @@ def get_graph_from_request(api):
 
     expand_nodes = request.args.get(APPEND_PARAM)
     remove_nodes = request.args.get(REMOVE_PARAM)
+    filters = request.args.getlist(FILTERS)
 
     if expand_nodes:
         expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
@@ -140,13 +143,15 @@ def get_graph_from_request(api):
         seed_data=seed_data,
         expand_nodes=expand_nodes,
         remove_nodes=remove_nodes,
+        filters=filters,
         **annotations
     )
 
     return graph
 
 
-def build_dictionary_service(app, manager, check_version=True, admin_password=None, analysis_enabled=False, eager=False):
+def build_dictionary_service(app, manager, check_version=True, admin_password=None, analysis_enabled=False,
+                             eager=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 

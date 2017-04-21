@@ -247,7 +247,7 @@ class DictionaryService(BaseService):
         raise TypeError('{} is wrong type: {}'.format(node_id, type(node_id)))
 
     def query(self, network_id=None, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None,
-              **annotations):
+              filters=None, **annotations):
         """Filters a dictionary from the module level cache.
         
         0. Gets network by ID or uses merged network store
@@ -269,6 +269,8 @@ class DictionaryService(BaseService):
         :type expand_nodes: list
         :param remove_nodes: Remove these nodes and all of their in/out edges
         :type remove_nodes: list
+        :param filters: A list of filter functions to apply to the network
+        :type filters: list[str]
         :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
         :type annotations: dict
         :return: A BEL Graph
@@ -281,7 +283,8 @@ class DictionaryService(BaseService):
             'seed_data': seed_data,
             'expand': expand_nodes,
             'delete': remove_nodes,
-            'annotations': annotations
+            'annotations': annotations,
+            'filters': filters,
         })
 
         result = get_subgraph(
@@ -290,6 +293,7 @@ class DictionaryService(BaseService):
             seed_data=seed_data,
             expand_nodes=expand_nodes,
             remove_nodes=remove_nodes,
+            filters=filters,
             **annotations
         )
 

@@ -229,7 +229,8 @@ def get_causal_subgraph(graph):
 
 
 @pipeline.mutator
-def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None, **annotations):
+def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None, filters=None,
+                 **annotations):
     """Runs pipeline query on graph with multiple subgraph filters and expanders.
 
     Order of Operations:
@@ -248,6 +249,8 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     :type expand_nodes: list
     :param remove_nodes: Remove these nodes and all of their in/out edges
     :type remove_nodes: list
+    :param filters: A list of filter functions to apply to the network
+    :type filters: list[str]
     :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
     :type annotations: dict
     :return: A BEL Graph
@@ -290,6 +293,10 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
                 continue
             result.remove_node(node)
         log.debug('graph contracted to (%s nodes / %s edges)', result.number_of_nodes(), result.number_of_edges())
+
+    # TODO Apply filters
+    if filters:
+        pass
 
     return result
 

@@ -31,6 +31,7 @@ class SeedSubgraphForm(FlaskForm):
             (SEED_TYPE_PATHS, 'Induce a subgraph over the nodes in all shortest paths between the given nodes'),
         ],
         default=SEED_TYPE_INDUCTION)
+    filter_pathologies = BooleanField('Filter pathology nodes', default=True)
     submit_subgraph = fields.SubmitField('Submit Subgraph')
 
 
@@ -38,6 +39,7 @@ class SeedProvenanceForm(FlaskForm):
     """Builds the form for seeding by author/citation"""
     author_list = HiddenField('Nodes')
     pubmed_list = HiddenField('Nodes')
+    filter_pathologies = BooleanField('Filter pathology nodes', default=True)
     submit_provenance = fields.SubmitField('Submit Provenance')
 
 
