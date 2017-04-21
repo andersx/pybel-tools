@@ -196,7 +196,7 @@ def convert(connection, upload, store_parts, directory, debug):
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 @click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-@click.option('--eager', is_flag=True, help="Preload all data")
+@click.option('-e', '--eager', is_flag=True, help="Eagerly preload all data and perform enrichments")
 @click.option('--run-database-service', is_flag=True, help='Enable the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
 @click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
