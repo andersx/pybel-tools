@@ -903,7 +903,7 @@ function initD3Force(graph, tree) {
         insertRow(dynamicTable, 0, "Evidence", edge.evidence);
         insertRow(dynamicTable, 1, "Citation", "<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
             "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>");
-        insertRow(dynamicTable, 2, "Citas", edge.relation);
+        insertRow(dynamicTable, 2, "Relationship", edge.relation);
         insertRow(dynamicTable, 3, "Annotations", JSON.stringify(edge.annotations));
         insertRow(dynamicTable, 4, "Source", edge.source.cname + " (ID: " + edge.source.id + ")");
         insertRow(dynamicTable, 5, "Target", edge.target.cname + " (ID: " + edge.target.id + ")");
