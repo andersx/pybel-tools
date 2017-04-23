@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 import itertools as itt
 import logging
 
@@ -11,10 +12,8 @@ log = logging.getLogger(__name__)
 def graph_entities_equal(g, h):
     """Tests that two graphs have the same nodes
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: Another BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: Another BEL Graph
     :return: Do the two graphs share the same set of nodes?
     :rtype: bool
     """
@@ -24,10 +23,8 @@ def graph_entities_equal(g, h):
 def graph_topologically_equal(g, h):
     """Tests that two graphs are topologically equal, defined by having the same nodes, and same connectivity
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: Another BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: Another BEL Graph
     :return: Do the graphs share the same set of nodes, and the same connectivity?
     :rtype: bool
     """
@@ -41,10 +38,8 @@ def graph_relations_equal(g, h):
     """Tests that two graphs are equal, defined by having the same nodes, same connections, and existence of
     same connection types
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: Another BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: Another BEL Graph
     :return: Do the two graphs share the same set of nodes, same connectivity, and types of connections?
     :rtype: bool
     """
@@ -61,10 +56,8 @@ def graph_provenance_equal(g, h):
     """Tests that two graphs are equal, defined by having the same nodes, same connections with same types,
     and same attributes exactly.
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: Another BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: Another BEL Graph
     :return: Do the two graphs share the same set of nodes, same connectivity, types of connections, evidences, and
               annotations?
     :rtype: bool
@@ -72,47 +65,42 @@ def graph_provenance_equal(g, h):
     if not graph_relations_equal(g, h):
         return False
 
-    for u, v in g.edges():
-        r = sum(gv == hv for gv, hv in itt.product(g.edge[u][v].values(), h.edge[u][v].values()))
-        if len(g.edge[u][v]) != r:
-            return False
+    for u in g.edge:
+        for v in g.edge[u]:
+            r = sum(gv == hv for gv, hv in itt.product(g.edge[u][v].values(), h.edge[u][v].values()))
+            if len(g.edge[u][v]) != r:
+                return False
 
     return True
 
 
 def graph_edges_intersection(g, h):
-    """
+    """Returns the set of node pairs that appear in both graphs
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: Another BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: Another BEL Graph
     :return: The set of edges shared between the two graphs
     :rtype: set
     """
     return set(g.edges()).intersection(h.edges())
 
 
-def graph_edges_subtract(g, h):
-    """
+def graph_edges_difference(g, h):
+    """Returns the set of node pairs that appear in g but not h
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: Another BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: Another BEL Graph
     :return: The asymmetric difference between the edges in g and h
     :rtype: set
     """
     return set(g.edges()).difference(set(h.edges()))
 
 
-def graph_edges_xor(g, h):
-    """
+def graph_edges_symmetric_difference(g, h):
+    """Returns the set of edges that appear in only one of g or h
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: Another BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: Another BEL Graph
     :return: The symmetric difference between the edges in g and h
     :rtype: set
     """

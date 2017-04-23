@@ -4,7 +4,7 @@ import unittest
 
 import pybel
 from pybel.constants import *
-from pybel_tools.comparison import graph_edges_subtract, graph_entities_equal
+from pybel_tools.comparison import graph_edges_difference, graph_entities_equal
 from pybel_tools.comparison import graph_provenance_equal, graph_topologically_equal
 
 test_bel_1 = """
@@ -114,6 +114,6 @@ class TestGraphDiff(unittest.TestCase):
             }
         }
 
-        difference = graph_edges_subtract(b, a)
+        difference = graph_edges_difference(b, a)
 
         self.assertEqual({(AKT1, AKT1_Ph), (MIA, AKT1_Ph)}, difference)

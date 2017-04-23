@@ -52,7 +52,7 @@ A single network stored as a PyBEL gpickle can quickly be uploaded using the fol
 
 .. code-block:: sh
 
-    $ python3 -m pybel_tools io upload /path/to/my_network.gpickle
+    $ python3 -m pybel_tools io upload -p /path/to/my_network.gpickle
 
 Web Services
 ------------

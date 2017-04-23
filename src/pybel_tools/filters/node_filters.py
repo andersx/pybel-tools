@@ -345,7 +345,7 @@ node_is_missing_cname = data_missing_key_builder(CNAME)
 def concatenate_node_filters(filters=None):
     """Concatenates multiple node filters to a new filter that requires all filters to be met
 
-    :param filters: a list of predicates (graph, node) -> bool
+    :param filters: A predicate or list of predicates (graph, node) -> bool
     :type filters: types.FunctionType or iter[types.FunctionType]
     :return: A combine filter (graph, node) -> bool
     :rtype: types.FunctionType

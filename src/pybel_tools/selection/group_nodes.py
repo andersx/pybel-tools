@@ -67,7 +67,8 @@ def group_nodes_by_annotation_filtered(graph, node_filters=None, annotation='Sub
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
-    :param node_filters: A predicate (graph, node) -> bool for passing nodes
+    :param node_filters: A predicate or list of predicates (graph, node) -> bool
+    :type node_filters: types.FunctionType or iter[types.FunctionType]
     :param annotation: The annotation to use for grouping
     :return: A dictionary of {annotation value: set of nodes}
     :rtype: dict

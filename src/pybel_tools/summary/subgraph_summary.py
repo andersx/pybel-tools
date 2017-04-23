@@ -29,7 +29,7 @@ def count_subgraph_sizes(graph, annotation='Subgraph'):
     :param annotation: The annotation to group by and compare. Defaults to 'Subgraph'
     :type annotation: str
     :return: A dictionary from {annotation value: number of nodes}
-    :rtype: dict
+    :rtype: dict[str, int]
     """
     return count_dict_values(group_nodes_by_annotation(graph, annotation))
 
@@ -83,16 +83,18 @@ def summarize_subgraph_edge_overlap(graph, annotation='Subgraph'):
     return subgraph_overlap
 
 
-def rank_subgraph_by_node_filter(graph, node_filter, annotation='Subgraph', reverse=True):
+def rank_subgraph_by_node_filter(graph, node_filters, annotation='Subgraph', reverse=True):
     """Ranks subgraphs by which have the most nodes matching an given filter
 
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
-    :param node_filter:
+    :param node_filters: A predicate or list of predicates (graph, node) -> bool
+    :type node_filters: types.FunctionType or iter[types.FunctionType]
     :param annotation:
+    :type annotation: str
     :param reverse:
     :type reverse: bool
-    :return:
+    :rtype: list
 
     A use case for this function would be to identify which subgraphs contain the most differentially expressed
     genes.
@@ -108,8 +110,7 @@ def rank_subgraph_by_node_filter(graph, node_filter, annotation='Subgraph', reve
     >>> overlay_type_data(graph, data, 'log2fc', GENE, 'HGNC', impute=0)
     >>> results = rank_subgraph_by_node_filter(graph, lambda g, n: 1.3 < abs(g.node[n]['log2fc']))
     """
-
-    r1 = group_nodes_by_annotation_filtered(graph, node_filter=node_filter, annotation=annotation)
+    r1 = group_nodes_by_annotation_filtered(graph, node_filters=node_filters, annotation=annotation)
     r2 = count_dict_values(r1)
     return sorted(r2.items(), key=itemgetter(1), reverse=reverse)
 
