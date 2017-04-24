@@ -16,9 +16,9 @@ from ..utils import all_edges_iter
 __all__ = [
     'remove_filtered_nodes',
     'remove_filtered_edges',
-    'remove_nodes_by_function_namespace',
+    'remove_nodes_by_function',
     'remove_nodes_by_namespace',
-    'remove_nodes_by_function'
+    'remove_nodes_by_function_namespace',
     'remove_leaves_by_type',
     'prune_central_dogma',
     'remove_inconsistent_edges',
@@ -68,6 +68,21 @@ def remove_nodes_by_function(graph, function):
 
 
 @pipeline.in_place_mutator
+def remove_nodes_by_namespace(graph, namespace):
+    """Removes nodes with the given  namespace.
+
+    This might be useful to exclude information learned about distant species, such as excluding all information
+    from MGI and RGD in diseases where mice and rats don't give much insight to the human disease mechanism.
+
+    :param graph: A BEL graph
+    :type: graph: pybel.BELGraph
+    :param namespace: The namespace to filter or iterable of namespaces
+    :type namespace: str or iter[str]
+    """
+    remove_filtered_nodes(graph, namespace_inclusion_builder(namespace))
+
+
+@pipeline.in_place_mutator
 def remove_nodes_by_function_namespace(graph, function, namespace):
     """Removes nodes with the given function and namespace.
 
@@ -82,21 +97,6 @@ def remove_nodes_by_function_namespace(graph, function, namespace):
     :type namespace: str or iter[str]
     """
     remove_filtered_nodes(graph, function_namespace_inclusion_builder(function, namespace))
-
-
-@pipeline.in_place_mutator
-def remove_nodes_by_namespace(graph, namespace):
-    """Removes nodes with the given  namespace.
-
-    This might be useful to exclude information learned about distant species, such as excluding all information
-    from MGI and RGD in diseases where mice and rats don't give much insight to the human disease mechanism.
-
-    :param graph: A BEL graph
-    :type: graph: pybel.BELGraph
-    :param namespace: The namespace to filter or iterable of namespaces
-    :type namespace: str or iter[str]
-    """
-    remove_filtered_nodes(graph, namespace_inclusion_builder(namespace))
 
 
 @pipeline.in_place_mutator
