@@ -36,4 +36,4 @@ def remove_isolated_nodes(graph):
     :param pybel.BELGraph graph: A BEL graph
     """
     nodes = list(nx.isolates(graph))
-    graph.remove_node(nodes)
+    graph.remove_nodes_from(nodes)
