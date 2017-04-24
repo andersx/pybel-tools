@@ -54,6 +54,8 @@ A single network stored as a PyBEL gpickle can quickly be uploaded using the fol
 
     $ python3 -m pybel_tools io upload -p /path/to/my_network.gpickle
 
+More examples of getting data into the cache can be found `here <http://pybel-tools.readthedocs.io/en/latest/cookbook.html#getting-data-in-to-the-cache>`_.
+
 Web Services
 ------------
 PyBEL Tools deploys a Flask web application that allows you to interact with your networks and apply filters/algorithms.
@@ -65,7 +67,7 @@ Multiple services are available. Use :code:`--help` for a description. To run th
     $ python3 -m pybel_tools web
 
 By default, Flask deploys on ``localhost`` at port ``5000``. These can be changed respectively with the ``--host`` and
-``--port`` arguments. Additionally, logging can be shown with ``-v``.
+``--port`` arguments. Additionally, logging can be shown with ``-v``. More documentation on the web services can be found `here <http://pybel-tools.readthedocs.io/en/latest/web.html>`_.
 
 Documentation and Examples
 --------------------------
