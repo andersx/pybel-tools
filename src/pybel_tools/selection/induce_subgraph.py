@@ -3,12 +3,13 @@
 import logging
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA
+from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA, PATHOLOGY
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
     edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
 from ..filters.node_filters import filter_nodes
+from ..mutation.deletion import remove_nodes_by_function, remove_isolated_nodes
 from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
 from ..mutation.highlight import highlight_nodes, highlight_edges
 from ..mutation.merge import left_merge
@@ -229,8 +230,8 @@ def get_causal_subgraph(graph):
 
 
 @pipeline.mutator
-def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None, filters=None,
-                 **annotations):
+def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None,
+                 filter_pathologies=False, **annotations):
     """Runs pipeline query on graph with multiple subgraph filters and expanders.
 
     Order of Operations:
@@ -239,6 +240,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     2. Filter by annotations
     3. Add nodes
     4. Remove nodes
+    5. Apply filters
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -249,8 +251,8 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     :type expand_nodes: list
     :param remove_nodes: Remove these nodes and all of their in/out edges
     :type remove_nodes: list
-    :param filters: A list of filter functions to apply to the network
-    :type filters: list[str]
+    :param filter_pathologies: Should pathology nodes be removed?
+    :type filter_pathologies: bool
     :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
     :type annotations: dict
     :return: A BEL Graph
@@ -294,9 +296,10 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
             result.remove_node(node)
         log.debug('graph contracted to (%s nodes / %s edges)', result.number_of_nodes(), result.number_of_edges())
 
-    # TODO Apply filters
-    if filters:
-        pass
+    # Apply filters
+    if filter_pathologies:
+        remove_nodes_by_function(graph, PATHOLOGY)
+        remove_isolated_nodes(graph)
 
     return result
 
