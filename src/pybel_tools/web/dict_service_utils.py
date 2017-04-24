@@ -24,6 +24,16 @@ from ..summary.provenance import get_authors, get_pmid_by_keyword, get_authors_b
 
 log = logging.getLogger(__name__)
 
+CENTRALITY_SAMPLES = 200
+
+
+def calc_betweenness_centality(graph):
+    try:
+        res = nx.betweenness_centrality(graph, k=200)
+        return res
+    except:
+        return nx.betweenness_centrality(graph)
+
 
 class DictionaryService(BaseService):
     """The dictionary service contains functions that implement the PyBEL API with a in-memory backend using 
@@ -125,6 +135,7 @@ class DictionaryService(BaseService):
         :param int network_id: The identifier for the graph
         :param pybel.BELGraph graph: A BEL Graph
         :param bool force_reload: Should the graphs be reloaded even if it has already been cached?
+        :param bool eager: Should data be calculated/loaded eagerly?
         """
         if network_id in self.networks and not force_reload:
             log.info('tried re-adding graph [%s] %s', network_id, graph.name)
@@ -156,7 +167,8 @@ class DictionaryService(BaseService):
         if eager:
             log.debug('calculating centralities (be patient)')
             t = time.time()
-            self.node_centralities[network_id] = Counter(nx.betweenness_centrality(graph))
+            bc = calc_betweenness_centality(graph)
+            self.node_centralities[network_id] = Counter(bc)
             log.debug('done with betweenness centrality in %.2f seconds', time.time() - t)
 
             log.debug('enriching citations')
@@ -354,7 +366,8 @@ class DictionaryService(BaseService):
             log.info('lazy loading centralities for [%s]', network_id)
             t = time.time()
             graph = self.get_network(network_id)
-            self.node_centralities[network_id] = Counter(nx.betweenness_centrality(graph))
+            bc = calc_betweenness_centality(graph)
+            self.node_centralities[network_id] = Counter(bc)
             log.info('loaded centralities in %.2f', time.time() - t)
         return {self.get_cname(node): v for node, v in self.node_centralities[network_id].most_common(count)}
 
