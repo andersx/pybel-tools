@@ -901,19 +901,42 @@ function initD3Force(graph, tree) {
 
     function displayEdgeInfo(edge) {
 
+        var edgeObject = {};
+
         var dynamicTable = document.getElementById('info-table');
 
         while (dynamicTable.rows.length > 0) {
             dynamicTable.deleteRow(0);
         }
 
-        insertRow(dynamicTable, 0, "Evidence", edge.evidence);
-        insertRow(dynamicTable, 1, "Citation", "<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
-            "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>");
-        insertRow(dynamicTable, 2, "Relationship", edge.relation);
-        insertRow(dynamicTable, 3, "Annotations", JSON.stringify(edge.annotations));
-        insertRow(dynamicTable, 4, "Source", edge.source.cname + " (ID: " + edge.source.id + ")");
-        insertRow(dynamicTable, 5, "Target", edge.target.cname + " (ID: " + edge.target.id + ")");
+        // Check if object property exists
+
+        if (edge.evidence) {
+            edgeObject["Evidence"] = edge.evidence;
+        }
+        if (edge.citation) {
+            edgeObject["Citation"] = "<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
+                "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>";
+        }
+        if (edge.relation) {
+            edgeObject["Relationship"] = edge.relation;
+        }
+        if (edge.annotations) {
+            edgeObject["Annotations"] = JSON.stringify(edge.annotations);
+        }
+        if (edge.source.cname) {
+            edgeObject["Source"] = edge.source.cname + " (ID: " + edge.source.id + ")";
+        }
+        if (edge.target.cname) {
+            edgeObject["Target"] = edge.target.cname + " (ID: " + edge.target.id + ")";
+        }
+
+
+        var row = 0;
+        $.each(edgeObject, function (key, value) {
+            insertRow(dynamicTable, row, key, value);
+            row++
+        });
     }
 
 
