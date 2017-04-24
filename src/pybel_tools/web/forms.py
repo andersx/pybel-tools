@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import fields
 from wtforms.fields import BooleanField, RadioField, HiddenField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, Email
 
 from ..selection.induce_subgraph import SEED_TYPE_INDUCTION, SEED_TYPE_PATHS, SEED_TYPE_NEIGHBORS, \
     SEED_TYPE_DOUBLE_NEIGHBORS
@@ -16,6 +16,8 @@ class UploadForm(FlaskForm):
         DataRequired(message="You must provide a PyBEL gpickle file"),
         FileAllowed(['gpickle'], 'Only gpickles allowed')
     ])
+    name = fields.StringField('Your Name', validators=[DataRequired()])
+    email = fields.StringField('Your Email Address', validators=[DataRequired(), Email()])
     submit = fields.SubmitField('Upload')
 
 
@@ -46,6 +48,8 @@ class SeedProvenanceForm(FlaskForm):
 class CompileForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
     file = FileField('My BEL file', validators=[DataRequired()])
+    name = fields.StringField('Your Name', validators=[DataRequired()])
+    email = fields.StringField('Your Email Address', validators=[DataRequired(), Email()])
     suggest_name_corrections = BooleanField('Suggest name corrections')
     suggest_naked_name = BooleanField('My document contains unqualified names - suggest appropriate namespaces')
     allow_nested = BooleanField('My document contains nested statements')
@@ -67,7 +71,7 @@ class DifferentialGeneExpressionForm(FlaskForm):
     file = FileField('Differential gene expression file', validators=[DataRequired()])
     gene_symbol_column = fields.StringField('Gene Symbol Column Name', default='Gene.symbol')
     log_fold_change_column = fields.StringField('Log Fold Change Column Name', default='logFC')
-    permutations = fields.IntegerField('Number of permutations', default=1000)
+    permutations = fields.IntegerField('Number of permutations', default=100)
     description = fields.StringField('Description of data', validators=[DataRequired()])
     separator = RadioField(
         'Separator',
