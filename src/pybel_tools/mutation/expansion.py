@@ -10,7 +10,7 @@ from .merge import left_merge
 from .utils import ensure_node_from_universe
 from .. import pipeline
 from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filters, edge_is_causal
-from ..filters.node_filters import keep_node_permissive, concatenate_node_filters
+from ..filters.node_filters import keep_node_permissive, concatenate_node_filters, exclude_pathology_filter
 from ..selection.utils import get_nodes_by_function
 from ..summary.edge_summary import count_annotation_values
 from ..utils import check_has_annotation, safe_add_edge
@@ -509,15 +509,19 @@ def expand_node_neighborhood(universe, graph, node):
 
 
 @pipeline.uni_in_place_mutator
-def expand_all_node_neighborhoods(universe, graph):
+def expand_all_node_neighborhoods(universe, graph, filter_pathologies=False):
     """Expands the neighborhoods of all nodes in the given graph based on the universe graph.
     
     :param universe: The graph containing the stuff to add
     :type universe: pybel.BELGraph
     :param graph: The graph to add stuff to
     :type graph: pybel.BELGraph 
+    :param bool filter_pathologies: Should expansion take place around pathologies?
     """
     for node in graph.nodes():
+        if filter_pathologies and exclude_pathology_filter(graph, node):
+            continue
+
         expand_node_neighborhood(universe, graph, node)
 
 

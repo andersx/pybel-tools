@@ -110,7 +110,7 @@ def get_subgraph_by_neighborhood(graph, nodes):
 
 
 @pipeline.mutator
-def get_subgraph_by_second_neighbors(graph, nodes):
+def get_subgraph_by_second_neighbors(graph, nodes, filter_pathologies=False):
     """Gets a BEL graph around the neighborhoods of the given nodes, and expands to the neighborhood of those nodes
 
     :param graph: A BEL graph
@@ -119,9 +119,10 @@ def get_subgraph_by_second_neighbors(graph, nodes):
     :type nodes: iter
     :return: A BEL graph induced around the neighborhoods of the given nodes
     :rtype: pybel.BELGraph
+    :param bool filter_pathologies: Should expansion take place around pathologies?
     """
     result = get_subgraph_by_neighborhood(graph, nodes)
-    expand_all_node_neighborhoods(graph, result)
+    expand_all_node_neighborhoods(graph, result, filter_pathologies=filter_pathologies)
     return result
 
 
@@ -333,7 +334,8 @@ def get_subgraph_by_provenance(graph, kwargs):
 
 
 @pipeline.mutator
-def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_neighborhoods=True):
+def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_neighborhoods=True,
+                                      filter_pathologies=False):
     """Gets all edges of given provenance and expands around their nodes' neighborhoods
     
     :param graph: A BEL graph
@@ -344,6 +346,7 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
     :type authors: str or list[str]
     :param expand_neighborhoods: Should the neighborhoods around all nodes be expanded? Defaults to ``True``
     :type expand_neighborhoods: bool
+    :param bool filter_pathologies: Should expansion take place around pathologies?
     :return: An induced graph
     :rtype: pybel.BELGraph
     """
@@ -362,6 +365,6 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
     highlight_edges(result, result.edges_iter(keys=True, data=True))
 
     if expand_neighborhoods:
-        expand_all_node_neighborhoods(graph, result)
+        expand_all_node_neighborhoods(graph, result, filter_pathologies=filter_pathologies)
 
     return result
