@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import os
 import sys
+import time
 from itertools import islice
 from operator import itemgetter
 
@@ -110,21 +111,19 @@ def make_document_metadata(name, contact, description, version=None, copyright=N
     :type authors: str
     :param licenses: The license applied to this document
     :type licenses: str
-    :return: A list of lines for the document metadata section
-    :rtype: list of str
+    :return: An iterator over the lines for the document metadata section
+    :rtype: iter[str]
     """
     yield 'SET DOCUMENT Name = "{}"'.format(name)
-    yield 'SET DOCUMENT Version = "{}"'.format('1.0.0' if version is None else version)
+    yield 'SET DOCUMENT Version = "{}"'.format(time.strftime('%Y%m%d') if version is None else version)
+    yield 'SET DOCUMENT Description = "{}"'.format(description)
+    yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
 
     if licenses is not None:
         yield 'SET DOCUMENT License = "{}"'.format(licenses)
 
-    yield 'SET DOCUMENT Description = "{}"'.format(description)
-
     if authors is not None:
         yield 'SET DOCUMENT Authors = {}'.format(authors)
-
-    yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
 
     if copyright is not None:
         yield 'SET DOCUMENT Copyright = "{}"'.format(copyright)
@@ -135,8 +134,8 @@ def make_document_namespaces(namespace_dict=None):
 
     :param namespace_dict: dictionary of {str name: str URL} of namespaces
     :type namespace_dict: dict
-    :return: List of lines for the namespace definitions
-    :rtype: list of str
+    :return: An iterator over the lines for the namespace definitions
+    :rtype: iter[str]
     """
     namespace_dict = default_namespaces if namespace_dict is None else namespace_dict
 
@@ -161,7 +160,7 @@ def make_document_annotations(annotation_dict=None):
 def make_document_statement_group(pmids):
     """Builds a skeleton for the citations' statements
     
-    :param pmids: A list of pubmed identifiers
+    :param pmids: A list of PubMed identifiers
     :type pmids: iter[str] or iter[int]
     :return: An iterator over the lines of the citation section
     :rtype: iter[str]
@@ -185,14 +184,13 @@ def write_boilerplate(document_name, contact, description, version=None, copyrig
     """Writes a boilerplate BEL document, with standard document metadata, definitions. Optionally, if a
     list of PubMed identifiers are given, the citations and abstracts will be written for each.
 
-
     :param document_name: The unique name for this BEL document
     :type document_name: str
     :param contact: The email address of the maintainer
     :type contact: str
     :param description: A description of the contents of this document
     :type description: str
-    :param version: The version. Defaults to :code:`1.0.0`
+    :param version: The version. Defaults to current date in format YYYYMMDD.
     :type version: str
     :param copyright: Copyright information about this document
     :type copyright: str
@@ -206,22 +204,22 @@ def write_boilerplate(document_name, contact, description, version=None, copyrig
     :param annotations_dict: an optional dictionary of {str name: str URL} of annotations
     :type annotations_dict: dict
     :param pmids: an optional list of PMID's to autopopulate with citation and abstract
-    :type pmids: iterable
+    :type pmids: iter[str] or iter[int]
     """
 
     file = sys.stdout if file is None else file
 
     for line in make_document_metadata(document_name, contact, description, version, copyright, authors, licenses):
         print(line, file=file)
-    print('', file=file)
+    print('#' * 80, file=file)
 
     for line in make_document_namespaces(namespace_dict):
         print(line, file=file)
-    print('', file=file)
+    print('#' * 80, file=file)
 
     for line in make_document_annotations(annotations_dict):
         print(line, file=file)
-    print('', file=file)
+    print('#' * 80, file=file)
 
     if pmids is not None:
         for line in make_document_statement_group(pmids):
