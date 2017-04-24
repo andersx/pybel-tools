@@ -11,7 +11,7 @@ from .utils import ensure_node_from_universe
 from .. import pipeline
 from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filters, edge_is_causal
 from ..filters.node_filters import keep_node_permissive, concatenate_node_filters, exclude_pathology_filter
-from ..selection.utils import get_nodes_by_function
+from ..filters.node_selection import get_nodes_by_function
 from ..summary.edge_summary import count_annotation_values
 from ..utils import check_has_annotation, safe_add_edge
 

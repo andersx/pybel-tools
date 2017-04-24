@@ -18,9 +18,9 @@ from .dict_service import get_graph_from_request
 from .forms import DifferentialGeneExpressionForm
 from .. import generation
 from ..analysis import npa
+from ..filters.node_deletion import remove_nodes_by_namespace
 from ..integration import overlay_type_data
 from ..mutation.collapse import collapse_variants_to_genes, collapse_by_central_dogma_to_genes
-from ..mutation.deletion import remove_nodes_by_namespace
 
 log = logging.getLogger(__name__)
 

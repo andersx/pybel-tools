@@ -8,11 +8,12 @@ from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
     edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
+from ..filters.node_deletion import remove_nodes_by_function
 from ..filters.node_filters import filter_nodes
-from ..mutation.deletion import remove_nodes_by_function, remove_isolated_nodes
 from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
 from ..mutation.highlight import highlight_nodes, highlight_edges
 from ..mutation.merge import left_merge
+from ..mutation.utils import remove_isolated_nodes
 from ..summary.edge_summary import get_annotation_values
 
 log = logging.getLogger(__name__)

@@ -10,10 +10,9 @@ from operator import itemgetter
 
 import numpy as np
 
-from pybel.constants import BIOPROCESS
-from pybel.constants import RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS
+from pybel.constants import BIOPROCESS, RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS
+from ..filters.node_selection import get_nodes_by_function
 from ..generation import generate_mechanism
-from ..selection.utils import get_nodes_by_function
 
 __all__ = [
     'NpaRunner',

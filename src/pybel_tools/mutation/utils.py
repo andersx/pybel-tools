@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import networkx as nx
+
 from .. import pipeline
+
+__all__ = [
+    'ensure_node_from_universe',
+    'remove_isolated_nodes',
+]
 
 
 @pipeline.uni_in_place_mutator
@@ -20,3 +27,13 @@ def ensure_node_from_universe(universe, graph, node, raise_for_missing=False):
 
     if node not in graph:
         graph.add_node(node, attr_dict=universe.node[node])
+
+
+@pipeline.in_place_mutator
+def remove_isolated_nodes(graph):
+    """Removes isolated nodes from the network
+
+    :param pybel.BELGraph graph: A BEL graph
+    """
+    nodes = list(nx.isolates(graph))
+    graph.remove_node(nodes)

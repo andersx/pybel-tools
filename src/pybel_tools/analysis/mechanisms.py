@@ -6,9 +6,9 @@ import itertools as itt
 from collections import defaultdict
 
 from pybel.constants import BIOPROCESS
+from ..filters.node_selection import get_nodes_by_function
 from ..generation import generate_mechanism
 from ..selection.induce_subgraph import get_subgraph_by_annotation_value
-from ..selection.utils import get_nodes_by_function
 from ..summary import get_annotation_values
 from ..utils import tanimoto_set_similarity
 

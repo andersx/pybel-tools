@@ -2,7 +2,7 @@
 
 from pybel.constants import GENE, RELATION, TRANSCRIBED_TO, RNA, TRANSLATED_TO
 from ..filters.node_filters import data_missing_key_builder, node_is_upstream_leaf, filter_nodes
-from ..selection.utils import get_nodes_by_function
+from ..filters.node_selection import get_nodes_by_function
 
 __all__ = [
     'get_upstream_leaves',
@@ -17,8 +17,7 @@ def get_upstream_leaves(graph):
 
     .. seealso:: :func:`upstream_leaf_predicate`
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: An iterator over nodes that are upstream leaves
     :rtype: iter
     """
@@ -31,8 +30,7 @@ def get_unweighted_upstream_leaves(graph, key):
 
     .. seealso :: :func:`data_does_not_contain_key_builder`
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param key: The key in the node data dictionary representing the experimental data
     :type key: str
     :return: An iterable over leaves (nodes with an in-degree of 0) that don't have the given annotation
@@ -44,8 +42,7 @@ def get_unweighted_upstream_leaves(graph, key):
 def get_gene_leaves(graph):
     """Find all genes who have only one connection, that's a transcription to its RNA
 
-    :param graph: a BEL network
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     """
     for node in get_nodes_by_function(graph, GENE):
         if graph.in_degree(node) != 0:
@@ -63,8 +60,7 @@ def get_gene_leaves(graph):
 def get_rna_leaves(graph):
     """Find all RNAs who have only one connection, that's a translation to its protein
 
-    :param graph: a BEL network
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     """
     for node in get_nodes_by_function(graph, RNA):
         if graph.in_degree(node) != 0:
