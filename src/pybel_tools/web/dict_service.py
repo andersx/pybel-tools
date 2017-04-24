@@ -257,6 +257,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
 
     # Web Pages
 
+    @app.route('/', methods=['GET', 'POST'])
     @app.route('/networks/', methods=['GET', 'POST'])
     def view_networks():
         """Renders a page for the user to choose a network"""
@@ -351,6 +352,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
             unstable_pairs=unstable_pairs,
             unstable_correlation_triplets=unstable_correlation_triplets,
             graph=graph,
+            graph_id=graph_id,
             time=None,
         )
 

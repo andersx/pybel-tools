@@ -34,7 +34,7 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Metadata</h3>
+                <h3 class="panel-title">Overview</h3>
             </div>
             <div class="panel-body">
                 <dl>
@@ -43,6 +43,12 @@
                         <dd>{{ value }}</dd>
                     {% endfor %}
                 </dl>
+                <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
+                   role="button">Explore</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bel') }}"
+                   role="button">Download as BEL Script</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='json') }}"
+                   role="button">Download as JSON</a>
             </div>
         </div>
 

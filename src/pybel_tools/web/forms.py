@@ -47,9 +47,9 @@ class SeedProvenanceForm(FlaskForm):
 
 class CompileForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
-    file = FileField('My BEL file', validators=[DataRequired()])
-    name = fields.StringField('Your Name', validators=[DataRequired()])
-    email = fields.StringField('Your Email Address', validators=[DataRequired(), Email()])
+    file = FileField('My BEL script', validators=[DataRequired()])
+    name = fields.StringField('Name', validators=[DataRequired()])
+    email = fields.StringField('Email Address', validators=[DataRequired(), Email()])
     suggest_name_corrections = BooleanField('Suggest name corrections')
     suggest_naked_name = BooleanField('My document contains unqualified names - suggest appropriate namespaces')
     allow_nested = BooleanField('My document contains nested statements')
@@ -60,7 +60,7 @@ class CompileForm(FlaskForm):
         'Encoding',
         choices=[
             ('utf-8', 'My document is encoded in UTF-8'),
-            ('utf_8_sig', 'My document is encoded in UTF-8 with a BOM')
+            ('utf_8_sig', 'My document is encoded in UTF-8 with a BOM (for Windows users who are having problems)')
         ],
         default='utf-8')
     submit = fields.SubmitField('Validate')
@@ -68,11 +68,13 @@ class CompileForm(FlaskForm):
 
 class DifferentialGeneExpressionForm(FlaskForm):
     """Builds the form for uploading differential gene expression data"""
-    file = FileField('Differential gene expression file', validators=[DataRequired()])
+    file = FileField('Differential Gene Expression File', validators=[DataRequired()])
+    name = fields.StringField('Name', validators=[DataRequired()])
+    email = fields.StringField('Email Address', validators=[DataRequired(), Email()])
     gene_symbol_column = fields.StringField('Gene Symbol Column Name', default='Gene.symbol')
     log_fold_change_column = fields.StringField('Log Fold Change Column Name', default='logFC')
-    permutations = fields.IntegerField('Number of permutations', default=100)
-    description = fields.StringField('Description of data', validators=[DataRequired()])
+    permutations = fields.IntegerField('Number of Permutations', default=100)
+    description = fields.StringField('Description of Data', validators=[DataRequired()])
     separator = RadioField(
         'Separator',
         choices=[

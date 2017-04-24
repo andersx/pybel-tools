@@ -11,7 +11,7 @@ from collections import Counter
 import networkx as nx
 
 from pybel import from_bytes, BELGraph
-from pybel.canonicalize import decanonicalize_node
+from pybel.canonicalize import decanonicalize_node, calculate_canonical_name
 from pybel.manager.models import Network
 from .base_service import BaseService
 from ..constants import CNAME
@@ -343,6 +343,10 @@ class DictionaryService(BaseService):
         return get_authors_by_keyword(keyword, authors=self.universe_authors)
 
     def get_cname(self, node):
+        if CNAME in self.universe.node[node]:
+            return self.universe.node[node][CNAME]
+
+        self.universe.node[node][CNAME] = calculate_canonical_name(self.universe, node)
         return self.universe.node[node][CNAME]
 
     def get_top_centrality(self, network_id, count=20):

@@ -37,11 +37,39 @@
 {% block content %}
     <div class="container">
         <div class="page-header">
-            <h1>Network Store</h1>
+            <h1>PyBEL Web</h1>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>This web application provides an interface for users to interact with the functions in the Python
+                    software packages: <a href="http://pybel.readthedocs.io/">PyBEL</a> and <a
+                            href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a>. From this page, you can begin to
+                    explore the networks stored in the knowledge base stratified by the source BEL script,
+                    by nodes and other biological entities of interest, or by certain authors and publications of
+                    interest.
+                </p>
+                <p>If you would like to validate your own BEL script and/or upload it to the knowledgebase, check the
+                    web-based BEL script <a
+                        href="{{ url_for('view_compile') }}">compiler</a> or pre-compiled gpickle <a
+                        href="{{ url_for('view_upload') }}">uploader</a></p>
+                <p>It is maintained by <a href="https://github.com/cthoyt">Charles Tapley Hoyt</a> and Daniel
+                    Domingo-Fernandez at the <a
+                            href="https://www.scai.fraunhofer.de/en/business-research-areas/bioinformatics.html">Fraunhofer
+                        SCAI Department of Bioinformatics</a> with support from the <a
+                            href="https://www.imi.europa.eu/">IMI</a> projects, <a href="http://www.aetionomy.eu/>">AETIONOMY</a>
+                    and <a href="http://www.phago.eu/">PHAGO</a>.
+                </p>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Curated Networks</h3>
+            </div>
+            <div class="panel-body">
+                <p>Each curated network is backed by a BEL script. Below are options to summarize the networks'
+                    contents, explore them with an in-browser navigator, or run analyses with data sets such as
+                    differential gene expression data.</p>
             </div>
             <div class="list-group">
                 {% for nid, name, vers, descr in data %}

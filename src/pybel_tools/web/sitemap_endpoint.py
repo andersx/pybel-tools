@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 def build_sitemap_endpoint(app, route=None, show_admin=False):
     """Builds the sitemap endpoint"""
 
-    @app.route("/" if route is None else route)
+    @app.route("/admin" if route is None else route)
     def view_site_map():
         """Displays a page with the site map"""
         api_links = []
