@@ -132,7 +132,7 @@ def get_graph_from_request(api):
     expand_nodes = request.args.get(APPEND_PARAM)
     remove_nodes = request.args.get(REMOVE_PARAM)
     filters = request.args.getlist(FILTERS)
-    pathology_filter = request.args.get(PATHOLOGY_FILTER)
+    pathology_filter = PATHOLOGY_FILTER in request.args
 
     if expand_nodes:
         expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
@@ -149,7 +149,7 @@ def get_graph_from_request(api):
         expand_nodes=expand_nodes,
         remove_nodes=remove_nodes,
         filters=filters,
-        pathology_filter=pathology_filter,
+        filter_pathologies=pathology_filter,
         **annotations
     )
 
@@ -274,7 +274,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
                 SEED_TYPE: seed_method,
                 SEED_DATA_NODES: seed_data_nodes,
                 PATHOLOGY_FILTER: filter_pathologies,
-                'autoload': 'yes',
+                AUTOLOAD: 'yes',
             })
             log.info('redirecting to %s', url)
             return redirect(url)
@@ -287,7 +287,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
                 SEED_TYPE: SEED_TYPE_PROVENANCE,
                 SEED_DATA_PMIDS: pmids,
                 SEED_DATA_AUTHORS: authors,
-                'autoload': 'yes',
+                AUTOLOAD: 'yes',
             })
             log.info('redirecting to %s', url)
             return redirect(url)

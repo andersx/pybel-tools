@@ -252,8 +252,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     :type expand_nodes: list
     :param remove_nodes: Remove these nodes and all of their in/out edges
     :type remove_nodes: list
-    :param filter_pathologies: Should pathology nodes be removed?
-    :type filter_pathologies: bool
+    :param bool filter_pathologies: Should pathology nodes be removed?
     :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
     :type annotations: dict
     :return: A BEL Graph
