@@ -352,8 +352,10 @@ class DictionaryService(BaseService):
     def get_top_centrality(self, network_id, count=20):
         if network_id not in self.node_centralities:
             log.info('lazy loading centralities for [%s]', network_id)
+            t = time.time()
             graph = self.get_network(network_id)
             self.node_centralities[network_id] = Counter(nx.betweenness_centrality(graph))
+            log.info('loaded centralities in %.2f', time.time() - t)
         return {self.get_cname(node): v for node, v in self.node_centralities[network_id].most_common(count)}
 
     def get_top_degree(self, network_id, count=20):
