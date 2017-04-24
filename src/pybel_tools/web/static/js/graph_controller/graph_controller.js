@@ -1265,7 +1265,7 @@ function initD3Force(graph, tree) {
 
     $.each(graph.links, function (key, value) {
 
-        $("#edge-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><span class>" +
+        $("#edge-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><span>" +
             value.source.cname + ' ' + value.relation + ' ' + value.target.cname + "</span></li>");
 
     });
