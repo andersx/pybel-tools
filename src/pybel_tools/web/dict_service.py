@@ -56,7 +56,7 @@ PIPELINE = 'pipeline'
 AUTOLOAD = 'autoload'
 FILTERS = 'filters'
 # TODO: delete once pipeline is ready
-PATHOLOGY_FILTER = 'pathology_filter'
+FILTER_PATHOLOGIES = 'pathology_filter'
 
 BLACK_LIST = {
     GRAPH_ID,
@@ -75,7 +75,7 @@ BLACK_LIST = {
     PIPELINE,
     AUTOLOAD,
     FILTERS,
-    PATHOLOGY_FILTER,
+    FILTER_PATHOLOGIES,
 }
 
 
@@ -132,7 +132,7 @@ def get_graph_from_request(api):
     expand_nodes = request.args.get(APPEND_PARAM)
     remove_nodes = request.args.get(REMOVE_PARAM)
     filters = request.args.getlist(FILTERS)
-    pathology_filter = PATHOLOGY_FILTER in request.args
+    filter_pathologies = FILTER_PATHOLOGIES in request.args
 
     if expand_nodes:
         expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
@@ -149,7 +149,7 @@ def get_graph_from_request(api):
         expand_nodes=expand_nodes,
         remove_nodes=remove_nodes,
         filters=filters,
-        filter_pathologies=pathology_filter,
+        filter_pathologies=filter_pathologies,
         **annotations
     )
 
@@ -273,7 +273,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
                 GRAPH_ID: '0',
                 SEED_TYPE: seed_method,
                 SEED_DATA_NODES: seed_data_nodes,
-                PATHOLOGY_FILTER: filter_pathologies,
+                FILTER_PATHOLOGIES: filter_pathologies,
                 AUTOLOAD: 'yes',
             })
             log.info('redirecting to %s', url)
