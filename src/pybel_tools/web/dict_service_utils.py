@@ -247,7 +247,7 @@ class DictionaryService(BaseService):
         raise TypeError('{} is wrong type: {}'.format(node_id, type(node_id)))
 
     def query(self, network_id=None, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None,
-              filters=None, **annotations):
+              filters=None, pathology_filter=None, **annotations):
         """Filters a dictionary from the module level cache.
         
         0. Gets network by ID or uses merged network store

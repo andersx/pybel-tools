@@ -33,7 +33,7 @@ class SeedSubgraphForm(FlaskForm):
             (SEED_TYPE_PATHS, 'Induce a subgraph over the nodes in all shortest paths between the given nodes'),
         ],
         default=SEED_TYPE_INDUCTION)
-    filter_pathologies = BooleanField('Filter pathology nodes', default=True)
+    filter_pathologies = BooleanField('Filter pathology nodes', default=False)
     submit_subgraph = fields.SubmitField('Submit Subgraph')
 
 

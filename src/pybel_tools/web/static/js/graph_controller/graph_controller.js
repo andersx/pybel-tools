@@ -135,10 +135,17 @@ function getSeedMethodFromURL(args, url) {
             "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
             args["nodes"] = url["nodes"];
         }
+        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] ||
+            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
+            args["nodes"] = url["nodes"];
+        }
     }
 
-    // Checking if methods for pipeline analysis are present
+    //TODO: Add to pipeline list
     args = argumentsInURL(args, "pipeline", url);
+
+    // Checking if methods for pipeline analysis are present
+    args = argumentsInURL(args, "pathology_filter", url);
 
     // Checking if autoload is present
     args = argumentsInURL(args, "autoload", url);

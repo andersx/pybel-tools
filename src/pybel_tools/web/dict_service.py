@@ -55,6 +55,8 @@ PATHS_METHOD = 'paths_method'
 PIPELINE = 'pipeline'
 AUTOLOAD = 'autoload'
 FILTERS = 'filters'
+# TODO: delete once pipeline is ready
+PATHOLOGY_FILTER = 'pathology_filter'
 
 BLACK_LIST = {
     GRAPH_ID,
@@ -73,6 +75,7 @@ BLACK_LIST = {
     PIPELINE,
     AUTOLOAD,
     FILTERS,
+    PATHOLOGY_FILTER,
 }
 
 
@@ -96,6 +99,7 @@ def get_graph_from_request(api):
     :return: graph: A BEL graph
     :rtype: pybel.BELGraph
     """
+
     network_id = request.args.get(GRAPH_ID)
 
     if network_id is not None:
@@ -128,6 +132,7 @@ def get_graph_from_request(api):
     expand_nodes = request.args.get(APPEND_PARAM)
     remove_nodes = request.args.get(REMOVE_PARAM)
     filters = request.args.getlist(FILTERS)
+    pathology_filter = request.args.get(PATHOLOGY_FILTER)
 
     if expand_nodes:
         expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
@@ -144,6 +149,7 @@ def get_graph_from_request(api):
         expand_nodes=expand_nodes,
         remove_nodes=remove_nodes,
         filters=filters,
+        pathology_filter=pathology_filter,
         **annotations
     )
 
@@ -260,11 +266,14 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         if seed_subgraph_form.validate_on_submit() and seed_subgraph_form.submit_subgraph.data:
             seed_data_nodes = seed_subgraph_form.node_list.data.split(',')
             seed_method = seed_subgraph_form.seed_method.data
-            log.info('got subgraph seed: %s', dict(nodes=seed_data_nodes, method=seed_method))
+            filter_pathologies = seed_subgraph_form.filter_pathologies.data
+            log.info('got subgraph seed: %s',
+                     dict(nodes=seed_data_nodes, method=seed_method, filter_path=filter_pathologies))
             url = url_for('view_explorer', **{
                 GRAPH_ID: '0',
                 SEED_TYPE: seed_method,
                 SEED_DATA_NODES: seed_data_nodes,
+                PATHOLOGY_FILTER: filter_pathologies,
                 'autoload': 'yes',
             })
             log.info('redirecting to %s', url)
