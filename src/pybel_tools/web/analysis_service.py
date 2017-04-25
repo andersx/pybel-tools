@@ -32,16 +32,20 @@ NPA_COLUMNS = ['NPA Average', 'NPA Standard Deviation', 'NPA Median', 'Number Fi
 
 
 class Experiment(Base):
-    """Represents a heat diffussion experiment run in PyBEL Web"""
+    """Represents a Candidate Mechanism Perturbation Amplitude experiment run in PyBEL Web"""
     __tablename__ = PYBEL_EXPERIMENT_TABLE_NAME
+
     id = Column(Integer, primary_key=True)
+
     created = Column(DateTime, default=datetime.datetime.utcnow, doc='The date on which this analysis was run')
     description = Column(Text, nullable=True, doc='A description of the purpose of the analysis')
-    network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)))
-    network = relationship('Network', foreign_keys=[network_id])
+    permutations = Column(Integer, doc='Number of permutations performed')
     source_name = Column(Text, doc='The name of the source file')
     source = Column(Binary, doc='The source document holding the data')
     result = Column(Binary, doc='The result python dictionary')
+
+    network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)))
+    network = relationship('Network', foreign_keys=[network_id])
 
     @property
     def data(self):
@@ -116,9 +120,10 @@ def build_analysis_service(app, manager, api):
 
         experiment = Experiment(
             description=form.description.data,
-            source=pickle.dumps(df),
             source_name=form.file.data.filename,
+            source=pickle.dumps(df),
             result=pickle.dumps(scores),
+            permutations=form.permutations.data,
         )
         experiment.network = network
 
