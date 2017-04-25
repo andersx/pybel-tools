@@ -23,7 +23,7 @@ import click
 
 import pybel
 from pybel import from_pickle, to_database, from_lines
-from pybel.constants import DEFAULT_CACHE_LOCATION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
+from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
 from pybel.manager.cache import build_manager
 from pybel.utils import get_version as pybel_version
 from .constants import GENE_FAMILIES, NAMED_COMPLEXES
@@ -66,7 +66,7 @@ def set_debug_param(debug):
         set_debug(10)
 
 
-@click.group(help="PyBEL-Tools Command Line Utilities on {}".format(sys.executable))
+@click.group(help="PyBEL-Tools Command Line Utilities on {}\n with PyBEL v{}".format(sys.executable, pybel_version()))
 @click.version_option()
 def main():
     pass
@@ -78,7 +78,7 @@ def ensure():
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
@@ -93,7 +93,7 @@ def small_corpus(connection, enrich_authors, use_edge_store, debug):
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
@@ -108,7 +108,7 @@ def large_corpus(connection, enrich_authors, use_edge_store, debug):
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
@@ -123,7 +123,7 @@ def gene_families(connection, enrich_authors, use_edge_store, debug):
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
@@ -144,7 +144,7 @@ def io():
 
 @io.command()
 @click.option('-p', '--path', default=os.getcwd())
-@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('-r', '--recursive', is_flag=True,
               help='Recursively upload all gpickles in the directory given as the path')
 @click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
@@ -176,7 +176,7 @@ def post(path, url, skip_check_version):
 
 
 @io.command()
-@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('-u', '--upload', is_flag=True, help='Enable automatic database uploading')
 @click.option('--store-parts', is_flag=True, help='Automatically upload to database and edge store')
 @click.option('-d', '--directory', default=os.getcwd(),
@@ -190,7 +190,7 @@ def convert(connection, upload, store_parts, directory, debug):
 
 
 @main.command()
-@click.option('-c', '--connection', help='Cache connection string. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--host', help='Flask host. Defaults to localhost')
 @click.option('--port', type=int, help='Flask port. Defaults to 5000')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
@@ -199,8 +199,6 @@ def convert(connection, upload, store_parts, directory, debug):
 @click.option('-e', '--eager', is_flag=True, help="Eagerly preload all data and perform enrichments")
 @click.option('--run-database-service', is_flag=True, help='Enable the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
-@click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
-@click.option('--run-compiler-service', is_flag=True, help='Enable the compiler page')
 @click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
 @click.option('--run-analysis-service', is_flag=True, help='Enable the analysis service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
@@ -208,7 +206,7 @@ def convert(connection, upload, store_parts, directory, debug):
 @click.option('--admin-password', help='Set admin password and enable admin services')
 @click.option('--echo-sql', is_flag=True)
 def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_uploader_service, run_compiler_service, run_receiver_service, run_analysis_service, run_all, secret_key,
+        run_receiver_service, run_analysis_service, run_all, secret_key,
         admin_password, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
@@ -240,17 +238,14 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
         eager=eager,
     )
 
+    build_synchronous_compiler_service(app, manager=manager)
+    build_pickle_uploader_service(app, manager=manager)
+
     if run_database_service:
         build_database_service(app, manager)
 
     if run_parser_service or run_all:
         build_parser_service(app)
-
-    if run_uploader_service or run_all:
-        build_pickle_uploader_service(app, manager=manager)
-
-    if run_compiler_service or run_all:
-        build_synchronous_compiler_service(app, manager=manager)
 
     if run_receiver_service or run_all:
         build_receiver_service(app, manager=manager)
