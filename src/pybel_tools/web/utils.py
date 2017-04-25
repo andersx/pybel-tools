@@ -25,17 +25,21 @@ def render_upload_error(exc):
     )
 
 
-def try_insert_graph(manager, graph):
+def try_insert_graph(manager, graph, api=None):
     """Inserts a graph and sends an okay message if success. else renders upload page
     
     :param manager: 
     :type manager: pybel.manager.cache.CacheManager
     :param graph: 
     :type graph: pybel.BELGraph
-    :return: HTTP response for flask rote
+    :return: The HTTP response to use as a Flask response
     """
     try:
         network = manager.insert_graph(graph)
+
+        if api:
+            api.add_network(network.id, graph)
+
         return jsonify({
             'status': 200,
             'network_id': network.id

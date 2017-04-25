@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import codecs  # To use a consistent encoding
+import codecs
 import os
 import re
 
@@ -18,7 +18,8 @@ CLASSIFIERS = [
     'License :: OSI Approved :: Apache Software License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3.6',
     'Topic :: Scientific/Engineering :: Bio-Informatics'
 ]
 INSTALL_REQUIRES = [
@@ -34,6 +35,8 @@ INSTALL_REQUIRES = [
     'pandas',
     'fuzzywuzzy',
     'ipython',
+    'scipy',
+    'numpy',
 ]
 EXTRAS_REQUIRE = {
     'speed': ['python-Levenshtein', ]  # Activates c-based speed improvements for fuzzywuzzy

@@ -34,8 +34,14 @@
 }
 
 .node-checkbox {
-    padding-right: 10px;
     margin-right: 10px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.edge-checkbox {
+    margin-right: 10px !important;
+    display: inline-block;
 }
 
 #export-node-list {
@@ -50,7 +56,6 @@
 #node-search {
     text-align: center;
 }
-
 
 #bel-logo {
     height: 20px;

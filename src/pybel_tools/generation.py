@@ -15,7 +15,7 @@ from .mutation.deletion import remove_inconsistent_edges
 from .mutation.expansion import get_upstream_causal_subgraph, expand_upstream_causal_subgraph
 from .mutation.merge import collapse_consistent_edges
 from .selection.leaves import get_unweighted_upstream_leaves
-from .selection.utils import get_nodes_by_function
+from .filters.node_selection import get_nodes_by_function
 
 __all__ = [
     'remove_unweighted_leaves',

@@ -40,7 +40,7 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
     @app.route('/compile', methods=('GET', 'POST'))
     def view_compile():
         """An upload form for a BEL script"""
-        form = CompileForm()
+        form = CompileForm(save_network=True)
 
         if not form.validate_on_submit():
             return render_template('compile.html', form=form)

@@ -61,7 +61,7 @@
 {% block content %}
     <div class="container">
         <div class="page-header">
-            <h1>{{ network_name }}</h1>
+            <h1 id="network-name">Biological Network Explorer</h1>
         </div>
         <div class="row"><!-- visualization row -->
             <div class="col-lg-8">
@@ -148,25 +148,7 @@
         </div><!-- button row -->
         <div class="row">
             <div class="col-lg-12">
-                <table class="table table-bordered table-hover">
-                    <tbody>
-                    <tr>
-                        <td id="table-11"></td>
-                        <td id="table-12"></td>
-                    </tr>
-                    <tr>
-                        <td id="table-21"></td>
-                        <td id="table-22"></td>
-                    </tr>
-                    <tr>
-                        <td id="table-31"></td>
-                        <td id="table-32"></td>
-                    </tr>
-                    <tr>
-                        <td id="table-41"></td>
-                        <td id="table-42"></td>
-                    </tr>
-                    </tbody>
+                <table id="info-table" class="table table-bordered table-hover">
                 </table>
             </div>
         </div>
@@ -238,11 +220,11 @@
                     </div>
                 </div><!-- /.Modal body -->
                 <div class="modal-footer">
-                    <button type="button" id="hide_node_names" class="btn btn-info button-padding">Hide labels
+                    <button type="button" id="hide_node_names" class="btn btn-info">Hide labels
                     </button>
-                    <button type="button" id="restore_node_names" class="btn btn-info button-padding">Restore labels
+                    <button type="button" id="restore_node_names" class="btn btn-info">Restore labels
                     </button>
-                    <button type="button" id="restore" class="btn btn-info button-padding">Restore all labels
+                    <button type="button" id="restore" class="btn btn-info">Restore all labels
                     </button>
                     <button class="btn btn-default" data-dismiss="modal" type="button">
                         Close
@@ -532,7 +514,7 @@
                             <input placeholder="Number of nodes" name="betweenness" id="betweenness" type="text"/>
                         </div>
                         <div class="buttons">
-                            <input type="button" class="btn" id="betweenness-button" value="Submit"/>
+                            <input type="button" id="betweenness-button" value="Submit"/>
                         </div>
                     </form>
                 </div><!-- /.Modal body -->

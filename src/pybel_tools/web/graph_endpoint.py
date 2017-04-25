@@ -5,7 +5,7 @@ import logging
 import flask
 from flask import jsonify
 
-from pybel.constants import METADATA_NAME, METADATA_VERSION
+from pybel.constants import METADATA_NAME, METADATA_VERSION, METADATA_DESCRIPTION
 
 __all__ = [
     'build_graph_endpoint',
@@ -27,7 +27,8 @@ def build_graph_endpoint(app, manager):
     @app.route('/api/networks/list')
     def list_networks():
         """Returns JSON of the network id's to their name and version"""
-        result = {gid: {METADATA_NAME: name, METADATA_VERSION: version} for gid, name, version in manager.list_graphs()}
+        result = {gid: {METADATA_NAME: name, METADATA_VERSION: version, METADATA_DESCRIPTION: description} for
+                  gid, name, version, description in manager.list_graphs()}
         return jsonify(result)
 
     log.info('Added graph endpoint to %s', app)

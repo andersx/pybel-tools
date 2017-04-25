@@ -10,10 +10,10 @@ from ..utils import get_version
 log = logging.getLogger(__name__)
 
 
-def build_sitemap_endpoint(app, route=None):
-    """Builds the sitemap endpoing"""
+def build_sitemap_endpoint(app, route=None, show_admin=False):
+    """Builds the sitemap endpoint"""
 
-    @app.route("/" if route is None else route)
+    @app.route("/admin" if route is None else route)
     def view_site_map():
         """Displays a page with the site map"""
         api_links = []
@@ -22,7 +22,7 @@ def build_sitemap_endpoint(app, route=None):
             try:
                 url = url_for(rule.endpoint)
                 item = url, rule.endpoint
-                if url.startswith('/admin') or url.startswith('/api/admin'):
+                if not show_admin and (url.startswith('/admin') or url.startswith('/api/admin')):
                     continue
                 elif url.startswith('/api'):
                     api_links.append(item)

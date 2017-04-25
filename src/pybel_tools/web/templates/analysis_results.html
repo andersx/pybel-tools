@@ -1,0 +1,56 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}Results{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>Analysis of {{ experiment.network.name }}
+                <small class="text-muted">{{ experiment.network.version }}</small>
+            </h1>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Results</h3>
+            </div>
+            <div class="panel-body">
+                <dl>
+                    <dt>Analysis ID</dt>
+                    <dd>{{ experiment.id }}</dd>
+                    <dt>Created</dt>
+                    <dd>{{ experiment.created }}</dd>
+                    <dt>Description</dt>
+                    <dd>{{ experiment.description }}</dd>
+                </dl>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    {% for column in columns %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for key, vals in data %}
+                    <tr>
+                        <td>{{ key[1] }}</td>
+                        <td>{{ key[2] }}</td>
+                        {% for val in vals %}
+                            <td>{{ val }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+

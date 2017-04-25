@@ -72,7 +72,7 @@ def get_pmids(graph):
     return set(iter_pmids(graph))
 
 
-def get_pmid_by_keyword(graph, keyword, pmids=None):
+def get_pmid_by_keyword(keyword, graph=None, pmids=None):
     """Gets the set of PubMed identifiers beginning with the given keyword string
     
     :param graph: A BEL graph
@@ -84,8 +84,13 @@ def get_pmid_by_keyword(graph, keyword, pmids=None):
     :return: A set of PMIDs starting with the given string
     :rtype: set[str]
     """
-    pmids = pmids if pmids is not None else iter_pmids(graph)
-    return {pmid for pmid in pmids if pmid.startswith(keyword)}
+    if pmids is not None:
+        return {pmid for pmid in pmids if pmid.startswith(keyword)}
+
+    if graph is None:
+        raise ValueError('Graph not supplied')
+
+    return {pmid for pmid in iter_pmids(graph) if pmid.startswith(keyword)}
 
 
 def count_pmids(graph):
@@ -202,7 +207,7 @@ def get_authors(graph):
     return authors
 
 
-def get_authors_by_keyword(graph, keyword, authors=None):
+def get_authors_by_keyword(keyword, graph=None, authors=None):
     """Gets authors for whom the search term is a substring
     
     :param graph: A BEL graph
@@ -214,9 +219,15 @@ def get_authors_by_keyword(graph, keyword, authors=None):
     :return: A set of authors with the keyword as a substring
     :rtype: set[str]
     """
-    authors = get_authors(graph) if authors is None else authors
     keyword_lower = keyword.lower()
-    return {author for author in authors if keyword_lower in author.lower()}
+
+    if authors is not None:
+        return {author for author in authors if keyword_lower in author.lower()}
+
+    if graph is None:
+        raise ValueError('Graph not supplied')
+
+    return {author for author in get_authors(graph) if keyword_lower in author.lower()}
 
 
 def count_authors_by_annotation(graph, annotation='Subgraph'):

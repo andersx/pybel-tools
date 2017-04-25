@@ -16,150 +16,16 @@ function getSelectedNodesFromTree(tree) {
     return selectionHashMap;
 }
 
-function resetGlobals() {
-    // Arrays with selected nodes to expand/delete
-    window.deleteNodes = [];
-    window.expandNodes = [];
-}
-
-
-function parameterFilters(tree) {
-    var args = getSelectedNodesFromTree(tree);
-    args["remove"] = window.deleteNodes.join();
-    args["append"] = window.expandNodes.join();
-    args["graphid"] = window.networkID;
-    return args
-}
-
-function renderNetwork(tree, url) {
-    var params = parameterFilters(tree);
-
-    if ("seed_method" in url) {
-        params["seed_method"] = url["seed_method"];
-
-        if ("provenance" === url["seed_method"]) {
-            params["pmids"] = url["pmids"];
-        }
-        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] || "neighbors" === url["seed_method"]) {
-            params["nodes"] = url["nodes"];
-        }
-        if ("provenance" === url["seed_method"]) {
-            params["pmids"] = url["pmids"];
-        }
-    }
-
-    console.log(params);
-
-    console.log($.param(params, true));
-
-    node_param = $.param(params, true);
-    $.getJSON("/api/network/" + "?" + node_param, function (data) {
-        initD3Force(data, tree);
-    });
-    // reset window variables (window.expand/delete/method)
-    resetGlobals();
-    // TODO: change window.networkID to another variable
-    window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
-}
-
-function doAjaxCall(url) {
-
-    var result = null;
-    $.ajax({
-        type: "GET",
-        url: url,
-        dataType: "json",
-        success: function (data) {
-            result = data;
-        },
-        data: {},
-        async: false
-    });
-
-    return result
-}
-
-
-$(document).ready(function () {
-
-    // Get the URL parameters (except for the int after /explore/ representing the network_id)
-    var URLString = function () {
-        // This function is anonymous, is executed immediately and
-        // the return value is assigned to QueryString!
-        var query_string = {};
-        var query = window.location.search.substring(1);
-        var vars = query.split("&");
-        for (var i = 0; i < vars.length; i++) {
-            var pair = vars[i].split("=");
-            // If first entry with this name
-            if (typeof query_string[pair[0]] === "undefined") {
-                query_string[pair[0]] = decodeURIComponent(pair[1]);
-                // If second entry with this name
-            } else if (typeof query_string[pair[0]] === "string") {
-                var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
-                query_string[pair[0]] = arr;
-                // If third or later entry with this name
-            } else {
-                query_string[pair[0]].push(decodeURIComponent(pair[1]));
-            }
-        }
-        return query_string;
-    }();
-
-    // if graphid not in arguments check if it is after /explore/
-    if (!("graphid" in URLString)) {
-        // grab the last part of the URL after /explore/...
-        var lastPartURL = window.location.href.substring(window.location.href.lastIndexOf("/") + 1);
-        // if there is anything after the last slash and not starts with "?" is the network_id
-        if ((lastPartURL) && ("?" !== lastPartURL.substring(0, 1) )) {
-            // split by ? get the int representing the network_id
-            URLString["graphid"] = lastPartURL.split("?")[0];
-        }
-    }
-
-    // Set global variable
-    if ("graphid" in URLString) {
-        window.networkID = URLString["graphid"];
-    }
-    else {
-        window.networkID = "0";
-    }
-
-    // Get the annotations for the queried graph
-    var annotationFilter = null;
-
-    // get tree for graph id or supernetwork if none
-    if ("graphid" in URLString) {
-        annotationFilter = doAjaxCall("/api/tree/?graphid=" + URLString["graphid"]);
-    } else {
-        annotationFilter = doAjaxCall("/api/tree/");
-    }
-
-    // Initiate the tree
-    var tree = new InspireTree({
-        target: "#tree",
-        selection: {
-            mode: "checkbox",
-            multiple: true
-        },
-        data: annotationFilter
-    });
-
-    tree.on("model.loaded", function () {
-        tree.expand();
-    });
-
-    var blackList = doAjaxCall("/api/meta/blacklist");
-
-    // Select in the tree the tree-nodes in URL
+function selectNodesInTreeFromURL(tree, url, blackList) {
+    // Select in the tree the tree-nodes in the URL
     var selectedNodes = {};
 
-    $.each(URLString, function (index, value) {
+    $.each(url, function (index, value) {
         if (!(index in blackList)) {
             if (Array.isArray(value)) {
                 $.each(value, function (childIndex, child) {
                     if (index in selectedNodes) {
-                        selectedNodes[index].push(child.replace(/\+/g, " "))
+                        selectedNodes[index].push(child.replace(/\+/g, " "));
                     }
                     else {
                         selectedNodes[index] = [child.replace(/\+/g, " ")];
@@ -168,7 +34,7 @@ $(document).ready(function () {
             }
             else {
                 if (index in selectedNodes) {
-                    selectedNodes[index].push(value.replace(/\+/g, " "))
+                    selectedNodes[index].push(value.replace(/\+/g, " "));
                 }
                 else {
                     selectedNodes[index] = [value.replace(/\+/g, " ")];
@@ -189,31 +55,210 @@ $(document).ready(function () {
             });
         }
     });
+}
+
+function getAnnotationForTree(URLString) {
+    // get all annotations for building the tree using the graphid parameter in the URL if exists or the whole supernetwork if none
+    if ("graphid" in URLString) {
+        return doAjaxCall("/api/tree/?graphid=" + URLString["graphid"]);
+    } else {
+        return doAjaxCall("/api/tree/");
+    }
+}
+
+function resetGlobals() {
+    // Arrays with selected nodes to expand/delete
+    window.deleteNodes = [];
+    window.expandNodes = [];
+}
+
+function getCurrentURL() {
+    // Get the URL parameters (except for the int after /explore/ representing the network_id)
+
+    var query_string = {};
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        // If first entry with this name
+        if (typeof query_string[pair[0]] === "undefined") {
+            query_string[pair[0]] = decodeURIComponent(pair[1]);
+            // If second entry with this name
+        } else if (typeof query_string[pair[0]] === "string") {
+            var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
+            query_string[pair[0]] = arr;
+            // If third or later entry with this name
+        } else {
+            query_string[pair[0]].push(decodeURIComponent(pair[1]));
+        }
+    }
+    return query_string;
+}
+
+function getFilterParameters(tree) {
+    var args = getSelectedNodesFromTree(tree);
+
+    if (window.deleteNodes.length > 0) {
+        args["remove"] = window.deleteNodes.join();
+    }
+    if (window.expandNodes.length > 0) {
+        args["append"] = window.expandNodes.join();
+    }
+    if (window.networkID === 0) {
+        args["graphid"] = window.networkID;
+    }
+    return args
+}
+
+function argumentsInURL(args, arg, url) {
+    // Checking if argument in url and adds it to arguments if exists
+    if (arg in url) {
+        args[arg] = url[arg];
+    }
+    return args
+}
+
+function getSeedMethodFromURL(args, url) {
+    // Checking if seed_methods are present in the URL and adding it to the parameters
+    if ("seed_method" in url) {
+        args["seed_method"] = url["seed_method"];
+
+        if ("provenance" === url["seed_method"]) {
+            if ("authors" in url) {
+                args["authors"] = url["authors"];
+            }
+            if ("pmids" in url) {
+                args["pmids"] = url["pmids"];
+            }
+        }
+        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] ||
+            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
+            args["nodes"] = url["nodes"];
+        }
+        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] ||
+            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
+            args["nodes"] = url["nodes"];
+        }
+    }
+
+    //TODO: Add to pipeline list
+    args = argumentsInURL(args, "pipeline", url);
+
+    // Checking if methods for pipeline analysis are present
+    args = argumentsInURL(args, "pathology_filter", url);
+
+    // Checking if autoload is present
+    args = argumentsInURL(args, "autoload", url);
+
+    return args
+}
+
+function getDefaultAjaxParameters(tree) {
+    // Returns an objects with all arguments used to generated the current network
+    return getSeedMethodFromURL(getFilterParameters(tree), getCurrentURL())
+}
 
 
+function renderNetwork(tree) {
+    // Store filtering parameters from tree and global variables (network_id, expand/delete nodes) and
+    // store seed methods/ pipeline arguments from URL
+    var args = getDefaultAjaxParameters(tree);
+
+    var renderParameters = $.param(args, true);
+
+    $.getJSON("/api/network/" + "?" + renderParameters, function (data) {
+        initD3Force(data, tree);
+    });
+
+    // reset window variables (window.expand/delete/method)
+    resetGlobals();
+    window.history.pushState("BiNE", "BiNE", "/explore/?" + renderParameters);
+}
+
+function doAjaxCall(url) {
+
+    var result = null;
+    $.ajax({
+        type: "GET",
+        url: url,
+        dataType: "json",
+        success: function (data) {
+            result = data;
+        },
+        data: {},
+        async: false
+    });
+
+    return result
+}
+
+function insertRow(table, row, column1, column2) {
+
+    var row = table.insertRow(row);
+    var cell1 = row.insertCell(0);
+    var cell2 = row.insertCell(1);
+    cell1.innerHTML = column1;
+    cell2.innerHTML = column2;
+}
+
+
+$(document).ready(function () {
+
+    var URLString = getCurrentURL();
+
+    // Set networkid as a global variable
+    if ("graphid" in URLString) {
+        window.networkID = URLString["graphid"];
+    }
+    else {
+        window.networkID = "0";
+    }
+
+    var networkName = doAjaxCall("/api/network/name/" + window.networkID);
+    if (networkName) {
+        $("#network-name").html(networkName)
+    }
+
+    // Initiate the tree and expands it with the annotations given the graphid in URL
+    var tree = new InspireTree({
+        target: "#tree",
+        selection: {
+            mode: "checkbox",
+            multiple: true
+        },
+        data: getAnnotationForTree(URLString)
+    });
+
+    tree.on("model.loaded", function () {
+        tree.expand();
+    });
+
+    selectNodesInTreeFromURL(tree, URLString, doAjaxCall("/api/meta/blacklist"));
+
+    // Loads the network if autoload is an argument in the URL or render empty frame if not
     if (window.location.search.indexOf("autoload=yes") > -1) {
-        renderNetwork(tree, URLString);
+        renderNetwork(tree);
     }
     else {
         renderEmptyFrame();
     }
 
     $("#submit-button").on("click", function () {
-        renderNetwork(tree, URLString);
+        renderNetwork(tree);
     });
 
-
+    // Export network as an image
     d3.select("#save-svg-graph").on("click", downloadSvg);
 
     // Export to BEL
     $("#bel-button").click(function () {
-        params = parameterFilters(tree);
-        params["format"] = "bel";
+        var args = getDefaultAjaxParameters(tree);
+        args["format"] = "bel";
 
         $.ajax({
             url: "/api/network/",
             dataType: "text",
-            data: $.param(params, true)
+            data: $.param(args, true)
         }).done(function (response) {
             downloadText(response, "MyGraph.bel")
         });
@@ -221,31 +266,31 @@ $(document).ready(function () {
 
     // Export to GraphML
     $("#graphml-button").click(function () {
-        params = parameterFilters(tree);
-        params["format"] = "graphml";
-        window.location.href = "/api/network/" + $.param(params, true);
+        var args = getDefaultAjaxParameters(tree);
+        args["format"] = "graphml";
+        window.location.href = "/api/network/" + $.param(args, true);
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
-        params = parameterFilters(tree);
-        params["format"] = "bytes";
-        window.location.href = "/api/network/" + $.param(params, true);
+        var args = getDefaultAjaxParameters(tree);
+        args["format"] = "bytes";
+        window.location.href = "/api/network/" + $.param(args, true);
 
     });
 
     // Export to CX
     $("#cx-button").click(function () {
-        params = parameterFilters(tree);
-        params["format"] = "cx";
-        window.location.href = "/api/network/" + $.param(params, true);
+        var args = getDefaultAjaxParameters(tree);
+        args["format"] = "cx";
+        window.location.href = "/api/network/" + $.param(args, true);
     });
 
     // Export to CSV
     $("#csv-button").click(function () {
-        params = parameterFilters(tree);
-        params["format"] = "csv";
-        window.location.href = "/api/network/" + $.param(params, true);
+        var args = getDefaultAjaxParameters(tree);
+        args["format"] = "csv";
+        window.location.href = "/api/network/" + $.param(args, true);
     });
 });
 
@@ -279,17 +324,15 @@ function renderEmptyFrame() {
 }
 
 function clearUsedDivs() {
-    // Force div
-    var graphDiv = $("#graph-chart");
-    // Node search div
-    var nodePanel = $("#node-list");
-    // Edge search div
-    var edgePanel = $("#edge-list");
+    // Clean divs to repopulate them with the new network
 
-    // Clean the current frame
-    graphDiv.empty();
-    nodePanel.empty();
-    edgePanel.empty();
+    // Force div
+    $("#graph-chart").empty();
+    // Node search div
+    $("#node-list").empty();
+    // Edge search div
+    $("#edge-list").empty();
+
 }
 
 ///////////////////////////////////////
@@ -413,7 +456,7 @@ function initD3Force(graph, tree) {
 
                 // Push selected node to expand node list
                 window.expandNodes.push(d.id);
-                var args = parameterFilters(tree);
+                var args = getDefaultAjaxParameters(tree);
 
                 node_param = $.param(args, true);
 
@@ -445,9 +488,9 @@ function initD3Force(graph, tree) {
 
                 // Push selected node to delete node list
                 window.deleteNodes.push(d.id);
-                var args = parameterFilters(tree);
-                node_param = $.param(args, true);
+                var args = getDefaultAjaxParameters(tree);
 
+                node_param = $.param(args, true);
 
                 $.ajax({
                     url: "/api/network/",
@@ -570,7 +613,7 @@ function initD3Force(graph, tree) {
         d.fy = d3.event.y;
     }
 
-    function dragEnded(d) {
+    function dragEnded() {
         if (!d3.event.active) simulation.alphaTarget(0);
     }
 
@@ -655,7 +698,7 @@ function initD3Force(graph, tree) {
     });
 
     function isConnected(a, b) {
-        return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index == b.index;
+        return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index === b.index;
     }
 
     function ticked() {
@@ -692,8 +735,15 @@ function initD3Force(graph, tree) {
     var link = g.selectAll(".link")
         .data(graph.links)
         .enter().append("line")
+        .style("stroke", function (d) {
+            if ('pybel_highlight' in d) {
+                return d['pybel_highlight']
+            }
+            else {
+                return defaultLinkColor
+            }
+        })
         .style("stroke-width", nominalStroke)
-        .style("stroke", defaultLinkColor)
         .on("click", function (d) {
             displayEdgeInfo(d);
         })
@@ -708,10 +758,10 @@ function initD3Force(graph, tree) {
             }
         })
         .attr("marker-start", function (d) {
-            if ("positiveCorrelation" == d.relation) {
+            if ("positiveCorrelation" === d.relation) {
                 return "url(#arrowhead)"
             }
-            else if ("negativeCorrelation" == d.relation) {
+            else if ("negativeCorrelation" === d.relation) {
                 return "url(#stub)"
             }
             else {
@@ -751,7 +801,14 @@ function initD3Force(graph, tree) {
             return d.function
         })
         .style("stroke-width", nominalStroke)
-        .style("stroke", circleColor);
+        .style("stroke", function (d) {
+            if ('pybel_highlight' in d) {
+                return d['pybel_highlight']
+            }
+            else {
+                return circleColor
+            }
+        });
 
     var text = node.append("text")
         .attr("class", "node-name")
@@ -777,9 +834,24 @@ function initD3Force(graph, tree) {
         highlightNode = null;
         if (focusNode === null) {
             if (highlightNodeBoundering !== circleColor) {
-                circle.style("stroke", circleColor);
+                circle.style("stroke", function (d) {
+                    if ("pybel_highlight" in d) {
+                        return d["pybel_highlight"]
+                    }
+                    else {
+                        return circleColor
+                    }
+                });
                 text.style("fill", "black");
-                link.style("stroke", defaultLinkColor);
+                link.style("stroke", function (d) {
+                    if ("pybel_highlight" in d) {
+                        return d["pybel_highlight"]
+                    }
+                    else {
+                        return defaultLinkColor
+                    }
+                })
+
             }
         }
     }
@@ -797,7 +869,7 @@ function initD3Force(graph, tree) {
             });
             link.style("stroke", function (o) {
                 // All links connected to the node you hover on
-                return o.source.index == d.index || o.target.index == d.index ? highlightedLinkColor : defaultLinkColor;
+                return o.source.index === d.index || o.target.index === d.index ? highlightedLinkColor : defaultLinkColor;
             });
         }
     }
@@ -806,7 +878,7 @@ function initD3Force(graph, tree) {
     link.on("mouseenter", function (d) {
         link.style("stroke", function (o) {
             // Specifically the link you hover on
-            return o.source.index == d.source.index && o.target.index == d.target.index ? highlightedLinkColor : defaultLinkColor;
+            return o.source.index === d.source.index && o.target.index === d.target.index ? highlightedLinkColor : defaultLinkColor;
         });
     })
         .on("mousedown", function () {
@@ -818,36 +890,80 @@ function initD3Force(graph, tree) {
     // Box info in table
 
     function displayNodeInfo(node) {
-        $("#table-11").html("Node");
-        $("#table-12").html(node.cname);
-        $("#table-21").html("Function");
-        $("#table-22").html(node.function);
-        $("#table-31").html("Namespace");
-        $("#table-32").html(node.namespace);
-        $("#table-41").html("Name");
-        $("#table-42").html(node.name);
+
+        var dynamicTable = document.getElementById('info-table');
+
+        while (dynamicTable.rows.length > 0) {
+            dynamicTable.deleteRow(0);
+        }
+
+        var nodeObject = {};
+
+        if (node.cname) {
+            nodeObject["Node"] = " (ID: " + node.id + ")";
+        }
+        if (node.name) {
+            nodeObject["Name"] = node.name;
+        }
+        if (node.function) {
+            nodeObject["Function"] = node.function;
+        }
+        if (node.namespace) {
+            nodeObject["Namespace"] = node.namespace;
+        }
+
+        var row = 0;
+        $.each(nodeObject, function (key, value) {
+            insertRow(dynamicTable, row, key, value);
+            row++
+        });
     }
 
 
     function displayEdgeInfo(edge) {
 
-        $("#table-11").html("Evidence");
-        $("#table-12").html(edge.evidence);
-        $("#table-21").html("Citation");
-        $("#table-22").html("<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
-            "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>");
-        $("#table-31").html("Relation");
-        $("#table-32").html(edge.relation);
-        $("#table-41").html("Annotations");
-        // Objects to string represented as JSON {key-value pairs}
-        $("#table-42").html(JSON.stringify(edge.annotations));
+        var edgeObject = {};
+
+        var dynamicTable = document.getElementById('info-table');
+
+        while (dynamicTable.rows.length > 0) {
+            dynamicTable.deleteRow(0);
+        }
+
+        // Check if object property exists
+
+        if (edge.evidence) {
+            edgeObject["Evidence"] = edge.evidence;
+        }
+        if (edge.citation) {
+            edgeObject["Citation"] = "<a href=https://www.ncbi.nlm.nih.gov/pubmed/" + edge.citation.reference + " target='_blank' " +
+                "style='color: blue; text-decoration: underline'>" + edge.citation.reference + "</a>";
+        }
+        if (edge.relation) {
+            edgeObject["Relationship"] = edge.relation;
+        }
+        if (edge.annotations) {
+            edgeObject["Annotations"] = JSON.stringify(edge.annotations);
+        }
+        if (edge.source.cname) {
+            edgeObject["Source"] = edge.source.cname + " (ID: " + edge.source.id + ")";
+        }
+        if (edge.target.cname) {
+            edgeObject["Target"] = edge.target.cname + " (ID: " + edge.target.id + ")";
+        }
+
+        var row = 0;
+        $.each(edgeObject, function (key, value) {
+            insertRow(dynamicTable, row, key, value);
+            row++
+        });
     }
 
 
     // Freeze the graph when space is pressed
     function freezeGraph() {
         // Space button Triggers STOP
-        if (d3.event.keyCode == 32) {
+        if (d3.event.keyCode === 32) {
             simulation.stop();
         }
     }
@@ -868,29 +984,27 @@ function initD3Force(graph, tree) {
 
     // Filter nodes in list
     function nodesNotInArray(nodeArray) {
-        var nodes = svg.selectAll(".node").filter(function (el) {
+        return svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el.id) < 0;
         });
-        return nodes
     }
 
     // Filter nodes in list
     function nodesInArray(nodeArray) {
-        var nodes = svg.selectAll(".node").filter(function (el) {
+        return svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el.id) >= 0;
         });
-        return nodes
+
     }
 
     // Filter nodes in list keeping the order of the nodeArray
     function nodesInArrayKeepOrder(nodeArray) {
-        var nodes = nodeArray.map(function (el) {
+        return nodeArray.map(function (el) {
             var nodeObject = svg.selectAll(".node").filter(function (node) {
                 return el === node.id;
             });
             return nodeObject._groups[0][0]
         });
-        return nodes
     }
 
     function resetAttributesDoubleClick() {
@@ -924,7 +1038,7 @@ function initD3Force(graph, tree) {
             return nodeList.indexOf(d.id) < 0;
         });
 
-        if (visualization != true) {
+        if (visualization !== true) {
             //noinspection JSDuplicatedDeclaration
             var visualizationOption = "opacity", on = "1", off = "0.1";
         } else {
@@ -954,7 +1068,7 @@ function initD3Force(graph, tree) {
             return nodesInPaths.indexOf(d.id) < 0;
         });
 
-        if (visualization != true) {
+        if (visualization !== true) {
             //noinspection JSDuplicatedDeclaration
             var visualizationOption = "opacity", on = "1", off = "0.1";
         } else {
@@ -983,8 +1097,6 @@ function initD3Force(graph, tree) {
             else return edgeObject;
         });
 
-        hideNodesText(nodesInEdges, false);
-
         var nodesNotInEdges = node.filter(function (nodeObject) {
             return nodesInEdges.indexOf(nodeObject.cname) < 0;
         });
@@ -996,8 +1108,6 @@ function initD3Force(graph, tree) {
 
     // Highlight nodes from array of ids and change the opacity of the rest of nodes
     function highlightNodes(nodeArray) {
-
-        hideNodesText(nodeArray, false);
 
         // Filter not mapped nodes to change opacity
         var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
@@ -1045,7 +1155,7 @@ function initD3Force(graph, tree) {
             return nodesInPaths.indexOf(el.id) < 0;
         });
 
-        if (visualization != true) {
+        if (visualization !== true) {
             //noinspection JSDuplicatedDeclaration
             var visualizationOption = "opacity", on = "1", off = "0.1";
         } else {
@@ -1084,7 +1194,7 @@ function initD3Force(graph, tree) {
             var path = link.filter(function (el) {
                 // Source and target should be present in the edge and the distance in the array should be one
                 return ((data[x].indexOf(el.source.id) >= 0 && data[x].indexOf(el.target.id) >= 0)
-                && (Math.abs(data[x].indexOf(el.source.id) - data[x].indexOf(el.target.id)) == 1));
+                && (Math.abs(data[x].indexOf(el.source.id) - data[x].indexOf(el.target.id)) === 1));
             });
 
             edgesInPaths.push(path);
@@ -1100,7 +1210,7 @@ function initD3Force(graph, tree) {
             var edgesInPath = link.filter(function (el) {
                 // Source and target should be present in the edge and the distance in the array should be one
                 return ((data[i].indexOf(el.source.id) >= 0 && data[i].indexOf(el.target.id) >= 0)
-                && (Math.abs(data[i].indexOf(el.source.id) - data[i].indexOf(el.target.id)) == 1));
+                && (Math.abs(data[i].indexOf(el.source.id) - data[i].indexOf(el.target.id)) === 1));
             });
 
             // Select randomly a color and apply to this path
@@ -1127,7 +1237,7 @@ function initD3Force(graph, tree) {
 
         nodeNames.push(value.cname);
 
-        $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='node-checkbox " + value.function + "'></div><span class>" + value.cname + "</span></li>");
+        $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='circle " + value.function + "'></div><span>" + value.cname + "</span></li>");
     });
 
     var duplicates = findDuplicates(nodeNames);
@@ -1171,7 +1281,7 @@ function initD3Force(graph, tree) {
 
     $.each(graph.links, function (key, value) {
 
-        $("#edge-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><span class>" +
+        $("#edge-list-ul").append("<li class='list-group-item'><input class='edge-checkbox' type='checkbox'><span>" +
             value.source.cname + ' ' + value.relation + ' ' + value.target.cname + "</span></li>");
 
     });
@@ -1180,7 +1290,7 @@ function initD3Force(graph, tree) {
         event.preventDefault();
 
         var checkedItems = [];
-        $(".node-checkbox:checked").each(function (idx, li) {
+        $(".edge-checkbox:checked").each(function (idx, li) {
             checkedItems.push(li.parentElement.childNodes[1].innerHTML);
         });
 
@@ -1196,11 +1306,11 @@ function initD3Force(graph, tree) {
     $("#button-paths").on("click", function () {
         if (pathForm.valid()) {
 
-            var checkbox = pathForm.find("input[name='visualization-options'']").is(":checked");
+            var checkbox = pathForm.find("input[name='visualization-options']").is(":checked");
 
-            var args = parameterFilters(tree);
+            var args = getDefaultAjaxParameters(tree);
             args["source"] = nodeNamesToId[pathForm.find("input[name='source']").val()];
-            args["target"] = nodeNamesToId[pathForm.find("input[name='target'']").val()];
+            args["target"] = nodeNamesToId[pathForm.find("input[name='target']").val()];
             args["paths_method"] = $("input[name=paths_method]:checked", pathForm).val();
             args["graphid"] = window.networkID;
 
@@ -1218,14 +1328,14 @@ function initD3Force(graph, tree) {
                 success: function (paths) {
 
                     if (args["paths_method"] === "all") {
-                        if (paths.length == 0) {
+                        if (paths.length === 0) {
                             alert("No paths between the selected nodes");
                         }
 
                         resetAttributes();
 
                         // Apply changes in style for select paths
-                        hideNodesTextInPaths(paths, false);
+                        hideNodesTextInPaths(paths, checkbox);
                         colorPaths(paths, checkbox);
                         resetAttributesDoubleClick()
                     }
@@ -1239,11 +1349,11 @@ function initD3Force(graph, tree) {
                         var edgesNotInPath = g.selectAll(".link").filter(function (el) {
                             // Source and target should be present in the edge and the distance in the array should be one
                             return !((paths.indexOf(el.source.id) >= 0 && paths.indexOf(el.target.id) >= 0)
-                            && (Math.abs(paths.indexOf(el.source.id) - paths.indexOf(el.target.id)) == 1));
+                            && (Math.abs(paths.indexOf(el.source.id) - paths.indexOf(el.target.id)) === 1));
                         });
 
                         // If checkbox is True -> Hide all, Else -> Opacity 0.1
-                        if (checkbox == true) {
+                        if (checkbox === true) {
                             nodesNotInPath.style("visibility", "hidden");
                             edgesNotInPath.style("visibility", "hidden");
                         } else {
@@ -1333,7 +1443,8 @@ function initD3Force(graph, tree) {
     $("#betweenness-button").on("click", function () {
         if (betwennessForm.valid()) {
 
-            var args = parameterFilters(tree);
+            var args = getDefaultAjaxParameters(tree);
+
             args["node_number"] = betwennessForm.find("input[name='betweenness']").val();
             args["graphid"] = window.networkID;
 

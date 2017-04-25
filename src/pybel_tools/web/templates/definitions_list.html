@@ -22,13 +22,15 @@
                 <thead>
                 <tr>
                     <th>Keyword</th>
+                    <th>Version</th>
                     <th>URL</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for keyword, url in namespaces %}
+                {% for keyword, version, url in namespaces %}
                     <tr>
                         <td>{{ keyword }}</td>
+                        <td>{{ version }}</td>
                         <td><a href="{{ url }}">{{ url }}</a></td>
                     </tr>
                 {% endfor %}
@@ -46,13 +48,15 @@
                 <thead>
                 <tr>
                     <th>Keyword</th>
+                    <th>Version</th>
                     <th>URL</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for keyword, url in annotations %}
+                {% for keyword, version, url in annotations %}
                     <tr>
                         <td>{{ keyword }}</td>
+                        <td>{{ version }}</td>
                         <td><a href="{{ url }}">{{ url }}</a></td>
                     </tr>
                 {% endfor %}

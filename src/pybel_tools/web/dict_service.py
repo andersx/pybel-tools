@@ -2,32 +2,43 @@
 
 """This module runs the dictionary-backed PyBEL API"""
 
+import itertools as itt
 import logging
 from operator import itemgetter
 
 import flask
 import networkx as nx
-from flask import Flask, request, jsonify, render_template, url_for, redirect
+from flask import Flask, request, jsonify, url_for, redirect
+from flask import render_template
 from flask_basicauth import BasicAuth
+from requests.compat import unquote
 
+from pybel import from_bytes
 from pybel import from_url
-from pybel.constants import METADATA_DESCRIPTION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
+from pybel.canonicalize import decanonicalize_node
+from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, FRAUNHOFER_RESOURCES
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
 from .utils import try_insert_graph, sanitize_list_of_str
+from ..analysis.stability import get_chaotic_pairs, get_dampened_pairs, get_mutually_unstable_correlation_triples, \
+    get_separate_unstable_correlation_triples
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
+from ..summary.edge_summary import count_relations, get_contradiction_summary
 from ..summary.edge_summary import get_annotation_values_by_annotation
-from ..summary.export import info_json
+from ..summary.error_summary import count_error_types, group_errors
+from ..summary.export import info_json, info_list
+from ..summary.node_properties import get_translocated, get_activities, get_degradations, count_variants
+from ..summary.node_summary import count_functions, count_namespaces
 from ..summary.provenance import get_authors, get_pmids
+
+from ..utils import prepare_c3, count_dict_values
 
 log = logging.getLogger(__name__)
 
 DICTIONARY_SERVICE = 'dictionary_service'
 DEFAULT_TITLE = 'Biological Network Explorer'
-TAB_DELIMITER = '|'
-COMMA_DELIMITER = ','
 
 APPEND_PARAM = 'append'
 REMOVE_PARAM = 'remove'
@@ -42,6 +53,11 @@ SEED_DATA_AUTHORS = 'authors'
 SEED_DATA_PMIDS = 'pmids'
 SEED_DATA_NODES = 'nodes'
 PATHS_METHOD = 'paths_method'
+PIPELINE = 'pipeline'
+AUTOLOAD = 'autoload'
+FILTERS = 'filters'
+# TODO: delete once pipeline is ready
+FILTER_PATHOLOGIES = 'pathology_filter'
 
 BLACK_LIST = {
     GRAPH_ID,
@@ -57,6 +73,10 @@ BLACK_LIST = {
     SEED_DATA_PMIDS,
     SEED_DATA_NODES,
     PATHS_METHOD,
+    PIPELINE,
+    AUTOLOAD,
+    FILTERS,
+    FILTER_PATHOLOGIES,
 }
 
 
@@ -73,7 +93,72 @@ def get_tree_annotations(graph):
             sorted(annotations.items())]
 
 
-def build_dictionary_service(app, manager, preload=True, check_version=True, admin_password=None):
+def get_graph_from_request(api):
+    """Process the GET request returning the filtered graph
+    
+    :param DictionaryService api: The dictionary service
+    :return: graph: A BEL graph
+    :rtype: pybel.BELGraph
+    """
+
+    network_id = request.args.get(GRAPH_ID)
+
+    if network_id is not None:
+        network_id = int(network_id)
+
+    if network_id == 0:
+        network_id = None
+
+    seed_method = request.args.get(SEED_TYPE)
+    if seed_method and seed_method not in SEED_TYPES:
+        raise ValueError('Invalid seed method: {}'.format(seed_method))
+
+    if seed_method and seed_method == SEED_TYPE_PROVENANCE:
+        seed_data = {}
+
+        authors = request.args.getlist(SEED_DATA_AUTHORS)
+
+        if authors:
+            seed_data['authors'] = [unquote(author) for author in authors]
+
+        pmids = request.args.getlist(SEED_DATA_PMIDS)
+        if pmids:
+            seed_data['pmids'] = pmids
+    elif seed_method:
+        seed_data = request.args.getlist(SEED_DATA_NODES)
+        seed_data = [api.decode_node(h) for h in seed_data]
+    else:
+        seed_data = None
+
+    expand_nodes = request.args.get(APPEND_PARAM)
+    remove_nodes = request.args.get(REMOVE_PARAM)
+    filters = request.args.getlist(FILTERS)
+    filter_pathologies = FILTER_PATHOLOGIES in request.args
+
+    if expand_nodes:
+        expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
+
+    if remove_nodes:
+        remove_nodes = [api.decode_node(h) for h in remove_nodes.split(',')]
+
+    annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
+
+    graph = api.query(
+        network_id=network_id,
+        seed_method=seed_method,
+        seed_data=seed_data,
+        expand_nodes=expand_nodes,
+        remove_nodes=remove_nodes,
+        filters=filters,
+        filter_pathologies=filter_pathologies,
+        **annotations
+    )
+
+    return graph
+
+
+def build_dictionary_service(app, manager, check_version=True, admin_password=None, analysis_enabled=False,
+                             eager=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -90,10 +175,9 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     """
     api = DictionaryService(manager=manager)
 
-    if preload:
-        log.info('loading networks')
-        api.load_networks(check_version=check_version)
-        log.info('pre-loaded the dict service')
+    log.info('loading networks')
+    api.load_networks(check_version=check_version, eager=eager)
+    log.info('pre-loaded the dict service')
 
     if admin_password is not None:
         app.config['BASIC_AUTH_USERNAME'] = 'pybel'
@@ -127,77 +211,54 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         def ensure_small_corpus():
             """Parses the small corpus"""
             graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph)
+            return try_insert_graph(manager, graph, api)
 
-        @app.route('/admin/ensure/small')
+        @app.route('/admin/ensure/large')
         @basic_auth.required
         def ensure_large_corpus():
             """Parses the large corpus"""
             graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph)
+            return try_insert_graph(manager, graph, api)
+
+        @app.route('/admin/ensure/abstract3')
+        @basic_auth.required
+        def ensure_abstract3():
+            """Ensures Selventa Example 3"""
+            url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
+            graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
+            return try_insert_graph(manager, graph, api)
+
+        @app.route('/admin/ensure/gfam')
+        @basic_auth.required
+        def ensure_gfam():
+            graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
+            return try_insert_graph(manager, graph, api)
+
+        @app.route('/admin/drop/all')
+        @basic_auth.required
+        def nuke():
+            """Destroys the database and recreates it"""
+            log.info('nuking database')
+            manager.drop_database()
+            manager.create_database()
+            log.info('restarting dictionary service')
+            api.load_networks(force_reload=True)
+            log.info('... the dust settles')
+            return jsonify({'status': 200})
+
+        @app.route('/admin/drop/graphs')
+        @basic_auth.required
+        def drop_graphs():
+            """Drops all graphs"""
+            log.info('dropping all graphs')
+            manager.drop_graphs()
+            return jsonify({'status': 200})
 
         log.info('added admin functions to dict service')
 
-    def get_graph_from_request():
-        """Process the GET request returning the filtered graph
-        :return: graph: A BEL graph
-        :rtype: pybel.BELGraph
-        """
-
-        network_id = request.args.get(GRAPH_ID)
-
-        if network_id is not None:
-            network_id = int(network_id)
-
-        if network_id == 0:
-            network_id = None
-
-        seed_method = request.args.get(SEED_TYPE)
-        if seed_method and seed_method not in SEED_TYPES:
-            raise ValueError('Invalid seed method: {}'.format(seed_method))
-
-        if seed_method and seed_method == SEED_TYPE_PROVENANCE:
-            seed_data = {}
-
-            authors = request.args.getlist(SEED_DATA_AUTHORS)
-
-            if authors:
-                # TODO: decode authors
-                seed_data['authors'] = authors
-
-            pmids = request.args.getlist(SEED_DATA_PMIDS)
-            if pmids:
-                seed_data['pmids'] = pmids
-        elif seed_method:
-            seed_data = request.args.getlist(SEED_DATA_NODES)
-            seed_data = [api.decode_node(h) for h in seed_data]
-        else:
-            seed_data = None
-
-        expand_nodes = request.args.get(APPEND_PARAM)
-        remove_nodes = request.args.get(REMOVE_PARAM)
-
-        if expand_nodes:
-            expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
-
-        if remove_nodes:
-            remove_nodes = [api.decode_node(h) for h in remove_nodes.split(',')]
-
-        annotations = {k: request.args.getlist(k) for k in request.args if k not in BLACK_LIST}
-
-        graph = api.query(
-            network_id=network_id,
-            seed_method=seed_method,
-            seed_data=seed_data,
-            expand_nodes=expand_nodes,
-            remove_nodes=remove_nodes,
-            **annotations
-        )
-
-        return graph
-
     # Web Pages
 
+    @app.route('/', methods=['GET', 'POST'])
     @app.route('/networks/', methods=['GET', 'POST'])
     def view_networks():
         """Renders a page for the user to choose a network"""
@@ -205,15 +266,17 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         seed_provenance_form = SeedProvenanceForm()
 
         if seed_subgraph_form.validate_on_submit() and seed_subgraph_form.submit_subgraph.data:
-            # nodes = sanitize_list_of_str()
-            seed_data_nodes = seed_subgraph_form.node_list.data.split('|')
+            seed_data_nodes = seed_subgraph_form.node_list.data.split(',')
             seed_method = seed_subgraph_form.seed_method.data
-            log.info('got subgraph seed: %s', dict(nodes=seed_data_nodes, method=seed_method))
+            filter_pathologies = seed_subgraph_form.filter_pathologies.data
+            log.info('got subgraph seed: %s',
+                     dict(nodes=seed_data_nodes, method=seed_method, filter_path=filter_pathologies))
             url = url_for('view_explorer', **{
                 GRAPH_ID: '0',
                 SEED_TYPE: seed_method,
                 SEED_DATA_NODES: seed_data_nodes,
-                'autoload': 'yes',
+                FILTER_PATHOLOGIES: filter_pathologies,
+                AUTOLOAD: 'yes',
             })
             log.info('redirecting to %s', url)
             return redirect(url)
@@ -226,18 +289,17 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
                 SEED_TYPE: SEED_TYPE_PROVENANCE,
                 SEED_DATA_PMIDS: pmids,
                 SEED_DATA_AUTHORS: authors,
-                'autoload': 'yes',
+                AUTOLOAD: 'yes',
             })
             log.info('redirecting to %s', url)
             return redirect(url)
 
-        data = [(nid, n.name, n.version, n.document[METADATA_DESCRIPTION]) for nid, n in api.networks.items()]
-
         return flask.render_template(
             'network_list.html',
-            data=data,
+            data=manager.list_graphs(),
             provenance_form=seed_provenance_form,
-            subgraph_form=seed_subgraph_form
+            subgraph_form=seed_subgraph_form,
+            analysis_enabled=analysis_enabled
         )
 
     @app.route('/explore/', methods=['GET'])
@@ -245,23 +307,93 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         """Renders a page for the user to explore a network"""
         return flask.render_template('explorer.html')
 
+    @app.route('/summary/<int:graph_id>')
+    def view_summary(graph_id):
+        """Renders a page with the parsing errors for a given BEL script"""
+        graph = manager.get_graph_by_id(graph_id)
+        graph = from_bytes(graph.blob, check_version=check_version)
+
+        unstable_pairs = itt.chain.from_iterable([
+            ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
+             get_chaotic_pairs(graph)),
+            ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Dampened') for u, v, in
+             get_dampened_pairs(graph)),
+        ])
+
+        contradictory_pairs = ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), relation) for
+                               u, v, relation in get_contradiction_summary(graph))
+
+        separate_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
+                                     get_separate_unstable_correlation_triples(graph))
+        mutually_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
+                                     get_mutually_unstable_correlation_triples(graph))
+
+        unstable_correlation_triplets = itt.chain.from_iterable([
+            ((a, b, c, 'Seperate') for a, b, c in separate_unstable_triples),
+            ((a, b, c, 'Mutual') for a, b, c in mutually_unstable_triples),
+        ])
+
+        return render_template(
+            'summary.html',
+            chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
+            chart_2_data=prepare_c3(count_relations(graph), 'Relationship Type'),
+            chart_3_data=prepare_c3(count_error_types(graph), 'Error Type'),
+            chart_4_data=prepare_c3({
+                'Translocations': len(get_translocated(graph)),
+                'Degradations': len(get_degradations(graph)),
+                'Molecular Activities': len(get_activities(graph))
+            }, 'Modifier Type'),
+            chart_5_data=prepare_c3(count_variants(graph), 'Node Variants'),
+            chart_6_data=prepare_c3(count_namespaces(graph), 'Namespaces'),
+            chart_7_data=prepare_c3(api.get_top_degree(graph_id), 'Top Hubs'),
+            chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
+            chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
+            error_groups=count_dict_values(group_errors(graph)).most_common(20),
+            info_list=info_list(graph),
+            contradictions=contradictory_pairs,
+            unstable_pairs=unstable_pairs,
+            unstable_correlation_triplets=unstable_correlation_triplets,
+            graph=graph,
+            graph_id=graph_id,
+            time=None,
+        )
+
     @app.route('/definitions')
     def view_definitions():
         """Displays a page listing the namespaces and annotations."""
-        return render_template('definitions_list.html', namespaces=manager.list_namespaces(),
-                               annotations=manager.list_annotations())
+        return render_template('definitions_list.html', namespaces=sorted(manager.list_namespaces()),
+                               annotations=sorted(manager.list_annotations()))
 
     # Data Service
+
+    @app.route('/api/network/list', methods=['GET'])
+    def get_network_list():
+        return jsonify(manager.list_graphs())
+
+    @app.route('/api/summary/<int:network_id>')
+    def get_number_nodes(network_id):
+        """Gets a summary of the given network"""
+        return jsonify(info_json(api.get_network(network_id)))
+
     @app.route('/api/network/', methods=['GET'])
     def get_network():
         """Builds a graph from the given network id and sends it in the given format"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
         return serve_network(graph, request.args.get(FORMAT))
+
+    @app.route('/api/network/name/<int:network_id>')
+    def get_network_id(network_id):
+        """Returns network name given its id"""
+        if network_id == 0:
+            return ''
+
+        graph = api.get_network(network_id)
+        return jsonify(graph.name)
 
     @app.route('/api/tree/')
     def get_tree_api():
         """Builds the annotation tree data structure for a given graph"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
         return jsonify(get_tree_annotations(graph))
 
     @app.route('/api/paths/')
@@ -269,7 +401,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         """Returns array of shortest/all paths given a source node and target node both belonging in the graph
         :return: JSON 
         """
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
 
         if SOURCE_NODE not in request.args:
             raise ValueError('no source')
@@ -297,6 +429,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
             graph = graph.to_undirected()
 
         if method == 'all':
+            # TODO: Think about increasing the cutoff
             all_paths = nx.all_simple_paths(graph, source=source, target=target, cutoff=7)
             # all_paths is a generator -> convert to list and create a list of lists (paths)
             return jsonify(list(all_paths))
@@ -312,7 +445,7 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/centrality/', methods=['GET'])
     def get_nodes_by_betweenness_centrality():
         """Gets a list of nodes with the top betweenness-centrality"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
 
         try:
             node_numbers = int(request.args.get(NODE_NUMBER))
@@ -331,13 +464,13 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
     @app.route('/api/authors')
     def get_all_authors():
         """Gets a list of all authors in the graph produced by the given URL parameters"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
         return jsonify(sorted(get_authors(graph)))
 
     @app.route('/api/pmids')
     def get_all_pmids():
         """Gets a list of all pubmed citation identifiers in the graph produced by the given URL parameters"""
-        graph = get_graph_from_request()
+        graph = get_graph_from_request(api)
         return jsonify(sorted(get_pmids(graph)))
 
     @app.route('/api/nodes/')
@@ -350,44 +483,31 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         """Gets the pybel node tuple"""
         return jsonify(api.get_node_by_id(nid))
 
-    @app.route('/api/summary/<int:network_id>')
-    def get_number_nodes(network_id):
-        """Gets a summary of the given network"""
-        return jsonify(info_json(api.get_network_by_id(network_id)))
-
     @app.route('/api/suggestion/nodes/')
     def get_node_suggestion():
         """Suggests a node based on the search criteria"""
         if not request.args['search']:
             return jsonify([])
 
-        keywords = [entry.strip() for entry in request.args['search'].split(TAB_DELIMITER)]
-
-        log.debug('Searching nodes by keywords: %s', keywords)
-
-        autocompletion_set = api.get_nodes_containing_keyword(keywords[-1])
+        autocompletion_set = api.get_nodes_containing_keyword(request.args['search'])
 
         return jsonify(autocompletion_set)
 
-    @app.route('/api/suggestion/authors/<author>')
-    def get_author_suggestion(author):
+    @app.route('/api/suggestion/authors/')
+    def get_author_suggestion():
         """Return list of authors matching the author keyword"""
-        keywords = [entry.strip() for entry in author.split(COMMA_DELIMITER)]
 
-        autocompletion_set = api.get_authors_containing_keyword(keywords[-1])
+        autocompletion_set = api.get_authors_containing_keyword(request.args['search'])
 
-        # {k: v for v, k in enumerate(lst)}
+        return jsonify([{"text": pubmed, "id": index} for index, pubmed in enumerate(autocompletion_set)])
 
-        return jsonify(list(autocompletion_set))
-
-    @app.route('/api/suggestion/pubmed/<pubmed>')
-    def get_pubmed_suggestion(pubmed):
+    @app.route('/api/suggestion/pubmed/')
+    def get_pubmed_suggestion():
         """Return list of pubmedids matching the integer keyword"""
-        keywords = [entry.strip() for entry in pubmed.split(COMMA_DELIMITER)]
 
-        autocompletion_set = api.get_pubmed_containing_keyword(keywords[-1])
+        autocompletion_set = api.get_pubmed_containing_keyword(request.args['search'])
 
-        return jsonify(list(autocompletion_set))
+        return jsonify([{"text": pubmed, "id": index} for index, pubmed in enumerate(autocompletion_set)])
 
     @app.route('/api/edges/provenance/<int:sid>/<int:tid>')
     def get_edges(sid, tid):
@@ -400,3 +520,5 @@ def build_dictionary_service(app, manager, preload=True, check_version=True, adm
         return jsonify(sorted(BLACK_LIST))
 
     log.info('Added dictionary service to %s', app)
+
+    return api

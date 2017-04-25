@@ -26,11 +26,14 @@ from pybel import from_pickle, to_database, from_lines
 from pybel.constants import DEFAULT_CACHE_LOCATION, SMALL_CORPUS_URL, LARGE_CORPUS_URL
 from pybel.manager.cache import build_manager
 from pybel.utils import get_version as pybel_version
+from .constants import GENE_FAMILIES, NAMED_COMPLEXES
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
-from .ioutils import convert_recursive, upload_recusive
+from .ioutils import convert_recursive, upload_recursive
+from .mutation.metadata import fix_pubmed_citations
 from .utils import get_version
 from .web import receiver_service
+from .web.analysis_service import build_analysis_service
 from .web.compilation_service import build_synchronous_compiler_service
 from .web.constants import SECRET_KEY
 from .web.database_service import build_database_service
@@ -38,17 +41,21 @@ from .web.dict_service import build_dictionary_service
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
 from .web.sitemap_endpoint import build_sitemap_endpoint
-from .web.summary_service import build_summary_service
 from .web.upload_service import build_pickle_uploader_service
 from .web.utils import get_app
 
 log = logging.getLogger(__name__)
 
+datefmt = '%H:%M:%S'
+fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
 
 def set_debug(level):
-    logging.basicConfig(level=level)
-    logging.getLogger('pybel').setLevel(level)
-    logging.getLogger('pybel_tools').setLevel(level)
+    logging.basicConfig(level=level, format=fmt, datefmt=datefmt)
+    pybel_log = logging.getLogger('pybel')
+    pybel_log.setLevel(level)
+    pbt_log = logging.getLogger('pybel_tools')
+    pbt_log.setLevel(level)
     log.setLevel(level)
 
 
@@ -72,27 +79,61 @@ def ensure():
 
 @ensure.command()
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def small_corpus(connection, use_edge_store, debug):
+def small_corpus(connection, enrich_authors, use_edge_store, debug):
     """Caches the Selventa Small Corpus"""
     set_debug_param(debug)
-
     manager = build_manager(connection)
     graph = pybel.from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    if enrich_authors:
+        fix_pubmed_citations(graph)
     manager.insert_graph(graph, store_parts=use_edge_store)
 
 
 @ensure.command()
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def large_corpus(connection, use_edge_store, debug):
+def large_corpus(connection, enrich_authors, use_edge_store, debug):
     """Caches the Selventa Large Corpus"""
     set_debug_param(debug)
-
     manager = build_manager(connection)
     graph = pybel.from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    if enrich_authors:
+        fix_pubmed_citations(graph)
+    manager.insert_graph(graph, store_parts=use_edge_store)
+
+
+@ensure.command()
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('--enrich-authors', is_flag=True)
+@click.option('--use-edge-store', is_flag=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+def gene_families(connection, enrich_authors, use_edge_store, debug):
+    """Caches the HGNC Gene Family memberships"""
+    set_debug_param(debug)
+    manager = build_manager(connection)
+    graph = pybel.from_url(GENE_FAMILIES, manager=manager)
+    if enrich_authors:
+        fix_pubmed_citations(graph)
+    manager.insert_graph(graph, store_parts=use_edge_store)
+
+
+@ensure.command()
+@click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
+@click.option('--enrich-authors', is_flag=True)
+@click.option('--use-edge-store', is_flag=True)
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+def named_complexes(connection, enrich_authors, use_edge_store, debug):
+    """Caches GO Named Protein Complexes memberships"""
+    set_debug_param(debug)
+    manager = build_manager(connection)
+    graph = pybel.from_url(NAMED_COMPLEXES, manager=manager)
+    if enrich_authors:
+        fix_pubmed_citations(graph)
     manager.insert_graph(graph, store_parts=use_edge_store)
 
 
@@ -102,9 +143,10 @@ def io():
 
 
 @io.command()
-@click.argument('path')
+@click.option('-p', '--path', default=os.getcwd())
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
-@click.option('-r', '--recursive', help='Recursively upload all gpickles in the directory given as the path')
+@click.option('-r', '--recursive', is_flag=True,
+              help='Recursively upload all gpickles in the directory given as the path')
 @click.option('-s', '--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
 @click.option('--to-service', is_flag=True, help='Sends to PyBEL web service')
 @click.option('--service-url', help='Service location. Defaults to {}'.format(DEFAULT_SERVICE_URL))
@@ -112,9 +154,9 @@ def io():
 def upload(path, connection, recursive, skip_check_version, to_service, service_url, debug):
     """Quick uploader"""
     set_debug_param(debug)
-
     if recursive:
-        upload_recusive(path, connection=connection)
+        log.info('uploading recursively from: %s', path)
+        upload_recursive(path, connection=connection)
     else:
         graph = from_pickle(path, check_version=(not skip_check_version))
         if to_service:
@@ -136,13 +178,15 @@ def post(path, url, skip_check_version):
 @io.command()
 @click.option('-c', '--connection', help='Input cache location. Defaults to {}'.format(DEFAULT_CACHE_LOCATION))
 @click.option('-u', '--upload', is_flag=True, help='Enable automatic database uploading')
+@click.option('--store-parts', is_flag=True, help='Automatically upload to database and edge store')
 @click.option('-d', '--directory', default=os.getcwd(),
               help='The directory to search. Defaults to current working directory')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def convert(connection, upload, directory, debug):
+def convert(connection, upload, store_parts, directory, debug):
     """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
     set_debug_param(debug)
-    convert_recursive(directory, connection=connection, upload=upload, pickle=True)
+    convert_recursive(directory, connection=connection, upload=(upload or store_parts), pickle=True,
+                      store_parts=store_parts)
 
 
 @main.command()
@@ -152,18 +196,20 @@ def convert(connection, upload, directory, debug):
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 @click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
 @click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+@click.option('-e', '--eager', is_flag=True, help="Eagerly preload all data and perform enrichments")
 @click.option('--run-database-service', is_flag=True, help='Enable the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
 @click.option('--run-uploader-service', is_flag=True, help='Enable the gpickle upload page')
 @click.option('--run-compiler-service', is_flag=True, help='Enable the compiler page')
 @click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
+@click.option('--run-analysis-service', is_flag=True, help='Enable the analysis service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
 @click.option('--admin-password', help='Set admin password and enable admin services')
 @click.option('--echo-sql', is_flag=True)
-def web(connection, host, port, debug, flask_debug, skip_check_version, run_database_service, run_parser_service,
-        run_uploader_service, run_compiler_service, run_receiver_service, run_all, secret_key, admin_password,
-        echo_sql):
+def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
+        run_uploader_service, run_compiler_service, run_receiver_service, run_analysis_service, run_all, secret_key,
+        admin_password, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
 
@@ -181,16 +227,18 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
 
     manager = build_manager(connection, echo=echo_sql)
 
-    build_sitemap_endpoint(app)
+    admin_password = admin_password or (('PYBEL_ADMIN_PASS' in os.environ) and os.environ['PYBEL_ADMIN_PASS'])
 
-    build_dictionary_service(
+    build_sitemap_endpoint(app, show_admin=admin_password)
+
+    api = build_dictionary_service(
         app,
         manager=manager,
         check_version=(not skip_check_version),
-        admin_password=admin_password
+        admin_password=admin_password,
+        analysis_enabled=(run_analysis_service or run_all),
+        eager=eager,
     )
-
-    build_summary_service(app, manager=manager)
 
     if run_database_service:
         build_database_service(app, manager)
@@ -206,6 +254,9 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, run_data
 
     if run_receiver_service or run_all:
         build_receiver_service(app, manager=manager)
+
+    if run_analysis_service or run_all:
+        build_analysis_service(app, manager=manager, api=api)
 
     log.info('Done building %s', app)
 

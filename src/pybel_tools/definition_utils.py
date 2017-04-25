@@ -33,6 +33,7 @@ log = logging.getLogger(__name__)
 
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'
 DATE_FMT = '%Y-%m-%d'
+DATE_VERSION_FMT = '%Y%m%d'
 
 
 def make_namespace_header(name, keyword, domain, query_url=None, description=None, species=None, version=None,
@@ -48,7 +49,7 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     :param query_url: HTTP URL to query for details on namespace values (must be valid URL)
     :param description: Namespace description
     :param species: Comma-separated list of species taxonomy id's
-    :param version: Namespace version. Defaults to :code:`1.0.0`
+    :param version: Namespace version. Defaults to current date in ``YYYYMMDD`` format.
     :param created: Namespace public timestamp, ISO 8601 datetime
     :type created: str
     :return: An iterator over the lines of the ``[Namespace]`` section of a BELNS file
@@ -61,11 +62,11 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     yield 'Keyword={}'.format(keyword)
     yield 'NameString={}'.format(name)
     yield 'DomainString={}'.format(domain)
-    yield 'VersionString={}'.format(version if version else '1.0.0')
+    yield 'VersionString={}'.format(version if version else time.strftime(DATE_VERSION_FMT))
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
 
     if description is not None:
-        yield 'DescriptionString={}'.format(description)
+        yield 'DescriptionString={}'.format(description.strip().replace('\n', ''))
 
     if species is not None:
         yield 'SpeciesString={}'.format(species)
@@ -237,7 +238,7 @@ def make_annotation_header(keyword, description=None, usage=None, version=None, 
     :type description: str
     :param usage: How to use this annotation
     :type usage: str
-    :param version: Namespace version. Defaults to '1.0.0'
+    :param version: Namespace version. Defaults to date in ``YYYYMMDD`` format.
     :type version: str
     :param created: Namespace public timestamp, ISO 8601 datetime
     :type created: str
@@ -248,14 +249,14 @@ def make_annotation_header(keyword, description=None, usage=None, version=None, 
     yield '[AnnotationDefinition]'
     yield 'Keyword={}'.format(keyword)
     yield 'TypeString={}'.format('list')
-    yield 'VersionString={}'.format(version if version else '1.0.0')
+    yield 'VersionString={}'.format(version if version else time.strftime(DATE_VERSION_FMT))
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
 
     if description is not None:
-        yield 'DescriptionString={}'.format(description)
+        yield 'DescriptionString={}'.format(description.strip().replace('\n', ''))
 
     if usage is not None:
-        yield 'UsageString={}'.format(usage)
+        yield 'UsageString={}'.format(usage.strip().replace('\n', ''))
 
 
 def write_annotation(keyword, values, citation_name, description=None, usage=None, version=None, created=None,
@@ -273,7 +274,7 @@ def write_annotation(keyword, values, citation_name, description=None, usage=Non
     :type description: str
     :param usage: How to use this annotation
     :type usage: str
-    :param version: The version of this annotation (defaults to ``1.0.0``)
+    :param version: The version of this annotation. Defaults to date in ``YYYYMMDD`` format.
     :type version: str
     :param created: The annotation's public timestamp, ISO 8601 datetime
     :type created: str
@@ -316,7 +317,7 @@ def write_annotation(keyword, values, citation_name, description=None, usage=Non
     for key, value in sorted(values.items()):
         if not key.strip():
             continue
-        print('{}{}|{}'.format(value_prefix, key.strip(), value.strip()), file=file)
+        print('{}{}|{}'.format(value_prefix, key.strip(), value.strip().replace('\n', '')), file=file)
 
 
 def export_namespace(graph, namespace, directory=None, cacheable=False):

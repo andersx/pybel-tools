@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from fuzzywuzzy import process, fuzz
 
 from pybel.constants import ANNOTATIONS
-from pybel.parser.parse_exceptions import NakedNameWarning, MissingNamespaceNameWarning
+from pybel.parser.parse_exceptions import NakedNameWarning, MissingNamespaceNameWarning, MissingNamespaceRegexWarning
 from ..utils import check_has_annotation
 
 __all__ = [
@@ -27,7 +27,7 @@ def count_error_types(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A Counter of {error type: frequency}
-    :rtype: Counter
+    :rtype: collections.Counter
     """
     return Counter(e.__class__.__name__ for _, _, e, _ in graph.warnings)
 
@@ -38,7 +38,7 @@ def count_naked_names(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A Counter from {name: frequency}
-    :rtype: Counter
+    :rtype: collections.Counter
     """
     return Counter(e.name for _, _, e, _ in graph.warnings if isinstance(e, NakedNameWarning))
 
@@ -51,10 +51,10 @@ def get_incorrect_names(graph, namespace):
     :param namespace: The namespace to filter by
     :type namespace: str
     :return: The set of all incorrect names from the given namespace in the graph
-    :rtype: set
+    :rtype: set[str]
     """
     return {e.name for _, _, e, _ in graph.warnings if
-            isinstance(e, MissingNamespaceNameWarning) and e.namespace == namespace}
+            isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning)) and e.namespace == namespace}
 
 
 def calculate_incorrect_name_dict(graph):
@@ -63,12 +63,12 @@ def calculate_incorrect_name_dict(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A dictionary of {namespace: list of erroneous names}
-    :rtype: dict
+    :rtype: dict[str, str]
     """
     missing = defaultdict(list)
 
     for line_number, line, e, ctx in graph.warnings:
-        if not isinstance(e, MissingNamespaceNameWarning):
+        if not isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning)):
             continue
         missing[e.namespace].append(e.name)
 
@@ -107,7 +107,7 @@ def calculate_error_by_annotation(graph, annotation):
     :param annotation: The annotation to group errors by
     :type annotation: str
     :return: A dictionary of {annotation value: list of errors}
-    :rtype: dict
+    :rtype: dict[str, list[str]]
     """
     results = defaultdict(list)
 
@@ -132,7 +132,7 @@ def group_errors(graph):
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :return: A dictionary of {error string: list of line numbers}
-    :rtype: dict
+    :rtype: dict[str, list[int]]
     """
     warning_summary = defaultdict(list)
 

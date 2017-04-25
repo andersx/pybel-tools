@@ -24,7 +24,7 @@ def count_functions(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A Counter from {function: frequency}
-    :rtype: Counter
+    :rtype: collections.Counter
     """
     return Counter(data[FUNCTION] for _, data in graph.nodes_iter(data=True))
 
@@ -35,7 +35,7 @@ def get_functions(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A set of functions
-    :rtype: set
+    :rtype: set[str]
     """
     return set(count_functions(graph))
 
@@ -46,7 +46,7 @@ def count_namespaces(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A Counter from {namespace: frequency}
-    :rtype: Counter
+    :rtype: collections.Counter
     """
     return Counter(data[NAMESPACE] for _, data in graph.nodes_iter(data=True) if NAMESPACE in data)
 
@@ -54,10 +54,9 @@ def count_namespaces(graph):
 def get_namespaces(graph):
     """Gets the set of all namespaces used in this graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A set of namespaces
-    :rtype: set
+    :rtype: set[str]
     """
     return set(count_namespaces(graph))
 
@@ -70,7 +69,7 @@ def count_names(graph):
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
     :return: A Counter from {names: frequency}
-    :rtype: Counter
+    :rtype: collections.Counter
     """
     return Counter(data[NAME] for _, data in graph.nodes_iter(data=True) if NAME in data)
 
@@ -83,7 +82,7 @@ def get_names(graph, namespace):
     :param namespace: A namespace
     :type namespace: str
     :return: A set of names belonging to the given namespace that are in the given graph
-    :rtype: set of str
+    :rtype: set[str]
     """
 
     return {data[NAME] for _, data in graph.nodes_iter(data=True) if NAMESPACE in data and data[NAMESPACE] == namespace}
@@ -99,7 +98,7 @@ def get_names_by_namespace(graph):
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
     :return: A dictionary of {namespace: set of names}
-    :rtype: dict
+    :rtype: dict[str, set[str]]
     """
     result = defaultdict(set)
 
@@ -119,6 +118,6 @@ def get_names_with_errors(graph, namespace):
     :param namespace: The namespace to filter by
     :type namespace: str
     :return: The set of all correct and incorrect names from the given namespace in the graph
-    :rtype: set
+    :rtype: set[str]
     """
     return get_names(graph, namespace) | get_incorrect_names(graph, namespace)

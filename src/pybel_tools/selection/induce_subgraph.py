@@ -3,14 +3,17 @@
 import logging
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA
+from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA, PATHOLOGY
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
     edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
+from ..filters.node_deletion import remove_nodes_by_function
 from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
+from ..mutation.highlight import highlight_nodes, highlight_edges
 from ..mutation.merge import left_merge
+from ..mutation.utils import remove_isolated_nodes
 from ..summary.edge_summary import get_annotation_values
 
 log = logging.getLogger(__name__)
@@ -20,6 +23,7 @@ __all__ = [
     'get_subgraph_by_edge_filter',
     'get_subgraph_by_node_filter',
     'get_subgraph_by_neighborhood',
+    'get_subgraph_by_second_neighbors',
     'get_subgraph_by_shortest_paths',
     'get_subgraph_by_annotation_value',
     'get_subgraph_by_data',
@@ -34,12 +38,14 @@ __all__ = [
 
 SEED_TYPE_INDUCTION = 'induction'
 SEED_TYPE_NEIGHBORS = 'neighbors'
+SEED_TYPE_DOUBLE_NEIGHBORS = 'dneighbors'
 SEED_TYPE_PATHS = 'shortest_paths'
 SEED_TYPE_PROVENANCE = 'provenance'
 
 SEED_TYPES = {
     SEED_TYPE_INDUCTION,
     SEED_TYPE_NEIGHBORS,
+    SEED_TYPE_DOUBLE_NEIGHBORS,
     SEED_TYPE_PATHS,
     SEED_TYPE_PROVENANCE,
 }
@@ -101,6 +107,23 @@ def get_subgraph_by_neighborhood(graph, nodes):
     for node in result.nodes_iter():
         result.node[node].update(graph.node[node])
 
+    return result
+
+
+@pipeline.mutator
+def get_subgraph_by_second_neighbors(graph, nodes, filter_pathologies=False):
+    """Gets a BEL graph around the neighborhoods of the given nodes, and expands to the neighborhood of those nodes
+
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param nodes: An iterable of BEL nodes
+    :type nodes: iter
+    :return: A BEL graph induced around the neighborhoods of the given nodes
+    :rtype: pybel.BELGraph
+    :param bool filter_pathologies: Should expansion take place around pathologies?
+    """
+    result = get_subgraph_by_neighborhood(graph, nodes)
+    expand_all_node_neighborhoods(graph, result, filter_pathologies=filter_pathologies)
     return result
 
 
@@ -209,7 +232,8 @@ def get_causal_subgraph(graph):
 
 
 @pipeline.mutator
-def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None, **annotations):
+def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, remove_nodes=None,
+                 filter_pathologies=False, **annotations):
     """Runs pipeline query on graph with multiple subgraph filters and expanders.
 
     Order of Operations:
@@ -218,6 +242,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     2. Filter by annotations
     3. Add nodes
     4. Remove nodes
+    5. Apply filters
 
     :param graph: A BEL graph
     :type graph: pybel.BELGraph
@@ -228,6 +253,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     :type expand_nodes: list
     :param remove_nodes: Remove these nodes and all of their in/out edges
     :type remove_nodes: list
+    :param bool filter_pathologies: Should pathology nodes be removed?
     :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
     :type annotations: dict
     :return: A BEL Graph
@@ -243,6 +269,8 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
         result = get_subgraph_by_neighborhood(graph, seed_data)
     elif seed_method == SEED_TYPE_PROVENANCE:
         result = get_subgraph_by_provenance(graph, seed_data)
+    elif seed_method == SEED_TYPE_DOUBLE_NEIGHBORS:
+        result = get_subgraph_by_second_neighbors(graph, seed_data)
     elif not seed_method:  # Otherwise, don't seed a subgraph
         result = graph.copy()
         log.debug('no seed function - using full network: %s', result.name)
@@ -268,6 +296,11 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
                 continue
             result.remove_node(node)
         log.debug('graph contracted to (%s nodes / %s edges)', result.number_of_nodes(), result.number_of_edges())
+
+    # Apply filters
+    if filter_pathologies:
+        remove_nodes_by_function(graph, PATHOLOGY)
+        remove_isolated_nodes(graph)
 
     return result
 
@@ -301,7 +334,8 @@ def get_subgraph_by_provenance(graph, kwargs):
 
 
 @pipeline.mutator
-def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_neighborhoods=True):
+def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_neighborhoods=True,
+                                      filter_pathologies=False):
     """Gets all edges of given provenance and expands around their nodes' neighborhoods
     
     :param graph: A BEL graph
@@ -312,6 +346,7 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
     :type authors: str or list[str]
     :param expand_neighborhoods: Should the neighborhoods around all nodes be expanded? Defaults to ``True``
     :type expand_neighborhoods: bool
+    :param bool filter_pathologies: Should expansion take place around pathologies?
     :return: An induced graph
     :rtype: pybel.BELGraph
     """
@@ -326,7 +361,10 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
     if authors:
         left_merge(result, get_subgraph_by_authors(graph, authors))
 
+    highlight_nodes(result, result.nodes_iter())
+    highlight_edges(result, result.edges_iter(keys=True, data=True))
+
     if expand_neighborhoods:
-        expand_all_node_neighborhoods(graph, result)
+        expand_all_node_neighborhoods(graph, result, filter_pathologies=filter_pathologies)
 
     return result

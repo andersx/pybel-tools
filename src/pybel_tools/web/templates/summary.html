@@ -27,11 +27,14 @@
     {{ util.flashed_messages(dismissible=True) }}
     <div class="container">
         <div class="page-header">
-            <h1>Summary for {{ filename }}</h1>
+            <h1>Summary of {{ graph.name }}
+                <small class="text-muted">{{ graph.version }}</small>
+            </h1>
         </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Metadata</h3>
+                <h3 class="panel-title">Overview</h3>
             </div>
             <div class="panel-body">
                 <dl>
@@ -40,11 +43,40 @@
                         <dd>{{ value }}</dd>
                     {% endfor %}
                 </dl>
+                <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
+                   role="button">Explore</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bel') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> BEL Script</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='json') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Nodelink JSON</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='cx') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CX JSON</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bytes') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Pickle</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='graphml') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> GraphML</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='csv') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</a>
             </div>
         </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Summary</h3>
+                <h3 class="panel-title">Network Statistics</h3>
+            </div>
+            <div class="panel-body">
+                <dl>
+                    {% for key, value in info_list %}
+                        <dt>{{ key }}</dt>
+                        <dd>{{ value }}</dd>
+                    {% endfor %}
+                </dl>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Statistics</h3>
             </div>
             <div class="panel-body">
                 {% if time is not none %}
@@ -61,11 +93,34 @@
                         <div id="chart2"></div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart4"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart5"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart6"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart7"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart8"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart9"></div>
+                    </div>
+                </div>
             </div>
         </div>
+
         <div class="panel panel-default panel-table">
             <div class="panel-heading">
-                <h3 class="panel-title">Errors</h3>
+                <h3 class="panel-title">All Errors</h3>
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
@@ -91,6 +146,158 @@
             </div>
             <div class="panel-footer">
                 <ul class="pagination pagination pagination-sm" style="margin:0;" id="myPager"></ul>
+            </div>
+        </div>
+
+        <div class="panel panel-default panel-table">
+            <div class="panel-heading">
+                <h3 class="panel-title">Top Errors</h3>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Error</th>
+                            <th>Frequency</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for k, v in error_groups %}
+                            <tr>
+                                <td><code>{{ k }}</code></td>
+                                <td>{{ v }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Contradictory Edges</h3>
+            </div>
+            <div class="panel-body">
+                <p>These pairs of nodes have a contradiction in their causal relationships, meaning they have more than
+                    one of <code>INCREASES</code>, <code>DECREASES</code>, or <code>CAUSES NO CHANGE</code>. This may be
+                    due to different experimental conditions, so these edges need to be carefully considered in
+                    analyses.
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>Relations</th>
+                            <th>Target</th>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for source, target, relations in contradictions %}
+                            <tr>
+                                <td>{{ source }}</td>
+                                <td>{{ ', '.join(relations) }}</td>
+                                <td>{{ target }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Unstable Pairs</h3>
+            </div>
+            <div class="panel-body">
+                <dl>
+                    <dt>Chaotic Pairs</dt>
+                    <dd>Nodes that mutually increase each other, such as when both <code>A increases B</code> and <code>B
+                        increases A</code>.
+                    </dd>
+                    <dt>Dampened Pairs</dt>
+                    <dd>Nodes that mutually decrease each other, such as when both <code>A decreases B</code> and <code>B
+                        decreases A</code>.
+                    </dd>
+                </dl>
+                <p>While neither chaotic nor dampened pairs are biologically invalid, they require additional context to
+                    understand their regulation.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Node A</th>
+                            <th>Node B</th>
+                            <th>Type</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for a, b, label in unstable_pairs %}
+                            <tr>
+                                <td>{{ a }}</td>
+                                <td>{{ b }}</td>
+                                <td>{{ label }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Unstable Triplets</h3>
+            </div>
+            <div class="panel-body">
+                <p>Analysis of triple stability comes from a deep graph theoretic background. It identifies triangles
+                    within the graph that have logically inconsistent relations</p>
+                <dl>
+                    <dt>Separately Unstable Triplet</dt>
+                    <dd>When both <code>A positiveCorrelation B</code>, <code>B negativeCorrelation C</code>, but <code>C
+                        positiveCorrelation A</code>.
+                    </dd>
+                    <dt>Mutually Unstable Triplets</dt>
+                    <dd>When both <code>A negativeCorrelation B</code>, <code>B negativeCorrelation C</code>, and <code>C
+                        negativeCorrelation A</code>.
+                    </dd>
+                    <dt>Jens Unstable Triplet</dt>
+                    <dd>When <code>A increases B</code>, <code>A decreases C</code>, and <code>C positiveCorrelation
+                        A</code></dd>
+                    <dt>Increase Mismatch Triplet</dt>
+                    <dd>When <code>A increases B</code>, <code>A increases C</code>, and <code>C negativeCorrelation
+                        A</code></dd>
+                    <dt>Decrease Mismatch Triplet</dt>
+                    <dd>When <code>A decreases B</code>, <code>A decreases C</code>, and <code>C negativeCorrelation
+                        A</code></dd>
+                </dl>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Node A</th>
+                            <th>Node B</th>
+                            <th>Node C</th>
+                            <th>Type</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for a, b, c, label in unstable_correlation_triplets %}
+                            <tr>
+                                <td>{{ a }}</td>
+                                <td>{{ b }}</td>
+                                <td>{{ c }}</td>
+                                <td>{{ label }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -204,7 +411,7 @@
 
         $(document).ready(function () {
 
-            $('#myTable').pageMe({pagerSelector: '#myPager', showPrevNext: true, hidePageNumbers: false, perPage: 25});
+            $('#myTable').pageMe({pagerSelector: '#myPager', showPrevNext: true, hidePageNumbers: false, perPage: 20});
 
         });
     </script>
@@ -293,5 +500,175 @@
                 show: false
             }
         });
+
+        var chart4 = c3.generate({
+            padding: {
+                top: 15,
+                left: 100
+            },
+            size: {
+                height: 350
+            },
+            bindto: '#chart4',
+            data: {
+                x: 'x',
+                columns: {{ chart_4_data|safe}},
+                type: 'bar'
+            },
+            title: {
+                text: 'Node Transformations'
+            },
+            axis: {
+                rotated: true,
+                x: {
+                    type: 'category'
+                }
+            },
+            legend: {
+                show: false
+            }
+        });
+
+        var chart5 = c3.generate({
+            padding: {
+                top: 15,
+                left: 100
+            },
+            size: {
+                height: 350
+            },
+            bindto: '#chart5',
+            data: {
+                x: 'x',
+                columns: {{ chart_5_data|safe}},
+                type: 'bar'
+            },
+            title: {
+                text: 'Node Modifications'
+            },
+            axis: {
+                rotated: true,
+                x: {
+                    type: 'category'
+                }
+            },
+            legend: {
+                show: false
+            }
+        });
+
+        var chart6 = c3.generate({
+            padding: {
+                top: 15,
+                left: 100
+            },
+            size: {
+                height: 350
+            },
+            bindto: '#chart6',
+            data: {
+                x: 'x',
+                columns: {{ chart_6_data|safe}},
+                type: 'bar'
+            },
+            title: {
+                text: 'Namespaces'
+            },
+            axis: {
+                rotated: true,
+                x: {
+                    type: 'category'
+                }
+            },
+            legend: {
+                show: false
+            }
+        });
+
+        var chart7 = c3.generate({
+            padding: {
+                top: 15,
+                left: 100
+            },
+            size: {
+                height: 350
+            },
+            bindto: '#chart7',
+            data: {
+                x: 'x',
+                columns: {{ chart_7_data|safe}},
+                type: 'bar'
+            },
+            title: {
+                text: 'Top Nodes by Degree'
+            },
+            axis: {
+                rotated: true,
+                x: {
+                    type: 'category'
+                }
+            },
+            legend: {
+                show: false
+            }
+        });
+
+        var chart8 = c3.generate({
+            padding: {
+                top: 15,
+                left: 100
+            },
+            size: {
+                height: 350
+            },
+            bindto: '#chart8',
+            data: {
+                x: 'x',
+                columns: {{ chart_8_data|safe}},
+                type: 'bar'
+            },
+            title: {
+                text: 'Top Nodes by Centrality'
+            },
+            axis: {
+                rotated: true,
+                x: {
+                    type: 'category'
+                }
+            },
+            legend: {
+                show: false
+            }
+        });
+
+        var chart9 = c3.generate({
+            padding: {
+                top: 15,
+                left: 100
+            },
+            size: {
+                height: 350
+            },
+            bindto: '#chart9',
+            data: {
+                x: 'x',
+                columns: {{ chart_9_data|safe}},
+                type: 'bar'
+            },
+            title: {
+                text: 'Diseases'
+            },
+            axis: {
+                rotated: true,
+                x: {
+                    type: 'category'
+                }
+            },
+            legend: {
+                show: false
+            }
+        });
+
+
     </script>
 {% endblock %}
