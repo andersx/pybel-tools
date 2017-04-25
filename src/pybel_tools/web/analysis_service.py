@@ -28,7 +28,6 @@ PYBEL_EXPERIMENT_TABLE_NAME = 'pybel_experiment'
 PYBEL_EXPERIMENT_ENTRY_TABLE_NAME = 'pybel_experiment_entry'
 
 LABEL = 'dgxa'
-NPA_COLUMNS = ['NPA Average', 'NPA Standard Deviation', 'NPA Median', 'Number First Neighbors', 'Subgraph Size']
 
 
 class Experiment(Base):
@@ -76,7 +75,7 @@ def build_analysis_service(app, manager, api):
         return render_template(
             'analysis_results.html',
             experiment=experiment,
-            columns=NPA_COLUMNS,
+            columns=npa.RESULT_LABELS,
             data=sorted([(k, v) for k, v in experiment.data.items() if v[0]], key=itemgetter(1))
         )
 

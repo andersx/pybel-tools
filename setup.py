@@ -35,6 +35,7 @@ INSTALL_REQUIRES = [
     'pandas',
     'fuzzywuzzy',
     'ipython',
+    'scipy',
     'numpy',
 ]
 EXTRAS_REQUIRE = {

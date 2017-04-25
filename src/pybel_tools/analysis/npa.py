@@ -9,6 +9,7 @@ import random
 from operator import itemgetter
 
 import numpy as np
+from scipy import stats
 
 from pybel.constants import BIOPROCESS, RELATION, CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS
 from ..filters.node_selection import get_nodes_by_function
@@ -385,6 +386,19 @@ def workflow_all_average(graph, key, tag=None, default_score=None, runs=None):
     return results
 
 
+RESULT_LABELS = [
+    'avg',
+    'stddev',
+    'min',
+    'min.p',
+    'median',
+    'max',
+    'max.p',
+    'neighbors',
+    'subgraph_size',
+]
+
+
 def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, default_score=None, runs=None):
     """Calculates the scores over precomputed candidate mechanisms
     
@@ -405,12 +419,13 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, defa
     
     >>> import pandas as pd
     >>> import pybel_tools as pbt
+    >>> from pybel_tools.analysis.npa import *
     >>> # load graph and data
     >>> key = ...
     >>> graph = ...
     >>> candidate_mechanisms = pbt.generation.generate_bioprocess_mechanisms(graph, key)
     >>> scores = calculate_average_npa_on_subgraphs(candidate_mechanisms, key)
-    >>> pd.DataFrame.from_items(scores.items(), orient='index', columns=['NPA Average','NPA Stddev','NPA Median','Number First Neighbors','Subgraph Size'])
+    >>> pd.DataFrame.from_items(scores.items(), orient='index', columns=RESULT_LABELS)
     """
     results = {}
 
@@ -420,17 +435,48 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, defa
         mechanism_size = subgraph.number_of_nodes()
 
         runners = workflow(subgraph, node, key, tag=tag, default_score=default_score, runs=runs)
-        scores = [runner.get_final_score() for runner in runners]
+        scores = np.array([runner.get_final_score() for runner in runners])
 
         if not scores:
-            results[node] = None, None, None, number_first_neighbors, mechanism_size
+            results[node] = tuple([
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                number_first_neighbors,
+                mechanism_size,
+            ])
             continue
 
-        npa_average = np.average(scores)
-        npa_std = np.std(scores)
-        npa_median = np.median(scores)
+        average_score = np.average(scores)
+        score_std = np.std(scores)
+        min_score = np.min(scores)
+        med_score = np.median(scores)
+        max_score = np.max(scores)
 
-        results[node] = npa_average, npa_std, npa_median, number_first_neighbors, mechanism_size
+        if med_score < 0:  # if distribution is negative, switch around
+            min_score, max_score = max_score, min_score
+
+        chi_2_stat, norm_p = stats.normaltest(scores)
+        # z_scores = stats.zscore(scores)
+        min_score_p = stats.norm.sf(np.abs(min_score - average_score) / score_std) * 2
+        max_score_p = stats.norm.sf(np.abs(max_score - average_score) / score_std) * 2
+
+        results[node] = tuple([
+            average_score,
+            score_std,
+            norm_p,
+            min_score,
+            min_score_p,
+            med_score,
+            max_score,
+            max_score_p,
+            number_first_neighbors,
+            mechanism_size,
+        ])
 
     return results
 
