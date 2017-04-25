@@ -143,3 +143,14 @@ def build_analysis_service(app, manager, api):
         results = {node: data[api.nid_node[node]] for node in graph.nodes_iter() if api.nid_node[node] in data}
 
         return jsonify(results)
+
+    @app.route('/api/analysis/<analysis_id>/median')
+    def get_analysis_median(analysis_id):
+        """Returns data from analysis"""
+        graph = get_graph_from_request(api)
+        experiment = manager.session.query(Experiment).get(analysis_id)
+        data = experiment.data
+
+        results = {node: data[api.nid_node[node]][4] for node in graph.nodes_iter() if api.nid_node[node] in data}
+
+        return jsonify(results)
