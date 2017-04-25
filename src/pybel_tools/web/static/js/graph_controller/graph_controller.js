@@ -1077,8 +1077,6 @@ function initD3Force(graph, tree) {
             else return edgeObject;
         });
 
-        hideNodesText(nodesInEdges, false);
-
         var nodesNotInEdges = node.filter(function (nodeObject) {
             return nodesInEdges.indexOf(nodeObject.cname) < 0;
         });
@@ -1090,8 +1088,6 @@ function initD3Force(graph, tree) {
 
     // Highlight nodes from array of ids and change the opacity of the rest of nodes
     function highlightNodes(nodeArray) {
-
-        hideNodesText(nodeArray, false);
 
         // Filter not mapped nodes to change opacity
         var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
