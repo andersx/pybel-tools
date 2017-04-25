@@ -105,7 +105,7 @@ def get_correlation_graph(graph):
             result.add_edge(u, v, **{d[RELATION]: True})
 
         elif d[RELATION] not in result.edge[u][v]:
-            log.warning('broken correlation relation for %s, %s', u, v)
+            log.log(5, 'broken correlation relation for %s, %s', u, v)
             result.edge[u][v][d[RELATION]] = True
             result.edge[v][u][d[RELATION]] = True
 
