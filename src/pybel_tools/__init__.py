@@ -46,7 +46,7 @@ from . import utils
 from . import visualization
 from . import web
 
-__version__ = '0.1.8'
+__version__ = '0.1.9-dev'
 
 __title__ = 'pybel_tools'
 __description__ = 'Tools for using BEL documents in python'
