@@ -1221,7 +1221,7 @@ function initD3Force(graph, tree) {
 
         nodeNames.push(value.cname);
 
-        $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='node-checkbox " + value.function + "'></div><span class>" + value.cname + "</span></li>");
+        $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='circle " + value.function + "'></div><span>" + value.cname + "</span></li>");
     });
 
     var duplicates = findDuplicates(nodeNames);
@@ -1265,7 +1265,7 @@ function initD3Force(graph, tree) {
 
     $.each(graph.links, function (key, value) {
 
-        $("#edge-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><span>" +
+        $("#edge-list-ul").append("<li class='list-group-item'><input class='edge-checkbox' type='checkbox'><span>" +
             value.source.cname + ' ' + value.relation + ' ' + value.target.cname + "</span></li>");
 
     });
@@ -1274,7 +1274,7 @@ function initD3Force(graph, tree) {
         event.preventDefault();
 
         var checkedItems = [];
-        $(".node-checkbox:checked").each(function (idx, li) {
+        $(".edge-checkbox:checked").each(function (idx, li) {
             checkedItems.push(li.parentElement.childNodes[1].innerHTML);
         });
 
