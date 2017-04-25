@@ -32,7 +32,7 @@ def count_defaultdict(dict_of_lists):
     """Takes a dictionary and applies a counter to each list
 
     :param dict_of_lists: A dictionary of lists
-    :type dict_of_lists: dict or defaultdict
+    :type dict_of_lists: dict or collections.defaultdict
     :return: A dictionary of {key: Counter(values)}
     :rtype: dict
     """
@@ -43,7 +43,7 @@ def get_value_sets(dict_of_iterables):
     """Takes a dictionary of lists/iterables/counters and gets the sets of the values
 
     :param dict_of_iterables: A dictionary of lists
-    :type dict_of_iterables: dict or defaultdict
+    :type dict_of_iterables: dict or collections.defaultdict
     :return: A dictionary of {key: set of values}
     :rtype: dict
     """
@@ -54,7 +54,7 @@ def count_dict_values(dict_of_counters):
     """Counts the number of elements in each value (can be list, Counter, etc)
 
     :param dict_of_counters: A dictionary of things whose lengths can be measured (lists, Counters, dicts)
-    :type dict_of_counters: dict or defaultdict
+    :type dict_of_counters: dict or collections.defaultdict
     :return: A Counter with the same keys as the input but the count of the length of the values list/tuple/set/Counter
     :rtype: collections.Counter
     """
@@ -298,7 +298,7 @@ def prepare_c3(data, y_axis_label='y', x_axis_label='x'):
     """Prepares C3 JSON for making a bar chart from a Counter
 
     :param data: A dictionary of {str: int} to display as bar chart
-    :type data: Counter or dict or defaultdict
+    :type data: Counter or dict or collections.defaultdict
     :param y_axis_label: The Y axis label
     :type y_axis_label: str
     :param x_axis_label: X axis internal label. Should be left as default 'x')
