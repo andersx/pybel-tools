@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'
 DATE_FMT = '%Y-%m-%d'
-DATE_VERSION_FMT='%Y%m%d'
+DATE_VERSION_FMT = '%Y%m%d'
 
 
 def make_namespace_header(name, keyword, domain, query_url=None, description=None, species=None, version=None,
@@ -66,7 +66,7 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
 
     if description is not None:
-        yield 'DescriptionString={}'.format(description)
+        yield 'DescriptionString={}'.format(description.strip().replace('\n', ''))
 
     if species is not None:
         yield 'SpeciesString={}'.format(species)
@@ -253,10 +253,10 @@ def make_annotation_header(keyword, description=None, usage=None, version=None, 
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
 
     if description is not None:
-        yield 'DescriptionString={}'.format(description)
+        yield 'DescriptionString={}'.format(description.strip().replace('\n', ''))
 
     if usage is not None:
-        yield 'UsageString={}'.format(usage)
+        yield 'UsageString={}'.format(usage.strip().replace('\n', ''))
 
 
 def write_annotation(keyword, values, citation_name, description=None, usage=None, version=None, created=None,
@@ -317,7 +317,7 @@ def write_annotation(keyword, values, citation_name, description=None, usage=Non
     for key, value in sorted(values.items()):
         if not key.strip():
             continue
-        print('{}{}|{}'.format(value_prefix, key.strip(), value.strip()), file=file)
+        print('{}{}|{}'.format(value_prefix, key.strip(), value.strip().replace('\n', '')), file=file)
 
 
 def export_namespace(graph, namespace, directory=None, cacheable=False):
