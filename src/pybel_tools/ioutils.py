@@ -75,8 +75,9 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False, st
     for path in paths:
         try:
             graph = from_path(path, manager=metadata_parser.manager)
-        except Exception as e:
+        except:
             log.exception('Problem parsing %s', path)
+            continue
 
         if upload:
             try:
@@ -84,7 +85,7 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False, st
             except IntegrityError as e:
                 log.exception('Integrity problem')
                 metadata_parser.manager.rollback()
-            except Exception as e:
+            except:
                 log.exception('Problem uploading %s', graph.name)
 
         if pickle:
