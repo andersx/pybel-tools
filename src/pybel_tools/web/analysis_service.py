@@ -140,7 +140,8 @@ def build_analysis_service(app, manager, api):
         experiment = manager.session.query(Experiment).get(analysis_id)
         data = experiment.data
 
-        results = {node: data[api.nid_node[node]] for node in graph.nodes_iter() if api.nid_node[node] in data}
+        results = [{'node': node, 'data': data[api.nid_node[node]]} for node in graph.nodes_iter() if
+                   api.nid_node[node] in data]
 
         return jsonify(results)
 
@@ -150,7 +151,7 @@ def build_analysis_service(app, manager, api):
         graph = get_graph_from_request(api)
         experiment = manager.session.query(Experiment).get(analysis_id)
         data = experiment.data
-
-        results = {node: data[api.nid_node[node]][4] for node in graph.nodes_iter() if api.nid_node[node] in data}
+        # position 3 is the 'median' score
+        results = {node: data[api.nid_node[node]][3] for node in graph.nodes_iter() if api.nid_node[node] in data}
 
         return jsonify(results)
