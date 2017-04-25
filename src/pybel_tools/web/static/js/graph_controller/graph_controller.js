@@ -214,6 +214,11 @@ $(document).ready(function () {
         window.networkID = "0";
     }
 
+    var networkName = doAjaxCall("/api/network/name/" + window.networkID);
+    if (networkName) {
+        $("#network-name").html(networkName)
+    }
+
     // Initiate the tree and expands it with the annotations given the graphid in URL
     var tree = new InspireTree({
         target: "#tree",

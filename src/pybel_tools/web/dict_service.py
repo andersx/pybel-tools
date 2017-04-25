@@ -381,6 +381,15 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         graph = get_graph_from_request(api)
         return serve_network(graph, request.args.get(FORMAT))
 
+    @app.route('/api/network/name/<int:network_id>')
+    def get_network_id(network_id):
+        """Returns network name given its id"""
+        if network_id == 0:
+            return ''
+
+        graph = api.get_network(network_id)
+        return jsonify(graph.name)
+
     @app.route('/api/tree/')
     def get_tree_api():
         """Builds the annotation tree data structure for a given graph"""
