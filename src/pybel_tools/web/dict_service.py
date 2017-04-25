@@ -27,12 +27,13 @@ from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary.edge_summary import count_relations, get_contradiction_summary
 from ..summary.edge_summary import get_annotation_values_by_annotation
-from ..summary.error_summary import count_error_types
+from ..summary.error_summary import count_error_types, group_errors
 from ..summary.export import info_json, info_list
 from ..summary.node_properties import get_translocated, get_activities, get_degradations, count_variants
 from ..summary.node_summary import count_functions, count_namespaces
 from ..summary.provenance import get_authors, get_pmids
-from ..utils import prepare_c3
+
+from ..utils import prepare_c3, count_dict_values
 
 log = logging.getLogger(__name__)
 
@@ -347,6 +348,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
             chart_7_data=prepare_c3(api.get_top_degree(graph_id), 'Top Hubs'),
             chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
             chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
+            error_groups=count_dict_values(group_errors(graph)).most_common(20),
             info_list=info_list(graph),
             contradictions=contradictory_pairs,
             unstable_pairs=unstable_pairs,

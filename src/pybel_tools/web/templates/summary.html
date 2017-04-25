@@ -46,9 +46,17 @@
                 <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
                    role="button">Explore</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bel') }}"
-                   role="button">Download as BEL Script</a>
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> BEL Script</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='json') }}"
-                   role="button">Download as JSON</a>
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Nodelink JSON</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='cx') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CX JSON</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bytes') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Pickle</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='graphml') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> GraphML</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='csv') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</a>
             </div>
         </div>
 
@@ -112,7 +120,7 @@
 
         <div class="panel panel-default panel-table">
             <div class="panel-heading">
-                <h3 class="panel-title">Errors</h3>
+                <h3 class="panel-title">All Errors</h3>
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
@@ -140,6 +148,33 @@
                 <ul class="pagination pagination pagination-sm" style="margin:0;" id="myPager"></ul>
             </div>
         </div>
+
+        <div class="panel panel-default panel-table">
+            <div class="panel-heading">
+                <h3 class="panel-title">Top Errors</h3>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Error</th>
+                            <th>Frequency</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for k, v in error_groups %}
+                            <tr>
+                                <td><code>{{ k }}</code></td>
+                                <td>{{ v }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
 
         <div class="panel panel-default">
             <div class="panel-heading">
