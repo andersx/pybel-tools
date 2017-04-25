@@ -892,10 +892,26 @@ function initD3Force(graph, tree) {
             dynamicTable.deleteRow(0);
         }
 
-        insertRow(dynamicTable, 0, "Node", node.cname + " (ID: " + node.id + ")");
-        insertRow(dynamicTable, 1, "Function", node.function);
-        insertRow(dynamicTable, 2, "Namespace", node.namespace);
-        insertRow(dynamicTable, 3, "Name", node.name);
+        var nodeObject = {};
+
+        if (node.cname) {
+            nodeObject["Node"] = " (ID: " + node.id + ")";
+        }
+        if (node.name) {
+            nodeObject["Name"] = node.name;
+        }
+        if (node.function) {
+            nodeObject["Function"] = node.function;
+        }
+        if (node.namespace) {
+            nodeObject["Namespace"] = node.namespace;
+        }
+
+        var row = 0;
+        $.each(nodeObject, function (key, value) {
+            insertRow(dynamicTable, row, key, value);
+            row++
+        });
     }
 
 
@@ -930,7 +946,6 @@ function initD3Force(graph, tree) {
         if (edge.target.cname) {
             edgeObject["Target"] = edge.target.cname + " (ID: " + edge.target.id + ")";
         }
-
 
         var row = 0;
         $.each(edgeObject, function (key, value) {
