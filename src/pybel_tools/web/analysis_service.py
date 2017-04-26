@@ -4,6 +4,7 @@ import csv
 import datetime
 import logging
 import pickle
+import time
 from operator import itemgetter
 
 import flask
@@ -100,6 +101,8 @@ def build_analysis_service(app, manager, api):
         log.info('analyzing %s: %s with CMPA (%d trials)', form.file.data.filename, form.description.data,
                  form.permutations.data)
 
+        t = time.time()
+
         df = pandas.read_csv(form.file.data)
 
         gene_column = form.gene_symbol_column.data
@@ -127,7 +130,7 @@ def build_analysis_service(app, manager, api):
         candidate_mechanisms = generation.generate_bioprocess_mechanisms(graph, LABEL)
         scores = npa.calculate_average_npa_on_subgraphs(candidate_mechanisms, LABEL, runs=form.permutations.data)
 
-        log.info('done running CMPA')
+        log.info('done running CMPA in %.2fs', time.time() - t)
 
         experiment = Experiment(
             description=form.description.data,
