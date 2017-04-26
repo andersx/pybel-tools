@@ -31,10 +31,11 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1, return_errors=Fa
     :rtype: dict
     """
     pmids = [str(pmid).strip() for pmid in sorted(pmids)]
-    log.info('Querying %d PubMed identifiers', len(pmids))
+    log.info('querying %d PubMed identifiers', len(pmids))
 
     result = defaultdict(dict)
     errors = set()
+    t = time.time()
 
     for pmidList in [','.join(pmids[i:i + group_size]) for i in range(0, len(pmids), group_size)]:
         url = EUTILS_URL_FMT.format(pmidList)
@@ -76,4 +77,7 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1, return_errors=Fa
 
         # Don't want to hit that rate limit
         time.sleep(sleep_time)
+
+    log.info('retrieved PubMed identifiers in %s', time.time() - t)
+
     return result, errors if return_errors else result
