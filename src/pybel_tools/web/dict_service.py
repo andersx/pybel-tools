@@ -32,7 +32,6 @@ from ..summary.export import info_json, info_list
 from ..summary.node_properties import get_translocated, get_activities, get_degradations, count_variants
 from ..summary.node_summary import count_functions, count_namespaces
 from ..summary.provenance import get_authors, get_pmids
-
 from ..utils import prepare_c3, count_dict_values
 
 log = logging.getLogger(__name__)
@@ -157,6 +156,87 @@ def get_graph_from_request(api):
     return graph
 
 
+def build_dictionary_service_admin(app, manager, api, basic_auth):
+    @app.route('/admin/reload')
+    @basic_auth.required
+    def run_reload():
+        """Reloads the networks and supernetwork"""
+        api.load_networks(force_reload=True)
+        return jsonify({'status': 200})
+
+    @app.route('/admin/enrich')
+    @basic_auth.required
+    def run_enrich_authors():
+        """Enriches information in network. Be patient"""
+        fix_pubmed_citations(api.universe)
+        return jsonify({'status': 200})
+
+    @app.route('/admin/ensure/small')
+    @basic_auth.required
+    def ensure_small_corpus():
+        """Parses the small corpus"""
+        graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+        return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/ensure/large')
+    @basic_auth.required
+    def ensure_large_corpus():
+        """Parses the large corpus"""
+        graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+        return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/ensure/abstract3')
+    @basic_auth.required
+    def ensure_abstract3():
+        """Ensures Selventa Example 3"""
+        url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
+        graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
+        return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/ensure/gfam')
+    @basic_auth.required
+    def ensure_gfam():
+        graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
+        return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/nuke/')
+    @basic_auth.required
+    def nuke():
+        """Destroys the database and recreates it"""
+        log.info('nuking database')
+        manager.drop_database()
+        manager.create_database()
+        log.info('restarting dictionary service')
+        api.load_networks(force_reload=True)
+        log.info('... the dust settles')
+        return jsonify({'status': 200})
+
+
+def build_api_admin(app, manager, basic_auth):
+    @app.route('/admin/rollback')
+    @basic_auth.required
+    def rollback():
+        """Rolls back the transaction for when something bad happens"""
+        manager.rollback()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/graphs/drop/<network_id>')
+    @basic_auth.required
+    def drop_graph(network_id):
+        """Drops a specific graph"""
+        log.info('dropping graphs %s', network_id)
+        manager.drop_graph(network_id)
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/graphs/dropall')
+    @basic_auth.required
+    def drop_graphs():
+        """Drops all graphs"""
+        log.info('dropping all graphs')
+        manager.drop_graphs()
+        return jsonify({'status': 200})
+
+
 def build_dictionary_service(app, manager, check_version=True, admin_password=None, analysis_enabled=False,
                              eager=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
@@ -184,75 +264,8 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         app.config['BASIC_AUTH_PASSWORD'] = admin_password
 
         basic_auth = BasicAuth(app)
-
-        @app.route('/admin/reload')
-        @basic_auth.required
-        def run_reload():
-            """Reloads the networks and supernetwork"""
-            api.load_networks(force_reload=True)
-            return jsonify({'status': 200})
-
-        @app.route('/admin/enrich')
-        @basic_auth.required
-        def run_enrich_authors():
-            """Enriches information in network. Be patient"""
-            fix_pubmed_citations(api.universe)
-            return jsonify({'status': 200})
-
-        @app.route('/admin/rollback')
-        @basic_auth.required
-        def rollback():
-            """Rolls back the transaction for when something bad happens"""
-            manager.rollback()
-            return jsonify({'status': 200})
-
-        @app.route('/admin/ensure/small')
-        @basic_auth.required
-        def ensure_small_corpus():
-            """Parses the small corpus"""
-            graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph, api)
-
-        @app.route('/admin/ensure/large')
-        @basic_auth.required
-        def ensure_large_corpus():
-            """Parses the large corpus"""
-            graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph, api)
-
-        @app.route('/admin/ensure/abstract3')
-        @basic_auth.required
-        def ensure_abstract3():
-            """Ensures Selventa Example 3"""
-            url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
-            graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph, api)
-
-        @app.route('/admin/ensure/gfam')
-        @basic_auth.required
-        def ensure_gfam():
-            graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
-            return try_insert_graph(manager, graph, api)
-
-        @app.route('/admin/drop/all')
-        @basic_auth.required
-        def nuke():
-            """Destroys the database and recreates it"""
-            log.info('nuking database')
-            manager.drop_database()
-            manager.create_database()
-            log.info('restarting dictionary service')
-            api.load_networks(force_reload=True)
-            log.info('... the dust settles')
-            return jsonify({'status': 200})
-
-        @app.route('/admin/drop/graphs')
-        @basic_auth.required
-        def drop_graphs():
-            """Drops all graphs"""
-            log.info('dropping all graphs')
-            manager.drop_graphs()
-            return jsonify({'status': 200})
+        build_dictionary_service_admin(app, manager, api, basic_auth)
+        build_api_admin(app, manager, basic_auth)
 
         log.info('added admin functions to dict service')
 
