@@ -31,7 +31,7 @@ def parse_authors(graph):
     :type graph: pybel.BELGraph
     """
     if 'PYBEL_PARSED_AUTHORS' in graph.graph:
-        log.warning('Authors have already been parsed in %s', graph.graph)
+        log.warning('Authors have already been parsed in %s', graph.name)
         return
 
     for u, v, k, d in filter_edges(graph, edge_has_author_annotation):
