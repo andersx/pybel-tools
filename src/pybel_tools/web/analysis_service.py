@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import csv
 import datetime
 import logging
 import pickle
@@ -7,7 +8,8 @@ from operator import itemgetter
 
 import flask
 import pandas
-from flask import render_template, redirect, url_for, jsonify
+from flask import render_template, redirect, url_for, jsonify, make_response
+from six import StringIO
 from sqlalchemy import Column, Integer, DateTime, Binary, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -18,6 +20,7 @@ from .dict_service import get_graph_from_request
 from .forms import DifferentialGeneExpressionForm
 from .. import generation
 from ..analysis import npa
+from ..analysis.npa import RESULT_LABELS
 from ..filters.node_deletion import remove_nodes_by_namespace
 from ..integration import overlay_type_data
 from ..mutation.collapse import collapse_variants_to_genes, collapse_by_central_dogma_to_genes
@@ -63,12 +66,18 @@ def build_analysis_service(app, manager, api):
     """
 
     @app.route('/analysis/')
-    def view_analyses():
-        """Views a list of all analyses"""
-        experiments = manager.session.query(Experiment).all()
+    @app.route('/analysis/<network_id>')
+    def view_analyses(network_id=None):
+        """Views a list of all analyses, with optional filter by network id"""
+        experiment_query = manager.session.query(Experiment)
+
+        if network_id is not None:
+            experiment_query = experiment_query.filter(Experiment.network_id == network_id)
+
+        experiments = experiment_query.all()
         return render_template('analysis_list.html', experiments=experiments)
 
-    @app.route('/analysis/results/<analysis_id>')
+    @app.route('/analysis/results/<int:analysis_id>')
     def view_analysis_results(analysis_id):
         """View the results of a given analysis"""
         experiment = manager.session.query(Experiment).get(analysis_id)
@@ -88,7 +97,8 @@ def build_analysis_service(app, manager, api):
             name, = manager.session.query(Network.name).filter(Network.id == network_id).one()
             return render_template('analyze_dgx.html', form=form, network_name=name)
 
-        log.info('Analyzing %s: %s', form.file.data.filename, form.description.data)
+        log.info('analyzing %s: %s with CMPA (%d trials)', form.file.data.filename, form.description.data,
+                 form.permutations.data)
 
         df = pandas.read_csv(form.file.data)
 
@@ -116,6 +126,8 @@ def build_analysis_service(app, manager, api):
 
         candidate_mechanisms = generation.generate_bioprocess_mechanisms(graph, LABEL)
         scores = npa.calculate_average_npa_on_subgraphs(candidate_mechanisms, LABEL, runs=form.permutations.data)
+
+        log.info('done running CMPA')
 
         experiment = Experiment(
             description=form.description.data,
@@ -155,3 +167,17 @@ def build_analysis_service(app, manager, api):
         results = {node: data[api.nid_node[node]][3] for node in graph.nodes_iter() if api.nid_node[node] in data}
 
         return jsonify(results)
+
+    @app.route('/api/analysis/<analysis_id>/download')
+    def download_analysis(analysis_id):
+        """Downloads data from a given experiment as a CSV"""
+        experiment = manager.session.query(Experiment).get(analysis_id)
+        si = StringIO()
+        cw = csv.writer(si)
+        csv_list = [('Namespace', 'Name') + tuple(RESULT_LABELS)]
+        csv_list.extend((ns, n) + tuple(v) for (_, ns, n), v in experiment.data.items())
+        cw.writerows(csv_list)
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = "attachment; filename=cmpa_{}.csv".format(analysis_id)
+        output.headers["Content-type"] = "text/csv"
+        return output
