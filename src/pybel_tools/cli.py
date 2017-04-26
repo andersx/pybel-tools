@@ -179,14 +179,15 @@ def post(path, url, skip_check_version):
 @click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('-u', '--enable-upload', is_flag=True, help='Enable automatic database uploading')
 @click.option('--store-parts', is_flag=True, help='Automatically upload to database and edge store')
+@click.option('--no-enrich-authors', is_flag=True, help="Don't enrich authors. Makes faster.")
 @click.option('-d', '--directory', default=os.getcwd(),
               help='The directory to search. Defaults to current working directory')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def convert(connection, enable_upload, store_parts, directory, debug):
+def convert(connection, enable_upload, store_parts, no_enrich_authors, directory, debug):
     """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
     set_debug_param(debug)
     convert_recursive(directory, connection=connection, upload=(enable_upload or store_parts), pickle=True,
-                      store_parts=store_parts)
+                      store_parts=store_parts, enrich_citations=(not no_enrich_authors))
 
 
 @main.command()

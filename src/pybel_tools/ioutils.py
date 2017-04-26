@@ -11,6 +11,7 @@ from pybel import from_path, BELGraph, to_pickle, from_pickle
 from pybel.io.line_utils import build_metadata_parser
 from pybel.manager.cache import build_manager
 from .mutation.merge import left_merge
+from .mutation.metadata import fix_pubmed_citations
 from .selection import get_subgraph_by_annotation_value
 from .summary import get_annotation_values
 
@@ -67,7 +68,8 @@ def get_paths_recursive(directory, extension='.bel'):
                 yield os.path.join(root, file)
 
 
-def convert_recursive(directory, connection=None, upload=False, pickle=False, store_parts=False):
+def convert_recursive(directory, connection=None, upload=False, pickle=False, store_parts=False,
+                      enrich_citations=False):
     metadata_parser = build_metadata_parser(connection)
     paths = list(get_paths_recursive(directory))
     log.info('Paths to parse: %s', paths)
@@ -78,6 +80,9 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False, st
         except:
             log.exception('Problem parsing %s', path)
             continue
+
+        if enrich_citations:
+            fix_pubmed_citations(graph)
 
         if upload:
             try:
