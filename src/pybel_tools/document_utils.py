@@ -24,8 +24,11 @@ __all__ = [
     'write_boilerplate',
 ]
 
-NAMESPACE_FMT = 'DEFINE NAMESPACE {} AS URL "{}"'
-ANNOTATION_FMT = 'DEFINE ANNOTATION {} AS URL "{}"'
+# TODO make constants in :mod:`pybel.constants`
+NAMESPACE_URL_FMT = 'DEFINE NAMESPACE {} AS URL "{}"'
+NAMESPACE_PATTERN_FMT = 'DEFINE NAMESPACE {} AS PATTERN "{}"'
+ANNOTATION_URL_FMT = 'DEFINE ANNOTATION {} AS URL "{}"'
+ANNOTATION_PATTERN_FMT = 'DEFINE ANNOTATION {} AS PATTERN "{}"'
 
 
 def split_document(lines):
@@ -129,32 +132,44 @@ def make_document_metadata(name, contact, description, version=None, copyright=N
         yield 'SET DOCUMENT Copyright = "{}"'.format(copyright)
 
 
-def make_document_namespaces(namespace_dict=None):
+def make_document_namespaces(namespace_dict=None, namespace_patterns=None):
     """Builds a list of lines for the namespace definitions
 
     :param namespace_dict: dictionary of {str name: str URL} of namespaces
     :type namespace_dict: dict
+    :param namespace_patterns: A dictionary of {str name: str regex}
+    :type namespace_patterns: dict[str, str] 
     :return: An iterator over the lines for the namespace definitions
     :rtype: iter[str]
     """
     namespace_dict = default_namespaces if namespace_dict is None else namespace_dict
 
     for name, url in sorted(namespace_dict.items(), key=itemgetter(1)):
-        yield NAMESPACE_FMT.format(name, url)
+        yield NAMESPACE_URL_FMT.format(name, url)
+
+    if namespace_patterns:
+        for name, pattern in sorted(namespace_patterns.items()):
+            yield NAMESPACE_PATTERN_FMT.format(name, pattern)
 
 
-def make_document_annotations(annotation_dict=None):
+def make_document_annotations(annotation_dict=None, annotation_patterns=None):
     """Builds a list of lines for the annotation definitions
 
     :param annotation_dict: A dictionary of {str name: str URL} of annotations
-    :type annotation_dict: dict
+    :type annotation_dict: dict[str, str]
+    :param annotation_patterns: A dictionary of {str name: str regex}
+    :type annotation_patterns: dict[str, str]
     :return: An iterator over the lines for the annotation definitions
     :rtype: iter[str]
     """
     annotation_dict = default_annotations if annotation_dict is None else annotation_dict
 
     for name, url in sorted(annotation_dict.items(), key=itemgetter(1)):
-        yield ANNOTATION_FMT.format(name, url)
+        yield ANNOTATION_URL_FMT.format(name, url)
+
+    if annotation_patterns:
+        for name, pattern in sorted(annotation_patterns.items()):
+            yield ANNOTATION_PATTERN_FMT.format(name, pattern)
 
 
 def make_document_statement_group(pmids):
@@ -180,7 +195,8 @@ def make_document_statement_group(pmids):
 
 
 def write_boilerplate(document_name, contact, description, version=None, copyright=None, authors=None,
-                      licenses=None, namespace_dict=None, annotations_dict=None, pmids=None, file=None):
+                      licenses=None, namespace_dict=None, namespace_patterns=None, annotations_dict=None,
+                      annotations_patterns=None, pmids=None, file=None):
     """Writes a boilerplate BEL document, with standard document metadata, definitions. Optionally, if a
     list of PubMed identifiers are given, the citations and abstracts will be written for each.
 
@@ -200,9 +216,13 @@ def write_boilerplate(document_name, contact, description, version=None, copyrig
     :type licenses: str
     :param file: output stream. If None, defaults to :data:`sys.stdout`
     :param namespace_dict: an optional dictionary of {str name: str URL} of namespaces
-    :type namespace_dict: dict
-    :param annotations_dict: an optional dictionary of {str name: str URL} of annotations
-    :type annotations_dict: dict
+    :type namespace_dict: dict[str, str]
+    :param namespace_patterns: An optional dictionary of {str name: str regex} namespaces
+    :type namespace_patterns: dict[str, str]
+    :param annotations_dict: An optional dictionary of {str name: str URL} of annotations
+    :type annotations_dict: dict[str, str]
+    :param annotation_patterns: An optional dictionary of {str name: str regex} annotations
+    :type annotation_patterns: dict[str, str]
     :param pmids: an optional list of PMID's to autopopulate with citation and abstract
     :type pmids: iter[str] or iter[int]
     """
@@ -213,11 +233,11 @@ def write_boilerplate(document_name, contact, description, version=None, copyrig
         print(line, file=file)
     print('#' * 80, file=file)
 
-    for line in make_document_namespaces(namespace_dict):
+    for line in make_document_namespaces(namespace_dict, namespace_patterns=namespace_patterns):
         print(line, file=file)
     print('#' * 80, file=file)
 
-    for line in make_document_annotations(annotations_dict):
+    for line in make_document_annotations(annotations_dict, annotation_patterns=annotations_patterns):
         print(line, file=file)
     print('#' * 80, file=file)
 
