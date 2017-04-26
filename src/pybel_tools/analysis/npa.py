@@ -393,10 +393,6 @@ RESULT_LABELS = [
     'median',
     'neighbors',
     'subgraph_size',
-    'min',
-    'min.p',
-    'max',
-    'max.p',
 ]
 
 
@@ -446,10 +442,6 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, defa
                 None,
                 number_first_neighbors,
                 mechanism_size,
-                None,
-                None,
-                None,
-                None,
             ])
             continue
 
@@ -457,17 +449,8 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, defa
 
         average_score = np.average(scores)
         score_std = np.std(scores)
-        min_score = np.min(scores)
         med_score = np.median(scores)
-        max_score = np.max(scores)
-
-        if med_score < 0:  # if distribution is negative, switch around
-            min_score, max_score = max_score, min_score
-
         chi_2_stat, norm_p = stats.normaltest(scores)
-        # z_scores = stats.zscore(scores)
-        min_score_p = stats.norm.sf(np.abs(min_score - average_score) / score_std) * 2
-        max_score_p = stats.norm.sf(np.abs(max_score - average_score) / score_std) * 2
 
         results[node] = tuple([
             average_score,
@@ -476,10 +459,6 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, defa
             med_score,
             number_first_neighbors,
             mechanism_size,
-            min_score,
-            min_score_p,
-            max_score,
-            max_score_p,
         ])
 
     return results
