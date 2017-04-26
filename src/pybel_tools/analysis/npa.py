@@ -438,7 +438,7 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, defa
         runners = workflow(subgraph, node, key, tag=tag, default_score=default_score, runs=runs)
         scores = [runner.get_final_score() for runner in runners]
 
-        if not scores:
+        if 0 == len(scores):
             results[node] = tuple([
                 None,
                 None,
