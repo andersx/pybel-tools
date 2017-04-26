@@ -112,6 +112,8 @@ def fix_pubmed_citations(graph, stringify_authors=False):
 
     if stringify_authors:
         serialize_authors(graph)
+    else:
+        graph.graph['PYBEL_PARSED_AUTHORS'] = True
 
     graph.graph['PYBEL_ENRICHED_CITATIONS'] = True
     return errors
