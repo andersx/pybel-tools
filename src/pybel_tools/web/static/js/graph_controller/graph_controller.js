@@ -900,7 +900,7 @@ function initD3Force(graph, tree) {
         var nodeObject = {};
 
         if (node.cname) {
-            nodeObject["Node"] = " (ID: " + node.id + ")";
+            nodeObject["Node"] = node.name + " (ID: " + node.id + ")";
         }
         if (node.name) {
             nodeObject["Name"] = node.name;
@@ -1514,6 +1514,36 @@ function initD3Force(graph, tree) {
                 success: function (data) {
 
                     console.log(data);
+
+                    var distribution = Object.values(data).filter(Number);
+
+                    var midRange = (Math.max.apply(Math, distribution) + Math.min.apply(Math, distribution)) / 2;
+
+                    var normalizedData = {};
+
+                    $.each(data, function (key, value) {
+                        // In case value is null
+                        if (value) {
+                            normalizedData[key] = Math.abs(value - midRange)
+                        }
+                    });
+
+                    console.log(normalizedData);
+
+                    // Keys are stored as strings need conversation to JS numbers
+                    var nodeIDStrings = Object.keys(normalizedData);
+
+                    var mappedNodes = nodesInArrayKeepOrder(nodeIDStrings.map(Number));
+
+                    $.each(mappedNodes, function (index, value) {
+                        console.log(value);
+                        // Order is maintain so it uses the index to get iterate over normalizedData applying (constant/midrange)
+                        value.childNodes[0].setAttribute("r", normalizedData[nodeIDStrings[index]] * (20 / midRange));
+
+                        console.log(normalizedData[nodeIDStrings[index]] * (20 / midRange))
+                    });
+
+
                 },
                 error: function (request) {
                     alert(request.responseText);
@@ -1522,7 +1552,7 @@ function initD3Force(graph, tree) {
         }
     });
 
-    betwennessForm.validate(
+    npaForm.validate(
         {
             rules: {
                 analysis_id: {
