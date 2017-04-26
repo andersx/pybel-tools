@@ -1524,11 +1524,9 @@ function initD3Force(graph, tree) {
                     $.each(data, function (key, value) {
                         // In case value is null
                         if (value) {
-                            normalizedData[key] = Math.abs(value - midRange)
+                            normalizedData[key] = value - Math.abs(midRange)
                         }
                     });
-
-                    console.log(normalizedData);
 
                     // Keys are stored as strings need conversation to JS numbers
                     var nodeIDStrings = Object.keys(normalizedData);
@@ -1536,11 +1534,10 @@ function initD3Force(graph, tree) {
                     var mappedNodes = nodesInArrayKeepOrder(nodeIDStrings.map(Number));
 
                     $.each(mappedNodes, function (index, value) {
-                        console.log(value);
                         // Order is maintain so it uses the index to get iterate over normalizedData applying (constant/midrange)
-                        value.childNodes[0].setAttribute("r", normalizedData[nodeIDStrings[index]] * (20 / midRange));
+                        value.childNodes[0].setAttribute("r", normalizedData[nodeIDStrings[index]] * (5 / midRange));
 
-                        console.log(normalizedData[nodeIDStrings[index]] * (20 / midRange))
+                        console.log(normalizedData[nodeIDStrings[index]] * (5 / midRange))
                     });
 
 
