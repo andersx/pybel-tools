@@ -183,9 +183,14 @@ def post(path, url, skip_check_version):
 @click.option('-d', '--directory', default=os.getcwd(),
               help='The directory to search. Defaults to current working directory')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def convert(connection, enable_upload, store_parts, no_enrich_authors, directory, debug):
+@click.option('-x', '--cool', is_flag=True, help='enable cool mode')
+def convert(connection, enable_upload, store_parts, no_enrich_authors, directory, debug, cool):
     """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
     set_debug_param(debug)
+
+    if cool:
+        logging.getLogger('pybel.parser').setLevel(50)
+
     convert_recursive(directory, connection=connection, upload=(enable_upload or store_parts), pickle=True,
                       store_parts=store_parts, enrich_citations=(not no_enrich_authors))
 

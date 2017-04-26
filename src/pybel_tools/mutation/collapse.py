@@ -30,6 +30,8 @@ def collapse_nodes(graph, dict_of_sets_of_nodes):
     :param dict_of_sets_of_nodes: A dictionary of {node: set of nodes}
     :type dict_of_sets_of_nodes: dict
     """
+    log.debug('collapsing %d groups', len(dict_of_sets_of_nodes))
+
     for key_node, value_nodes in dict_of_sets_of_nodes.items():
         for value_node in value_nodes:
             for successor in graph.successors_iter(value_node):
@@ -127,7 +129,6 @@ def collapse_by_central_dogma(graph):
     >>> collapse_nodes(graph, build_central_dogma_collapse_dict(graph)) 
     """
     collapse_dict = build_central_dogma_collapse_dict(graph)
-    log.info('Collapsing %d groups', len(collapse_dict))
     collapse_nodes(graph, collapse_dict)
 
 
@@ -145,7 +146,6 @@ def collapse_by_central_dogma_to_genes(graph):
     >>> collapse_nodes(graph, build_central_dogma_collapse_gene_dict(graph))
     """
     collapse_dict = build_central_dogma_collapse_gene_dict(graph)
-    log.info('Collapsing %d groups', len(collapse_dict))
     collapse_nodes(graph, collapse_dict)
 
 
