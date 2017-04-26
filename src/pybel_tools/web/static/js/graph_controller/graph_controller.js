@@ -1446,7 +1446,6 @@ function initD3Force(graph, tree) {
             var args = getDefaultAjaxParameters(tree);
 
             args["node_number"] = betwennessForm.find("input[name='betweenness']").val();
-            args["graphid"] = window.networkID;
 
             $.ajax({
                 url: "/api/centrality/",
@@ -1491,6 +1490,48 @@ function initD3Force(graph, tree) {
             },
             messages: {
                 betweenness: "Please enter a number"
+            }
+        }
+    );
+
+
+    // Get normalized results from NPA analysis given an experiment ID
+
+    var npaForm = $("#npa-form");
+
+    $("#npa-button").on("click", function () {
+        if (npaForm.valid()) {
+
+            var args = getDefaultAjaxParameters(tree);
+
+            var experimentID = $("#analysis_id").val();
+
+            $.ajax({
+                url: "/api/analysis/" + experimentID + "/median",
+                type: npaForm.attr("method"),
+                dataType: "json",
+                data: $.param(args, true),
+                success: function (data) {
+
+                    console.log(data);
+                },
+                error: function (request) {
+                    alert(request.responseText);
+                }
+            })
+        }
+    });
+
+    betwennessForm.validate(
+        {
+            rules: {
+                analysis_id: {
+                    required: true,
+                    digits: true
+                }
+            },
+            messages: {
+                analysis_id: "Please enter a number corresponding to the ID of an experiment"
             }
         }
     );
