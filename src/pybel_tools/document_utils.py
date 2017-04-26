@@ -119,7 +119,7 @@ def make_document_metadata(name, contact, description, version=None, copyright=N
     """
     yield 'SET DOCUMENT Name = "{}"'.format(name)
     yield 'SET DOCUMENT Version = "{}"'.format(time.strftime('%Y%m%d') if version is None else version)
-    yield 'SET DOCUMENT Description = "{}"'.format(description)
+    yield 'SET DOCUMENT Description = "{}"'.format(description.replace('\n', ''))
     yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
 
     if licenses is not None:
