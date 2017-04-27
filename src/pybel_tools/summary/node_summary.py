@@ -14,7 +14,9 @@ __all__ = [
     'get_namespaces',
     'count_names',
     'get_names',
-    'get_names_by_namespace'
+    'get_names_by_namespace',
+    'get_names_with_errors',
+    'get_unused_namespaces',
 ]
 
 

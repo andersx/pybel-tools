@@ -15,17 +15,19 @@ __all__ = [
     'get_edge_relations',
     'count_unique_relations',
     'count_annotations',
-    'count_diseases',
     'get_annotations',
     'get_annotation_values_by_annotation',
     'count_annotation_values',
     'get_annotation_values',
     'count_annotation_values_filtered',
+    'get_all_relations',
     'pair_is_consistent',
     'get_consistent_edges',
-    'get_inconsistent_edges',
     'pair_has_contradiction',
+    'get_inconsistent_edges',
     'get_contradictory_pairs',
+    'get_contradiction_summary',
+    'count_diseases',
 ]
 
 
@@ -271,7 +273,7 @@ def _disease_iterator(graph):
 
 def count_diseases(graph):
     """Returns a counter of all of the mentions of diseases in a graph
-    
+
     :param pybel.BELGraph graph: A BEL graph
     :rtype: Counter
     """
