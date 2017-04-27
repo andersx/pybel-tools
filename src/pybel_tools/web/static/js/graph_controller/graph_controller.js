@@ -1513,8 +1513,6 @@ function initD3Force(graph, tree) {
                 data: $.param(args, true),
                 success: function (data) {
 
-                    console.log(data);
-
                     var distribution = Object.values(data).filter(Number);
 
                     var midRange = (Math.max.apply(Math, distribution) + Math.min.apply(Math, distribution)) / 2;
@@ -1524,7 +1522,7 @@ function initD3Force(graph, tree) {
                     $.each(data, function (key, value) {
                         // In case value is null
                         if (value) {
-                            normalizedData[key] = value - Math.abs(midRange)
+                            normalizedData[key] = value - Math.abs(midRange);
                         }
                     });
 
@@ -1535,12 +1533,8 @@ function initD3Force(graph, tree) {
 
                     $.each(mappedNodes, function (index, value) {
                         // Order is maintain so it uses the index to get iterate over normalizedData applying (constant/midrange)
-                        value.childNodes[0].setAttribute("r", normalizedData[nodeIDStrings[index]] * (5 / midRange));
-
-                        console.log(normalizedData[nodeIDStrings[index]] * (5 / midRange))
+                        value.childNodes[0].setAttribute("r", Math.abs(normalizedData[nodeIDStrings[index]] * (5 / midRange)));
                     });
-
-
                 },
                 error: function (request) {
                     alert(request.responseText);
