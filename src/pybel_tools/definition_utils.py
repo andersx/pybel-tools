@@ -26,6 +26,7 @@ __all__ = [
     'export_namespace',
     'export_namespaces',
     'get_merged_namespace_names',
+    'merge_namespaces',
     'check_cacheable',
 ]
 
@@ -422,60 +423,35 @@ def merge_namespaces(input_locations, output_path, namespace_name, namespace_key
                      sort_key=None, check_keywords=True):
     """Merges namespaces from multiple locations to one.
     
-    :param input_locations: An iterable of URLs or file paths pointing to BEL namespaces.
-    :type input_locations: iter
-    :param output_path: The path to the file to write the merged namespace
-    :type output_path: str
-    :param namespace_name: The namespace name
-    :type namespace_name: str
-    :param namespace_keyword: Preferred BEL Keyword, maximum length of 8
-    :type namespace_keyword: str
-    :param namespace_domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
+    :param iter input_locations: An iterable of URLs or file paths pointing to BEL namespaces.
+    :param str output_path: The path to the file to write the merged namespace
+    :param str namespace_name: The namespace name
+    :param str namespace_keyword: Preferred BEL Keyword, maximum length of 8
+    :param str namespace_domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
                             :data:`pybel.constants.NAMESPACE_DOMAIN_CHEMICAL`,
                             :data:`pybel.constants.NAMESPACE_DOMAIN_GENE`, or
                             :data:`pybel.constants.NAMESPACE_DOMAIN_OTHER`
-    :type namespace_domain: str
-    :param author_name: The namespace's authors
-    :type author_name: str
-    :param citation_name: The name of the citation
-    :type citation_name: str
-    :param values: An iterable of values (strings)
-    :type values: iter
-    :param namespace_query_url: HTTP URL to query for details on namespace values (must be valid URL)
-    :type namespace_query_url: str
-    :param namespace_description: Namespace description
-    :type namespace_description: str
-    :param namespace_species: Comma-separated list of species taxonomy id's
-    :type namespace_species: str
-    :param namespace_version: Namespace version
-    :type namespace_version: str
-    :param namespace_created: Namespace public timestamp, ISO 8601 datetime
-    :type namespace_created: str
-    :param author_contact: Namespace author's contact info/email address
-    :type author_contact: str
-    :param author_copyright: Namespace's copyright/license information
-    :type author_copyright: str
-    :param citation_description: Citation description
-    :type citation_description: str
-    :param citation_url: URL to more citation information
-    :type citation_url: str
-    :param citation_version: Citation version
-    :type citation_version: str
-    :param citation_date: Citation publish timestamp, ISO 8601 Date
-    :type citation_date: str
-    :param case_sensitive: Should this config file be interpreted as case-sensitive?
-    :type case_sensitive: bool
-    :param delimiter: The delimiter between names and labels in this config file
-    :type delimiter: str
-    :param cacheable: Should this config file be cached?
-    :type cacheable: bool
+    :param str author_name: The namespace's authors
+    :param str citation_name: The name of the citation
+    :param str namespace_query_url: HTTP URL to query for details on namespace values (must be valid URL)
+    :param str namespace_description: Namespace description
+    :param str namespace_species: Comma-separated list of species taxonomy id's
+    :param str namespace_version: Namespace version
+    :param str namespace_created: Namespace public timestamp, ISO 8601 datetime
+    :param str author_contact: Namespace author's contact info/email address
+    :param str author_copyright: Namespace's copyright/license information
+    :param str citation_description: Citation description
+    :param str citation_url: URL to more citation information
+    :param str citation_version: Citation version
+    :param str citation_date: Citation publish timestamp, ISO 8601 Date
+    :param bool case_sensitive: Should this config file be interpreted as case-sensitive?
+    :param str delimiter: The delimiter between names and labels in this config file
+    :param bool cacheable: Should this config file be cached?
     :param functions: The encoding for the elements in this namespace
     :type functions: iterable of characters
-    :param value_prefix: a prefix for each name
-    :type value_prefix: str
+    :param str value_prefix: a prefix for each name
     :param sort_key: A function to sort the values with :func:`sorted`
-    :param check_keywords: Should all the keywords be the same? Defaults to ``True``
-    :type check_keywords: bool
+    :param bool check_keywords: Should all the keywords be the same? Defaults to ``True``
     """
     results = get_merged_namespace_names(input_locations, check_keywords=check_keywords)
 
