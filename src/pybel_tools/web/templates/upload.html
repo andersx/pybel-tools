@@ -7,9 +7,7 @@
 {% block title %}Upload{% endblock %}
 
 {% block content %}
-    {{ util.flashed_messages(dismissible=True) }}
     <div class="container" style="padding-top:50px">
-
         <div class="jumbotron">
             <h1>PyBEL Web - Uploader</h1>
             <p>This web application is for uploading precompiled BEL scripts to the cache. It accepts files in the
@@ -21,6 +19,7 @@
                 <a href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> documentation.
             </p>
         </div>
+        {{ util.flashed_messages(dismissible=True) }}
         {{ wtf.quick_form(form, form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
     </div>
 {% endblock %}

@@ -13,6 +13,7 @@ from flask import Flask, render_template
 from sqlalchemy.exc import IntegrityError
 
 from pybel import from_lines
+from pybel.parser.parse_exceptions import InconsistientDefinitionError
 from .forms import CompileForm
 from .utils import render_graph_summary
 from ..mutation.metadata import add_canonical_names
@@ -60,13 +61,16 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
             )
             add_canonical_names(graph)
         except requests.exceptions.ConnectionError as e:
-            flask.flash("Resource doesn't exist")
+            flask.flash("Resource doesn't exist", category='error')
+            return render_error(e)
+        except InconsistientDefinitionError as e:
+            flask.flash('Duplicate definition: {}'.format(e.definition), category='error')
             return render_error(e)
         except Exception as e:
             return render_error(e)
 
         if not enable_cache:
-            flask.flash('Sorry, storing data is not enabled currently')
+            flask.flash('Sorry, storing data is not enabled currently', category='error')
             return render_graph_summary(0, graph)
 
         if not form.save_network.data and not form.save_edge_store.data:
@@ -77,12 +81,13 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
             network_id = network.id
             log.info('Done storing %s [%d]', form.file.data.filename, network_id)
         except IntegrityError as e:
-            flask.flash("A praph with same name and version already exists. Try bumping the version number.")
+            flask.flash("A praph with same name and version already exists. Try bumping the version number.",
+                        category='error')
             log.warning("Integrity error - can't store duplicate: %s v%s", graph.name, graph.version)
             manager.rollback()
             return render_error(e)
         except Exception as e:
-            flask.flash("Error storing in database")
+            flask.flash("Error storing in database", category='error')
             return render_error(e)
 
         return render_graph_summary(network_id, graph)
