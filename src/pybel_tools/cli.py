@@ -31,7 +31,7 @@ from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
 from .ioutils import convert_recursive, upload_recursive
 from .mutation.metadata import fix_pubmed_citations
-from .utils import get_version
+from .utils import get_version, enable_cool_mode
 from .web import receiver_service
 from .web.analysis_service import build_analysis_service
 from .web.compilation_service import build_synchronous_compiler_service
@@ -189,7 +189,7 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, directory
     set_debug_param(debug)
 
     if cool:
-        logging.getLogger('pybel.parser').setLevel(50)
+        enable_cool_mode()
 
     convert_recursive(directory, connection=connection, upload=(enable_upload or store_parts), pickle=True,
                       store_parts=store_parts, enrich_citations=(not no_enrich_authors))
@@ -216,6 +216,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
         admin_password, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
+    if debug < 3:
+        enable_cool_mode()
 
     log.info('Running PyBEL v%s', pybel_version())
     log.info('Running PyBEL Tools v%s', get_version())
