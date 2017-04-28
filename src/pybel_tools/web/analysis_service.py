@@ -82,11 +82,15 @@ def build_analysis_service(app, manager, api):
     def view_analysis_results(analysis_id):
         """View the results of a given analysis"""
         experiment = manager.session.query(Experiment).get(analysis_id)
+
+        data = sorted([(k, v) for k, v in experiment.data.items() if v[0]], key=itemgetter(1))
+
         return render_template(
             'analysis_results.html',
             experiment=experiment,
             columns=npa.RESULT_LABELS,
-            data=sorted([(k, v) for k, v in experiment.data.items() if v[0]], key=itemgetter(1))
+            data=data,
+            kde_list=[d[1][2] for d in data]
         )
 
     @app.route('/analysis/upload/<int:network_id>', methods=('GET', 'POST'))

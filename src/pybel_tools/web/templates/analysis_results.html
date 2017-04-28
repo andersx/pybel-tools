@@ -13,6 +13,16 @@
                 <small class="text-muted">{{ experiment.network.version }}</small>
             </h1>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Results Distribution</h3>
+            </div>
+            <div class="panel-body">
+                <div id="kde-chart"></div>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Results</h3>
@@ -61,6 +71,101 @@
             </table>
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script>
+
+        var svg = d3.select("#kde-chart").append("svg").attr('width', '900').attr('height', '400'),
+            width = +svg.attr("width"),
+            height = +svg.attr("height"),
+            margin = {top: 20, right: 30, bottom: 30, left: 40};
+
+        var x = d3.scaleLinear()
+            .domain([-10, 15])
+            .range([margin.left, width - margin.right]);
+
+        var y = d3.scaleLinear()
+            .domain([0, 0.1])
+            .range([height - margin.bottom, margin.top]);
+
+        svg.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + (height - margin.bottom) + ")")
+            .call(d3.axisBottom(x))
+            .append("text")
+            .attr("x", width - margin.right)
+            .attr("y", -6)
+            .attr("fill", "#000")
+            .attr("text-anchor", "end")
+            .attr("font-weight", "bold")
+            .text("CMPA Score");
+
+        svg.append("g")
+            .attr("class", "axis axis--y")
+            .attr("transform", "translate(" + margin.left + ",0)")
+            .call(d3.axisLeft(y).ticks(null, "%"));
+
+        faithful = {{ kde_list|safe }};
+
+        var n = faithful.length,
+            bins = d3.histogram().domain(x.domain()).thresholds(40)(faithful),
+            density = kernelDensityEstimator(kernelEpanechnikov(10), x.ticks(50))(faithful);
+
+        svg.insert("g", "*")
+            .attr("fill", "#bbb")
+            .selectAll("rect")
+            .data(bins)
+            .enter().append("rect")
+            .attr("x", function (d) {
+                return x(d.x0) + 1;
+            })
+            .attr("y", function (d) {
+                return y(d.length / n);
+            })
+            .attr("width", function (d) {
+                return x(d.x1) - x(d.x0) - 1;
+            })
+            .attr("height", function (d) {
+                return y(0) - y(d.length / n);
+            });
+
+        svg.append("path")
+            .datum(density)
+            .attr("fill", "none")
+            .attr("stroke", "#000")
+            .attr("stroke-width", 1.5)
+            .attr("stroke-linejoin", "round")
+            .attr("d", d3.line()
+                .curve(d3.curveBasis)
+                .x(function (d) {
+                    return x(d[0]);
+                })
+                .y(function (d) {
+                    return y(d[1]);
+                }));
+
+        function kernelDensityEstimator(kernel, X) {
+            return function (V) {
+                return X.map(function (x) {
+                    return [x, d3.mean(V, function (v) {
+                        return kernel(x - v);
+                    })];
+                });
+            };
+        }
+
+        function kernelEpanechnikov(k) {
+            return function (v) {
+                return Math.abs(v /= k) <= 1 ? 0.75 * (1 - v * v) / k : 0;
+            };
+        }
+
+    </script>
+
 {% endblock %}
 
 
