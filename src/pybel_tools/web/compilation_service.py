@@ -64,7 +64,7 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
             flask.flash("Resource doesn't exist", category='error')
             return render_error(e)
         except InconsistientDefinitionError as e:
-            flask.flash('Duplicate definition: {}'.format(e.definition), category='error')
+            flask.flash('{} was defined multiple times'.format(e.definition), category='error')
             return render_error(e)
         except Exception as e:
             return render_error(e)
