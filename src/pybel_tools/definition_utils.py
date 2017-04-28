@@ -414,6 +414,100 @@ def get_merged_namespace_names(locations, check_keywords=True):
     return result
 
 
+def merge_namespaces(input_locations, output_path, namespace_name, namespace_keyword, namespace_domain, author_name,
+                     citation_name, namespace_description=None, namespace_species=None, namespace_version=None,
+                     namespace_query_url=None, namespace_created=None, author_contact=None, author_copyright=None,
+                     citation_description=None, citation_url=None, citation_version=None, citation_date=None,
+                     case_sensitive=True, delimiter='|', cacheable=True, functions=None, value_prefix='',
+                     sort_key=None, check_keywords=True):
+    """Merges namespaces from multiple locations to one.
+    
+    :param input_locations: An iterable of URLs or file paths pointing to BEL namespaces.
+    :type input_locations: iter
+    :param output_path: The path to the file to write the merged namespace
+    :type output_path: str
+    :param namespace_name: The namespace name
+    :type namespace_name: str
+    :param namespace_keyword: Preferred BEL Keyword, maximum length of 8
+    :type namespace_keyword: str
+    :param namespace_domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_CHEMICAL`,
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_GENE`, or
+                            :data:`pybel.constants.NAMESPACE_DOMAIN_OTHER`
+    :type namespace_domain: str
+    :param author_name: The namespace's authors
+    :type author_name: str
+    :param citation_name: The name of the citation
+    :type citation_name: str
+    :param values: An iterable of values (strings)
+    :type values: iter
+    :param namespace_query_url: HTTP URL to query for details on namespace values (must be valid URL)
+    :type namespace_query_url: str
+    :param namespace_description: Namespace description
+    :type namespace_description: str
+    :param namespace_species: Comma-separated list of species taxonomy id's
+    :type namespace_species: str
+    :param namespace_version: Namespace version
+    :type namespace_version: str
+    :param namespace_created: Namespace public timestamp, ISO 8601 datetime
+    :type namespace_created: str
+    :param author_contact: Namespace author's contact info/email address
+    :type author_contact: str
+    :param author_copyright: Namespace's copyright/license information
+    :type author_copyright: str
+    :param citation_description: Citation description
+    :type citation_description: str
+    :param citation_url: URL to more citation information
+    :type citation_url: str
+    :param citation_version: Citation version
+    :type citation_version: str
+    :param citation_date: Citation publish timestamp, ISO 8601 Date
+    :type citation_date: str
+    :param case_sensitive: Should this config file be interpreted as case-sensitive?
+    :type case_sensitive: bool
+    :param delimiter: The delimiter between names and labels in this config file
+    :type delimiter: str
+    :param cacheable: Should this config file be cached?
+    :type cacheable: bool
+    :param functions: The encoding for the elements in this namespace
+    :type functions: iterable of characters
+    :param value_prefix: a prefix for each name
+    :type value_prefix: str
+    :param sort_key: A function to sort the values with :func:`sorted`
+    :param check_keywords: Should all the keywords be the same? Defaults to ``True``
+    :type check_keywords: bool
+    """
+    results = get_merged_namespace_names(input_locations, check_keywords=check_keywords)
+
+    with open(output_path, 'w') as file:
+        write_namespace(
+            namespace_name=namespace_name,
+            namespace_keyword=namespace_keyword,
+            namespace_domain=namespace_domain,
+            author_name=author_name,
+            citation_name=citation_name,
+            values=results,
+            namespace_species=namespace_species,
+            namespace_description=namespace_description,
+            namespace_query_url=namespace_query_url,
+            namespace_version=namespace_version,
+            namespace_created=namespace_created,
+            author_contact=author_contact,
+            author_copyright=author_copyright,
+            citation_description=citation_description,
+            citation_url=citation_url,
+            citation_version=citation_version,
+            citation_date=citation_date,
+            case_sensitive=case_sensitive,
+            delimiter=delimiter,
+            cacheable=cacheable,
+            functions=functions,
+            value_prefix=value_prefix,
+            sort_key=sort_key,
+            file=file
+        )
+
+
 def check_cacheable(config):
     """Checks the config returned by :func:`pybel.utils.get_bel_resource` to determine if the resource should be cached.
 
