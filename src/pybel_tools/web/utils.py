@@ -1,12 +1,26 @@
 # -*- coding: utf-8 -*-
-
+import itertools as itt
 import logging
 import traceback
+from collections import Counter
 
 import flask
+import networkx as nx
 from flask import render_template, jsonify, Flask
 from flask_bootstrap import Bootstrap
 from sqlalchemy.exc import IntegrityError
+
+from pybel.canonicalize import decanonicalize_node
+from ..analysis import get_chaotic_pairs, get_dampened_pairs, get_separate_unstable_correlation_triples, \
+    get_mutually_unstable_correlation_triples
+from ..constants import CNAME
+from ..summary import get_contradiction_summary, count_functions, count_relations, count_error_types, get_translocated, \
+    get_degradations, get_activities, count_namespaces, group_errors
+from ..summary.edge_summary import count_diseases
+from ..summary.export import info_list
+from ..summary.node_properties import count_variants
+from ..utils import prepare_c3, count_dict_values
+
 
 log = logging.getLogger(__name__)
 
@@ -74,3 +88,79 @@ def sanitize_list_of_str(l):
     :rtype: list[str]
     """
     return [e for e in (e.strip() for e in l) if e]
+
+
+def render_graph_summary(graph_id, graph, api=None):
+    """Renders the graph summary page
+    
+    :param int graph_id: 
+    :param pybel.BELGraph graph: 
+    :param DictionaryService api: 
+    :return: 
+    """
+
+    if api is not None:
+        hub_data = api.get_top_degree(graph_id)
+        centrality_data = api.get_top_centrality(graph_id)
+        disease_data = api.get_top_comorbidities(graph_id)
+    else:
+        hub_data = {graph.node[node][CNAME]: count for node, count in Counter(graph.degree()).items()}
+        centrality_data = {graph.node[node][CNAME]: count for node, count in calc_betweenness_centality(graph).items()}
+        disease_data = {graph.node[node][CNAME]: count for node, count in count_diseases(graph).items()}
+
+    unstable_pairs = itt.chain.from_iterable([
+        ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
+         get_chaotic_pairs(graph)),
+        ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Dampened') for u, v, in
+         get_dampened_pairs(graph)),
+    ])
+
+    contradictory_pairs = ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), relation) for
+                           u, v, relation in get_contradiction_summary(graph))
+
+    separate_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
+                                 get_separate_unstable_correlation_triples(graph))
+    mutually_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
+                                 get_mutually_unstable_correlation_triples(graph))
+
+    unstable_correlation_triplets = itt.chain.from_iterable([
+        ((a, b, c, 'Seperate') for a, b, c in separate_unstable_triples),
+        ((a, b, c, 'Mutual') for a, b, c in mutually_unstable_triples),
+    ])
+
+    return render_template(
+        'summary.html',
+        chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
+        chart_2_data=prepare_c3(count_relations(graph), 'Relationship Type'),
+        chart_3_data=prepare_c3(count_error_types(graph), 'Error Type'),
+        chart_4_data=prepare_c3({
+            'Translocations': len(get_translocated(graph)),
+            'Degradations': len(get_degradations(graph)),
+            'Molecular Activities': len(get_activities(graph))
+        }, 'Modifier Type'),
+        chart_5_data=prepare_c3(count_variants(graph), 'Node Variants'),
+        chart_6_data=prepare_c3(count_namespaces(graph), 'Namespaces'),
+        chart_7_data=prepare_c3(hub_data, 'Top Hubs'),
+        chart_8_data=prepare_c3(centrality_data, 'Top Central'),
+        chart_9_data=prepare_c3(disease_data, 'Pathologies'),
+        error_groups=count_dict_values(group_errors(graph)).most_common(20),
+        info_list=info_list(graph),
+        contradictions=contradictory_pairs,
+        unstable_pairs=unstable_pairs,
+        unstable_correlation_triplets=unstable_correlation_triplets,
+        graph=graph,
+        graph_id=graph_id,
+        time=None,
+    )
+
+
+def canonicalize_node_keys(d, graph):
+    return {graph.node[node][CNAME] for node, value in d.items()}
+
+
+def calc_betweenness_centality(graph):
+    try:
+        res = nx.betweenness_centrality(graph, k=200)
+        return res
+    except:
+        return nx.betweenness_centrality(graph)

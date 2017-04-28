@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 import codecs
 import logging
+import time
 import traceback
 
 import flask
@@ -13,12 +14,10 @@ from sqlalchemy.exc import IntegrityError
 
 from pybel import from_lines
 from .forms import CompileForm
-from ..summary import count_functions, count_relations, count_error_types
-from ..utils import prepare_c3
+from .utils import render_graph_summary
+from ..mutation.metadata import add_canonical_names
 
 log = logging.getLogger(__name__)
-
-import time
 
 
 def render_error(exception):
@@ -59,44 +58,33 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
                 allow_nested=form.allow_nested.data,
                 citation_clearing=(not form.citation_clearing.data)
             )
+            add_canonical_names(graph)
         except requests.exceptions.ConnectionError as e:
             flask.flash("Resource doesn't exist")
             return render_error(e)
         except Exception as e:
             return render_error(e)
 
-        if not enable_cache and (form.save_network.data or form.save_edge_store.data):
+        if not enable_cache:
             flask.flash('Sorry, storing data is not enabled currently')
-            return render_template(
-                'summary.html',
-                chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
-                chart_2_data=prepare_c3(count_relations(graph), 'Relationship Type'),
-                chart_3_data=prepare_c3(count_error_types(graph), 'Error Type'),
-                graph=graph,
-                filename='{} (v{})'.format(graph.name, graph.version),
-                time='{:.2f}'.format(time.time() - t)
-            )
+            return render_graph_summary(0, graph)
+
+        if not form.save_network.data and not form.save_edge_store.data:
+            return render_graph_summary(0, graph)
 
         try:
             network = manager.insert_graph(graph, store_parts=form.save_edge_store.data)
             network_id = network.id
             log.info('Done storing %s [%d]', form.file.data.filename, network_id)
         except IntegrityError as e:
-            flask.flash("Graph with same Name/Version already exists. Try bumping the version number.")
+            flask.flash("A praph with same name and version already exists. Try bumping the version number.")
+            log.warning("Integrity error - can't store duplicate: %s v%s", graph.name, graph.version)
             manager.rollback()
             return render_error(e)
         except Exception as e:
             flask.flash("Error storing in database")
             return render_error(e)
 
-        return render_template(
-            'summary.html',
-            chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
-            chart_2_data=prepare_c3(count_relations(graph), 'Relationship Type'),
-            chart_3_data=prepare_c3(count_error_types(graph), 'Error Type'),
-            graph=graph,
-            filename='{} (v{})'.format(graph.name, graph.version),
-            time='{:.2f}'.format(time.time() - t)
-        )
+        return render_graph_summary(network_id, graph)
 
     log.info('Added synchronous validator to %s', app)

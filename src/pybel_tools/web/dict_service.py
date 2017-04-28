@@ -2,7 +2,6 @@
 
 """This module runs the dictionary-backed PyBEL API"""
 
-import itertools as itt
 import logging
 from operator import itemgetter
 
@@ -15,24 +14,17 @@ from requests.compat import unquote
 
 from pybel import from_bytes
 from pybel import from_url
-from pybel.canonicalize import decanonicalize_node
 from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, FRAUNHOFER_RESOURCES
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
+from .utils import render_graph_summary
 from .utils import try_insert_graph, sanitize_list_of_str
-from ..analysis.stability import get_chaotic_pairs, get_dampened_pairs, get_mutually_unstable_correlation_triples, \
-    get_separate_unstable_correlation_triples
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
-from ..summary.edge_summary import count_relations, get_contradiction_summary
 from ..summary.edge_summary import get_annotation_values_by_annotation
-from ..summary.error_summary import count_error_types, group_errors
-from ..summary.export import info_json, info_list
-from ..summary.node_properties import get_translocated, get_activities, get_degradations, count_variants
-from ..summary.node_summary import count_functions, count_namespaces
+from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
-from ..utils import prepare_c3, count_dict_values
 
 log = logging.getLogger(__name__)
 
@@ -325,51 +317,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         """Renders a page with the parsing errors for a given BEL script"""
         graph = manager.get_graph_by_id(graph_id)
         graph = from_bytes(graph.blob, check_version=check_version)
-
-        unstable_pairs = itt.chain.from_iterable([
-            ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
-             get_chaotic_pairs(graph)),
-            ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Dampened') for u, v, in
-             get_dampened_pairs(graph)),
-        ])
-
-        contradictory_pairs = ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), relation) for
-                               u, v, relation in get_contradiction_summary(graph))
-
-        separate_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
-                                     get_separate_unstable_correlation_triples(graph))
-        mutually_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
-                                     get_mutually_unstable_correlation_triples(graph))
-
-        unstable_correlation_triplets = itt.chain.from_iterable([
-            ((a, b, c, 'Seperate') for a, b, c in separate_unstable_triples),
-            ((a, b, c, 'Mutual') for a, b, c in mutually_unstable_triples),
-        ])
-
-        return render_template(
-            'summary.html',
-            chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
-            chart_2_data=prepare_c3(count_relations(graph), 'Relationship Type'),
-            chart_3_data=prepare_c3(count_error_types(graph), 'Error Type'),
-            chart_4_data=prepare_c3({
-                'Translocations': len(get_translocated(graph)),
-                'Degradations': len(get_degradations(graph)),
-                'Molecular Activities': len(get_activities(graph))
-            }, 'Modifier Type'),
-            chart_5_data=prepare_c3(count_variants(graph), 'Node Variants'),
-            chart_6_data=prepare_c3(count_namespaces(graph), 'Namespaces'),
-            chart_7_data=prepare_c3(api.get_top_degree(graph_id), 'Top Hubs'),
-            chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
-            chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
-            error_groups=count_dict_values(group_errors(graph)).most_common(20),
-            info_list=info_list(graph),
-            contradictions=contradictory_pairs,
-            unstable_pairs=unstable_pairs,
-            unstable_correlation_triplets=unstable_correlation_triplets,
-            graph=graph,
-            graph_id=graph_id,
-            time=None,
-        )
+        return render_graph_summary(graph_id, graph, api)
 
     @app.route('/definitions')
     def view_definitions():
