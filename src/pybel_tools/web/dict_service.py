@@ -2,7 +2,6 @@
 
 """This module runs the dictionary-backed PyBEL API"""
 
-import itertools as itt
 import logging
 from operator import itemgetter
 
@@ -15,25 +14,17 @@ from requests.compat import unquote
 
 from pybel import from_bytes
 from pybel import from_url
-from pybel.canonicalize import decanonicalize_node
 from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, FRAUNHOFER_RESOURCES
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
+from .utils import render_graph_summary
 from .utils import try_insert_graph, sanitize_list_of_str
-from ..analysis.stability import get_chaotic_pairs, get_dampened_pairs, get_mutually_unstable_correlation_triples, \
-    get_separate_unstable_correlation_triples
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
-from ..summary.edge_summary import count_relations, get_contradiction_summary
 from ..summary.edge_summary import get_annotation_values_by_annotation
-from ..summary.error_summary import count_error_types, group_errors
-from ..summary.export import info_json, info_list
-from ..summary.node_properties import get_translocated, get_activities, get_degradations, count_variants
-from ..summary.node_summary import count_functions, count_namespaces
+from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
-
-from ..utils import prepare_c3, count_dict_values
 
 log = logging.getLogger(__name__)
 
@@ -157,6 +148,87 @@ def get_graph_from_request(api):
     return graph
 
 
+def build_dictionary_service_admin(app, manager, api, basic_auth):
+    @app.route('/admin/reload')
+    @basic_auth.required
+    def run_reload():
+        """Reloads the networks and supernetwork"""
+        api.load_networks(force_reload=True)
+        return jsonify({'status': 200})
+
+    @app.route('/admin/enrich')
+    @basic_auth.required
+    def run_enrich_authors():
+        """Enriches information in network. Be patient"""
+        fix_pubmed_citations(api.universe)
+        return jsonify({'status': 200})
+
+    @app.route('/admin/ensure/small')
+    @basic_auth.required
+    def ensure_small_corpus():
+        """Parses the small corpus"""
+        graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+        return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/ensure/large')
+    @basic_auth.required
+    def ensure_large_corpus():
+        """Parses the large corpus"""
+        graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+        return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/ensure/abstract3')
+    @basic_auth.required
+    def ensure_abstract3():
+        """Ensures Selventa Example 3"""
+        url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
+        graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
+        return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/ensure/gfam')
+    @basic_auth.required
+    def ensure_gfam():
+        graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
+        return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/nuke/')
+    @basic_auth.required
+    def nuke():
+        """Destroys the database and recreates it"""
+        log.info('nuking database')
+        manager.drop_database()
+        manager.create_database()
+        log.info('restarting dictionary service')
+        api.load_networks(force_reload=True)
+        log.info('... the dust settles')
+        return jsonify({'status': 200})
+
+
+def build_api_admin(app, manager, basic_auth):
+    @app.route('/admin/rollback')
+    @basic_auth.required
+    def rollback():
+        """Rolls back the transaction for when something bad happens"""
+        manager.rollback()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/graphs/drop/<network_id>')
+    @basic_auth.required
+    def drop_graph(network_id):
+        """Drops a specific graph"""
+        log.info('dropping graphs %s', network_id)
+        manager.drop_graph(network_id)
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/graphs/dropall')
+    @basic_auth.required
+    def drop_graphs():
+        """Drops all graphs"""
+        log.info('dropping all graphs')
+        manager.drop_graphs()
+        return jsonify({'status': 200})
+
+
 def build_dictionary_service(app, manager, check_version=True, admin_password=None, analysis_enabled=False,
                              eager=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
@@ -184,75 +256,8 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         app.config['BASIC_AUTH_PASSWORD'] = admin_password
 
         basic_auth = BasicAuth(app)
-
-        @app.route('/admin/reload')
-        @basic_auth.required
-        def run_reload():
-            """Reloads the networks and supernetwork"""
-            api.load_networks(force_reload=True)
-            return jsonify({'status': 200})
-
-        @app.route('/admin/enrich')
-        @basic_auth.required
-        def run_enrich_authors():
-            """Enriches information in network. Be patient"""
-            fix_pubmed_citations(api.universe)
-            return jsonify({'status': 200})
-
-        @app.route('/admin/rollback')
-        @basic_auth.required
-        def rollback():
-            """Rolls back the transaction for when something bad happens"""
-            manager.rollback()
-            return jsonify({'status': 200})
-
-        @app.route('/admin/ensure/small')
-        @basic_auth.required
-        def ensure_small_corpus():
-            """Parses the small corpus"""
-            graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph, api)
-
-        @app.route('/admin/ensure/large')
-        @basic_auth.required
-        def ensure_large_corpus():
-            """Parses the large corpus"""
-            graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph, api)
-
-        @app.route('/admin/ensure/abstract3')
-        @basic_auth.required
-        def ensure_abstract3():
-            """Ensures Selventa Example 3"""
-            url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
-            graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
-            return try_insert_graph(manager, graph, api)
-
-        @app.route('/admin/ensure/gfam')
-        @basic_auth.required
-        def ensure_gfam():
-            graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
-            return try_insert_graph(manager, graph, api)
-
-        @app.route('/admin/drop/all')
-        @basic_auth.required
-        def nuke():
-            """Destroys the database and recreates it"""
-            log.info('nuking database')
-            manager.drop_database()
-            manager.create_database()
-            log.info('restarting dictionary service')
-            api.load_networks(force_reload=True)
-            log.info('... the dust settles')
-            return jsonify({'status': 200})
-
-        @app.route('/admin/drop/graphs')
-        @basic_auth.required
-        def drop_graphs():
-            """Drops all graphs"""
-            log.info('dropping all graphs')
-            manager.drop_graphs()
-            return jsonify({'status': 200})
+        build_dictionary_service_admin(app, manager, api, basic_auth)
+        build_api_admin(app, manager, basic_auth)
 
         log.info('added admin functions to dict service')
 
@@ -312,51 +317,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         """Renders a page with the parsing errors for a given BEL script"""
         graph = manager.get_graph_by_id(graph_id)
         graph = from_bytes(graph.blob, check_version=check_version)
-
-        unstable_pairs = itt.chain.from_iterable([
-            ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
-             get_chaotic_pairs(graph)),
-            ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Dampened') for u, v, in
-             get_dampened_pairs(graph)),
-        ])
-
-        contradictory_pairs = ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), relation) for
-                               u, v, relation in get_contradiction_summary(graph))
-
-        separate_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
-                                     get_separate_unstable_correlation_triples(graph))
-        mutually_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
-                                     get_mutually_unstable_correlation_triples(graph))
-
-        unstable_correlation_triplets = itt.chain.from_iterable([
-            ((a, b, c, 'Seperate') for a, b, c in separate_unstable_triples),
-            ((a, b, c, 'Mutual') for a, b, c in mutually_unstable_triples),
-        ])
-
-        return render_template(
-            'summary.html',
-            chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
-            chart_2_data=prepare_c3(count_relations(graph), 'Relationship Type'),
-            chart_3_data=prepare_c3(count_error_types(graph), 'Error Type'),
-            chart_4_data=prepare_c3({
-                'Translocations': len(get_translocated(graph)),
-                'Degradations': len(get_degradations(graph)),
-                'Molecular Activities': len(get_activities(graph))
-            }, 'Modifier Type'),
-            chart_5_data=prepare_c3(count_variants(graph), 'Node Variants'),
-            chart_6_data=prepare_c3(count_namespaces(graph), 'Namespaces'),
-            chart_7_data=prepare_c3(api.get_top_degree(graph_id), 'Top Hubs'),
-            chart_8_data=prepare_c3(api.get_top_centrality(graph_id), 'Top Central'),
-            chart_9_data=prepare_c3(api.get_top_comorbidities(graph_id), 'Diseases'),
-            error_groups=count_dict_values(group_errors(graph)).most_common(20),
-            info_list=info_list(graph),
-            contradictions=contradictory_pairs,
-            unstable_pairs=unstable_pairs,
-            unstable_correlation_triplets=unstable_correlation_triplets,
-            graph=graph,
-            graph_id=graph_id,
-            time=None,
-        )
+        return render_graph_summary(graph_id, graph, api)
 
     @app.route('/definitions')
     def view_definitions():

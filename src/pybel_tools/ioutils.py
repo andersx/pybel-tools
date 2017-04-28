@@ -11,6 +11,7 @@ from pybel import from_path, BELGraph, to_pickle, from_pickle
 from pybel.io.line_utils import build_metadata_parser
 from pybel.manager.cache import build_manager
 from .mutation.merge import left_merge
+from .mutation.metadata import fix_pubmed_citations
 from .selection import get_subgraph_by_annotation_value
 from .summary import get_annotation_values
 
@@ -67,7 +68,20 @@ def get_paths_recursive(directory, extension='.bel'):
                 yield os.path.join(root, file)
 
 
-def convert_recursive(directory, connection=None, upload=False, pickle=False, store_parts=False):
+def safe_upload(manager, graph, store_parts=False):
+    """Wraps uploading with try/catch so other functions can continue after"""
+    try:
+        manager.insert_graph(graph, store_parts=store_parts)
+    except IntegrityError as e:
+        log.error("Can't upload duplcate %s v%s. Consider bumping the version", graph.name, graph.version)
+        manager.rollback()
+    except:
+        log.exception('Problem uploading %s', graph.name)
+
+
+def convert_recursive(directory, connection=None, upload=False, pickle=False, store_parts=False,
+                      enrich_citations=False):
+    """Recursively parses and either uploads/pickles graphs in a given directory and sub-directories"""
     metadata_parser = build_metadata_parser(connection)
     paths = list(get_paths_recursive(directory))
     log.info('Paths to parse: %s', paths)
@@ -75,38 +89,30 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False, st
     for path in paths:
         try:
             graph = from_path(path, manager=metadata_parser.manager)
-        except Exception as e:
+        except:
             log.exception('Problem parsing %s', path)
+            continue
+
+        if enrich_citations:
+            fix_pubmed_citations(graph)
 
         if upload:
-            try:
-                metadata_parser.manager.insert_graph(graph, store_parts=store_parts)
-            except IntegrityError as e:
-                log.exception('Integrity problem')
-                metadata_parser.manager.rollback()
-            except Exception as e:
-                log.exception('Problem uploading %s', graph.name)
+            safe_upload(metadata_parser.manager, graph, store_parts=store_parts)
 
         if pickle:
-            new_path = '{}.gpickle'.format(path[:-4])
+            new_path = '{}.gpickle'.format(path[:-4])  # [:-4] gets rid of .bel at the end of the file name
             to_pickle(graph, new_path)
 
 
-def upload_recursive(directory, connection=None):
+def upload_recursive(directory, connection=None, store_parts=False):
+    """Recursively uploads all gpickles in a given directory and sub-directories"""
     manager = build_manager(connection)
     paths = list(get_paths_recursive(directory, extension='.gpickle'))
-    log.info('Paths to parse: %s', paths)
+    log.info('Paths to upload: %s', paths)
 
     for path in paths:
         graph = from_pickle(path)
-
-        try:
-            manager.insert_graph(graph)
-        except IntegrityError as e:
-            log.info("Duplicate name/version - couldn't upload %s v%s", graph.name, graph.version)
-            manager.rollback()
-        except Exception as e:
-            log.exception('Problem uploading %s', graph.name)
+        safe_upload(manager, graph, store_parts=store_parts)
 
 
 def subgraphs_to_pickles(graph, directory=None, annotation='Subgraph'):

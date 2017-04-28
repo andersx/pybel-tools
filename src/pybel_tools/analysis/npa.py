@@ -389,11 +389,8 @@ def workflow_all_average(graph, key, tag=None, default_score=None, runs=None):
 RESULT_LABELS = [
     'avg',
     'stddev',
-    'min',
-    'min.p',
+    'normality',
     'median',
-    'max',
-    'max.p',
     'neighbors',
     'subgraph_size',
 ]
@@ -435,13 +432,10 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, defa
         mechanism_size = subgraph.number_of_nodes()
 
         runners = workflow(subgraph, node, key, tag=tag, default_score=default_score, runs=runs)
-        scores = np.array([runner.get_final_score() for runner in runners])
+        scores = [runner.get_final_score() for runner in runners]
 
-        if not scores:
+        if 0 == len(scores):
             results[node] = tuple([
-                None,
-                None,
-                None,
                 None,
                 None,
                 None,
@@ -451,29 +445,18 @@ def calculate_average_npa_on_subgraphs(candidate_mechanisms, key, tag=None, defa
             ])
             continue
 
+        scores = np.array(scores)
+
         average_score = np.average(scores)
         score_std = np.std(scores)
-        min_score = np.min(scores)
         med_score = np.median(scores)
-        max_score = np.max(scores)
-
-        if med_score < 0:  # if distribution is negative, switch around
-            min_score, max_score = max_score, min_score
-
         chi_2_stat, norm_p = stats.normaltest(scores)
-        # z_scores = stats.zscore(scores)
-        min_score_p = stats.norm.sf(np.abs(min_score - average_score) / score_std) * 2
-        max_score_p = stats.norm.sf(np.abs(max_score - average_score) / score_std) * 2
 
         results[node] = tuple([
             average_score,
             score_std,
             norm_p,
-            min_score,
-            min_score_p,
             med_score,
-            max_score,
-            max_score_p,
             number_first_neighbors,
             mechanism_size,
         ])

@@ -31,7 +31,7 @@ def parse_authors(graph):
     :type graph: pybel.BELGraph
     """
     if 'PYBEL_PARSED_AUTHORS' in graph.graph:
-        log.warning('Authors have already been parsed in %s', graph.graph)
+        log.warning('Authors have already been parsed in %s', graph.name)
         return
 
     for u, v, k, d in filter_edges(graph, edge_has_author_annotation):
@@ -53,7 +53,7 @@ def serialize_authors(graph):
     :type graph: pybel.BELGraph
     """
     if 'PYBEL_PARSED_AUTHORS' not in graph.graph:
-        log.warning('Authors have not yet been parsed in %s', graph.graph)
+        log.warning('Authors have not yet been parsed in %s', graph.name)
         return
 
     for u, v, k, d in filter_edges(graph, edge_has_author_annotation):
@@ -112,6 +112,8 @@ def fix_pubmed_citations(graph, stringify_authors=False):
 
     if stringify_authors:
         serialize_authors(graph)
+    else:
+        graph.graph['PYBEL_PARSED_AUTHORS'] = True
 
     graph.graph['PYBEL_ENRICHED_CITATIONS'] = True
     return errors

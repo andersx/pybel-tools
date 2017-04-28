@@ -4,6 +4,7 @@
 
 import itertools as itt
 import json
+import logging
 import os
 from collections import Counter, defaultdict
 from operator import itemgetter
@@ -366,3 +367,7 @@ def build_template_renderer(file):
         return template_environment.get_template(template_filename).render(context)
 
     return render_template
+
+
+def enable_cool_mode():
+    logging.getLogger('pybel.parser').setLevel(50)

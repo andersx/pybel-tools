@@ -51,12 +51,14 @@
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Nodelink JSON</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='cx') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CX JSON</a>
+                <!-- These are still broken...
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bytes') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Pickle</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='graphml') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> GraphML</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='csv') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</a>
+                 -->
             </div>
         </div>
 
@@ -120,7 +122,7 @@
 
         <div class="panel panel-default panel-table">
             <div class="panel-heading">
-                <h3 class="panel-title">All Errors</h3>
+                <h3 class="panel-title">All Warnings</h3>
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
@@ -151,7 +153,7 @@
 
         <div class="panel panel-default panel-table">
             <div class="panel-heading">
-                <h3 class="panel-title">Top Errors</h3>
+                <h3 class="panel-title">Top Warnings</h3>
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
@@ -266,16 +268,28 @@
                     <dd>When both <code>A negativeCorrelation B</code>, <code>B negativeCorrelation C</code>, and <code>C
                         negativeCorrelation A</code>.
                     </dd>
-                    <dt>Jens Unstable Triplet</dt>
+                    <dt>Jens Unstable Triplet*</dt>
                     <dd>When <code>A increases B</code>, <code>A decreases C</code>, and <code>C positiveCorrelation
-                        A</code></dd>
-                    <dt>Increase Mismatch Triplet</dt>
+                        A</code>.
+                    </dd>
+                    <dt>Increase Mismatch Triplet*</dt>
                     <dd>When <code>A increases B</code>, <code>A increases C</code>, and <code>C negativeCorrelation
-                        A</code></dd>
-                    <dt>Decrease Mismatch Triplet</dt>
+                        A</code>.
+                    </dd>
+                    <dt>Decrease Mismatch Triplet*</dt>
                     <dd>When <code>A decreases B</code>, <code>A decreases C</code>, and <code>C negativeCorrelation
-                        A</code></dd>
+                        A</code>.
+                    </dd>
+                    <dt>Chaotic Triplets*</dt>
+                    <dd>A triplet of nodes that mutually increase each other, such as when <code>A increases B</code>,
+                        <code>B increases C</code>, and <code>C increases A</code>.
+                    </dd>
+                    <dt>Dampened Triplets*</dt>
+                    <dd>A triplet of nodes that mutually decreases each other, such as when <code>A decreases B</code>,
+                        <code>B decreases C</code>, and <code>C decreases A</code>.
+                    </dd>
                 </dl>
+                <p>Analysis with astericks have not been implemented and are not yet shown.</p>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>

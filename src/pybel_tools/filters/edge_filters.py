@@ -542,3 +542,10 @@ def edge_has_translocation(graph, u, v, k, d):
 
 def edge_has_degradation(graph, u, v, k, d):
     return edge_has_modifier(graph, u, v, k, d, DEGRADATION)
+
+
+def edge_has_pathology_causal(graph, u, v, k, d):
+    """Returns if the subject of this edge is a pathology and participates in a causal relation. This
+    is usually nonsense, in most cases.
+    """
+    return graph.node[u][FUNCTION] == PATHOLOGY and d[RELATION] in CAUSAL_RELATIONS

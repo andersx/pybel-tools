@@ -14,6 +14,7 @@ from pybel import from_bytes, BELGraph
 from pybel.canonicalize import decanonicalize_node, calculate_canonical_name
 from pybel.manager.models import Network
 from .base_service import BaseService
+from .utils import calc_betweenness_centality
 from ..constants import CNAME
 from ..mutation.inference import infer_central_dogma
 from ..mutation.merge import left_merge
@@ -25,14 +26,6 @@ from ..summary.provenance import get_authors, get_pmid_by_keyword, get_authors_b
 log = logging.getLogger(__name__)
 
 CENTRALITY_SAMPLES = 200
-
-
-def calc_betweenness_centality(graph):
-    try:
-        res = nx.betweenness_centrality(graph, k=200)
-        return res
-    except:
-        return nx.betweenness_centrality(graph)
 
 
 class DictionaryService(BaseService):

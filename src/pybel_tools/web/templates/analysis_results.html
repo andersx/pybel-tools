@@ -25,9 +25,19 @@
                     <dd>{{ experiment.created }}</dd>
                     <dt>Description</dt>
                     <dd>{{ experiment.description }}</dd>
+                    <dt>Permutations</dt>
+                    <dd>{{ experiment.permutations }}</dd>
+                    <dt>Source File</dt>
+                    <dd>{{ experiment.source_name }}</dd>
                 </dl>
+                <a class="btn btn-default" href="{{ url_for('download_analysis', analysis_id=experiment.id) }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Download CSV</a>
+                <a class="btn btn-default" href="{{ url_for('view_summary', graph_id=experiment.network.id) }}"
+                   role="button">View Network Summary</a>
+                <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=experiment.network.id) }}"
+                   role="button">Explore Network</a>
             </div>
-            <table class="table table-striped">
+            <table class="table table-striped table-responsive">
                 <thead>
                 <tr>
                     <th></th>

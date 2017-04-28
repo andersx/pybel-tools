@@ -102,3 +102,12 @@ DATA_WEIGHT = 'weight'
 # Resources
 GENE_FAMILIES = FRAUNHOFER_RESOURCES + 'gfam_members.bel'
 NAMED_COMPLEXES = 'http://resources.openbel.org/belframework/20150611/resource/named-complexes.bel'
+
+#: Points to the env variable name for pybel resources
+PYBEL_RESOURCES_ENV = 'PYBEL_RESOURCES_BASE'
+
+#: Points to the env variable for owncloud resources
+OWNCLOUD_ENV = 'OWNCLOUD_BASE'
+
+#: Points to the env variable for the biological model store repository
+BMS_BASE = 'BMS_BASE'

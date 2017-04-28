@@ -30,6 +30,8 @@ def collapse_nodes(graph, dict_of_sets_of_nodes):
     :param dict_of_sets_of_nodes: A dictionary of {node: set of nodes}
     :type dict_of_sets_of_nodes: dict
     """
+    log.debug('collapsing %d groups', len(dict_of_sets_of_nodes))
+
     for key_node, value_nodes in dict_of_sets_of_nodes.items():
         for value_node in value_nodes:
             for successor in graph.successors_iter(value_node):
@@ -127,14 +129,13 @@ def collapse_by_central_dogma(graph):
     >>> collapse_nodes(graph, build_central_dogma_collapse_dict(graph)) 
     """
     collapse_dict = build_central_dogma_collapse_dict(graph)
-    log.info('Collapsing %d groups', len(collapse_dict))
     collapse_nodes(graph, collapse_dict)
 
 
 @pipeline.in_place_mutator
 def collapse_by_central_dogma_to_genes(graph):
     """Collapses all nodes from the central dogma (:data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`, 
-    :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE` in place. This 
+    :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE`, in-place. This 
     function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
     
     :param graph: A BEL graph
@@ -142,10 +143,11 @@ def collapse_by_central_dogma_to_genes(graph):
     
     Equivalent to:
     
+    >>> infer_central_dogma(graph)
     >>> collapse_nodes(graph, build_central_dogma_collapse_gene_dict(graph))
     """
+    infer_central_dogma(graph)
     collapse_dict = build_central_dogma_collapse_gene_dict(graph)
-    log.info('Collapsing %d groups', len(collapse_dict))
     collapse_nodes(graph, collapse_dict)
 
 
@@ -154,8 +156,9 @@ def collapse_variants_to_genes(graph):
     """Finds all protein variants that are pointing to a gene and not a protein and fixes them by changing their
     function to be :data:`pybel.constants.GENE`
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
+    
+    A use case is after running :func:`collapse_by_central_dogma_to_genes`
     """
     for node, data in graph.nodes(data=True):
         if data[FUNCTION] != PROTEIN:

@@ -48,10 +48,7 @@
                     by nodes and other biological entities of interest, or by certain authors and publications of
                     interest.
                 </p>
-                <p>If you would like to validate your own BEL script and/or upload it to the knowledgebase, check the
-                    web-based BEL script <a
-                        href="{{ url_for('view_compile') }}">compiler</a> or pre-compiled gpickle <a
-                        href="{{ url_for('view_upload') }}">uploader</a></p>
+
                 <p>It is maintained by <a href="https://github.com/cthoyt">Charles Tapley Hoyt</a> and Daniel
                     Domingo-Fernandez at the <a
                             href="https://www.scai.fraunhofer.de/en/business-research-areas/bioinformatics.html">Fraunhofer
@@ -59,6 +56,12 @@
                             href="https://www.imi.europa.eu/">IMI</a> projects, <a href="http://www.aetionomy.eu/>">AETIONOMY</a>
                     and <a href="http://www.phago.eu/">PHAGO</a>.
                 </p>
+
+                <h4>Actions</h4>
+                <a class="btn btn-default" href="{{ url_for('view_compile') }}"
+                   role="button">Compile a BEL Script</a>
+                <a class="btn btn-default" href="{{ url_for('view_upload') }}"
+                   role="button">Upload a Pre-compiled Pickle</a>
             </div>
         </div>
 
@@ -84,6 +87,7 @@
                                 <li><a href="/explore/?graphid={{ nid }}">Explore</a></li>
                                 {% if analysis_enabled %}
                                     <li><a href="/analysis/upload/{{ nid }}">Analyze</a></li>
+                                    <li><a href="/analysis/{{ nid }}">Results</a></li>
                                 {% endif %}
                             </ul>
                         </div>
