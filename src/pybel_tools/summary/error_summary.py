@@ -7,13 +7,15 @@ from collections import Counter, defaultdict
 from fuzzywuzzy import process, fuzz
 
 from pybel.constants import ANNOTATIONS
-from pybel.parser.parse_exceptions import NakedNameWarning, MissingNamespaceNameWarning, MissingNamespaceRegexWarning
+from pybel.parser.parse_exceptions import NakedNameWarning, MissingNamespaceNameWarning, MissingNamespaceRegexWarning, \
+    UndefinedNamespaceWarning
 from ..utils import check_has_annotation
 
 __all__ = [
     'count_error_types',
     'count_naked_names',
     'get_incorrect_names',
+    'get_undefined_namespace_names',
     'calculate_incorrect_name_dict',
     'calculate_suggestions',
     'calculate_error_by_annotation',
@@ -55,6 +57,18 @@ def get_incorrect_names(graph, namespace):
     """
     return {e.name for _, _, e, _ in graph.warnings if
             isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning)) and e.namespace == namespace}
+
+
+def get_undefined_namespace_names(graph, namespace):
+    """Gets the names from namespaces that aren't actually defined
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :param str namespace: The namespace to filter by
+    :return: The set of all names from the undefined namespace
+    :rtype: set[str] 
+    """
+    return {e.name for _, _, e, _ in graph.warnings if
+            isinstance(e, UndefinedNamespaceWarning) and e.namespace == namespace}
 
 
 def calculate_incorrect_name_dict(graph):

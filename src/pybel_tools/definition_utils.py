@@ -12,7 +12,7 @@ import time
 
 from pybel.constants import NAMESPACE_DOMAIN_TYPES, belns_encodings, METADATA_AUTHORS, METADATA_CONTACT, METADATA_NAME
 from pybel.utils import get_bel_resource
-from .summary.error_summary import get_incorrect_names
+from .summary.error_summary import get_incorrect_names, get_undefined_namespace_names
 from .summary.node_summary import get_names
 
 __all__ = [
@@ -343,9 +343,15 @@ def export_namespace(graph, namespace, directory=None, cacheable=False):
     path = os.path.join(directory, '{}.belns'.format(namespace))
 
     with open(path, 'w') as file:
-        right_names, wrong_names = get_names(graph, namespace), get_incorrect_names(graph, namespace)
-        log.info('Outputting %d correct and %d wrong names to %s', len(right_names), len(wrong_names), path)
-        names = (right_names | wrong_names)
+        log.info('Outputting to %s', path)
+        right_names = get_names(graph, namespace)
+        log.info('Graph has %d correct names in %s', len(right_names), namespace)
+        wrong_names = get_incorrect_names(graph, namespace)
+        log.info('Graph has %d incorrect names in %s', len(right_names), namespace)
+        undefined_ns_names = get_undefined_namespace_names(graph, namespace)
+        log.info('Graph has %d names in missing namespace %s', len(right_names), namespace)
+
+        names = (right_names | wrong_names | undefined_ns_names)
 
         if 0 == len(names):
             log.warning('%s is empty', namespace)
