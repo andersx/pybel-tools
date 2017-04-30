@@ -173,7 +173,7 @@
         </div>
 
         {% if graph.warnings|length > 0 %}
-            <div class="panel panel-default panel-table">
+            <div class="panel panel-danger panel-table">
                 <div class="panel-heading">
                     <h3 class="panel-title">All Warnings</h3>
                 </div>
@@ -206,7 +206,7 @@
         {% endif %}
 
         {% if error_groups is defined and error_groups|length > 0 %}
-            <div class="panel panel-default panel-table">
+            <div class="panel panel-danger panel-table">
                 <div class="panel-heading">
                     <h3 class="panel-title">Top Warnings</h3>
                 </div>
@@ -234,7 +234,7 @@
         {% endif %}
 
         {% if contradictions is defined and contradictions|length > 0 %}
-            <div class="panel panel-default">
+            <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title">Contradictory Edges</h3>
                 </div>
