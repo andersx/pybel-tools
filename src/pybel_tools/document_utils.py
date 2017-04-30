@@ -97,23 +97,16 @@ def merge(output_path, input_paths, merge_document_name=None, merge_document_con
                 print(line, file=f)
 
 
-def make_document_metadata(name, contact, description, version=None, copyright=None, authors=None, licenses=None):
+def make_document_metadata(name, contact, description, authors, version=None, copyright=None, licenses=None):
     """Builds a list of lines for the document metadata section of a BEL document
 
-    :param name: The unique name for this BEL document
-    :type name: str
-    :param contact: The email address of the maintainer
-    :type contact: str
-    :param description: A description of the contents of this document
-    :type description: str
-    :param version: The version. Defaults to 1.0.0
-    :type version: str
-    :param copyright: Copyright information about this document
-    :type copyright: str
-    :param authors: The authors of this document
-    :type authors: str
-    :param licenses: The license applied to this document
-    :type licenses: str
+    :param str name: The unique name for this BEL document
+    :param str contact: The email address of the maintainer
+    :param str description: A description of the contents of this document
+    :param str authors: The authors of this document
+    :param str version: The version. Defaults to date in ``YYYYMMDD`` format.
+    :param str copyright: Copyright information about this document
+    :param str licenses: The license applied to this document
     :return: An iterator over the lines for the document metadata section
     :rtype: iter[str]
     """
@@ -121,12 +114,10 @@ def make_document_metadata(name, contact, description, version=None, copyright=N
     yield 'SET DOCUMENT Version = "{}"'.format(time.strftime('%Y%m%d') if version is None else version)
     yield 'SET DOCUMENT Description = "{}"'.format(description.replace('\n', ''))
     yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
+    yield 'SET DOCUMENT Authors = {}'.format(authors)
 
     if licenses is not None:
         yield 'SET DOCUMENT License = "{}"'.format(licenses)
-
-    if authors is not None:
-        yield 'SET DOCUMENT Authors = {}'.format(authors)
 
     if copyright is not None:
         yield 'SET DOCUMENT Copyright = "{}"'.format(copyright)
@@ -194,7 +185,7 @@ def make_document_statement_group(pmids):
         yield 'UNSET STATEMENT_GROUP'
 
 
-def write_boilerplate(document_name, contact, description, version=None, copyright=None, authors=None,
+def write_boilerplate(document_name, contact, description, authors, version=None, copyright=None,
                       licenses=None, namespace_dict=None, namespace_patterns=None, annotations_dict=None,
                       annotations_patterns=None, pmids=None, file=None):
     """Writes a boilerplate BEL document, with standard document metadata, definitions. Optionally, if a
@@ -206,12 +197,12 @@ def write_boilerplate(document_name, contact, description, version=None, copyrig
     :type contact: str
     :param description: A description of the contents of this document
     :type description: str
+    :param authors: The authors of this document
+    :type authors: str
     :param version: The version. Defaults to current date in format YYYYMMDD.
     :type version: str
     :param copyright: Copyright information about this document
     :type copyright: str
-    :param authors: The authors of this document
-    :type authors: str
     :param licenses: The license applied to this document
     :type licenses: str
     :param file: output stream. If None, defaults to :data:`sys.stdout`
