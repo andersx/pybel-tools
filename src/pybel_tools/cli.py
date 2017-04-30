@@ -206,13 +206,12 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, directory
 @click.option('--run-database-service', is_flag=True, help='Enable the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
 @click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
-@click.option('--run-analysis-service', is_flag=True, help='Enable the analysis service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
 @click.option('--admin-password', help='Set admin password and enable admin services')
 @click.option('--echo-sql', is_flag=True)
 def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_receiver_service, run_analysis_service, run_all, secret_key,
+        run_receiver_service, run_all, secret_key,
         admin_password, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
@@ -235,19 +234,19 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
     admin_password = admin_password or (('PYBEL_ADMIN_PASS' in os.environ) and os.environ['PYBEL_ADMIN_PASS'])
 
-    build_sitemap_endpoint(app, show_admin=admin_password)
-
     api = build_dictionary_service(
         app,
         manager=manager,
         check_version=(not skip_check_version),
         admin_password=admin_password,
-        analysis_enabled=(run_analysis_service or run_all),
+        analysis_enabled=True,
         eager=eager,
     )
 
+    build_sitemap_endpoint(app, show_admin=admin_password)
     build_synchronous_compiler_service(app, manager=manager)
     build_pickle_uploader_service(app, manager=manager)
+    build_analysis_service(app, manager=manager, api=api)
 
     if run_database_service:
         build_database_service(app, manager)
@@ -257,9 +256,6 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
     if run_receiver_service or run_all:
         build_receiver_service(app, manager=manager)
-
-    if run_analysis_service or run_all:
-        build_analysis_service(app, manager=manager, api=api)
 
     log.info('Done building %s', app)
 
