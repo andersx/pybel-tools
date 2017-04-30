@@ -49,8 +49,7 @@ def split_document(lines):
     return documents, definitions, statements
 
 
-def merge(output_path, input_paths, merge_document_name=None, merge_document_contact=None,
-          merge_document_description=None):
+def merge(output_path, input_paths, merged_name=None, merged_contact=None, merged_description=None, merged_author=None):
     """Merges multiple BEL documents and maintains author information in comments
 
     Steps:
@@ -61,40 +60,42 @@ def merge(output_path, input_paths, merge_document_name=None, merge_document_con
 
     :param output_path: Path to file to write merged BEL document
     :param input_paths: List of paths to input BEL document files
-    :param merge_document_name: name for combined document
-    :param merge_document_contact: contact information for combine document
-    :param merge_document_description: description of combine document
+    :param merged_name: name for combined document
+    :param merged_contact: contact information for combine document
+    :param merged_description: description of combine document
     """
     metadata, defs, statements = [], [], []
 
     for input_path in input_paths:
-        with open(os.path.expanduser(input_path)) as f:
-            a, b, c = split_document([line.strip() for line in f])
+        with open(os.path.expanduser(input_path)) as file:
+            a, b, c = split_document([line.strip() for line in file])
             metadata.append(a)
             defs.append(set(b))
             statements.append(c)
 
-    merge_document_contact = merge_document_contact if merge_document_contact is not None else ''
-    merge_document_name = merge_document_name if merge_document_name is not None else 'MERGED DOCUMENT'
-    merge_document_description = merge_document_description if merge_document_description is not None else 'This is a merged document'
+    merged_contact = merged_contact if merged_contact is not None else ''
+    merged_name = merged_name if merged_name is not None else 'MERGED DOCUMENT'
+    merged_description = merged_description if merged_description is not None else 'This is a merged document'
+    merged_author = merged_author if merged_author is not None else ''
 
-    with open(os.path.expanduser(output_path), 'w') as f:
-        for line in make_document_metadata(merge_document_name, merge_document_contact, merge_document_description):
-            print(line, file=f)
+    with open(os.path.expanduser(output_path), 'w') as file:
+        for line in make_document_metadata(merged_name, merged_contact, merged_description,
+                                           merged_author):
+            print(line, file=file)
 
         for line in sorted(set().union(*defs)):
-            print(line, file=f)
+            print(line, file=file)
 
         for md, st in zip(metadata, statements):
-            print(file=f)
+            print(file=file)
 
             for line in md:
-                print('# SUBDOCUMENT {}'.format(line), file=f)
+                print('# SUBDOCUMENT {}'.format(line), file=file)
 
-            print(file=f)
+            print(file=file)
 
             for line in st:
-                print(line, file=f)
+                print(line, file=file)
 
 
 def make_document_metadata(name, contact, description, authors, version=None, copyright=None, licenses=None):
@@ -220,13 +221,13 @@ def write_boilerplate(document_name, contact, description, authors, version=None
     file = sys.stdout if file is None else file
 
     metadata_iter = make_document_metadata(
-            name=document_name,
-            contact=contact,
-            description=description,
-            authors=authors,
-            version=version,
-            copyright=copyright,
-            licenses=licenses
+        name=document_name,
+        contact=contact,
+        description=description,
+        authors=authors,
+        version=version,
+        copyright=copyright,
+        licenses=licenses
     )
 
     for line in metadata_iter:
