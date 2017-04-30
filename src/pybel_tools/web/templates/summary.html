@@ -7,6 +7,7 @@
 {% block styles %}
     {{ super() }}
     <link href="{{ url_for('static', filename='css/c3.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
 {% endblock %}
 
 {% block head %}
@@ -33,6 +34,22 @@
         </div>
 
         <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
+                   role="button">Explore</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bel') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> BEL Script</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='json') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Nodelink JSON</a>
+                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='cx') }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CX JSON</a>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Overview</h3>
             </div>
@@ -43,14 +60,7 @@
                         <dd>{{ value }}</dd>
                     {% endfor %}
                 </dl>
-                <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
-                   role="button">Explore</a>
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bel') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> BEL Script</a>
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='json') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Nodelink JSON</a>
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='cx') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CX JSON</a>
+
                 <!-- These are still broken...
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bytes') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Pickle</a>

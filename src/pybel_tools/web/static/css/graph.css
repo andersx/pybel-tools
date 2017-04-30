@@ -72,11 +72,7 @@
 #graph-chart {
     display: block;
     margin: auto;
-    height: 550px;
-}
-
-svg {
-    border: 1px solid black;
+    height: 584px;
 }
 
 .graph-controller {

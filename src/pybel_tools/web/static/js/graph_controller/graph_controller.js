@@ -691,9 +691,7 @@ function initD3Force(graph, tree) {
     svg.append("rect")
         .attr("height", h)
         .attr("width", w)
-        .style("stroke", bordercolor)
         .style("fill", "none")
-        .style("stroke-width", border);
 
     // g = svg object where the graph will be appended
     var g = svg.append("g");

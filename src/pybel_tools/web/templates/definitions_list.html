@@ -4,6 +4,11 @@
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
 
+{% block styles %}
+    {{ super() }}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
+{% endblock %}
+
 {% block title %}Definitions{% endblock %}
 
 {% block content %}
@@ -11,6 +16,15 @@
         <div class="page-header">
             <h1>Definition Store</h1>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks', graphid=graph_id) }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Namespaces</h3>
