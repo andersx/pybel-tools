@@ -217,10 +217,19 @@ def write_boilerplate(document_name, contact, description, authors, version=None
     :param pmids: an optional list of PMID's to autopopulate with citation and abstract
     :type pmids: iter[str] or iter[int]
     """
-
     file = sys.stdout if file is None else file
 
-    for line in make_document_metadata(document_name, contact, description, version, copyright, authors, licenses):
+    metadata_iter = make_document_metadata(
+            name=document_name,
+            contact=contact,
+            description=description,
+            authors=authors,
+            version=version,
+            copyright=copyright,
+            licenses=licenses
+    )
+
+    for line in metadata_iter:
         print(line, file=file)
     print('#' * 80, file=file)
 
