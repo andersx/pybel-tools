@@ -18,6 +18,21 @@
                 <small class="text-muted">{{ experiment.network.version }}</small>
             </h1>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <a class="btn btn-default" href="{{ url_for('view_summary', graph_id=experiment.network.id) }}"
+                   role="button">Summarize Network</a>
+                <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=experiment.network.id) }}"
+                   role="button">Explore Network</a>
+                <a class="btn btn-default" href="{{ url_for('download_analysis', analysis_id=experiment.id) }}"
+                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Download Results</a>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Results</h3>
@@ -35,12 +50,6 @@
                     <dt>Source File</dt>
                     <dd>{{ experiment.source_name }}</dd>
                 </dl>
-                <a class="btn btn-default" href="{{ url_for('download_analysis', analysis_id=experiment.id) }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Download CSV</a>
-                <a class="btn btn-default" href="{{ url_for('view_summary', graph_id=experiment.network.id) }}"
-                   role="button">View Network Summary</a>
-                <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=experiment.network.id) }}"
-                   role="button">Explore Network</a>
             </div>
             <table class="table table-striped table-responsive">
                 <thead>
