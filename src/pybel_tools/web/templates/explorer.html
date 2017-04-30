@@ -550,12 +550,12 @@
                         <thead>
                         <tr>
                             <th>Format</th>
-                            <th>Download</th>
+                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td>Network to SVG</td>
+                            <td>Save current explorer window as a SVG image</td>
                             <td>
                                 <button type="button" id="save-svg-graph" class="btn btn-primary"
                                         aria-label="Left Align">
@@ -563,7 +563,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to BEL</td>
+                            <td>Save as a BEL script</td>
                             <td>
                                 <button type="button" id="bel-button" class="btn btn-primary" aria-label="Left Align">
                                     <img alt="BEL-logo" id="bel-logo"
@@ -571,34 +571,47 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to <a href="http://graphml.graphdrawing.org/">GraphML</a></td>
+                            <td>Save as <a href="http://graphml.graphdrawing.org/">GraphML</a> for use in Cytoscape</td>
                             <td>
                                 <button type="button" id="graphml-button" class="btn btn-primary"
-                                        aria-label="Left Align">GraphML
+                                        aria-label="Left Align"><span class="glyphicon glyphicon-download"
+                                                                      aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to CSV</td>
+                            <td>Save as CSV for import in Microsoft Excel</td>
                             <td>
-                                <button type="button" id="csv-button" class="btn btn-primary"
-                                        aria-label="Left Align">CSV
+                                <button type="button" id="csv-button" class="btn btn-primary" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Save as <a href="http://www.home.ndexbio.org/data-model/">CX</a> JSON for use with the
+                                <a href="http://ndexbio.org/">Network Data Exchange</a></td>
+                            <td>
+                                <button type="button" id="cx-button" class="btn btn-primary" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to Bytes</td>
+                            <td>Save as Node Link JSON for custom visualization using <a href="https://d3js.org/">D3</a>
+                            </td>
                             <td>
-                                <button type="button" id="bytes-button" class="btn btn-primary"
-                                        aria-label="Left Align">Bytes
+                                <button type="button" id="nodelink-button" class="btn btn-primary"
+                                        aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to <a href="http://www.home.ndexbio.org/data-model/">CX</a></td>
+                            <td>Save as a pre-compiled gpickle for programmatic use</td>
                             <td>
-                                <button type="button" id="cx-button" class="btn btn-primary"
-                                        aria-label="Left Align">CX
+                                <button type="button" id="bytes-button" class="btn btn-primary" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>

@@ -292,6 +292,12 @@ $(document).ready(function () {
         args["format"] = "csv";
         window.location.href = "/api/network/" + $.param(args, true);
     });
+
+    $("#nodelink-button").click(function () {
+        var args = getDefaultAjaxParameters(tree);
+        args["format"] = "json";
+        window.location.href = "/api/network/" + $.param(args, true);
+    });
 });
 
 function renderEmptyFrame() {
