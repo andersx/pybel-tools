@@ -326,7 +326,7 @@ function renderEmptyFrame() {
         .attr("class", "title")
         .attr("x", w / 3.2)
         .attr("y", h / 2)
-        .text("Please filter the graph by annotation and press submit");
+        .text("Select your desired filters press refresh.");
 }
 
 function clearUsedDivs() {
