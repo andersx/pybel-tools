@@ -22,11 +22,44 @@ log = logging.getLogger(__name__)
 
 
 @pipeline.in_place_mutator
-def collapse_nodes(graph, dict_of_sets_of_nodes):
-    """Collapses all nodes in values to the key nodes in place
+def collapse_pair(graph, survivor, synonym):
+    """Rewires all edges from the synonymous node to the survivor node, then deletes the synonymous node.
+    
+    Does not keep edges between the two nodes.
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :param tuple survivor: The BEL node to collapse all edges on the synonym to
+    :param tuple synonym: The BEL node to collapse into the surviving node
+    :return: 
+    """
+    for successor in graph.successors_iter(synonym):
+        if successor == survivor:
+            continue
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+        for key, data in graph.edge[synonym][successor].items():
+            if key >= 0:
+                graph.add_edge(survivor, successor, attr_dict=data)
+            elif successor not in graph.edge[survivor] or key not in graph.edge[survivor][successor]:
+                graph.add_edge(survivor, successor, key=key, **{RELATION: unqualified_edges[-1 - key]})
+
+    for predecessor in graph.predecessors_iter(synonym):
+        if predecessor == survivor:
+            continue
+
+        for key, data in graph.edge[predecessor][synonym].items():
+            if key >= 0:
+                graph.add_edge(predecessor, survivor, attr_dict=data)
+            elif predecessor not in graph.pred[survivor] or key not in graph.edge[predecessor][survivor]:
+                graph.add_edge(predecessor, survivor, key=key, **{RELATION: unqualified_edges[-1 - key]})
+
+    graph.remove_node(synonym)
+
+
+@pipeline.in_place_mutator
+def collapse_nodes(graph, dict_of_sets_of_nodes):
+    """Collapses all nodes in values to the key nodes, in place
+
+    :param pybel.BELGraph graph: A BEL graph
     :param dict_of_sets_of_nodes: A dictionary of {node: set of nodes}
     :type dict_of_sets_of_nodes: dict
     """
@@ -34,21 +67,7 @@ def collapse_nodes(graph, dict_of_sets_of_nodes):
 
     for key_node, value_nodes in dict_of_sets_of_nodes.items():
         for value_node in value_nodes:
-            for successor in graph.successors_iter(value_node):
-                for key, data in graph.edge[value_node][successor].items():
-                    if key >= 0:
-                        graph.add_edge(key_node, successor, attr_dict=data)
-                    elif successor not in graph.edge[key_node] or key not in graph.edge[key_node][successor]:
-                        graph.add_edge(key_node, successor, key=key, **{RELATION: unqualified_edges[-1 - key]})
-
-            for predecessor in graph.predecessors_iter(value_node):
-                for key, data in graph.edge[predecessor][value_node].items():
-                    if key >= 0:
-                        graph.add_edge(predecessor, key_node, attr_dict=data)
-                    elif predecessor not in graph.pred[key_node] or key not in graph.edge[predecessor][key_node]:
-                        graph.add_edge(predecessor, key_node, key=key, **{RELATION: unqualified_edges[-1 - key]})
-
-            graph.remove_node(value_node)
+            collapse_pair(graph, key_node, value_node)
 
     # Remove self edges
     for u, v, k in graph.edges(keys=True):
@@ -226,3 +245,30 @@ def collapse_by_opening_by_central_dogma_to_genes(graph):
     """
     infer_central_dogma(graph)
     collapse_by_central_dogma_to_genes(graph)
+
+
+@pipeline.in_place_mutator
+def collapse_namespace(graph, from_namespace, to_namespace):
+    """Collapses pairs of nodes that have equivalence relationships to the target namespace
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :param str from_namespace: 
+    :param str to_namespace: 
+    
+    
+    To convert all ChEBI names to InChI keys:
+    
+    >>> collapse_namespace(graph, 'CHEBI', 'CHEBIID')
+    >>> collapse_namespace(graph, 'CHEBIID', 'INCHI')
+    """
+    for u, v, d in graph.edges_iter(data=True):
+        if d[RELATION] != EQUIVALENT_TO:
+            continue
+
+        if NAMESPACE not in graph.node[u] or graph.node[u][NAMESPACE] != from_namespace:
+            continue
+
+        if NAMESPACE not in graph.node[v] or graph.node[v][NAMESPACE] != to_namespace:
+            continue
+
+        collapse_pair(graph, u, v)
