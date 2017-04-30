@@ -54,7 +54,7 @@
                 <h3 class="panel-title">Overview</h3>
             </div>
             <div class="panel-body">
-                <dl>
+                <dl class="dl-horizontal">
                     {% for key, value in graph.document.items() %}
                         <dt>{{ key }}</dt>
                         <dd>{{ value }}</dd>
@@ -115,7 +115,7 @@
                 <h3 class="panel-title">Network Statistics</h3>
             </div>
             <div class="panel-body">
-                <dl>
+                <dl class="dl-horizontal">
                     {% for key, value in info_list %}
                         <dt>{{ key }}</dt>
                         <dd>{{ value }}</dd>
