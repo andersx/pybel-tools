@@ -110,25 +110,25 @@ def render_graph_summary(graph_id, graph, api=None):
                            calc_betweenness_centality(graph).most_common(25)}
         disease_data = {graph.node[node][CNAME]: count for node, count in count_diseases(graph).most_common(25)}
 
-    unstable_pairs = itt.chain.from_iterable([
+    unstable_pairs = list(itt.chain.from_iterable([
         ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
          get_chaotic_pairs(graph)),
         ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Dampened') for u, v, in
          get_dampened_pairs(graph)),
-    ])
+    ]))
 
-    contradictory_pairs = ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), relation) for
-                           u, v, relation in get_contradiction_summary(graph))
+    contradictory_pairs = list((decanonicalize_node(graph, u), decanonicalize_node(graph, v), relation) for
+                               u, v, relation in get_contradiction_summary(graph))
 
-    separate_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
-                                 get_separate_unstable_correlation_triples(graph))
-    mutually_unstable_triples = (tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
-                                 get_mutually_unstable_correlation_triples(graph))
+    separate_unstable_triples = list(tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
+                                     get_separate_unstable_correlation_triples(graph))
+    mutually_unstable_triples = list(tuple(decanonicalize_node(graph, node) for node in nodes) for nodes in
+                                     get_mutually_unstable_correlation_triples(graph))
 
-    unstable_correlation_triplets = itt.chain.from_iterable([
+    unstable_correlation_triplets = list(itt.chain.from_iterable([
         ((a, b, c, 'Seperate') for a, b, c in separate_unstable_triples),
         ((a, b, c, 'Mutual') for a, b, c in mutually_unstable_triples),
-    ])
+    ]))
 
     undefined_namespaces = get_undefined_namespaces(graph)
 
