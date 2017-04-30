@@ -40,6 +40,10 @@
                 </a>
                 <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
                    role="button">Explore</a>
+                <a class="btn btn-default" href="{{ url_for('view_analysis_uploader', network_id=graph_id) }}"
+                   role="button">Analyze</a>
+                <a class="btn btn-default" href="{{ url_for('view_analyses', network_id=graph_id) }}"
+                   role="button">Results</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bel') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> BEL Script</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='json') }}"
@@ -51,7 +55,7 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Overview</h3>
+                <h3 class="panel-title">Provenance</h3>
             </div>
             <div class="panel-body">
                 <dl class="dl-horizontal">
@@ -73,7 +77,7 @@
         </div>
 
         {% if undefined_namespaces is defined and undefined_namespaces|length > 0 %}
-            <div class="panel panel-default">
+            <div class="panel panel-danger">
                 <div class="panel-heading">
                     <h3 class="panel-title">Undefined Namespaces</h3>
                 </div>
@@ -93,7 +97,7 @@
         {% endif %}
 
         {% if unused_namespaces is defined and unused_namespaces|length > 0 %}
-            <div class="panel panel-default">
+            <div class="panel panel-danger">
                 <div class="panel-heading">
                     <h3 class="panel-title">Unused Namespaces</h3>
                 </div>
