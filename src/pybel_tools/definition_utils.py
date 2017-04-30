@@ -35,6 +35,7 @@ log = logging.getLogger(__name__)
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'
 DATE_FMT = '%Y-%m-%d'
 DATE_VERSION_FMT = '%Y%m%d'
+DEFAULT_NS_DESCRIPTION = 'This namespace was serialized by PyBEL Tools'
 
 
 def make_namespace_header(name, keyword, domain, query_url=None, description=None, species=None, version=None,
@@ -65,9 +66,8 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     yield 'DomainString={}'.format(domain)
     yield 'VersionString={}'.format(version if version else time.strftime(DATE_VERSION_FMT))
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
-
-    if description is not None:
-        yield 'DescriptionString={}'.format(description.strip().replace('\n', ''))
+    yield 'DescriptionString={}'.format(
+        DEFAULT_NS_DESCRIPTION if description is None else description.strip().replace('\n', ''))
 
     if species is not None:
         yield 'SpeciesString={}'.format(species)

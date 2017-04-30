@@ -17,10 +17,11 @@ from ..constants import CNAME
 from ..summary import get_contradiction_summary, count_functions, count_relations, count_error_types, get_translocated, \
     get_degradations, get_activities, count_namespaces, group_errors
 from ..summary.edge_summary import count_diseases
+from ..summary.error_summary import get_undefined_namespaces
 from ..summary.export import info_list
 from ..summary.node_properties import count_variants
+from ..summary.node_summary import get_unused_namespaces
 from ..utils import prepare_c3, count_dict_values
-
 
 log = logging.getLogger(__name__)
 
@@ -104,9 +105,10 @@ def render_graph_summary(graph_id, graph, api=None):
         centrality_data = api.get_top_centrality(graph_id)
         disease_data = api.get_top_comorbidities(graph_id)
     else:
-        hub_data = {graph.node[node][CNAME]: count for node, count in Counter(graph.degree()).items()}
-        centrality_data = {graph.node[node][CNAME]: count for node, count in calc_betweenness_centality(graph).items()}
-        disease_data = {graph.node[node][CNAME]: count for node, count in count_diseases(graph).items()}
+        hub_data = {graph.node[node][CNAME]: count for node, count in Counter(graph.degree()).most_common(25)}
+        centrality_data = {graph.node[node][CNAME]: count for node, count in
+                           calc_betweenness_centality(graph).most_common(25)}
+        disease_data = {graph.node[node][CNAME]: count for node, count in count_diseases(graph).most_common(25)}
 
     unstable_pairs = itt.chain.from_iterable([
         ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
@@ -127,6 +129,10 @@ def render_graph_summary(graph_id, graph, api=None):
         ((a, b, c, 'Seperate') for a, b, c in separate_unstable_triples),
         ((a, b, c, 'Mutual') for a, b, c in mutually_unstable_triples),
     ])
+
+    undefined_namespaces = get_undefined_namespaces(graph)
+
+    unused_namespaces = get_unused_namespaces(graph)
 
     return render_template(
         'summary.html',
@@ -151,6 +157,8 @@ def render_graph_summary(graph_id, graph, api=None):
         graph=graph,
         graph_id=graph_id,
         time=None,
+        undefined_namespaces=sorted(undefined_namespaces),
+        unused_namespaces=sorted(unused_namespaces),
     )
 
 
@@ -160,7 +168,7 @@ def canonicalize_node_keys(d, graph):
 
 def calc_betweenness_centality(graph):
     try:
-        res = nx.betweenness_centrality(graph, k=200)
+        res = Counter(nx.betweenness_centrality(graph, k=200))
         return res
     except:
-        return nx.betweenness_centrality(graph)
+        return Counter(nx.betweenness_centrality(graph))

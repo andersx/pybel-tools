@@ -92,8 +92,13 @@ abstract_url_fmt = "http://togows.dbcls.jp/entry/ncbi-pubmed/{}/abstract"
 title_url_fmt = "http://togows.dbcls.jp/entry/ncbi-pubmed/{}/title"
 #: SO gives short citation information
 so_url_fmt = "http://togows.dbcls.jp/entry/ncbi-pubmed/{}/so"
-citation_format = 'SET Citation = {{"PubMed","{}","{}"}}\n'
-evidence_format = 'SET Evidence = "{}"\n\n\n'
+citation_format = 'SET Citation = {{"PubMed","{}","{}"}}'
+evidence_format = 'SET Evidence = "{}"'
+
+
+def pubmed(name, identifier):
+    return citation_format.format(name.replace('\n', ''), identifier)
+
 
 CNAME = 'cname'
 PUBMED = 'PubMed'

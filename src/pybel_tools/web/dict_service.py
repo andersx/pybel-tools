@@ -7,22 +7,25 @@ from operator import itemgetter
 
 import flask
 import networkx as nx
-from flask import Flask, request, jsonify, url_for, redirect
+from flask import Flask, request, jsonify, url_for, redirect, make_response
 from flask import render_template
 from flask_basicauth import BasicAuth
 from requests.compat import unquote
+from six import StringIO
 
 from pybel import from_bytes
 from pybel import from_url
-from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, FRAUNHOFER_RESOURCES
+from pybel.constants import *
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
 from .utils import render_graph_summary
 from .utils import try_insert_graph, sanitize_list_of_str
+from ..definition_utils import write_namespace
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary.edge_summary import get_annotation_values_by_annotation
+from ..summary.error_summary import get_undefined_namespace_names
 from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
 
@@ -479,6 +482,31 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
     def get_blacklist():
         """Return list of blacklist constants"""
         return jsonify(sorted(BLACK_LIST))
+
+    @app.route('/api/nsbuilder/<int:graph_id>/<namespace>')
+    def download_undefined_namespace(graph_id, namespace):
+        """Outputs a namespace built for this undefined namespace"""
+        graph = api.get_network(graph_id)
+        names = get_undefined_namespace_names(graph, namespace)
+
+        si = StringIO()
+
+        write_namespace(
+            namespace_name=namespace,
+            namespace_keyword=namespace,
+            namespace_domain='Other',
+            author_name=graph.document.get(METADATA_AUTHORS),
+            author_contact=graph.document.get(METADATA_CONTACT),
+            citation_name=graph.document.get(METADATA_NAME),
+            citation_description='This namespace was serialized by PyBEL Web',
+            values=names,
+            file=si
+        )
+
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = "attachment; filename={}.belns".format(namespace)
+        output.headers["Content-type"] = "text/plain"
+        return output
 
     log.info('Added dictionary service to %s', app)
 
