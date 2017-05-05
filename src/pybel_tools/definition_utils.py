@@ -196,7 +196,7 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
     :type file: file or file-like
     :param value_prefix: a prefix for each name
     :type value_prefix: str
-    :param sort_key: A function to sort the values with :func:`sorted`
+    :param sort_key: A function to sort the values with :func:`sorted`. Give ``False`` to not sort
     """
     file = sys.stdout if file is None else file
 
@@ -223,8 +223,12 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
 
     print('[Values]', file=file)
 
-    values = sorted(values) if sort_key is None else sorted(values, key=sort_key)
-    for value in values:
+    if sort_key is None:
+        values = sorted(values)
+    elif sort_key:
+        values = sorted(values, key=sort_key)
+
+    for value in map(str, values):
         if not value.strip():
             continue
         print('{}{}|{}'.format(value_prefix, value.strip(), function_values), file=file)
