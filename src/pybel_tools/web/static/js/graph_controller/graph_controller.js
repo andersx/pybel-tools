@@ -322,10 +322,10 @@ $(document).ready(function () {
 
     // Comes back to the network id originally choosen
     $("#reset_all").on("click", function () {
-        $.getJSON("/api/network/" + "?graphid=" + window.networkID, function (data) {
-            initD3Force(data, tree);
-        });
-        window.history.pushState("BiNE", "BiNE", "/explore/?graphid=" + window.networkID);
+
+        args = {};
+        args["graphid"] = window.networkID;
+        window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
     });
 });
 
