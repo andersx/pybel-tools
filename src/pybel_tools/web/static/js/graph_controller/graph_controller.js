@@ -329,7 +329,7 @@ $(document).ready(function () {
     // Comes back to the network id originally choosen
     $("#reset_all").on("click", function () {
 
-        args = {};
+        var args = {};
         args["graphid"] = window.networkID;
         window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
     });
@@ -499,13 +499,11 @@ function initD3Force(graph, tree) {
                 window.expandNodes.push(d.id);
                 var args = getDefaultAjaxParameters(tree);
 
-                node_param = $.param(args, true);
-
                 // Ajax to update the cypher query. Three list are sent to the server. pks of the subgraphs, list of nodes to delete and list of nodes to expand
                 $.ajax({
                     url: "/api/network/",
                     dataType: "json",
-                    data: node_param
+                    data: $.param(args, true)
                 }).done(function (response) {
 
                     // Load new data, first empty all created divs and clear the current network
@@ -531,12 +529,10 @@ function initD3Force(graph, tree) {
                 window.deleteNodes.push(d.id);
                 var args = getDefaultAjaxParameters(tree);
 
-                node_param = $.param(args, true);
-
                 $.ajax({
                     url: "/api/network/",
                     dataType: "json",
-                    data: node_param
+                    data: $.param(args, true)
                 }).done(function (response) {
 
                     // Load new data, first empty all created divs and clear the current network
@@ -562,7 +558,6 @@ function initD3Force(graph, tree) {
 
                 console.log(d.source);
                 console.log(d.target);
-
 
                 $.ajax({
                     url: "/api/edges/provenance/" + d.source.id + "/" + d.target.id,
