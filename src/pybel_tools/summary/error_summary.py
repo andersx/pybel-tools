@@ -88,7 +88,7 @@ def get_undefined_annotations(graph):
     :return: The set of all undefined annotations
     :rtype: set[str]
     """
-    return {e.annotation for _, _, e, _ in graph.warnings if isinstance(e, (UndefinedAnnotationWarning))}
+    return {e.annotation for _, _, e, _ in graph.warnings if isinstance(e, UndefinedAnnotationWarning)}
 
 
 # FIXME need to change underlying definition and usage of this exception
