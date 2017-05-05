@@ -86,6 +86,9 @@
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#export">
                     Export
                 </button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#controls">
+                    Controls
+                </button>
             </div>
         </div>
 
@@ -221,12 +224,6 @@
                     </div>
                 </div><!-- /.Modal body -->
                 <div class="modal-footer">
-                    <button type="button" id="hide_node_names" class="btn btn-info">Hide labels
-                    </button>
-                    <button type="button" id="restore_node_names" class="btn btn-info">Restore labels
-                    </button>
-                    <button type="button" id="restore" class="btn btn-info">Restore all labels
-                    </button>
                     <button class="btn btn-default" data-dismiss="modal" type="button">
                         Close
                     </button>
@@ -647,4 +644,77 @@
             </div><!-- /.Modal content -->
         </div><!-- /.Modal dialog -->
     </div><!-- /.export-graph Modal -->
+
+    <div id="controls" class="modal fade"><!-- /.info-graph Modal -->
+        <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
+            <div class="modal-content"><!-- /.Modal content -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Controls</h4>
+                </div>
+                <div class="modal-body text-left"><!-- /.Modal body -->
+                    <div class="center-table">
+                        <div class="table-wrapper">
+                            <table class="table table-responsive">
+                                <thead>
+                                <tr>
+                                    <th><b>Button</b></th>
+                                    <th><b>Action</b></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="hide_node_names" class="btn btn-info">Hide text
+                                        </button>
+                                    </td>
+                                    <td>Hide node names</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="restore_node_names" class="btn btn-info">Restore
+                                            labels
+                                        </button>
+                                    </td>
+                                    <td>Restore node names</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="restore" class="btn btn-info">Restore all
+                                        </button>
+                                    </td>
+                                    <td>Restore node names and edge colors</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="reset_globals" class="btn btn-info">Reset globals
+                                        </button>
+                                    </td>
+                                    <td>Reset
+                                        expand/remove nodes global variables
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="reset_all" class="btn btn-info">Reset all
+                                        </button>
+                                    </td>
+                                    <td>Reset to original network
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- /.Modal body -->
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button">
+                        Close
+                    </button>
+                </div>
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.info-graph Modal -->
 {% endblock %}
