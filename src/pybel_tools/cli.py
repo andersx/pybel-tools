@@ -34,6 +34,7 @@ from .mutation.metadata import fix_pubmed_citations
 from .utils import get_version, enable_cool_mode
 from .web import receiver_service
 from .web.analysis_service import build_analysis_service
+from .web.boilerplate_service import build_boilerplate_service
 from .web.compilation_service import build_synchronous_compiler_service
 from .web.constants import SECRET_KEY
 from .web.database_service import build_database_service
@@ -206,12 +207,13 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, directory
 @click.option('--run-database-service', is_flag=True, help='Enable the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
 @click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
+@click.option('--run-boilerplate-service', is_flag=True, help='Enable the boilerplate generation service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
 @click.option('--admin-password', help='Set admin password and enable admin services')
 @click.option('--echo-sql', is_flag=True)
 def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_receiver_service, run_all, secret_key,
+        run_receiver_service, run_boilerplate_service, run_all, secret_key,
         admin_password, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
@@ -256,6 +258,9 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
     if run_receiver_service or run_all:
         build_receiver_service(app, manager=manager)
+
+    if run_boilerplate_service or run_all:
+        build_boilerplate_service(app)
 
     log.info('Done building %s', app)
 

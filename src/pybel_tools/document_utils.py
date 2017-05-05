@@ -112,15 +112,15 @@ def make_document_metadata(name, contact, description, authors, version=None, co
     :rtype: iter[str]
     """
     yield 'SET DOCUMENT Name = "{}"'.format(name)
-    yield 'SET DOCUMENT Version = "{}"'.format(time.strftime('%Y%m%d') if version is None else version)
+    yield 'SET DOCUMENT Version = "{}"'.format(version if version else time.strftime('%Y%m%d'))
     yield 'SET DOCUMENT Description = "{}"'.format(description.replace('\n', ''))
     yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
     yield 'SET DOCUMENT Authors = {}'.format(authors)
 
-    if licenses is not None:
+    if licenses:
         yield 'SET DOCUMENT License = "{}"'.format(licenses)
 
-    if copyright is not None:
+    if copyright:
         yield 'SET DOCUMENT Copyright = "{}"'.format(copyright)
 
 
