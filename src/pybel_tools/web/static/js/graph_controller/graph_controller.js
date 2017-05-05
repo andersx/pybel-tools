@@ -248,6 +248,12 @@ $(document).ready(function () {
 
     selectNodesInTreeFromURL(tree, URLString, doAjaxCall("/api/meta/blacklist"));
 
+    // Enables tree search
+    $('#tree-search').on('keyup', function (ev) {
+        tree.search(ev.target.value);
+
+    });
+
     // Loads the network if autoload is an argument in the URL or render empty frame if not
     if (window.location.search.indexOf("autoload=yes") > -1) {
         renderNetwork(tree);
