@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import itertools as itt
 import logging
 import traceback
@@ -16,8 +17,8 @@ from ..analysis import get_chaotic_pairs, get_dampened_pairs, get_separate_unsta
 from ..constants import CNAME
 from ..summary import get_contradiction_summary, count_functions, count_relations, count_error_types, get_translocated, \
     get_degradations, get_activities, count_namespaces, group_errors
-from ..summary.edge_summary import count_diseases
-from ..summary.error_summary import get_undefined_namespaces
+from ..summary.edge_summary import count_diseases, get_unused_annotations, get_unused_list_annotation_values
+from ..summary.error_summary import get_undefined_namespaces, get_undefined_annotations
 from ..summary.export import info_list
 from ..summary.node_properties import count_variants
 from ..summary.node_summary import get_unused_namespaces
@@ -99,7 +100,6 @@ def render_graph_summary(graph_id, graph, api=None):
     :param DictionaryService api: 
     :return: 
     """
-
     if api is not None:
         hub_data = api.get_top_degree(graph_id)
         centrality_data = api.get_top_centrality(graph_id)
@@ -131,8 +131,11 @@ def render_graph_summary(graph_id, graph, api=None):
     ]))
 
     undefined_namespaces = get_undefined_namespaces(graph)
+    undefined_annotations = get_undefined_annotations(graph)
 
     unused_namespaces = get_unused_namespaces(graph)
+    unused_annotations = get_unused_annotations(graph)
+    unused_list_annotation_values = get_unused_list_annotation_values(graph)
 
     return render_template(
         'summary.html',
@@ -159,6 +162,9 @@ def render_graph_summary(graph_id, graph, api=None):
         time=None,
         undefined_namespaces=sorted(undefined_namespaces),
         unused_namespaces=sorted(unused_namespaces),
+        undefined_annotations=sorted(undefined_annotations),
+        unused_annotations=sorted(unused_annotations),
+        unused_list_annotation_values=sorted(unused_list_annotation_values.items()),
     )
 
 

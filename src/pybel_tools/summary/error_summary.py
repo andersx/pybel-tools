@@ -7,8 +7,7 @@ from collections import Counter, defaultdict
 from fuzzywuzzy import process, fuzz
 
 from pybel.constants import ANNOTATIONS
-from pybel.parser.parse_exceptions import NakedNameWarning, MissingNamespaceNameWarning, MissingNamespaceRegexWarning, \
-    UndefinedNamespaceWarning
+from pybel.parser.parse_exceptions import *
 from ..utils import check_has_annotation
 
 __all__ = [
@@ -80,6 +79,29 @@ def get_undefined_namespace_names(graph, namespace):
     """
     return {e.name for _, _, e, _ in graph.warnings if
             isinstance(e, UndefinedNamespaceWarning) and e.namespace == namespace}
+
+
+def get_undefined_annotations(graph):
+    """Gets all annotations that aren't actually defined
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :return: The set of all undefined annotations
+    :rtype: set[str]
+    """
+    return {e.annotation for _, _, e, _ in graph.warnings if isinstance(e, (UndefinedAnnotationWarning))}
+
+
+# FIXME need to change underlying definition and usage of this exception
+def get_undefined_annotation_values(graph, annotation):
+    """Gets the values from an annotation that wasn't actually defined
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param str annotation: The annotaton to filter by
+    :return: The set of all values from the undefined annotation
+    :rtype: set[str]
+    """
+    raise NotImplementedError
+    # return {e.value for _, _, e, _ in graph.warnings if isinstance(e, UndefinedAnnotationWarning) and e.annotation == annotation}
 
 
 def calculate_incorrect_name_dict(graph):
