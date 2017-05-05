@@ -229,7 +229,7 @@ $(document).ready(function () {
 
     var networkName = doAjaxCall("/api/network/name/" + window.networkID);
     if (networkName) {
-        $("#network-name").html(networkName)
+        $("#network-name").html(networkName);
     }
 
     // Initiate the tree and expands it with the annotations given the graphid in URL
