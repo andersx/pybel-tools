@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import re
 
 from flask import render_template, make_response
 from flask_wtf import FlaskForm
@@ -16,8 +17,8 @@ log = logging.getLogger(__name__)
 class BoilerplateForm(FlaskForm):
     name = fields.StringField('Document Name', validators=[DataRequired()])
     description = fields.StringField('Document Description', validators=[DataRequired()])
-    contact_info = fields.StringField('Contact Info', validators=[DataRequired(), Email()])
     authors = fields.StringField('Authors', validators=[DataRequired()])
+    contact_email = fields.StringField('Contact Info', validators=[DataRequired(), Email()])
     licenses = fields.StringField('License')
     copyrights = fields.StringField('Copyright')
     pmids = fields.StringField('PubMed Identifiers, seperated by commas')
@@ -40,11 +41,11 @@ def build_boilerplate_service(app):
 
         si = StringIO()
 
-        pmids = [int(x) for x in form.pmids.data.split(',') if x]
+        pmids = [int(x.strip()) for x in form.pmids.data.split(',') if x]
 
         write_boilerplate(
             document_name=form.name.data,
-            contact=form.contact_info.data,
+            contact=form.contact_email.data,
             description=form.description.data,
             authors=form.authors.data,
             licenses=form.licenses.data,
@@ -53,8 +54,10 @@ def build_boilerplate_service(app):
             file=si
         )
 
+        identifier = re.sub(r"\s+", '_', form.name.data.lower())
+
         output = make_response(si.getvalue())
-        output.headers["Content-Disposition"] = "attachment; filename=stub.bel"
+        output.headers["Content-Disposition"] = "attachment; filename={}.bel".format(identifier)
         output.headers["Content-type"] = "text/plain"
         return output
 

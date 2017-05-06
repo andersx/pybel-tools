@@ -14,6 +14,7 @@ import requests
 
 from .constants import default_namespaces, default_annotations
 from .constants import title_url_fmt, citation_format, abstract_url_fmt, evidence_format
+from .utils import get_version
 
 __all__ = [
     'merge',
@@ -111,17 +112,25 @@ def make_document_metadata(name, contact, description, authors, version=None, co
     :return: An iterator over the lines for the document metadata section
     :rtype: iter[str]
     """
+    yield '# Document created by PyBEL v{} on {}\n'.format(get_version(), time.asctime())
+
+    yield '#' * 80
+    yield '# Metadata'
+    yield '#' * 80 + '\n'
+
     yield 'SET DOCUMENT Name = "{}"'.format(name)
-    yield 'SET DOCUMENT Version = "{}"'.format(version if version else time.strftime('%Y%m%d'))
     yield 'SET DOCUMENT Description = "{}"'.format(description.replace('\n', ''))
+    yield 'SET DOCUMENT Version = "{}"'.format(version if version else time.strftime('%Y%m%d'))
+    yield 'SET DOCUMENT Authors = "{}"'.format(authors)
     yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
-    yield 'SET DOCUMENT Authors = {}'.format(authors)
 
     if licenses:
         yield 'SET DOCUMENT License = "{}"'.format(licenses)
 
     if copyright:
         yield 'SET DOCUMENT Copyright = "{}"'.format(copyright)
+
+    yield ''
 
 
 def make_document_namespaces(namespace_dict=None, namespace_patterns=None):
@@ -136,12 +145,18 @@ def make_document_namespaces(namespace_dict=None, namespace_patterns=None):
     """
     namespace_dict = default_namespaces if namespace_dict is None else namespace_dict
 
+    yield '#' * 80
+    yield '# Namespaces'
+    yield '#' * 80 + '\n'
+
     for name, url in sorted(namespace_dict.items(), key=itemgetter(1)):
         yield NAMESPACE_URL_FMT.format(name, url)
 
     if namespace_patterns:
         for name, pattern in sorted(namespace_patterns.items()):
             yield NAMESPACE_PATTERN_FMT.format(name, pattern)
+
+    yield ''
 
 
 def make_document_annotations(annotation_dict=None, annotation_patterns=None):
@@ -156,12 +171,18 @@ def make_document_annotations(annotation_dict=None, annotation_patterns=None):
     """
     annotation_dict = default_annotations if annotation_dict is None else annotation_dict
 
+    yield '#' * 80
+    yield '# Annotations'
+    yield '#' * 80 + '\n'
+
     for name, url in sorted(annotation_dict.items(), key=itemgetter(1)):
         yield ANNOTATION_URL_FMT.format(name, url)
 
     if annotation_patterns:
         for name, pattern in sorted(annotation_patterns.items()):
             yield ANNOTATION_PATTERN_FMT.format(name, pattern)
+
+    yield ''
 
 
 def make_document_statement_group(pmids):
@@ -172,8 +193,11 @@ def make_document_statement_group(pmids):
     :return: An iterator over the lines of the citation section
     :rtype: iter[str]
     """
-    for i, pmid in enumerate(pmids, start=1):
-        yield 'SET STATEMENT_GROUP = "Group {}"\n'.format(i)
+    yield '#' * 80
+    yield '# Statements'
+    yield '#' * 80 + '\n'
+
+    for pmid in set(pmids):
         res = requests.get(title_url_fmt.format(pmid))
         title = res.content.decode('utf-8').strip()
 
@@ -183,7 +207,10 @@ def make_document_statement_group(pmids):
         abstract = res.content.decode('utf-8').strip()
 
         yield evidence_format.format(abstract)
-        yield 'UNSET STATEMENT_GROUP'
+
+        yield '\nUNSET Evidence\nUNSET Citation\n'
+
+    yield ''
 
 
 def write_boilerplate(document_name, contact, description, authors, version=None, copyright=None,
@@ -232,15 +259,12 @@ def write_boilerplate(document_name, contact, description, authors, version=None
 
     for line in metadata_iter:
         print(line, file=file)
-    print('#' * 80, file=file)
 
     for line in make_document_namespaces(namespace_dict, namespace_patterns=namespace_patterns):
         print(line, file=file)
-    print('#' * 80, file=file)
 
     for line in make_document_annotations(annotations_dict, annotation_patterns=annotations_patterns):
         print(line, file=file)
-    print('#' * 80, file=file)
 
     if pmids is not None:
         for line in make_document_statement_group(pmids):
