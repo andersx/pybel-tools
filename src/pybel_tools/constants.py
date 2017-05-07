@@ -19,74 +19,81 @@ INFERRED_INVERSE = {
     TRANSLATED_TO: TRANSLATED_FROM
 }
 
-default_namespaces = {
-    'ADO': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/ADO.belns',
-    'AFFX': 'http://resource.belframework.org/belframework/20150611/namespace/affy-probeset-ids.belns',
-    'BRCO': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/BRCO.belns',
-    'CHEBI': 'http://resource.belframework.org/belframework/20150611/namespace/chebi.belns',
-    'CHEBIID': 'http://resource.belframework.org/belframework/20150611/namespace/chebi-ids.belns',
-    'CHEMBL': 'http://belief-demo.scai.fraunhofer.de/openbel/repository/namespaces/chembl-names.belns',
-    'CHEMBLID': 'http://belief-demo.scai.fraunhofer.de/openbel/repository/namespaces/chembl-ids.belns',
-    'CTO': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/CTO.belns',
-    'DO': 'http://resource.belframework.org/belframework/20150611/namespace/disease-ontology.belns',
-    'DOID': 'http://resource.belframework.org/belframework/20150611/namespace/disease-ontology-ids.belns',
-    'EGID': 'http://resource.belframework.org/belframework/20150611/namespace/entrez-gene-ids.belns',
-    'FlyBase': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/Dmel.belns',
-    'GOBP': 'http://resource.belframework.org/belframework/20150611/namespace/go-biological-process.belns',
-    'GOBPID': 'http://resource.belframework.org/belframework/20150611/namespace/go-biological-process-ids.belns',
-    'GOCC': 'http://resource.belframework.org/belframework/20150611/namespace/go-cellular-component.belns',
-    'GOCCID': 'http://resource.belframework.org/belframework/20150611/namespace/go-cellular-component-ids.belns',
-    'HGNC': 'http://resource.belframework.org/belframework/20150611/namespace/hgnc-human-genes.belns',
-    'LMSD': 'http://belief-demo.scai.fraunhofer.de/openbel/repository/namespaces/LMSD.belns',
-    'MESHC': 'http://resource.belframework.org/belframework/20150611/namespace/mesh-chemicals.belns',
-    'MESHCID': 'http://resource.belframework.org/belframework/20150611/namespace/mesh-chemicals-ids.belns',
-    'MESHCS': 'http://resource.belframework.org/belframework/20150611/namespace/mesh-cellular-structures.belns',
-    'MESHCSID': 'http://resource.belframework.org/belframework/20150611/namespace/mesh-cellular-structures-ids.belns',
-    'MESHD': 'http://resource.belframework.org/belframework/20150611/namespace/mesh-diseases.belns',
-    'MESHDID': 'http://resource.belframework.org/belframework/20150611/namespace/mesh-diseases-ids.belns',
-    'MESHPP': 'http://resource.belframework.org/belframework/20150611/namespace/mesh-processes.belns',
-    'MESHPPID': 'http://resource.belframework.org/belframework/20150611/namespace/mesh-processes-ids.belns',
-    'MGI': 'http://resource.belframework.org/belframework/20150611/namespace/mgi-mouse-genes.belns',
-    'NIFT': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/NIFT.belns',
-    'NTN': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/Nutrition.belns',
-    'PDO': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/PDO.belns',
-    'PH': 'http://belief-demo.scai.fraunhofer.de/openbel/repository/namespaces/Placeholder.belns',
-    'PMIBP': 'http://belief-demo.scai.fraunhofer.de/BeliefDashboard/dicten/namespaces/pmibp.belns',
-    'PMICHEM': 'http://belief-demo.scai.fraunhofer.de/BeliefDashboard/dicten/namespaces/pmichem.belns',
-    'PMICOMP': 'http://belief-demo.scai.fraunhofer.de/BeliefDashboard/dicten/namespaces/pmicomp.belns',
-    'PMIDIS': 'http://belief-demo.scai.fraunhofer.de/BeliefDashboard/dicten/namespaces/pmidis.belns',
-    'PMIPFAM': 'http://belief-demo.scai.fraunhofer.de/BeliefDashboard/dicten/namespaces/pmipfam.belns',
-    'PTS': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/PTS.belns',
-    'RGD': 'http://resource.belframework.org/belframework/20150611/namespace/rgd-rat-genes.belns',
-    'SCHEM': 'http://resource.belframework.org/belframework/20150611/namespace/selventa-legacy-chemicals.belns',
-    'SCOMP': 'http://resource.belframework.org/belframework/20150611/namespace/selventa-named-complexes.belns',
-    'SDIS': 'http://resource.belframework.org/belframework/20150611/namespace/selventa-legacy-diseases.belns',
-    'SFAM': 'http://resource.belframework.org/belframework/20150611/namespace/selventa-protein-families.belns',
-    'SP': 'http://resource.belframework.org/belframework/20150611/namespace/swissprot.belns',
-    'SPID': 'http://resource.belframework.org/belframework/20150611/namespace/swissprot-ids.belns',
-    'dbSNP': 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/SNP.belns'
+default_namespace_names = {
+    'AFFX': 'affy-probeset-ids.belns',
+    'CHEBI': 'chebi.belns',
+    'DO': 'disease-ontology.belns',
+    'DOID': 'disease-ontology-ids.belns',
+    'EGID': 'entrez-gene-ids.belns',
+    'GOBP': 'go-biological-process.belns',
+    'GOBPID': 'go-biological-process-ids.belns',
+    'GOCC': 'go-cellular-component.belns',
+    'HGNC': 'hgnc-human-genes.belns',
+    'MESHCS': 'mesh-cellular-structures.belns',
+    'MESHD': 'mesh-diseases.belns',
+    'MESHPP': 'mesh-processes.belns',
+    'MGI': 'mgi-mouse-genes.belns',
+    'RGD': 'rgd-rat-genes.belns',
+    'SCOMP': 'selventa-named-complexes.belns',
+    'SDIS': 'selventa-legacy-diseases.belns',
+    'SFAM': 'selventa-protein-families.belns',
+    'SP': 'swissprot.belns',
+    'SPID': 'swissprot-ids.belns',
 }
 
-default_annotations = {
-    'Anatomy': 'http://resource.belframework.org/belframework/20131211/annotation/anatomy.belanno',
-    'BodyRegion': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-body-region.belanno',
-    'CardiovascularSystem': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-cardiovascular-system.belanno',
-    'Cell': 'http://resource.belframework.org/belframework/20131211/annotation/cell.belanno',
-    'CellLine': 'http://resource.belframework.org/belframework/20131211/annotation/cell-line.belanno',
-    'CellStructure': 'http://resource.belframework.org/belframework/20131211/annotation/cell-structure.belanno',
-    'DigestiveSystem': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-digestive-system.belanno',
-    'Disease': 'http://resource.belframework.org/belframework/20131211/annotation/disease.belanno',
-    'FluidAndSecretion': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-fluid-and-secretion.belanno',
-    'HemicAndImmuneSystem': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-hemic-and-immune-system.belanno',
-    'IntegumentarySystem': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-integumentary-system.belanno',
-    'MeSHAnatomy': 'http://resource.belframework.org/belframework/20131211/annotation/mesh-anatomy.belanno',
-    'MeSHDisease': 'http://resource.belframework.org/belframework/20131211/annotation/mesh-diseases.belanno',
-    'NervousSystem': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-nervous-system.belanno',
-    'RespiratorySystem': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-respiratory-system.belanno',
-    'Species': 'http://resource.belframework.org/belframework/20131211/annotation/species-taxonomy-id.belanno',
-    'Tissue': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-tissue.belanno',
-    'UrogenitalSystem': 'http://resource.belframework.org/belframework/1.0/annotation/mesh-urogenital-system.belanno'
+prfx = 'http://resource.belframework.org/belframework/20150611/namespace/'
+default_namespaces = {k: FRAUNHOFER_RESOURCES + v for k, v in default_namespace_names.items()}
+
+belief_prefix = 'http://belief.scai.fraunhofer.de/openbel/repository/namespaces/'
+belief_namespaces = {
+    'ADO': 'ADO.belns',
+    'BRCO': 'BRCO.belns',
+    'CTO': 'CTO.belns',
+    'FlyBase': 'Dmel.belns',
+    'NIFT': 'NIFT.belns',
+    'NTN': 'Nutrition.belns',
+    'PDO': 'PDO.belns',
+    'PTS': 'PTS.belns',
+
 }
+
+belief_demo_prefix_1 = 'http://belief-demo.scai.fraunhofer.de/openbel/repository/namespaces/'
+belief_demo_namespaces_1 = {
+    'CHEMBL': 'chembl-names.belns',
+    'CHEMBLID': 'chembl-ids.belns',
+    'LMSD': 'LMSD.belns',
+}
+
+belief_demo_prefix_2 = 'http://belief-demo.scai.fraunhofer.de/BeliefDashboard/dicten/namespaces/'
+belief_demo_namespaces_2 = {
+    'PMIBP': 'pmibp.belns',
+    'PMICHEM': 'pmichem.belns',
+    'PMICOMP': 'pmicomp.belns',
+    'PMIDIS': 'pmidis.belns',
+    'PMIPFAM': 'pmipfam.belns',
+}
+
+default_namespace_patterns = {
+    'dbSNP': 'rs[0-9]+',
+    'InChI': '^((InChI=)?[^J][0-9BCOHNSOPrIFla+\-\(\)\\\/,pqbtmsih]{6,})$'
+}
+
+openbel_2013_prefix = 'http://resource.belframework.org/belframework/20131211/annotation/'
+openbel_2013_annotations = {
+    'Anatomy': 'anatomy.belanno',
+    'Cell': 'cell.belanno',
+    'CellLine': 'cell-line.belanno',
+    'CellStructure': 'cell-structure.belanno',
+    'Disease': 'disease.belanno',
+    'MeSHAnatomy': 'mesh-anatomy.belanno',
+    'MeSHDisease': 'mesh-diseases.belanno',
+    'Species': 'species-taxonomy-id.belanno',
+    'Gender': 'gender.belanno',
+    'TextLocation': 'textlocation.belanno',
+    'Confidence': 'confidence.belanno'
+
+}
+default_annotations = {k: FRAUNHOFER_RESOURCES + v for k, v in openbel_2013_annotations.items()}
 
 abstract_url_fmt = "http://togows.dbcls.jp/entry/ncbi-pubmed/{}/abstract"
 title_url_fmt = "http://togows.dbcls.jp/entry/ncbi-pubmed/{}/title"
@@ -108,10 +115,10 @@ DATA_WEIGHT = 'weight'
 GENE_FAMILIES = FRAUNHOFER_RESOURCES + 'gfam_members.bel'
 NAMED_COMPLEXES = 'http://resources.openbel.org/belframework/20150611/resource/named-complexes.bel'
 
-#: Points to the env variable name for pybel resources
+#: Points to the env variable name for PyBEL resources
 PYBEL_RESOURCES_ENV = 'PYBEL_RESOURCES_BASE'
 
-#: Points to the env variable for owncloud resources
+#: Points to the env variable for ownCloud resources
 OWNCLOUD_ENV = 'OWNCLOUD_BASE'
 
 #: Points to the env variable for the biological model store repository

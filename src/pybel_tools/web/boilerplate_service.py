@@ -18,10 +18,16 @@ class BoilerplateForm(FlaskForm):
     name = fields.StringField('Document Name', validators=[DataRequired()])
     description = fields.StringField('Document Description', validators=[DataRequired()])
     authors = fields.StringField('Authors', validators=[DataRequired()])
-    contact_email = fields.StringField('Contact Info', validators=[DataRequired(), Email()])
-    licenses = fields.StringField('License')
-    copyrights = fields.StringField('Copyright')
-    pmids = fields.StringField('PubMed Identifiers, seperated by commas')
+    contact_email = fields.StringField('Contact Email', validators=[DataRequired(), Email()])
+    pmids = fields.StringField('PubMed Identifiers, separated by commas')
+    licenses = fields.RadioField(
+        'License',
+        choices=[
+            ('CC BY 4.0', 'Add the CC BY 4.0 license'),
+            ('Other/Proprietary', 'Add an "Other/Proprietary" license')
+        ],
+        default='CC BY 4.0'
+    )
     submit = fields.SubmitField('Generate')
 
 
@@ -49,7 +55,6 @@ def build_boilerplate_service(app):
             description=form.description.data,
             authors=form.authors.data,
             licenses=form.licenses.data,
-            copyright=form.copyrights.data,
             pmids=pmids,
             file=si
         )

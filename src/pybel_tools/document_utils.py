@@ -12,7 +12,7 @@ from operator import itemgetter
 
 import requests
 
-from .constants import default_namespaces, default_annotations
+from .constants import default_namespaces, default_annotations, default_namespace_patterns
 from .constants import title_url_fmt, citation_format, abstract_url_fmt, evidence_format
 from .utils import get_version
 
@@ -112,7 +112,7 @@ def make_document_metadata(name, contact, description, authors, version=None, co
     :return: An iterator over the lines for the document metadata section
     :rtype: iter[str]
     """
-    yield '# Document created by PyBEL v{} on {}\n'.format(get_version(), time.asctime())
+    yield '# This document was created by PyBEL v{} on {}\n'.format(get_version(), time.asctime())
 
     yield '#' * 80
     yield '# Metadata'
@@ -144,17 +144,20 @@ def make_document_namespaces(namespace_dict=None, namespace_patterns=None):
     :rtype: iter[str]
     """
     namespace_dict = default_namespaces if namespace_dict is None else namespace_dict
+    namespace_patterns = default_namespace_patterns if namespace_patterns is None else namespace_patterns
 
     yield '#' * 80
     yield '# Namespaces'
     yield '#' * 80 + '\n'
+    yield '# Enumerated Namespaces\n'
 
     for name, url in sorted(namespace_dict.items(), key=itemgetter(1)):
         yield NAMESPACE_URL_FMT.format(name, url)
 
-    if namespace_patterns:
-        for name, pattern in sorted(namespace_patterns.items()):
-            yield NAMESPACE_PATTERN_FMT.format(name, pattern)
+    yield '\n# Regular Expression Namespaces\n'
+
+    for name, pattern in sorted(namespace_patterns.items()):
+        yield NAMESPACE_PATTERN_FMT.format(name, pattern)
 
     yield ''
 
@@ -195,9 +198,11 @@ def make_document_statement_group(pmids):
     """
     yield '#' * 80
     yield '# Statements'
-    yield '#' * 80 + '\n'
+    yield '#' * 80
 
     for pmid in set(pmids):
+        yield ''
+
         res = requests.get(title_url_fmt.format(pmid))
         title = res.content.decode('utf-8').strip()
 
@@ -207,10 +212,7 @@ def make_document_statement_group(pmids):
         abstract = res.content.decode('utf-8').strip()
 
         yield evidence_format.format(abstract)
-
-        yield '\nUNSET Evidence\nUNSET Citation\n'
-
-    yield ''
+        yield '\nUNSET Evidence\nUNSET Citation'
 
 
 def write_boilerplate(document_name, contact, description, authors, version=None, copyright=None,
@@ -240,9 +242,9 @@ def write_boilerplate(document_name, contact, description, authors, version=None
     :type namespace_patterns: dict[str, str]
     :param annotations_dict: An optional dictionary of {str name: str URL} of annotations
     :type annotations_dict: dict[str, str]
-    :param annotation_patterns: An optional dictionary of {str name: str regex} annotations
-    :type annotation_patterns: dict[str, str]
-    :param pmids: an optional list of PMID's to autopopulate with citation and abstract
+    :param annotations_patterns: An optional dictionary of {str name: str regex} annotations
+    :type annotations_patterns: dict[str, str]
+    :param pmids: an optional list of PMID's to auto-populate with citation and abstract
     :type pmids: iter[str] or iter[int]
     """
     file = sys.stdout if file is None else file

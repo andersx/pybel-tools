@@ -9,17 +9,20 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
 {% endblock %}
 
-{% block title %}Boilerplate{% endblock %}
+{% block title %}BEL Document Generator{% endblock %}
 
 {% block content %}
     <div class="container">
         <div class="page-header">
-            <h1>Boilerplate</h1>
+            <h1>BEL Document Generator</h1>
         </div>
         {{ util.flashed_messages(dismissible=True) }}
         <div class="panel panel-default">
             <div class="panel-body">
-                <p>This form can be used to create a stub BEL script.</p>
+                <p>This page can be used to make a BEL script that's pre-populated with the most common namespaces and
+                    annotations. Optionally, a set of PubMed identifiers can be input to retrieve the abstract
+                    and generate the corresponding <code>SET Citation</code> and <code>SET Evidence</code> statements.
+                </p>
             </div>
         </div>
         <div class="panel panel-default">
