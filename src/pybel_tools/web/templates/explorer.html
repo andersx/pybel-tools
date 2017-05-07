@@ -74,9 +74,6 @@
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#info-graph">
                     Help
                 </button>
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#legend">
-                    Legend
-                </button>
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#paths">
                     Path Search
                 </button>
@@ -225,26 +222,6 @@
                             </table>
                         </div>
                     </div>
-                </div><!-- /.Modal body -->
-                <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal" type="button">
-                        Close
-                    </button>
-                </div>
-            </div><!-- /.Modal content -->
-        </div><!-- /.Modal dialog -->
-    </div><!-- /.info-graph Modal -->
-
-    <div id="legend" aria-hidden="true" style="display: none;" class="modal fade"><!-- /.Legend Modal -->
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title">Legend</h4>
-                </div> <!-- .modal-header -->
-                <div class="modal-body">
                     <div id="accordion" role="tablist" aria-multiselectable="true">
                         <div class="card">
                             <div class="card-header center" role="tab" id="headingOne">
@@ -425,20 +402,15 @@
                             </div>
                         </div>
                     </div>
-                    <!-- .panel.panel-default -->
-                </div>
-                <!-- #accordian.panel-group -->
+                </div><!-- /.Modal body -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">
                         Close
                     </button>
-                </div><!-- .modal-footer -->
-            </div>
-            <!-- .modal-body -->
-
-
-        </div><!-- .modal-content -->
-    </div>
+                </div>
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.info-graph Modal -->
 
     <div id="paths" class="modal fade"><!-- /paths Modal -->
         <div class="modal-dialog"><!-- /.Modal dialog -->
@@ -508,7 +480,7 @@
                 </div><!-- /.Modal body -->
 
                 <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
 
             </div><!-- /.Modal content -->
@@ -538,7 +510,8 @@
                     </form>
                     <hr>
                     <p>Visualize significantly disregulated nodes according to Candidate Mechanism Perturbation
-                        Amplitude (CMPA) from a previously loaded experiment</p>
+                        Amplitude (CMPA) from a previously loaded <a
+                                href="{{ url_for('view_analyses') }}">experiment</a>.</p>
                     <form id="npa-form" method="get">
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="Experiment identifier"
@@ -551,7 +524,7 @@
                     </form>
                 </div><!-- /.Modal body -->
                 <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div><!-- /.Modal content -->
         </div><!-- /.Modal dialog -->
@@ -640,7 +613,7 @@
                     </table>
                 </div><!-- /.Modal body -->
                 <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal" type="button">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
                         Close
                     </button>
                 </div>
@@ -649,7 +622,7 @@
     </div><!-- /.export-graph Modal -->
 
     <div id="controls" class="modal fade"><!-- /.info-graph Modal -->
-        <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
+        <div class="modal-dialog"><!-- /.Modal dialog -->
             <div class="modal-content"><!-- /.Modal content -->
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
@@ -713,7 +686,7 @@
                     </div>
                 </div><!-- /.Modal body -->
                 <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal" type="button">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
                         Close
                     </button>
                 </div>
