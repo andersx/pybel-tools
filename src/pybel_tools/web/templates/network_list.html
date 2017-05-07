@@ -50,6 +50,8 @@
                    role="button">Upload a Pre-compiled Pickle</a>
                 <a class="btn btn-default" href="{{ url_for('view_definitions') }}"
                    role="button">View Stored Definitions</a>
+                <a class="btn btn-default" href="{{ url_for('get_boilerplate') }}"
+                   role="button">Generate a BEL template</a>
 
                 <div class="pull-right">
                     {% if current_user.is_authenticated %}

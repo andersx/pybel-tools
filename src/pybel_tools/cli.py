@@ -260,6 +260,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     build_synchronous_compiler_service(app, manager=manager)
     build_pickle_uploader_service(app, manager=manager)
     build_analysis_service(app, manager=manager, api=api)
+    build_boilerplate_service(app)
 
     if run_database_service:
         build_database_service(app, manager)
@@ -269,9 +270,6 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
     if run_receiver_service or run_all:
         build_receiver_service(app, manager=manager)
-
-    if run_boilerplate_service or run_all:
-        build_boilerplate_service(app)
 
     log.info('Done building %s', app)
 
