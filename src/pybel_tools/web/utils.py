@@ -2,7 +2,6 @@
 
 import itertools as itt
 import logging
-import traceback
 from collections import Counter
 
 import flask
@@ -12,6 +11,7 @@ from flask_bootstrap import Bootstrap
 from sqlalchemy.exc import IntegrityError
 
 from pybel.canonicalize import decanonicalize_node
+from .constants import integrity_message
 from ..analysis import get_chaotic_pairs, get_dampened_pairs, get_separate_unstable_correlation_triples, \
     get_mutually_unstable_correlation_triples
 from ..constants import CNAME
@@ -32,12 +32,10 @@ def render_upload_error(exc):
     
     :type exc: Exception
     """
-    traceback_lines = traceback.format_exc().split('\n')
     return render_template(
         'parse_error.html',
         error_title='Upload Error',
         error_text=str(exc),
-        traceback_lines=traceback_lines
     )
 
 
@@ -61,7 +59,7 @@ def try_insert_graph(manager, graph, api=None):
             'network_id': network.id
         })
     except IntegrityError as e:
-        flask.flash("Graph with same Name/Version already exists. Try bumping the version number.")
+        flask.flash(integrity_message.format(graph.name, graph.version))
         log.exception('Integrity error')
         manager.rollback()
         return render_upload_error(e)

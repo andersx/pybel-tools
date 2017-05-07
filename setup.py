@@ -29,6 +29,8 @@ INSTALL_REQUIRES = [
     'flask-bootstrap',
     'flask-wtf',
     'flask-basicauth',
+    'flask-github',
+    'flask-login',
     'networkx',
     'pybel',
     'click',
@@ -45,6 +47,7 @@ TESTS_REQUIRE = []
 ENTRY_POINTS = {
     'console_scripts': [
         'pybel-tools = pybel_tools.cli:main',
+        'pybelweb = pybel_tools.cli:web',
     ]
 }
 

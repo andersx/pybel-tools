@@ -10,12 +10,14 @@ import networkx as nx
 from flask import Flask, request, jsonify, url_for, redirect, make_response
 from flask import render_template
 from flask_basicauth import BasicAuth
+from flask_login import current_user
 from requests.compat import unquote
 from six import StringIO
 
 from pybel import from_bytes
 from pybel import from_url
 from pybel.constants import *
+from pybel.manager.models import Namespace, Annotation
 from .dict_service_utils import DictionaryService
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
@@ -307,7 +309,8 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
             data=manager.list_graphs(),
             provenance_form=seed_provenance_form,
             subgraph_form=seed_subgraph_form,
-            analysis_enabled=analysis_enabled
+            analysis_enabled=analysis_enabled,
+            current_user=current_user,
         )
 
     @app.route('/explore/', methods=['GET'])
@@ -325,8 +328,11 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
     @app.route('/definitions')
     def view_definitions():
         """Displays a page listing the namespaces and annotations."""
-        return render_template('definitions_list.html', namespaces=sorted(manager.list_namespaces()),
-                               annotations=sorted(manager.list_annotations()))
+        return render_template(
+            'definitions_list.html',
+            namespaces=manager.session.query(Namespace).order_by(Namespace.keyword).all(),
+            annotations=manager.session.query(Annotation).order_by(Annotation.keyword).all(),
+        )
 
     # Data Service
 

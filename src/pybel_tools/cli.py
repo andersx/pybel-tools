@@ -23,6 +23,7 @@ import click
 
 import pybel
 from pybel import from_pickle, to_database, from_lines
+from pybel.constants import PYBEL_LOG_DIR
 from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
 from pybel.manager.cache import build_manager
 from pybel.utils import get_version as pybel_version
@@ -36,9 +37,10 @@ from .web import receiver_service
 from .web.analysis_service import build_analysis_service
 from .web.boilerplate_service import build_boilerplate_service
 from .web.compilation_service import build_synchronous_compiler_service
-from .web.constants import SECRET_KEY
+from .web.constants import SECRET_KEY, reporting_log
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
+from .web.login_service import build_login_service
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
 from .web.sitemap_endpoint import build_sitemap_endpoint
@@ -49,6 +51,13 @@ log = logging.getLogger(__name__)
 
 datefmt = '%H:%M:%S'
 fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+reporting_log.setLevel(logging.DEBUG)
+fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
+fh.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(message)s")
+fh.setFormatter(formatter)
+reporting_log.addHandler(fh)
 
 
 def set_debug(level):
@@ -233,6 +242,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
 
     manager = build_manager(connection, echo=echo_sql)
+
+    build_login_service(app)
 
     admin_password = admin_password or (('PYBEL_ADMIN_PASS' in os.environ) and os.environ['PYBEL_ADMIN_PASS'])
 

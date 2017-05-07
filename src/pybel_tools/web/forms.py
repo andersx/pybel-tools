@@ -14,10 +14,8 @@ class UploadForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
     file = FileField('A PyBEL gpickle', validators=[
         DataRequired(message="You must provide a PyBEL gpickle file"),
-        FileAllowed(['gpickle'], 'Only gpickles allowed')
+        FileAllowed(['gpickle'], 'Only files with the *.gpickle extension are allowed')
     ])
-    name = fields.StringField('Your Name', validators=[DataRequired()])
-    email = fields.StringField('Your Email Address', validators=[DataRequired(), Email()])
     submit = fields.SubmitField('Upload')
 
 
@@ -48,8 +46,6 @@ class SeedProvenanceForm(FlaskForm):
 class CompileForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
     file = FileField('My BEL script', validators=[DataRequired()])
-    name = fields.StringField('Name', validators=[DataRequired()])
-    email = fields.StringField('Email Address', validators=[DataRequired(), Email()])
     suggest_name_corrections = BooleanField('Suggest name corrections')
     suggest_naked_name = BooleanField('My document contains unqualified names - suggest appropriate namespaces')
     allow_nested = BooleanField('My document contains nested statements')
@@ -69,8 +65,6 @@ class CompileForm(FlaskForm):
 class DifferentialGeneExpressionForm(FlaskForm):
     """Builds the form for uploading differential gene expression data"""
     file = FileField('Differential Gene Expression File', validators=[DataRequired()])
-    name = fields.StringField('Name', validators=[DataRequired()])
-    email = fields.StringField('Email Address', validators=[DataRequired(), Email()])
     gene_symbol_column = fields.StringField('Gene Symbol Column Name', default='Gene.symbol')
     log_fold_change_column = fields.StringField('Log Fold Change Column Name', default='logFC')
     permutations = fields.IntegerField('Number of Permutations', default=100)

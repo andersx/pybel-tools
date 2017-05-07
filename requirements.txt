@@ -4,6 +4,8 @@ flask
 flask-bootstrap
 flask-wtf
 flask-basicauth
+flask-login
+flask-github
 networkx
 pybel
 click

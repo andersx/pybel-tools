@@ -4,11 +4,13 @@ from __future__ import unicode_literals
 
 import logging
 
-from flask import Flask, render_template
+from flask import render_template, flash, redirect, url_for
+from flask_login import login_required, current_user
+from sqlalchemy.exc import IntegrityError
 
 import pybel
+from .constants import integrity_message, reporting_log
 from .forms import UploadForm
-from .utils import render_upload_error, try_insert_graph
 
 log = logging.getLogger(__name__)
 
@@ -16,30 +18,47 @@ log = logging.getLogger(__name__)
 def build_pickle_uploader_service(app, manager):
     """Adds the endpoints for uploading pickle files
 
-    :param app: A Flask application
-    :type app: Flask
+    :param flask.Flask app: A Flask application
     :param manager: A PyBEL cache manager
     :type manager: pybel.manager.cache.CacheManager
     """
 
-    @app.route('/upload', methods=('GET', 'POST'))
+    @app.route('/upload', methods=['GET', 'POST'])
+    @login_required
     def view_upload():
         """An upload form for a BEL script"""
         form = UploadForm()
 
         if not form.validate_on_submit():
-            return render_template('upload.html', form=form)
+            return render_template('upload.html', form=form, current_user=current_user)
 
-        log.info('Running on %s', form.file.data.filename)
+        log.info('uploading %s', form.file.data.filename)
 
         try:
             graph_bytes = form.file.data.read()
-            s = graph_bytes
-            graph = pybel.from_bytes(s)
+            graph = pybel.from_bytes(graph_bytes)
         except Exception as e:
-            log.exception('Gpickle error')
-            return render_upload_error(e)
+            log.exception('gpickle error')
+            flash('The given file was not able to be unpickled [{}]'.format(str(e)), category='error')
+            return redirect(url_for('view_upload'))
 
-        return try_insert_graph(manager, graph)
+        try:
+            network = manager.insert_graph(graph)
+        except IntegrityError:
+            log.exception('integrity error', category='error')
+            flash(integrity_message.format(graph.name, graph.version))
+            manager.rollback()
+            return redirect(url_for('view_upload'))
+        except Exception as e:
+            log.exception('upload error')
+            flash("Error storing in database [{}]".format(e), category='error')
+            return redirect(url_for('view_upload'))
+
+        log.info('done uploading %s [%d]', form.file.data.filename, network.id)
+        reporting_log.info('%s (%s) uploaded %s v%s with %d nodes, %d edges, and %d warnings)', current_user.name,
+                           current_user.username, graph.name, graph.version, graph.number_of_nodes(),
+                           graph.number_of_edges(), len(graph.warnings))
+
+        return redirect(url_for('view_summary', graph_id=network.id))
 
     log.info('Added pickle uploader endpoint to %s', app)

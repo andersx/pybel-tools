@@ -17,7 +17,23 @@
         <div class="page-header">
             <h1>Analysis</h1>
         </div>
+
         {{ util.flashed_messages(dismissible=True) }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <div class="pull-right">
+                    <span class="btn btn-default">Logged in as {{ current_user.name }}</span>
+                    <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">
+                        Log out
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-body">
                 <p>This form will run an analysis on <code>{{ network_name }}</code> using a variant of the
@@ -30,6 +46,7 @@
                 </p>
             </div>
         </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Input</h3>
