@@ -395,8 +395,7 @@ def enrich_unqualified(universe, graph):
 def expand_internal(universe, graph, edge_filters=None):
     """Edges between entities in the subgraph that pass the given filters
 
-    :param universe: The full graph
-    :type universe: pybel.BELGraph
+    :param pybel.BELGraph universe: The full graph
     :param graph: A subgraph to find the upstream information
     :type graph: pybel.BELGraph
     :param edge_filters: Optional list of edge filter functions (graph, node, node, key, data) -> bool
@@ -443,8 +442,7 @@ def expand_node_predecessors(universe, graph, node):
     """Expands around the predecessors of the given node in the result graph by looking at the universe graph,
     in place.
     
-    :param universe: The graph containing the stuff to add
-    :type universe: pybel.BELGraph
+    :param pybel.BELGraph universe: The graph containing the stuff to add
     :param graph: The graph to add stuff to
     :type graph: pybel.BELGraph
     :param node: A node tuples from the query graph
@@ -470,8 +468,7 @@ def expand_node_successors(universe, graph, node):
     """Expands around the successors of the given node in the result graph by looking at the universe graph,
     in place.
     
-    :param universe: The graph containing the stuff to add
-    :type universe: pybel.BELGraph
+    :param pybel.BELGraph universe: The graph containing the stuff to add
     :param graph: The graph to add stuff to
     :type graph: pybel.BELGraph
     :param node: A node tuples from the query graph
@@ -497,8 +494,7 @@ def expand_node_neighborhood(universe, graph, node):
     """Expands around the neighborhoods of the given node in the result graph by looking at the universe graph,
     in place.
 
-    :param universe: The graph containing the stuff to add
-    :type universe: pybel.BELGraph
+    :param pybel.BELGraph universe: The graph containing the stuff to add
     :param graph: The graph to add stuff to
     :type graph: pybel.BELGraph
     :param node: A node tuples from the query graph
@@ -512,8 +508,7 @@ def expand_node_neighborhood(universe, graph, node):
 def expand_all_node_neighborhoods(universe, graph, filter_pathologies=False):
     """Expands the neighborhoods of all nodes in the given graph based on the universe graph.
     
-    :param universe: The graph containing the stuff to add
-    :type universe: pybel.BELGraph
+    :param pybel.BELGraph universe: The graph containing the stuff to add
     :param graph: The graph to add stuff to
     :type graph: pybel.BELGraph 
     :param bool filter_pathologies: Should expansion take place around pathologies?
