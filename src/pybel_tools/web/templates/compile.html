@@ -16,7 +16,17 @@
         <div class="page-header">
             <h1>Compiler</h1>
         </div>
+
         {{ util.flashed_messages(dismissible=True) }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks', graphid=graph_id) }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-body">
                 <p>This web application is built with PyBEL. It compiles BEL scripts and provides helpful output
