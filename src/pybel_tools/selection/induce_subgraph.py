@@ -55,8 +55,7 @@ SEED_TYPES = {
 def get_subgraph_by_induction(graph, nodes):
     """Induces a graph on the given nodes
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param nodes: A list of nodes in the graph
     :type nodes: iter
     :return: An induced BEL subgraph
@@ -69,8 +68,7 @@ def get_subgraph_by_induction(graph, nodes):
 def get_subgraph_by_node_filter(graph, node_filters):
     """Induces a graph on the nodes that pass all filters
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node_filters: A node filter (graph, node) -> bool or list of node filters (graph, node) -> bool
     :type node_filters: list or lambda
     :return: An induced BEL subgraph
@@ -83,8 +81,7 @@ def get_subgraph_by_node_filter(graph, node_filters):
 def get_subgraph_by_neighborhood(graph, nodes):
     """Gets a BEL graph around the neighborhoods of the given nodes
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param nodes: An iterable of BEL nodes
     :type nodes: iter
     :return: A BEL graph induced around the neighborhoods of the given nodes
@@ -114,13 +111,12 @@ def get_subgraph_by_neighborhood(graph, nodes):
 def get_subgraph_by_second_neighbors(graph, nodes, filter_pathologies=False):
     """Gets a BEL graph around the neighborhoods of the given nodes, and expands to the neighborhood of those nodes
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param nodes: An iterable of BEL nodes
     :type nodes: iter
+    :param bool filter_pathologies: Should expansion take place around pathologies?
     :return: A BEL graph induced around the neighborhoods of the given nodes
     :rtype: pybel.BELGraph
-    :param bool filter_pathologies: Should expansion take place around pathologies?
     """
     result = get_subgraph_by_neighborhood(graph, nodes)
     expand_all_node_neighborhoods(graph, result, filter_pathologies=filter_pathologies)
@@ -131,8 +127,7 @@ def get_subgraph_by_second_neighbors(graph, nodes, filter_pathologies=False):
 def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
     """Induces a subgraph over the nodes in the pairwise shortest paths between all of the nodes in the given list
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param nodes: A set of nodes over which to calculate shortest paths
     :type nodes: set
     :param cutoff:  Depth to stop the shortest path search. Only paths of length <= cutoff are returned.
@@ -152,8 +147,7 @@ def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
 def get_subgraph_by_edge_filter(graph, edge_filters):
     """Induces a subgraph on all edges that pass the given filters
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph 
+    :param pybel.BELGraph graph: A BEL graph 
     :param edge_filters: A predicate or list of predicates (graph, node, node, key, data) -> bool
     :type edge_filters: list or tuple or lambda
     :return: A BEL subgraph induced over the edges passing the given filters
@@ -174,8 +168,7 @@ def get_subgraph_by_edge_filter(graph, edge_filters):
 def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
     """Builds a new subgraph induced over all edges whose annotations match the given key and value
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param value: The value for the annotation
     :type value: str
     :param annotation: The annotation to group by
@@ -192,8 +185,7 @@ def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
 def get_subgraph_by_data(graph, annotations):
     """
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
     :type annotations: dict
     :return: A subgraph of the original BEL graph
@@ -206,8 +198,7 @@ def get_subgraph_by_data(graph, annotations):
 def get_subgraphs_by_annotation(graph, annotation='Subgraph'):
     """Builds a new subgraph induced over all edges for each value in the given annotation.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to group by
     :type annotation: str
     :return: A dictionary of {str value: BELGraph subgraph}
@@ -221,8 +212,7 @@ def get_subgraphs_by_annotation(graph, annotation='Subgraph'):
 def get_causal_subgraph(graph):
     """Builds a new subgraph induced over all edges that are causal
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
@@ -244,8 +234,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     4. Remove nodes
     5. Apply filters
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param seed_method: The name of the get_subgraph_by_* function to use
     :type seed_method: str or None
     :param seed_data: The argument to pass to the get_subgraph function
@@ -338,8 +327,7 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
                                       filter_pathologies=False):
     """Gets all edges of given provenance and expands around their nodes' neighborhoods
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param pmids: A PubMed identifier or list of PubMed identifiers
     :type pmids: str or list[str]
     :param authors: An author or list of authors
@@ -361,8 +349,8 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
     if authors:
         left_merge(result, get_subgraph_by_authors(graph, authors))
 
-    highlight_nodes(result, result.nodes_iter())
-    highlight_edges(result, result.edges_iter(keys=True, data=True))
+    highlight_nodes(result)
+    highlight_edges(result)
 
     if expand_neighborhoods:
         expand_all_node_neighborhoods(graph, result, filter_pathologies=filter_pathologies)

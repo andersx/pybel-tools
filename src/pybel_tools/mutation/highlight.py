@@ -22,7 +22,7 @@ EDGE_HIGHLIGHT_DEFAULT_COLOR = 'orange'
 
 
 @pipeline.in_place_mutator
-def highlight_nodes(graph, nodes, color=None):
+def highlight_nodes(graph, nodes=None, color=None):
     """Adds a highlight tag to the given nodes
     
     :param graph: A BEL graph 
@@ -32,7 +32,7 @@ def highlight_nodes(graph, nodes, color=None):
     :param color: The color to highlight (use something that works with CSS)
     :type color: str
     """
-    for node in nodes:
+    for node in nodes if nodes is not None else graph.nodes_iter():
         graph.node[node][NODE_HIGHLIGHT] = NODE_HIGHLIGHT_DEFAULT_COLOR if color is None else color
 
 
