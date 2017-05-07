@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
     <link rel="stylesheet" type="text/css"
           href='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'/>
-
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
 {% endblock %}
 
 {% block head %}
@@ -39,6 +39,31 @@
         <div class="page-header">
             <h1>PyBEL Web</h1>
         </div>
+
+        {{ util.flashed_messages(dismissible=True) }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_compile') }}"
+                   role="button">Compile a BEL Script</a>
+                <a class="btn btn-default" href="{{ url_for('view_upload') }}"
+                   role="button">Upload a Pre-compiled Pickle</a>
+                <a class="btn btn-default" href="{{ url_for('view_definitions') }}"
+                   role="button">View Stored Definitions</a>
+                <a class="btn btn-default" href="{{ url_for('get_boilerplate') }}"
+                   role="button">Generate a BEL template</a>
+
+                <div class="pull-right">
+                    {% if current_user.is_authenticated %}
+                        <span class="btn btn-default">Logged in as {{ current_user.name }}</span>
+                        <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">Log out</a>
+                    {% else %}
+                        <a class="btn btn-default" href="{{ url_for('login') }}" role="button">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-body">
                 <p>This web application provides an interface for users to interact with the functions in the Python
@@ -56,12 +81,6 @@
                             href="https://www.imi.europa.eu/">IMI</a> projects, <a href="http://www.aetionomy.eu/>">AETIONOMY</a>
                     and <a href="http://www.phago.eu/">PHAGO</a>.
                 </p>
-
-                <h4>Actions</h4>
-                <a class="btn btn-default" href="{{ url_for('view_compile') }}"
-                   role="button">Compile a BEL Script</a>
-                <a class="btn btn-default" href="{{ url_for('view_upload') }}"
-                   role="button">Upload a Pre-compiled Pickle</a>
             </div>
         </div>
 
@@ -83,11 +102,11 @@
                         <div class="list-group-item-text">
                             <p>{{ descr }}</p>
                             <ul class="list-inline">
-                                <li><a href="/summary/{{ nid }}">Summarize</a></li>
-                                <li><a href="/explore/?graphid={{ nid }}">Explore</a></li>
+                                <li><a href="/summary/{{ nid }}" class="btn btn-default">Summarize</a></li>
+                                <li><a href="/explore/?graphid={{ nid }}" class="btn btn-default">Explore</a></li>
                                 {% if analysis_enabled %}
-                                    <li><a href="/analysis/upload/{{ nid }}">Analyze</a></li>
-                                    <li><a href="/analysis/{{ nid }}">Results</a></li>
+                                    <li><a href="/analysis/upload/{{ nid }}" class="btn btn-default">Analyze</a></li>
+                                    <li><a href="/analysis/{{ nid }}" class="btn btn-default">Results</a></li>
                                 {% endif %}
                             </ul>
                         </div>

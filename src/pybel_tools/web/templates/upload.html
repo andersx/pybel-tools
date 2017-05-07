@@ -4,23 +4,56 @@
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
 
+{% block styles %}
+    {{ super() }}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
+{% endblock %}
+
 {% block title %}Upload{% endblock %}
 
 {% block content %}
-    <div class="container" style="padding-top:50px">
-        <div class="jumbotron">
-            <h1>PyBEL Web - Uploader</h1>
-            <p>This web application is for uploading precompiled BEL scripts to the cache. It accepts files in the
-                gpickle format, created by running <code>python3 -m pybel convert -p my_document.bel --pickle
-                    my_document.gpickle</code> in your favorite command line or programmatically in Python with
-                <a href="http://pybel.readthedocs.io/en/latest/io.html#pybel.to_pickle">pybel.to_pickle</a>.
-            </p>
-            <p>For more information on how this app works, see the <a href="http://pybel.readthedocs.io/">PyBEL</a> and
-                <a href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> documentation.
-            </p>
+    <div class="container">
+        <div class="page-header">
+            <h1>BEL Web Uploader</h1>
         </div>
+
         {{ util.flashed_messages(dismissible=True) }}
-        {{ wtf.quick_form(form, form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <div class="pull-right">
+                    <span class="btn btn-default">Logged in as {{ current_user.name }}</span>
+                    <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">
+                        Log out
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>This web application is for uploading precompiled BEL scripts to the cache. It accepts files in the
+                    gpickle format, created by running <code>python3 -m pybel convert -p my_document.bel --pickle
+                        my_document.gpickle</code> in your favorite command line or programmatically in Python with
+                    <a href="http://pybel.readthedocs.io/en/latest/io.html#pybel.to_pickle">pybel.to_pickle</a>.
+                </p>
+                <p>For more information on how this app works, see the <a href="http://pybel.readthedocs.io/">PyBEL</a>
+                    and
+                    <a href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> documentation.
+                </p>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Input</h3>
+            </div>
+            <div class="panel-body">
+                {{ wtf.quick_form(form, form_type='horizontal', button_map={'submit_button': 'btn btn-primary'}) }}
+            </div>
+        </div>
     </div>
 {% endblock %}
 

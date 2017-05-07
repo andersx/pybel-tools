@@ -78,6 +78,6 @@ def get_citations_by_pmids(pmids, group_size=200, sleep_time=1, return_errors=Fa
         # Don't want to hit that rate limit
         time.sleep(sleep_time)
 
-    log.info('retrieved PubMed identifiers in %s', time.time() - t)
+    log.info('retrieved PubMed identifiers in %.02f seconds', time.time() - t)
 
     return result, errors if return_errors else result

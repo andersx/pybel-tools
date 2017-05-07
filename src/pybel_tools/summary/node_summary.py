@@ -14,9 +14,9 @@ __all__ = [
     'get_namespaces',
     'count_names',
     'get_names',
+    'get_unused_namespaces',
     'get_names_by_namespace',
     'get_names_with_errors',
-    'get_unused_namespaces',
 ]
 
 
@@ -61,6 +61,17 @@ def get_namespaces(graph):
     :rtype: set[str]
     """
     return set(count_namespaces(graph))
+
+
+def get_unused_namespaces(graph):
+    """Gets the set of all namespaces that are defined in a graph, but are never used.
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :return: A set of namespaces that are included but not used
+    :rtype: set[str] 
+    """
+    defined_namespaces = set(graph.namespace_pattern) | set(graph.namespace_url) | set(graph.namespace_owl)
+    return defined_namespaces - get_namespaces(graph)
 
 
 def count_names(graph):
@@ -123,15 +134,3 @@ def get_names_with_errors(graph, namespace):
     :rtype: set[str]
     """
     return get_names(graph, namespace) | get_incorrect_names(graph, namespace)
-
-
-def get_unused_namespaces(graph):
-    """Gets all of the unused namespaces in a graph
-    
-    :param pybel.BELGraph graph: A BEL graph 
-    :return: A set of namespaces that are included but not used
-    :rtype: set[str]
-    """
-    used_namespaces = get_namespaces(graph)
-    all_namespaces = set(graph.namespace_url) | set(graph.namespace_owl) | set(graph.namespace_pattern)
-    return all_namespaces - used_namespaces

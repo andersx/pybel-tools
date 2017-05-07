@@ -35,6 +35,7 @@ log = logging.getLogger(__name__)
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'
 DATE_FMT = '%Y-%m-%d'
 DATE_VERSION_FMT = '%Y%m%d'
+DEFAULT_NS_DESCRIPTION = 'This namespace was serialized by PyBEL Tools'
 
 
 def make_namespace_header(name, keyword, domain, query_url=None, description=None, species=None, version=None,
@@ -65,9 +66,8 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     yield 'DomainString={}'.format(domain)
     yield 'VersionString={}'.format(version if version else time.strftime(DATE_VERSION_FMT))
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
-
-    if description is not None:
-        yield 'DescriptionString={}'.format(description.strip().replace('\n', ''))
+    yield 'DescriptionString={}'.format(
+        DEFAULT_NS_DESCRIPTION if description is None else description.strip().replace('\n', ''))
 
     if species is not None:
         yield 'SpeciesString={}'.format(species)
@@ -196,7 +196,7 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
     :type file: file or file-like
     :param value_prefix: a prefix for each name
     :type value_prefix: str
-    :param sort_key: A function to sort the values with :func:`sorted`
+    :param sort_key: A function to sort the values with :func:`sorted`. Give ``False`` to not sort
     """
     file = sys.stdout if file is None else file
 
@@ -223,8 +223,12 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
 
     print('[Values]', file=file)
 
-    values = sorted(values) if sort_key is None else sorted(values, key=sort_key)
-    for value in values:
+    if sort_key is None:
+        values = sorted(values)
+    elif sort_key:
+        values = sorted(values, key=sort_key)
+
+    for value in map(str, values):
         if not value.strip():
             continue
         print('{}{}|{}'.format(value_prefix, value.strip(), function_values), file=file)

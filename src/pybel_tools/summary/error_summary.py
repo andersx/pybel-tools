@@ -7,14 +7,14 @@ from collections import Counter, defaultdict
 from fuzzywuzzy import process, fuzz
 
 from pybel.constants import ANNOTATIONS
-from pybel.parser.parse_exceptions import NakedNameWarning, MissingNamespaceNameWarning, MissingNamespaceRegexWarning, \
-    UndefinedNamespaceWarning
+from pybel.parser.parse_exceptions import *
 from ..utils import check_has_annotation
 
 __all__ = [
     'count_error_types',
     'count_naked_names',
     'get_incorrect_names',
+    'get_undefined_namespaces',
     'get_undefined_namespace_names',
     'calculate_incorrect_name_dict',
     'calculate_suggestions',
@@ -59,16 +59,49 @@ def get_incorrect_names(graph, namespace):
             isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning)) and e.namespace == namespace}
 
 
+def get_undefined_namespaces(graph):
+    """Gets all namespaces that aren't actually defined
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :return: The set of all undefined namespaces
+    :rtype: set[str]
+    """
+    return {e.namespace for _, _, e, _ in graph.warnings if isinstance(e, UndefinedNamespaceWarning)}
+
+
 def get_undefined_namespace_names(graph, namespace):
-    """Gets the names from namespaces that aren't actually defined
+    """Gets the names from a namespace that wasn't actually defined
     
     :param pybel.BELGraph graph: A BEL graph
     :param str namespace: The namespace to filter by
     :return: The set of all names from the undefined namespace
-    :rtype: set[str] 
+    :rtype: set[str]
     """
     return {e.name for _, _, e, _ in graph.warnings if
             isinstance(e, UndefinedNamespaceWarning) and e.namespace == namespace}
+
+
+def get_undefined_annotations(graph):
+    """Gets all annotations that aren't actually defined
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :return: The set of all undefined annotations
+    :rtype: set[str]
+    """
+    return {e.annotation for _, _, e, _ in graph.warnings if isinstance(e, UndefinedAnnotationWarning)}
+
+
+# FIXME need to change underlying definition and usage of this exception
+def get_undefined_annotation_values(graph, annotation):
+    """Gets the values from an annotation that wasn't actually defined
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param str annotation: The annotaton to filter by
+    :return: The set of all values from the undefined annotation
+    :rtype: set[str]
+    """
+    raise NotImplementedError
+    # return {e.value for _, _, e, _ in graph.warnings if isinstance(e, UndefinedAnnotationWarning) and e.annotation == annotation}
 
 
 def calculate_incorrect_name_dict(graph):

@@ -31,7 +31,7 @@ def parse_authors(graph):
     :type graph: pybel.BELGraph
     """
     if 'PYBEL_PARSED_AUTHORS' in graph.graph:
-        log.warning('Authors have already been parsed in %s', graph.name)
+        log.debug('Authors have already been parsed in %s', graph.name)
         return
 
     for u, v, k, d in filter_edges(graph, edge_has_author_annotation):
@@ -94,7 +94,7 @@ def fix_pubmed_citations(graph, stringify_authors=False):
     :rtype: set
     """
     if 'PYBEL_ENRICHED_CITATIONS' in graph.graph:
-        log.info('already enriched citations in %s', graph.name)
+        log.debug('citations have already been enriched in %s', graph.name)
         return
 
     pmids = get_pmids(graph)

@@ -7,21 +7,24 @@ import logging
 import time
 import traceback
 
-import flask
 import requests
-from flask import Flask, render_template
+from flask import render_template, flash, redirect, url_for
+from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 
 from pybel import from_lines
 from pybel.parser.parse_exceptions import InconsistientDefinitionError
+from .constants import integrity_message, reporting_log
 from .forms import CompileForm
 from .utils import render_graph_summary
 from ..mutation.metadata import add_canonical_names
+from .models import add_network_reporting
 
 log = logging.getLogger(__name__)
 
 
 def render_error(exception):
+    """Displays an error in compilation/uploading"""
     traceback_lines = traceback.format_exc().split('\n')
     return render_template('parse_error.html', error_text=str(exception), traceback_lines=traceback_lines)
 
@@ -29,21 +32,21 @@ def render_error(exception):
 def build_synchronous_compiler_service(app, manager, enable_cache=True):
     """Adds the endpoints for a synchronous web validation web app
 
-    :param app: A Flask application
-    :type app: Flask
+    :param flask.Flask app: A Flask application
     :param manager: A PyBEL cache manager
     :type manager: pybel.manager.cache.CacheManager
     :param enable_cache: Should the user be given the option to cache graphs?
     :type enable_cache: bool
     """
 
-    @app.route('/compile', methods=('GET', 'POST'))
+    @app.route('/compile', methods=['GET', 'POST'])
+    @login_required
     def view_compile():
         """An upload form for a BEL script"""
         form = CompileForm(save_network=True)
 
         if not form.validate_on_submit():
-            return render_template('compile.html', form=form)
+            return render_template('compile.html', form=form, current_user=current_user)
 
         log.info('Running on %s', form.file.data.filename)
 
@@ -61,16 +64,19 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
             )
             add_canonical_names(graph)
         except requests.exceptions.ConnectionError as e:
-            flask.flash("Resource doesn't exist", category='error')
+            flash("Resource doesn't exist.", category='error')
             return render_error(e)
         except InconsistientDefinitionError as e:
-            flask.flash('{} was defined multiple times'.format(e.definition), category='error')
-            return render_error(e)
+            log.error('%s was defined multiple times', e.definition)
+            flash('{} was defined multiple times.'.format(e.definition), category='error')
+            return redirect(url_for('view_compile'))
         except Exception as e:
-            return render_error(e)
+            log.exception('compilation error')
+            flash('Compilation error: {}'.format(e))
+            return redirect(url_for('view_compile'))
 
         if not enable_cache:
-            flask.flash('Sorry, storing data is not enabled currently', category='error')
+            flash('Sorry, graph storage is not currently enabled.', category='warning')
             return render_graph_summary(0, graph)
 
         if not form.save_network.data and not form.save_edge_store.data:
@@ -78,18 +84,19 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
 
         try:
             network = manager.insert_graph(graph, store_parts=form.save_edge_store.data)
-            network_id = network.id
-            log.info('Done storing %s [%d]', form.file.data.filename, network_id)
-        except IntegrityError as e:
-            flask.flash("A praph with same name and version already exists. Try bumping the version number.",
-                        category='error')
-            log.warning("Integrity error - can't store duplicate: %s v%s", graph.name, graph.version)
+        except IntegrityError:
+            log.exception('integrity error')
+            flash(integrity_message.format(graph.name, graph.version), category='error')
             manager.rollback()
-            return render_error(e)
+            return redirect(url_for('view_compile'))
         except Exception as e:
-            flask.flash("Error storing in database", category='error')
-            return render_error(e)
+            log.exception('general storage error')
+            flash("Error storing in database: {}".format(e), category='error')
+            return redirect(url_for('view_compile'))
 
-        return render_graph_summary(network_id, graph)
+        log.info('done storing %s [%d]', form.file.data.filename, network.id)
+        add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(), graph.number_of_edges(), len(graph.warnings), precompiled=False)
 
-    log.info('Added synchronous validator to %s', app)
+        return redirect(url_for('view_summary', graph_id=network.id))
+
+    log.info('Added synchronous compiler to %s', app)

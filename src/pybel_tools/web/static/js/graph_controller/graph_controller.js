@@ -66,10 +66,21 @@ function getAnnotationForTree(URLString) {
     }
 }
 
-function resetGlobals() {
-    // Arrays with selected nodes to expand/delete
-    window.deleteNodes = [];
-    window.expandNodes = [];
+function initiliazeGlobals(url) {
+    // Initialize arrays with selected nodes to expand/delete
+    if ("remove" in url) {
+        window.deleteNodes = url["remove"].split(',');
+    }
+    else {
+        window.deleteNodes = [];
+    }
+    if ("append" in url) {
+        window.expandNodes = url["append"].split(',');
+    }
+    else {
+        window.expandNodes = [];
+    }
+
 }
 
 function getCurrentURL() {
@@ -104,7 +115,8 @@ function getFilterParameters(tree) {
     if (window.expandNodes.length > 0) {
         args["append"] = window.expandNodes.join();
     }
-    if (window.networkID === 0) {
+
+    if (window.networkID > 0) {
         args["graphid"] = window.networkID;
     }
     return args
@@ -162,6 +174,9 @@ function getDefaultAjaxParameters(tree) {
 function renderNetwork(tree) {
     // Store filtering parameters from tree and global variables (network_id, expand/delete nodes) and
     // store seed methods/ pipeline arguments from URL
+
+    initiliazeGlobals(getCurrentURL());
+
     var args = getDefaultAjaxParameters(tree);
 
     var renderParameters = $.param(args, true);
@@ -170,8 +185,6 @@ function renderNetwork(tree) {
         initD3Force(data, tree);
     });
 
-    // reset window variables (window.expand/delete/method)
-    resetGlobals();
     window.history.pushState("BiNE", "BiNE", "/explore/?" + renderParameters);
 }
 
@@ -216,7 +229,7 @@ $(document).ready(function () {
 
     var networkName = doAjaxCall("/api/network/name/" + window.networkID);
     if (networkName) {
-        $("#network-name").html(networkName)
+        $("#network-name").html(networkName);
     }
 
     // Initiate the tree and expands it with the annotations given the graphid in URL
@@ -234,6 +247,12 @@ $(document).ready(function () {
     });
 
     selectNodesInTreeFromURL(tree, URLString, doAjaxCall("/api/meta/blacklist"));
+
+    // Enables tree search
+    $('#tree-search').on('keyup', function (ev) {
+        tree.search(ev.target.value);
+
+    });
 
     // Loads the network if autoload is an argument in the URL or render empty frame if not
     if (window.location.search.indexOf("autoload=yes") > -1) {
@@ -292,6 +311,28 @@ $(document).ready(function () {
         args["format"] = "csv";
         window.location.href = "/api/network/" + $.param(args, true);
     });
+
+    $("#nodelink-button").click(function () {
+        var args = getDefaultAjaxParameters(tree);
+        args["format"] = "json";
+        window.location.href = "/api/network/" + $.param(args, true);
+    });
+
+    // Reset expand/node window globals
+    $("#reset_globals").on("click", function () {
+        window.expandNodes = [];
+        window.deleteNodes = [];
+        var args = getDefaultAjaxParameters(tree);
+        window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
+    });
+
+    // Comes back to the network id originally choosen
+    $("#reset_all").on("click", function () {
+
+        var args = {};
+        args["graphid"] = window.networkID;
+        window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
+    });
 });
 
 function renderEmptyFrame() {
@@ -320,7 +361,7 @@ function renderEmptyFrame() {
         .attr("class", "title")
         .attr("x", w / 3.2)
         .attr("y", h / 2)
-        .text("Please filter the graph by annotation and press submit");
+        .text("Select your desired filters press refresh.");
 }
 
 function clearUsedDivs() {
@@ -458,13 +499,11 @@ function initD3Force(graph, tree) {
                 window.expandNodes.push(d.id);
                 var args = getDefaultAjaxParameters(tree);
 
-                node_param = $.param(args, true);
-
                 // Ajax to update the cypher query. Three list are sent to the server. pks of the subgraphs, list of nodes to delete and list of nodes to expand
                 $.ajax({
                     url: "/api/network/",
                     dataType: "json",
-                    data: node_param
+                    data: $.param(args, true)
                 }).done(function (response) {
 
                     // Load new data, first empty all created divs and clear the current network
@@ -490,12 +529,10 @@ function initD3Force(graph, tree) {
                 window.deleteNodes.push(d.id);
                 var args = getDefaultAjaxParameters(tree);
 
-                node_param = $.param(args, true);
-
                 $.ajax({
                     url: "/api/network/",
                     dataType: "json",
-                    data: node_param
+                    data: $.param(args, true)
                 }).done(function (response) {
 
                     // Load new data, first empty all created divs and clear the current network
@@ -521,7 +558,6 @@ function initD3Force(graph, tree) {
 
                 console.log(d.source);
                 console.log(d.target);
-
 
                 $.ajax({
                     url: "/api/edges/provenance/" + d.source.id + "/" + d.target.id,
@@ -685,9 +721,7 @@ function initD3Force(graph, tree) {
     svg.append("rect")
         .attr("height", h)
         .attr("width", w)
-        .style("stroke", bordercolor)
-        .style("fill", "none")
-        .style("stroke-width", border);
+        .style("fill", "none");
 
     // g = svg object where the graph will be appended
     var g = svg.append("g");

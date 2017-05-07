@@ -91,6 +91,34 @@ def get_annotations(graph):
     return set(count_annotations(graph))
 
 
+def get_unused_annotations(graph):
+    """Gets the set of all annotations that are defined in a graph, but are never used.
+
+    :param pybel.BELGraph graph: A BEL graph
+    :return: A set of annotations
+    :rtype: set[str] 
+    """
+    defined_annotations = set(graph.annotation_pattern) | set(graph.annotation_url) | set(graph.annotation_owl) | set(
+        graph.annotation_list)
+    return defined_annotations - get_annotations(graph)
+
+
+def get_unused_list_annotation_values(graph):
+    """Gets all of the unused values for list annotations
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :return: A dictionary of {str annotation: set of str values that aren't used}
+    :rtype: dict[str, set[str]]
+    """
+    result = {}
+    for annotation, values in graph.annotation_list.items():
+        used_values = get_annotation_values(graph, annotation)
+        if len(used_values) == len(values):  # all values have been used
+            continue
+        result[annotation] = set(values) - used_values
+    return result
+
+
 def get_annotation_values_by_annotation(graph):
     """Gets the set of values for each annotation used in a BEL Graph
 

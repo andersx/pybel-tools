@@ -6,6 +6,7 @@ from flask import send_file, Response, jsonify
 from six import BytesIO, StringIO
 
 from pybel import to_cx_json, to_bel_lines, to_graphml, to_bytes, to_csv
+from ..mutation.metadata import serialize_authors
 
 log = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ def serve_network(graph, serve_format=None):
                          attachment_filename='graph.gpickle')
 
     if serve_format == 'bel':
+        serialize_authors(graph)
         data = '\n'.join(to_bel_lines(graph))
         return Response(data, mimetype='text/plain')
 

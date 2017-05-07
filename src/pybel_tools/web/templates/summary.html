@@ -7,6 +7,7 @@
 {% block styles %}
     {{ super() }}
     <link href="{{ url_for('static', filename='css/c3.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
 {% endblock %}
 
 {% block head %}
@@ -33,41 +34,157 @@
         </div>
 
         <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Overview</h3>
-            </div>
             <div class="panel-body">
-                <dl>
-                    {% for key, value in graph.document.items() %}
-                        <dt>{{ key }}</dt>
-                        <dd>{{ value }}</dd>
-                    {% endfor %}
-                </dl>
+                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
                 <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
                    role="button">Explore</a>
+                <a class="btn btn-default" href="{{ url_for('view_analysis_uploader', network_id=graph_id) }}"
+                   role="button">Analyze</a>
+                <a class="btn btn-default" href="{{ url_for('view_analyses', network_id=graph_id) }}"
+                   role="button">Results</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bel') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> BEL Script</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='json') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Nodelink JSON</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='cx') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CX JSON</a>
-                <!-- These are still broken...
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bytes') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Pickle</a>
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='graphml') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> GraphML</a>
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='csv') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</a>
-                 -->
             </div>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Provenance</h3>
+            </div>
+            <div class="panel-body">
+                <dl class="dl-horizontal">
+                    <dt>Authors</dt>
+                    <dd>{{ graph.document['authors'] }}</dd>
+                    <dt>Contact</dt>
+                    <dd>{{ graph.document['contact'] }}</dd>
+                    <dt>Description</dt>
+                    <dd>{{ graph.description }}</dd>
+                    <dt>License</dt>
+                    <dd>{{ graph.document['licenses'] }}</dd>
+                    <dt>Copyright</dt>
+                    <dd>{{ graph.document['copyright'] }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        {% if undefined_namespaces is defined and undefined_namespaces|length > 0 %}
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Undefined Namespaces</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained references to the following namespaces, but they were never
+                        defined. Click the links to download them as enumerated namespaces, and update the BEL script
+                        accordingly.</p>
+                    <ul>
+                        {% for undefined_namespace in undefined_namespaces %}
+                            <li>
+                                <a href="{{ url_for('download_undefined_namespace', graph_id=graph_id, namespace=undefined_namespace) }}">{{ undefined_namespace }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if unused_namespaces is defined and unused_namespaces|length > 0 %}
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unused Namespaces</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained references to the following namespaces, but they were never
+                        used. It is suggested to delete their definitions from the BEL script to improve readability
+                        and compilation speed.</p>
+                    <ul>
+                        {% for unused_namespace in unused_namespaces %}
+                            <li>{{ unused_namespace }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if undefined_annotation is defined and undefined_annotations|length > 0 %}
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Undefined Annotations</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained references to the following annotations, but they were never
+                        defined.
+                    </p>
+                    <ul>
+                        {% for undefined_annotation in undefined_annotations %}
+                            <li>{{ undefined_annotation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if unused_annotations is defined and unused_annotations|length > 0 %}
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unused Annotations</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained references to the following annotations, but they were never
+                        used. It is suggested to delete their definitions from the BEL script to improve readability
+                        and compilation speed.</p>
+                    <ul>
+                        {% for unused_annotation in unused_annotations %}
+                            <li>{{ unused_annotation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unused List Annotation Values</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained the following list annotations, but no references to the
+                        following values. It is suggested to prune these values from the list definitions. This box
+                        will not show annotations that are wholly unused, since they already appear in the Unused
+                        Annotations box.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Annotation</th>
+                                <th>Values</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for annotation, values in unused_list_annotation_values %}
+                                <tr>
+                                    <td>{{ annotation }}</td>
+                                    <td>{{ values }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Network Statistics</h3>
             </div>
             <div class="panel-body">
-                <dl>
+                <dl class="dl-horizontal">
                     {% for key, value in info_list %}
                         <dt>{{ key }}</dt>
                         <dd>{{ value }}</dd>
@@ -78,7 +195,7 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Statistics</h3>
+                <h3 class="panel-title">Content Statistics</h3>
             </div>
             <div class="panel-body">
                 {% if time is not none %}
@@ -120,200 +237,217 @@
             </div>
         </div>
 
-        <div class="panel panel-default panel-table">
-            <div class="panel-heading">
-                <h3 class="panel-title">All Warnings</h3>
-            </div>
-            <div class="panel-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                        <tr>
-                            <th>Line</th>
-                            <th>BEL</th>
-                            <th>Message</th>
-                        </tr>
-                        </thead>
-                        <tbody id="myTable">
-                        {% for number, line, exc, _ in graph.warnings %}
+        {% if graph.warnings|length > 0 %}
+            <div class="panel panel-danger panel-table">
+                <div class="panel-heading">
+                    <h3 class="panel-title">All Warnings</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                             <tr>
-                                <td>{{ number }}</td>
-                                <td><code>{{ line }}</code></td>
-                                <td>{{ exc }}</td>
+                                <th>Line</th>
+                                <th>BEL</th>
+                                <th>Message</th>
                             </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody id="myTable">
+                            {% for number, line, exc, _ in graph.warnings %}
+                                <tr>
+                                    <td>{{ number }}</td>
+                                    <td><code>{{ line }}</code></td>
+                                    <td>{{ exc }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <ul class="pagination pagination pagination-sm" style="margin:0;" id="myPager"></ul>
                 </div>
             </div>
-            <div class="panel-footer">
-                <ul class="pagination pagination pagination-sm" style="margin:0;" id="myPager"></ul>
-            </div>
-        </div>
+        {% endif %}
 
-        <div class="panel panel-default panel-table">
-            <div class="panel-heading">
-                <h3 class="panel-title">Top Warnings</h3>
-            </div>
-            <div class="panel-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                        <tr>
-                            <th>Error</th>
-                            <th>Frequency</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for k, v in error_groups %}
+        {% if error_groups is defined and error_groups|length > 0 %}
+            <div class="panel panel-danger panel-table">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Top Warnings</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                             <tr>
-                                <td><code>{{ k }}</code></td>
-                                <td>{{ v }}</td>
+                                <th>Error</th>
+                                <th>Frequency</th>
                             </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                            {% for k, v in error_groups %}
+                                <tr>
+                                    <td><code>{{ k }}</code></td>
+                                    <td>{{ v }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
 
-
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Contradictory Edges</h3>
-            </div>
-            <div class="panel-body">
-                <p>These pairs of nodes have a contradiction in their causal relationships, meaning they have more than
-                    one of <code>INCREASES</code>, <code>DECREASES</code>, or <code>CAUSES NO CHANGE</code>. This may be
-                    due to different experimental conditions, so these edges need to be carefully considered in
-                    analyses.
-                </p>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                        <tr>
-                            <th>Source</th>
-                            <th>Relations</th>
-                            <th>Target</th>
-
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for source, target, relations in contradictions %}
+        {% if contradictions is defined and contradictions|length > 0 %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Contradictory Edges</h3>
+                </div>
+                <div class="panel-body">
+                    <p>These pairs of nodes have a contradiction in their causal relationships, meaning they have more
+                        than one of <code>INCREASES</code>, <code>DECREASES</code>, or <code>CAUSES NO CHANGE</code>.
+                        This may be due to different experimental conditions, so these edges need to be carefully
+                        considered in analyses.
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                             <tr>
-                                <td>{{ source }}</td>
-                                <td>{{ ', '.join(relations) }}</td>
-                                <td>{{ target }}</td>
+                                <th>Source</th>
+                                <th>Relations</th>
+                                <th>Target</th>
+
                             </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                            {% for source, target, relations in contradictions %}
+                                <tr>
+                                    <td>{{ source }}</td>
+                                    <td>{{ ', '.join(relations) }}</td>
+                                    <td>{{ target }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
 
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Unstable Pairs</h3>
-            </div>
-            <div class="panel-body">
-                <dl>
-                    <dt>Chaotic Pairs</dt>
-                    <dd>Nodes that mutually increase each other, such as when both <code>A increases B</code> and <code>B
-                        increases A</code>.
-                    </dd>
-                    <dt>Dampened Pairs</dt>
-                    <dd>Nodes that mutually decrease each other, such as when both <code>A decreases B</code> and <code>B
-                        decreases A</code>.
-                    </dd>
-                </dl>
-                <p>While neither chaotic nor dampened pairs are biologically invalid, they require additional context to
-                    understand their regulation.</p>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                        <tr>
-                            <th>Node A</th>
-                            <th>Node B</th>
-                            <th>Type</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for a, b, label in unstable_pairs %}
+        {% if unstable_pairs is defined and unstable_pairs|length > 0 %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unstable Pairs</h3>
+                </div>
+                <div class="panel-body">
+                    <dl>
+                        <dt>Chaotic Pairs</dt>
+                        <dd>Nodes that mutually increase each other, such as when both <code>A increases B</code> and
+                            <code>B
+                                increases A</code>.
+                        </dd>
+                        <dt>Dampened Pairs</dt>
+                        <dd>Nodes that mutually decrease each other, such as when both <code>A decreases B</code> and
+                            <code>B
+                                decreases A</code>.
+                        </dd>
+                    </dl>
+                    <p>While neither chaotic nor dampened pairs are biologically invalid, they require additional
+                        context to
+                        understand their regulation.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                             <tr>
-                                <td>{{ a }}</td>
-                                <td>{{ b }}</td>
-                                <td>{{ label }}</td>
+                                <th>Node A</th>
+                                <th>Node B</th>
+                                <th>Type</th>
                             </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                            {% for a, b, label in unstable_pairs %}
+                                <tr>
+                                    <td>{{ a }}</td>
+                                    <td>{{ b }}</td>
+                                    <td>{{ label }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
 
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Unstable Triplets</h3>
-            </div>
-            <div class="panel-body">
-                <p>Analysis of triple stability comes from a deep graph theoretic background. It identifies triangles
-                    within the graph that have logically inconsistent relations</p>
-                <dl>
-                    <dt>Separately Unstable Triplet</dt>
-                    <dd>When both <code>A positiveCorrelation B</code>, <code>B negativeCorrelation C</code>, but <code>C
-                        positiveCorrelation A</code>.
-                    </dd>
-                    <dt>Mutually Unstable Triplets</dt>
-                    <dd>When both <code>A negativeCorrelation B</code>, <code>B negativeCorrelation C</code>, and <code>C
-                        negativeCorrelation A</code>.
-                    </dd>
-                    <dt>Jens Unstable Triplet*</dt>
-                    <dd>When <code>A increases B</code>, <code>A decreases C</code>, and <code>C positiveCorrelation
-                        A</code>.
-                    </dd>
-                    <dt>Increase Mismatch Triplet*</dt>
-                    <dd>When <code>A increases B</code>, <code>A increases C</code>, and <code>C negativeCorrelation
-                        A</code>.
-                    </dd>
-                    <dt>Decrease Mismatch Triplet*</dt>
-                    <dd>When <code>A decreases B</code>, <code>A decreases C</code>, and <code>C negativeCorrelation
-                        A</code>.
-                    </dd>
-                    <dt>Chaotic Triplets*</dt>
-                    <dd>A triplet of nodes that mutually increase each other, such as when <code>A increases B</code>,
-                        <code>B increases C</code>, and <code>C increases A</code>.
-                    </dd>
-                    <dt>Dampened Triplets*</dt>
-                    <dd>A triplet of nodes that mutually decreases each other, such as when <code>A decreases B</code>,
-                        <code>B decreases C</code>, and <code>C decreases A</code>.
-                    </dd>
-                </dl>
-                <p>Analysis with astericks have not been implemented and are not yet shown.</p>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                        <tr>
-                            <th>Node A</th>
-                            <th>Node B</th>
-                            <th>Node C</th>
-                            <th>Type</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for a, b, c, label in unstable_correlation_triplets %}
+        {% if unstable_correlation_triplets is defined and unstable_correlation_triplets|length > 0 %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unstable Triplets</h3>
+                </div>
+                <div class="panel-body">
+                    <p>Analysis of triple stability comes from a deep graph theoretic background. It identifies
+                        triangles
+                        within the graph that have logically inconsistent relations</p>
+                    <dl>
+                        <dt>Separately Unstable Triplet</dt>
+                        <dd>When both <code>A positiveCorrelation B</code>, <code>B negativeCorrelation C</code>, but
+                            <code>C
+                                positiveCorrelation A</code>.
+                        </dd>
+                        <dt>Mutually Unstable Triplets</dt>
+                        <dd>When both <code>A negativeCorrelation B</code>, <code>B negativeCorrelation C</code>, and
+                            <code>C
+                                negativeCorrelation A</code>.
+                        </dd>
+                        <dt>Jens Unstable Triplet*</dt>
+                        <dd>When <code>A increases B</code>, <code>A decreases C</code>, and <code>C positiveCorrelation
+                            A</code>.
+                        </dd>
+                        <dt>Increase Mismatch Triplet*</dt>
+                        <dd>When <code>A increases B</code>, <code>A increases C</code>, and <code>C negativeCorrelation
+                            A</code>.
+                        </dd>
+                        <dt>Decrease Mismatch Triplet*</dt>
+                        <dd>When <code>A decreases B</code>, <code>A decreases C</code>, and <code>C negativeCorrelation
+                            A</code>.
+                        </dd>
+                        <dt>Chaotic Triplets*</dt>
+                        <dd>A triplet of nodes that mutually increase each other, such as when <code>A increases
+                            B</code>,
+                            <code>B increases C</code>, and <code>C increases A</code>.
+                        </dd>
+                        <dt>Dampened Triplets*</dt>
+                        <dd>A triplet of nodes that mutually decreases each other, such as when <code>A decreases
+                            B</code>,
+                            <code>B decreases C</code>, and <code>C decreases A</code>.
+                        </dd>
+                    </dl>
+                    <p>Analysis with astericks have not been implemented and are not yet shown.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                             <tr>
-                                <td>{{ a }}</td>
-                                <td>{{ b }}</td>
-                                <td>{{ c }}</td>
-                                <td>{{ label }}</td>
+                                <th>Node A</th>
+                                <th>Node B</th>
+                                <th>Node C</th>
+                                <th>Type</th>
                             </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                            {% for a, b, c, label in unstable_correlation_triplets %}
+                                <tr>
+                                    <td>{{ a }}</td>
+                                    <td>{{ b }}</td>
+                                    <td>{{ c }}</td>
+                                    <td>{{ label }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
     </div>
 {% endblock %}
 
@@ -446,7 +580,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Entity Frequency ({{ graph.number_of_nodes() }})'
+                text: 'Entity Types ({{ graph.number_of_nodes() }})'
             },
             axis: {
                 rotated: true,
@@ -474,7 +608,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Relationship Frequency ({{ graph.number_of_edges() }})'
+                text: 'Relationship Types ({{ graph.number_of_edges() }})'
             },
             axis: {
                 rotated: true,
@@ -502,7 +636,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Error Frequency ({{ graph.warnings.__len__() }})'
+                text: 'Error Types ({{ graph.warnings.__len__() }})'
             },
             axis: {
                 rotated: true,
@@ -586,7 +720,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Namespaces'
+                text: 'Namespace Usage'
             },
             axis: {
                 rotated: true,
@@ -614,7 +748,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Top Nodes by Degree'
+                text: 'Top Hub Nodes'
             },
             axis: {
                 rotated: true,
@@ -642,7 +776,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Top Nodes by Centrality'
+                text: 'Most Central Nodes'
             },
             axis: {
                 rotated: true,

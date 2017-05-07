@@ -361,7 +361,7 @@ class DictionaryService(BaseService):
             graph = self.get_network(network_id)
             bc = calc_betweenness_centality(graph)
             self.node_centralities[network_id] = Counter(bc)
-            log.info('loaded centralities in %.2f', time.time() - t)
+            log.info('loaded centralities in %.2f seconds', time.time() - t)
         return {self.get_cname(node): v for node, v in self.node_centralities[network_id].most_common(count)}
 
     def get_top_degree(self, network_id, count=20):

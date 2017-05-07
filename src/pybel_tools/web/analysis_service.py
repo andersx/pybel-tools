@@ -10,6 +10,7 @@ from operator import itemgetter
 import flask
 import pandas
 from flask import render_template, redirect, url_for, jsonify, make_response
+from flask_login import login_required
 from six import StringIO
 from sqlalchemy import Column, Integer, DateTime, Binary, Text, ForeignKey
 from sqlalchemy.orm import relationship
@@ -90,6 +91,7 @@ def build_analysis_service(app, manager, api):
         )
 
     @app.route('/analysis/upload/<int:network_id>', methods=('GET', 'POST'))
+    @login_required
     def view_analysis_uploader(network_id):
         """Views the results of analysis on a given graph"""
         form = DifferentialGeneExpressionForm()

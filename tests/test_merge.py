@@ -25,9 +25,25 @@ class TestBoilerplate(unittest.TestCase):
         pmids_2 = [26839406, 26612754]
 
         with open(b1, 'w') as f:
-            write_boilerplate(b1, 'BP1', 'cthoyt+1@gmail.com', 'Boilerplate Test Document 1', pmids=pmids_1, file=f)
+            write_boilerplate(
+                b1,
+                'BP1',
+                'cthoyt+1@gmail.com',
+                'Boilerplate Test Document 1',
+                'Charles Tapley Hoyt',
+                pmids=pmids_1,
+                file=f
+            )
 
         with open(b2, 'w') as f:
-            write_boilerplate(b2, 'BP2', 'cthoyt+2@gmail.com', 'Boilerplate Test Document 2', pmids=pmids_2, file=f)
+            write_boilerplate(
+                b2,
+                'BP2',
+                'cthoyt+2@gmail.com',
+                'Boilerplate Test Document 2',
+                'Charles Tapley Hoyt',
+                pmids=pmids_2,
+                file=f
+            )
 
         merge(b3, [b1, b2])

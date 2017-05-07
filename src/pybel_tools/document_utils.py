@@ -12,8 +12,9 @@ from operator import itemgetter
 
 import requests
 
-from .constants import default_namespaces, default_annotations
+from .constants import default_namespaces, default_annotations, default_namespace_patterns
 from .constants import title_url_fmt, citation_format, abstract_url_fmt, evidence_format
+from .utils import get_version
 
 __all__ = [
     'merge',
@@ -49,8 +50,7 @@ def split_document(lines):
     return documents, definitions, statements
 
 
-def merge(output_path, input_paths, merge_document_name=None, merge_document_contact=None,
-          merge_document_description=None):
+def merge(output_path, input_paths, merged_name=None, merged_contact=None, merged_description=None, merged_author=None):
     """Merges multiple BEL documents and maintains author information in comments
 
     Steps:
@@ -61,75 +61,76 @@ def merge(output_path, input_paths, merge_document_name=None, merge_document_con
 
     :param output_path: Path to file to write merged BEL document
     :param input_paths: List of paths to input BEL document files
-    :param merge_document_name: name for combined document
-    :param merge_document_contact: contact information for combine document
-    :param merge_document_description: description of combine document
+    :param merged_name: name for combined document
+    :param merged_contact: contact information for combine document
+    :param merged_description: description of combine document
     """
     metadata, defs, statements = [], [], []
 
     for input_path in input_paths:
-        with open(os.path.expanduser(input_path)) as f:
-            a, b, c = split_document([line.strip() for line in f])
+        with open(os.path.expanduser(input_path)) as file:
+            a, b, c = split_document([line.strip() for line in file])
             metadata.append(a)
             defs.append(set(b))
             statements.append(c)
 
-    merge_document_contact = merge_document_contact if merge_document_contact is not None else ''
-    merge_document_name = merge_document_name if merge_document_name is not None else 'MERGED DOCUMENT'
-    merge_document_description = merge_document_description if merge_document_description is not None else 'This is a merged document'
+    merged_contact = merged_contact if merged_contact is not None else ''
+    merged_name = merged_name if merged_name is not None else 'MERGED DOCUMENT'
+    merged_description = merged_description if merged_description is not None else 'This is a merged document'
+    merged_author = merged_author if merged_author is not None else ''
 
-    with open(os.path.expanduser(output_path), 'w') as f:
-        for line in make_document_metadata(merge_document_name, merge_document_contact, merge_document_description):
-            print(line, file=f)
+    with open(os.path.expanduser(output_path), 'w') as file:
+        for line in make_document_metadata(merged_name, merged_contact, merged_description,
+                                           merged_author):
+            print(line, file=file)
 
         for line in sorted(set().union(*defs)):
-            print(line, file=f)
+            print(line, file=file)
 
         for md, st in zip(metadata, statements):
-            print(file=f)
+            print(file=file)
 
             for line in md:
-                print('# SUBDOCUMENT {}'.format(line), file=f)
+                print('# SUBDOCUMENT {}'.format(line), file=file)
 
-            print(file=f)
+            print(file=file)
 
             for line in st:
-                print(line, file=f)
+                print(line, file=file)
 
 
-def make_document_metadata(name, contact, description, version=None, copyright=None, authors=None, licenses=None):
+def make_document_metadata(name, contact, description, authors, version=None, copyright=None, licenses=None):
     """Builds a list of lines for the document metadata section of a BEL document
 
-    :param name: The unique name for this BEL document
-    :type name: str
-    :param contact: The email address of the maintainer
-    :type contact: str
-    :param description: A description of the contents of this document
-    :type description: str
-    :param version: The version. Defaults to 1.0.0
-    :type version: str
-    :param copyright: Copyright information about this document
-    :type copyright: str
-    :param authors: The authors of this document
-    :type authors: str
-    :param licenses: The license applied to this document
-    :type licenses: str
+    :param str name: The unique name for this BEL document
+    :param str contact: The email address of the maintainer
+    :param str description: A description of the contents of this document
+    :param str authors: The authors of this document
+    :param str version: The version. Defaults to date in ``YYYYMMDD`` format.
+    :param str copyright: Copyright information about this document
+    :param str licenses: The license applied to this document
     :return: An iterator over the lines for the document metadata section
     :rtype: iter[str]
     """
+    yield '# This document was created by PyBEL v{} on {}\n'.format(get_version(), time.asctime())
+
+    yield '#' * 80
+    yield '# Metadata'
+    yield '#' * 80 + '\n'
+
     yield 'SET DOCUMENT Name = "{}"'.format(name)
-    yield 'SET DOCUMENT Version = "{}"'.format(time.strftime('%Y%m%d') if version is None else version)
     yield 'SET DOCUMENT Description = "{}"'.format(description.replace('\n', ''))
+    yield 'SET DOCUMENT Version = "{}"'.format(version if version else time.strftime('%Y%m%d'))
+    yield 'SET DOCUMENT Authors = "{}"'.format(authors)
     yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
 
-    if licenses is not None:
+    if licenses:
         yield 'SET DOCUMENT License = "{}"'.format(licenses)
 
-    if authors is not None:
-        yield 'SET DOCUMENT Authors = {}'.format(authors)
-
-    if copyright is not None:
+    if copyright:
         yield 'SET DOCUMENT Copyright = "{}"'.format(copyright)
+
+    yield ''
 
 
 def make_document_namespaces(namespace_dict=None, namespace_patterns=None):
@@ -143,13 +144,22 @@ def make_document_namespaces(namespace_dict=None, namespace_patterns=None):
     :rtype: iter[str]
     """
     namespace_dict = default_namespaces if namespace_dict is None else namespace_dict
+    namespace_patterns = default_namespace_patterns if namespace_patterns is None else namespace_patterns
+
+    yield '#' * 80
+    yield '# Namespaces'
+    yield '#' * 80 + '\n'
+    yield '# Enumerated Namespaces\n'
 
     for name, url in sorted(namespace_dict.items(), key=itemgetter(1)):
         yield NAMESPACE_URL_FMT.format(name, url)
 
-    if namespace_patterns:
-        for name, pattern in sorted(namespace_patterns.items()):
-            yield NAMESPACE_PATTERN_FMT.format(name, pattern)
+    yield '\n# Regular Expression Namespaces\n'
+
+    for name, pattern in sorted(namespace_patterns.items()):
+        yield NAMESPACE_PATTERN_FMT.format(name, pattern)
+
+    yield ''
 
 
 def make_document_annotations(annotation_dict=None, annotation_patterns=None):
@@ -164,12 +174,18 @@ def make_document_annotations(annotation_dict=None, annotation_patterns=None):
     """
     annotation_dict = default_annotations if annotation_dict is None else annotation_dict
 
+    yield '#' * 80
+    yield '# Annotations'
+    yield '#' * 80 + '\n'
+
     for name, url in sorted(annotation_dict.items(), key=itemgetter(1)):
         yield ANNOTATION_URL_FMT.format(name, url)
 
     if annotation_patterns:
         for name, pattern in sorted(annotation_patterns.items()):
             yield ANNOTATION_PATTERN_FMT.format(name, pattern)
+
+    yield ''
 
 
 def make_document_statement_group(pmids):
@@ -180,8 +196,13 @@ def make_document_statement_group(pmids):
     :return: An iterator over the lines of the citation section
     :rtype: iter[str]
     """
-    for i, pmid in enumerate(pmids, start=1):
-        yield 'SET STATEMENT_GROUP = "Group {}"\n'.format(i)
+    yield '#' * 80
+    yield '# Statements'
+    yield '#' * 80
+
+    for pmid in set(pmids):
+        yield ''
+
         res = requests.get(title_url_fmt.format(pmid))
         title = res.content.decode('utf-8').strip()
 
@@ -191,10 +212,10 @@ def make_document_statement_group(pmids):
         abstract = res.content.decode('utf-8').strip()
 
         yield evidence_format.format(abstract)
-        yield 'UNSET STATEMENT_GROUP'
+        yield '\nUNSET Evidence\nUNSET Citation'
 
 
-def write_boilerplate(document_name, contact, description, version=None, copyright=None, authors=None,
+def write_boilerplate(document_name, contact, description, authors, version=None, copyright=None,
                       licenses=None, namespace_dict=None, namespace_patterns=None, annotations_dict=None,
                       annotations_patterns=None, pmids=None, file=None):
     """Writes a boilerplate BEL document, with standard document metadata, definitions. Optionally, if a
@@ -206,12 +227,12 @@ def write_boilerplate(document_name, contact, description, version=None, copyrig
     :type contact: str
     :param description: A description of the contents of this document
     :type description: str
+    :param authors: The authors of this document
+    :type authors: str
     :param version: The version. Defaults to current date in format YYYYMMDD.
     :type version: str
     :param copyright: Copyright information about this document
     :type copyright: str
-    :param authors: The authors of this document
-    :type authors: str
     :param licenses: The license applied to this document
     :type licenses: str
     :param file: output stream. If None, defaults to :data:`sys.stdout`
@@ -221,25 +242,31 @@ def write_boilerplate(document_name, contact, description, version=None, copyrig
     :type namespace_patterns: dict[str, str]
     :param annotations_dict: An optional dictionary of {str name: str URL} of annotations
     :type annotations_dict: dict[str, str]
-    :param annotation_patterns: An optional dictionary of {str name: str regex} annotations
-    :type annotation_patterns: dict[str, str]
-    :param pmids: an optional list of PMID's to autopopulate with citation and abstract
+    :param annotations_patterns: An optional dictionary of {str name: str regex} annotations
+    :type annotations_patterns: dict[str, str]
+    :param pmids: an optional list of PMID's to auto-populate with citation and abstract
     :type pmids: iter[str] or iter[int]
     """
-
     file = sys.stdout if file is None else file
 
-    for line in make_document_metadata(document_name, contact, description, version, copyright, authors, licenses):
+    metadata_iter = make_document_metadata(
+        name=document_name,
+        contact=contact,
+        description=description,
+        authors=authors,
+        version=version,
+        copyright=copyright,
+        licenses=licenses
+    )
+
+    for line in metadata_iter:
         print(line, file=file)
-    print('#' * 80, file=file)
 
     for line in make_document_namespaces(namespace_dict, namespace_patterns=namespace_patterns):
         print(line, file=file)
-    print('#' * 80, file=file)
 
     for line in make_document_annotations(annotations_dict, annotation_patterns=annotations_patterns):
         print(line, file=file)
-    print('#' * 80, file=file)
 
     if pmids is not None:
         for line in make_document_statement_group(pmids):

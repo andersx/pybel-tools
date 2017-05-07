@@ -4,6 +4,11 @@
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
 
+{% block styles %}
+    {{ super() }}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
+{% endblock %}
+
 {% block title %}Definitions{% endblock %}
 
 {% block content %}
@@ -11,6 +16,15 @@
         <div class="page-header">
             <h1>Definition Store</h1>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Namespaces</h3>
@@ -18,25 +32,29 @@
             <div class="panel-body">
                 <p>The list below enumerates the cached namespaces.</p>
             </div>
-            <table class="table table-striped">
-                <thead>
-                <tr>
-                    <th>Keyword</th>
-                    <th>Version</th>
-                    <th>URL</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for keyword, version, url in namespaces %}
-                    <tr>
-                        <td>{{ keyword }}</td>
-                        <td>{{ version }}</td>
-                        <td><a href="{{ url }}">{{ url }}</a></td>
-                    </tr>
+            <div class="list-group">
+                {% for namespace in namespaces %}
+                    <div class="list-group-item">
+                        <h4 class="list-group-item-heading">{{ namespace.name }}
+                            <small class="text-muted">{{ namespace.version }}</small>
+                        </h4>
+                        <div class="list-group-item-text">
+                            <dl class="dl-horizontal">
+                                <dt>Keyword</dt>
+                                <dd>{{ namespace.keyword }}</dd>
+                                <dt>URL</dt>
+                                <dd><a href="{{ namespace.url }}">{{ namespace.url }}</a></dd>
+                                {% if namespace.description is not none %}
+                                    <dt>Description</dt>
+                                    <dd>{{ namespace.description }}</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
                 {% endfor %}
-                </tbody>
-            </table>
+            </div>
         </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Annotations</h3>
@@ -44,24 +62,27 @@
             <div class="panel-body">
                 <p>The list below enumerates the cached annotations.</p>
             </div>
-            <table class="table table-striped">
-                <thead>
-                <tr>
-                    <th>Keyword</th>
-                    <th>Version</th>
-                    <th>URL</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for keyword, version, url in annotations %}
-                    <tr>
-                        <td>{{ keyword }}</td>
-                        <td>{{ version }}</td>
-                        <td><a href="{{ url }}">{{ url }}</a></td>
-                    </tr>
+            <div class="list-group">
+                {% for annotation in annotations %}
+                    <div class="list-group-item">
+                        <h4 class="list-group-item-heading">{{ annotation.name }}
+                            <small class="text-muted">{{ annotation.version }}</small>
+                        </h4>
+                        <div class="list-group-item-text">
+                            <dl class="dl-horizontal">
+                                <dt>Keyword</dt>
+                                <dd>{{ annotation.keyword }}</dd>
+                                <dt>URL</dt>
+                                <dd><a href="{{ annotation.url }}">{{ annotation.url }}</a></dd>
+                                {% if annotation.description is not none %}
+                                    <dt>Description</dt>
+                                    <dd>{{ annotation.description }}</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
                 {% endfor %}
-                </tbody>
-            </table>
+            </div>
         </div>
     </div>
 {% endblock %}

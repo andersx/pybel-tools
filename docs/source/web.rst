@@ -5,6 +5,15 @@ Running from the Command Line
 -----------------------------
 PyBEL Tools deploys a Flask web application that allows you to interact with your networks and apply filters/algorithms.
 
+1. Add GitHub login information to your environment variables
+
+.. code-block:: sh
+
+    $ export PYBEL_GITHUB_CLIENT_ID="..."
+    $ export PYBEL_GITHUB_CLIENT_SECRET="..."
+
+2. Run the command line script
+
 Multiple services are available. Use :code:`--help` for a description. To run the web services, type:
 
 .. code-block:: sh

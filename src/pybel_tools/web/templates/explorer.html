@@ -4,7 +4,7 @@
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
 
-{% block title %}Networks{% endblock %}
+{% block title %}Explorer{% endblock %}
 
 {% block styles %}
     {{ super() }}
@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='js/d3-context-menu/css/d3-context-menu.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/graph.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/legend.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
 {% endblock %}
 
 {% block head %}
@@ -61,8 +62,33 @@
 {% block content %}
     <div class="container">
         <div class="page-header">
+
             <h1 id="network-name">Biological Network Explorer</h1>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#info-graph">
+                    Help
+                </button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#paths">
+                    Path Search
+                </button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#algorithms">
+                    Algorithms
+                </button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#export">
+                    Export
+                </button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#controls">
+                    Controls
+                </button>
+            </div>
+        </div>
+
         <div class="row"><!-- visualization row -->
             <div class="col-lg-8">
                 <div id="graph-chart"></div>
@@ -87,16 +113,21 @@
                 </ul>
                 <!-- Tab panes -->
                 <div class="tab-content">
-                    <div class="tab-pane active" id="tree-panel" role="tabpanel"
-                         style="max-height: 509px;height: 509px; overflow:auto;">
-                        <div id="tree"></div>
+                    <div class="tab-pane active" id="tree-panel" role="tabpanel">
+                        <button type="button" id="submit-button" class="btn btn-primary not-rounded">
+                            Refresh Network
+                        </button>
+                        <input placeholder="Annotation search" id="tree-search"
+                               class="wide form-control not-rounded"
+                               aria-describedby="sizing-addon1" type="text"/>
+                        <div id="tree" style="max-height: 509px;height: 509px; overflow:auto;"></div>
                     </div>
                     <div class="tab-pane not-rounded" id="nodes-panel" role="tabpanel">
                         <button class='btn btn-primary not-rounded' id='get-checked-nodes'>Show Selected Nodes</button>
                         <div class="input-group">
                                         <span class="input-group-addon not-rounded2" id="sizing-addon"><i
                                                 class="fa fa-connectdevelop fa-0.5x"></i></span>
-                            <input placeholder="Search Nodes" id="node-search"
+                            <input placeholder="Search nodes" id="node-search"
                                    class="wide form-control not-rounded"
                                    aria-describedby="sizing-addon1" type="text"/>
                         </div>
@@ -108,7 +139,7 @@
                         <div class="input-group">
                                         <span class="input-group-addon not-rounded2" id="sizing-addon"><i
                                                 class="fa fa-connectdevelop fa-0.5x"></i></span>
-                            <input placeholder="Search Edged" id="edge-search"
+                            <input placeholder="Search edges" id="edge-search"
                                    class="wide form-control not-rounded"
                                    aria-describedby="sizing-addon1" type="text"/>
                         </div>
@@ -116,36 +147,9 @@
                              style="max-height: 434px;height: 434px; overflow:auto;"></div>
                     </div>
                 </div>
+
             </div><!-- visualization row -->
         </div>
-        <div class="row"><!-- button row -->
-            <div class="col-lg-8">
-                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
-                        data-target="#info-graph">
-                    Help
-                </button>
-                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#legend">
-                    Legend
-                </button>
-                <button type="button" class="btn btn-primary button-padding" data-toggle="modal" data-target="#paths">
-                    Path Search
-                </button>
-                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
-                        data-target="#algorithms">
-                    Algorithms
-                </button>
-                <button type="button" class="btn btn-primary button-padding" data-toggle="modal"
-                        data-target="#export">
-                    Export
-                </button>
-
-            </div>
-            <div class="col-lg-4">
-                <button type="button" id="submit-button" class="btn btn-primary button-padding">
-                    Refresh Network
-                </button>
-            </div>
-        </div><!-- button row -->
         <div class="row">
             <div class="col-lg-12">
                 <table id="info-table" class="table table-bordered table-hover">
@@ -218,32 +222,6 @@
                             </table>
                         </div>
                     </div>
-                </div><!-- /.Modal body -->
-                <div class="modal-footer">
-                    <button type="button" id="hide_node_names" class="btn btn-info">Hide labels
-                    </button>
-                    <button type="button" id="restore_node_names" class="btn btn-info">Restore labels
-                    </button>
-                    <button type="button" id="restore" class="btn btn-info">Restore all labels
-                    </button>
-                    <button class="btn btn-default" data-dismiss="modal" type="button">
-                        Close
-                    </button>
-                </div>
-            </div><!-- /.Modal content -->
-        </div><!-- /.Modal dialog -->
-    </div><!-- /.info-graph Modal -->
-
-    <div id="legend" aria-hidden="true" style="display: none;" class="modal fade"><!-- /.Legend Modal -->
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title">Legend</h4>
-                </div> <!-- .modal-header -->
-                <div class="modal-body">
                     <div id="accordion" role="tablist" aria-multiselectable="true">
                         <div class="card">
                             <div class="card-header center" role="tab" id="headingOne">
@@ -424,23 +402,18 @@
                             </div>
                         </div>
                     </div>
-                    <!-- .panel.panel-default -->
-                </div>
-                <!-- #accordian.panel-group -->
+                </div><!-- /.Modal body -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">
                         Close
                     </button>
-                </div><!-- .modal-footer -->
-            </div>
-            <!-- .modal-body -->
-
-
-        </div><!-- .modal-content -->
-    </div>
+                </div>
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.info-graph Modal -->
 
     <div id="paths" class="modal fade"><!-- /paths Modal -->
-        <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
+        <div class="modal-dialog"><!-- /.Modal dialog -->
             <div class="modal-content"><!-- /.Modal content -->
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
@@ -449,49 +422,65 @@
                     <h4 class="modal-title">Path Mining</h4>
                 </div>
                 <div class="modal-body"><!-- /.Modal body -->
-                    <h4>Path Search</h4>
                     <p>Highlight paths between two nodes</p>
                     <form id="path-form" class="form-horizontal" method="get">
 
-                        <div class="input-group col-lg-6">
-                            <input type="text" class="form-control" placeholder="Source node" name="source"
-                                   id="source-node">
-                            <span class="input-group-addon">
-                                <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
-                                </span>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="source-node">Source Node</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="source-node" name="source"
+                                       placeholder="Source node"/>
+                            </div>
                         </div>
 
-                        <div class="input-group col-lg-6">
-                            <input type="text" class="form-control" placeholder="Target node" name="target"
-                                   id="target-node">
-                            <span class="input-group-addon">
-                            <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
-                                </span>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="target-node">Target Node</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="target-node" name="target"
+                                       placeholder="Target node"/>
+                            </div>
                         </div>
 
-                        <div class="input-group">
-                            <label>
-                                <input type="radio" name="paths_method" value="shortest" checked> Shortest path<br>
-                                <input type="radio" name="paths_method" value="all"> All paths<br>
-                            </label>
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <label class="radio-inline">
+                                    <input type="radio" name="paths_method" value="shortest" checked> Shortest path
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="paths_method" value="all"> All paths<br>
+                                </label>
+                            </div>
                         </div>
 
-                        <div class="input-group">
-                            <label>
-                                <input type="checkbox" name="visualization-options" value="hide">
-                                Hide Other Nodes
-                                <input type="checkbox" name="undirectionalize" value="undirected">
-                                Remove Directionality
-                            </label>
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="visualization-options" value="hide">
+                                        Hide Other Nodes
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="undirectionalize" value="undirected" checked>
+                                        Remove Directionality
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <input type="button" id="button-paths" value="Submit"/>
+
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <input type="button" class="btn btn-primary" id="button-paths" value="Submit"
+                                       data-dismiss="modal"/>
+                            </div>
                         </div>
+
                     </form>
                 </div><!-- /.Modal body -->
 
                 <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
 
             </div><!-- /.Modal content -->
@@ -499,7 +488,7 @@
     </div><!-- /.paths Modal -->
 
     <div id="algorithms" class="modal fade"><!-- /Algorithms Modal -->
-        <div class="modal-dialog modal-lg"><!-- /.Modal dialog -->
+        <div class="modal-dialog"><!-- /.Modal dialog -->
             <div class="modal-content"><!-- /.Modal content -->
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
@@ -511,26 +500,31 @@
                     <p>Visualize top nodes according to betweenness centrality</p>
                     <form id="betweenness-centrality" method="get">
                         <div class="input-group">
-                            <input placeholder="Number of nodes" name="betweenness" id="betweenness" type="text"/>
-                        </div>
-                        <div class="buttons">
-                            <input type="button" id="betweenness-button" value="Submit"/>
+                            <input type="text" class="form-control" placeholder="Number of nodes" name="betweenness"
+                                   id="betweenness"/>
+                            <span class="input-group-btn">
+                            <input type="button" class="btn btn-primary" id="betweenness-button" value="Submit"
+                                   data-dismiss="modal"/>
+                            </span>
                         </div>
                     </form>
                     <hr>
-                    <p>Visualize significantly dysregulated nodes according to Network Perturbation Analysis (NPA) from
-                        an already loaded experiment</p>
+                    <p>Visualize significantly disregulated nodes according to Candidate Mechanism Perturbation
+                        Amplitude (CMPA) from a previously loaded <a
+                                href="{{ url_for('view_analyses') }}">experiment</a>.</p>
                     <form id="npa-form" method="get">
                         <div class="input-group">
-                            <input placeholder="Experiment ID" name="analysis_id" id="analysis_id" type="text"/>
-                        </div>
-                        <div class="buttons">
-                            <input type="button" id="npa-button" value="Submit"/>
+                            <input type="text" class="form-control" placeholder="Experiment identifier"
+                                   name="analysis_id" id="analysis_id"/>
+                            <span class="input-group-btn">
+                                <input type="button" class="btn btn-primary" id="npa-button" value="Submit"
+                                       data-dismiss="modal"/>
+                            </span>
                         </div>
                     </form>
                 </div><!-- /.Modal body -->
                 <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div><!-- /.Modal content -->
         </div><!-- /.Modal dialog -->
@@ -550,55 +544,68 @@
                         <thead>
                         <tr>
                             <th>Format</th>
-                            <th>Download</th>
+                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td>Network to SVG</td>
+                            <td>Save current explorer window as a SVG image</td>
                             <td>
-                                <button type="button" id="save-svg-graph" class="btn btn-primary"
+                                <button type="button" id="save-svg-graph" class="btn btn-default"
                                         aria-label="Left Align">
                                     <i class="fa fa-file-image-o"></i></button>
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to BEL</td>
+                            <td>Save as a BEL script</td>
                             <td>
-                                <button type="button" id="bel-button" class="btn btn-primary" aria-label="Left Align">
+                                <button type="button" id="bel-button" class="btn btn-default" aria-label="Left Align">
                                     <img alt="BEL-logo" id="bel-logo"
                                          src="{{ url_for('static', filename='img/bel300x.png') }}"></button>
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to <a href="http://graphml.graphdrawing.org/">GraphML</a></td>
+                            <td>Save as <a href="http://graphml.graphdrawing.org/">GraphML</a> for use in Cytoscape</td>
                             <td>
-                                <button type="button" id="graphml-button" class="btn btn-primary"
-                                        aria-label="Left Align">GraphML
+                                <button type="button" id="graphml-button" class="btn btn-default"
+                                        aria-label="Left Align"><span class="glyphicon glyphicon-download"
+                                                                      aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to CSV</td>
+                            <td>Save as CSV for import in Microsoft Excel</td>
                             <td>
-                                <button type="button" id="csv-button" class="btn btn-primary"
-                                        aria-label="Left Align">CSV
+                                <button type="button" id="csv-button" class="btn btn-default" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Save as <a href="http://www.home.ndexbio.org/data-model/">CX</a> JSON for use with the
+                                <a href="http://ndexbio.org/">Network Data Exchange</a></td>
+                            <td>
+                                <button type="button" id="cx-button" class="btn btn-default" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to Bytes</td>
+                            <td>Save as Nodelink JSON for custom visualization using <a href="https://d3js.org/">D3</a>
+                            </td>
                             <td>
-                                <button type="button" id="bytes-button" class="btn btn-primary"
-                                        aria-label="Left Align">Bytes
+                                <button type="button" id="nodelink-button" class="btn btn-default"
+                                        aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>
                         <tr>
-                            <td>Network to <a href="http://www.home.ndexbio.org/data-model/">CX</a></td>
+                            <td>Save as a pre-compiled gpickle for programmatic use</td>
                             <td>
-                                <button type="button" id="cx-button" class="btn btn-primary"
-                                        aria-label="Left Align">CX
+                                <button type="button" id="bytes-button" class="btn btn-default" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>
@@ -606,11 +613,84 @@
                     </table>
                 </div><!-- /.Modal body -->
                 <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal" type="button">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
                         Close
                     </button>
                 </div>
             </div><!-- /.Modal content -->
         </div><!-- /.Modal dialog -->
     </div><!-- /.export-graph Modal -->
+
+    <div id="controls" class="modal fade"><!-- /.info-graph Modal -->
+        <div class="modal-dialog"><!-- /.Modal dialog -->
+            <div class="modal-content"><!-- /.Modal content -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Controls</h4>
+                </div>
+                <div class="modal-body text-left"><!-- /.Modal body -->
+                    <div class="center-table">
+                        <div class="table-wrapper">
+                            <table class="table table-responsive">
+                                <thead>
+                                <tr>
+                                    <th><b>Button</b></th>
+                                    <th><b>Action</b></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="hide_node_names" class="btn btn-info">Hide text
+                                        </button>
+                                    </td>
+                                    <td>Hide node names</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="restore_node_names" class="btn btn-info">Restore
+                                            labels
+                                        </button>
+                                    </td>
+                                    <td>Restore node names</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="restore" class="btn btn-info">Restore all
+                                        </button>
+                                    </td>
+                                    <td>Restore node names and edge colors</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="reset_globals" class="btn btn-info">Reset globals
+                                        </button>
+                                    </td>
+                                    <td>Reset
+                                        expand/remove nodes global variables
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="reset_all" class="btn btn-info">Reset all
+                                        </button>
+                                    </td>
+                                    <td>Reset to original network
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- /.Modal body -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.info-graph Modal -->
 {% endblock %}
