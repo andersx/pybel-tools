@@ -37,10 +37,13 @@
                     <thead>
                     <tr>
                         <th></th>
-                        <th>Network Name</th>
-                        <th>Network Version</th>
+                        <th>Network</th>
+                        <th>Version</th>
+                        <th>Nodes</th>
+                        <th>Edges</th>
+                        <th>Warnings</th>
                         <th>Uploader</th>
-                        <th>Upload Method</th>
+                        <th>Format</th>
                         <th>Time</th>
                     </tr>
                     </thead>
@@ -54,9 +57,12 @@
                             </td>
                             <td>{{ report.network.name }}</td>
                             <td>{{ report.network.version }}</td>
+                            <td>{{ report.number_nodes }}</td>
+                            <td>{{ report.number_edges }}</td>
+                            <td>{{ report.number_warnings }}</td>
                             <td>{{ report.name }} ({{ report.username }})</td>
                             <td>{{ 'Pickle' if report.precompiled else 'BEL' }}</td>
-                            <td>{{ report.created }}</td>
+                            <td>{{ report.created.strftime('%Y-%m-%d %H:%M') }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
