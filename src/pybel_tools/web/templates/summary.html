@@ -59,20 +59,17 @@
             </div>
             <div class="panel-body">
                 <dl class="dl-horizontal">
-                    {% for key, value in graph.document.items() %}
-                        <dt>{{ key }}</dt>
-                        <dd>{{ value }}</dd>
-                    {% endfor %}
+                    <dt>Authors</dt>
+                    <dd>{{ graph.document['authors'] }}</dd>
+                    <dt>Contact</dt>
+                    <dd>{{ graph.document['contact'] }}</dd>
+                    <dt>Description</dt>
+                    <dd>{{ graph.description }}</dd>
+                    <dt>License</dt>
+                    <dd>{{ graph.document['licenses'] }}</dd>
+                    <dt>Copyright</dt>
+                    <dd>{{ graph.document['copyright'] }}</dd>
                 </dl>
-
-                <!-- These are still broken...
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='bytes') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Pickle</a>
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='graphml') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> GraphML</a>
-                <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='csv') }}"
-                   role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Excel</a>
-                 -->
             </div>
         </div>
 
@@ -302,7 +299,7 @@
         {% endif %}
 
         {% if contradictions is defined and contradictions|length > 0 %}
-            <div class="panel panel-warning">
+            <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Contradictory Edges</h3>
                 </div>

@@ -66,9 +66,11 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
             flash("Resource doesn't exist.", category='error')
             return render_error(e)
         except InconsistientDefinitionError as e:
+            log.error('%s was defined multiple times', e.definition)
             flash('{} was defined multiple times.'.format(e.definition), category='error')
             return redirect(url_for('view_compile'))
         except Exception as e:
+            log.exception('compilation error')
             flash('Compilation error: {}'.format(e))
             return redirect(url_for('view_compile'))
 
@@ -81,17 +83,18 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
 
         try:
             network = manager.insert_graph(graph, store_parts=form.save_edge_store.data)
-        except IntegrityError as e:
+        except IntegrityError:
+            log.exception('integrity error')
             flash(integrity_message.format(graph.name, graph.version), category='error')
             manager.rollback()
             return redirect(url_for('view_compile'))
         except Exception as e:
-            flash("Error storing in database: {}".format(e), category='error')
             log.exception('general storage error')
+            flash("Error storing in database: {}".format(e), category='error')
             return redirect(url_for('view_compile'))
 
         log.info('done storing %s [%d]', form.file.data.filename, network.id)
-        reporting_log.info('%s (%s) compiled %s v%s with %d nodes, %d edges, and %d warnings)', current_user.name,
+        reporting_log.info('%s (%s) compiled %s v%s with %d nodes, %d edges, and %d warnings', current_user.name,
                            current_user.username, graph.name, graph.version, graph.number_of_nodes(),
                            graph.number_of_edges(), len(graph.warnings))
 
