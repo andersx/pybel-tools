@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 import pybel
 from .constants import integrity_message, reporting_log
 from .forms import UploadForm
+from .models import add_network_reporting
 
 log = logging.getLogger(__name__)
 
@@ -55,9 +56,8 @@ def build_pickle_uploader_service(app, manager):
             return redirect(url_for('view_upload'))
 
         log.info('done uploading %s [%d]', form.file.data.filename, network.id)
-        reporting_log.info('%s (%s) uploaded %s v%s with %d nodes, %d edges, and %d warnings', current_user.name,
-                           current_user.username, graph.name, graph.version, graph.number_of_nodes(),
-                           graph.number_of_edges(), len(graph.warnings))
+        add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(),
+                              graph.number_of_edges(), len(graph.warnings), precompiled=True)
 
         return redirect(url_for('view_summary', graph_id=network.id))
 

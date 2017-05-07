@@ -1,0 +1,69 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
+{% endblock %}
+
+{% block title %}Reporting{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>Reporting</h1>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Upload Reports</h3>
+            </div>
+            <div class="panel-body">
+                <p>The history of compilations and uploads provides insight to curation activities.</p>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Network Name</th>
+                        <th>Network Version</th>
+                        <th>Uploader</th>
+                        <th>Upload Method</th>
+                        <th>Time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('view_summary', graph_id=report.network.id) }}"><span
+                                        class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
+                                <!--<a href="{{ url_for('view_reports', network_name=report.network.name) }}"><span class="glyphicon glyphicon-glass" aria-hidden="true"></span></a>-->
+                            </td>
+                            <td>{{ report.network.name }}</td>
+                            <td>{{ report.network.version }}</td>
+                            <td>{{ report.name }} ({{ report.username }})</td>
+                            <td>{{ 'Pickle' if report.precompiled else 'BEL' }}</td>
+                            <td>{{ report.created }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+

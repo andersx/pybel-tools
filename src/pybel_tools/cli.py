@@ -43,6 +43,7 @@ from .web.dict_service import build_dictionary_service
 from .web.login_service import build_login_service
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
+from .web.reporting_service import build_reporting_service
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
 from .web.utils import get_app
@@ -261,6 +262,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     build_pickle_uploader_service(app, manager=manager)
     build_analysis_service(app, manager=manager, api=api)
     build_boilerplate_service(app)
+    build_reporting_service(app, manager=manager)
 
     if run_database_service:
         build_database_service(app, manager)

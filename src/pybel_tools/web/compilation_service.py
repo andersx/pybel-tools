@@ -18,6 +18,7 @@ from .constants import integrity_message, reporting_log
 from .forms import CompileForm
 from .utils import render_graph_summary
 from ..mutation.metadata import add_canonical_names
+from .models import add_network_reporting
 
 log = logging.getLogger(__name__)
 
@@ -94,9 +95,7 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
             return redirect(url_for('view_compile'))
 
         log.info('done storing %s [%d]', form.file.data.filename, network.id)
-        reporting_log.info('%s (%s) compiled %s v%s with %d nodes, %d edges, and %d warnings', current_user.name,
-                           current_user.username, graph.name, graph.version, graph.number_of_nodes(),
-                           graph.number_of_edges(), len(graph.warnings))
+        add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(), graph.number_of_edges(), len(graph.warnings), precompiled=False)
 
         return redirect(url_for('view_summary', graph_id=network.id))
 
