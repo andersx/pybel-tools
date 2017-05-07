@@ -32,25 +32,20 @@
             <div class="panel-body">
                 <p>The list below enumerates the cached namespaces.</p>
             </div>
-            <table class="table table-striped">
-                <thead>
-                <tr>
-                    <th>Keyword</th>
-                    <th>Version</th>
-                    <th>URL</th>
-                </tr>
-                </thead>
-                <tbody>
+            <div class="list-group">
                 {% for keyword, version, url in namespaces %}
-                    <tr>
-                        <td>{{ keyword }}</td>
-                        <td>{{ version }}</td>
-                        <td><a href="{{ url }}">{{ url }}</a></td>
-                    </tr>
+                    <div class="list-group-item">
+                        <h4 class="list-group-item-heading">{{ keyword }}
+                            <small class="text-muted">{{ version }}</small>
+                        </h4>
+                        <div class="list-group-item-text">
+                            <a href="{{ url }}">{{ url }}</a>
+                        </div>
+                    </div>
                 {% endfor %}
-                </tbody>
-            </table>
+            </div>
         </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Annotations</h3>
@@ -58,24 +53,18 @@
             <div class="panel-body">
                 <p>The list below enumerates the cached annotations.</p>
             </div>
-            <table class="table table-striped">
-                <thead>
-                <tr>
-                    <th>Keyword</th>
-                    <th>Version</th>
-                    <th>URL</th>
-                </tr>
-                </thead>
-                <tbody>
+            <div class="list-group">
                 {% for keyword, version, url in annotations %}
-                    <tr>
-                        <td>{{ keyword }}</td>
-                        <td>{{ version }}</td>
-                        <td><a href="{{ url }}">{{ url }}</a></td>
-                    </tr>
+                    <div class="list-group-item">
+                        <h4 class="list-group-item-heading">{{ keyword }}
+                            <small class="text-muted">{{ version }}</small>
+                        </h4>
+                        <div class="list-group-item-text">
+                            <a href="{{ url }}">{{ url }}</a>
+                        </div>
+                    </div>
                 {% endfor %}
-                </tbody>
-            </table>
+            </div>
         </div>
     </div>
 {% endblock %}
