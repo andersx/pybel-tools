@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import csv
-import datetime
 import logging
 import pickle
 import time
@@ -12,14 +11,13 @@ import pandas
 from flask import render_template, redirect, url_for, jsonify, make_response
 from flask_login import login_required, current_user
 from six import StringIO
-from sqlalchemy import Column, Integer, DateTime, Binary, Text, ForeignKey, String
-from sqlalchemy.orm import relationship
 
 import pybel
 from pybel.constants import GENE
-from pybel.manager.models import Base, Network, NETWORK_TABLE_NAME
+from pybel.manager.models import Network
 from .dict_service import get_graph_from_request
 from .forms import DifferentialGeneExpressionForm
+from .models import Experiment
 from .. import generation
 from ..analysis import npa
 from ..analysis.npa import RESULT_LABELS
@@ -29,36 +27,7 @@ from ..mutation.collapse import collapse_variants_to_genes, collapse_by_central_
 
 log = logging.getLogger(__name__)
 
-PYBEL_EXPERIMENT_TABLE_NAME = 'pybel_experiment'
-PYBEL_EXPERIMENT_ENTRY_TABLE_NAME = 'pybel_experiment_entry'
-
 LABEL = 'dgxa'
-
-
-class Experiment(Base):
-    """Represents a Candidate Mechanism Perturbation Amplitude experiment run in PyBEL Web"""
-    __tablename__ = PYBEL_EXPERIMENT_TABLE_NAME
-
-    id = Column(Integer, primary_key=True)
-
-    created = Column(DateTime, default=datetime.datetime.utcnow, doc='The date on which this analysis was run')
-    description = Column(Text, nullable=True, doc='A description of the purpose of the analysis')
-    permutations = Column(Integer, doc='Number of permutations performed')
-    source_name = Column(Text, doc='The name of the source file')
-    source = Column(Binary, doc='The source document holding the data')
-    result = Column(Binary, doc='The result python dictionary')
-
-    user_id = Column(Integer)
-    name = Column(String(255))
-    username = Column(String(255))
-
-    network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)))
-    network = relationship('Network', foreign_keys=[network_id])
-
-    @property
-    def data(self):
-        """Get unpickled data"""
-        return pickle.loads(self.result)
 
 
 def build_analysis_service(app, manager, api):
