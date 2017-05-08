@@ -197,10 +197,6 @@ def make_document_statement_group(pmids):
     :return: An iterator over the lines of the citation section
     :rtype: iter[str]
     """
-    yield '#' * 80
-    yield '# Statements'
-    yield '#' * 80
-
     for pmid in set(pmids):
         yield ''
 
@@ -268,6 +264,10 @@ def write_boilerplate(document_name, contact, description, authors, version=None
 
     for line in make_document_annotations(annotations_dict, annotation_patterns=annotations_patterns):
         print(line, file=file)
+
+    print('#' * 80, file=file)
+    print('# Statements', file=file)
+    print('#' * 80 + '\n', file=file)
 
     if pmids is not None:
         for line in make_document_statement_group(pmids):
