@@ -154,12 +154,13 @@ def make_document_namespaces(namespace_dict=None, namespace_patterns=None):
     for name, url in sorted(namespace_dict.items(), key=itemgetter(1)):
         yield NAMESPACE_URL_FMT.format(name, url)
 
-    yield '\n# Regular Expression Namespaces\n'
+    if namespace_patterns:
+        yield '\n# Regular Expression Namespaces\n'
 
-    for name, pattern in sorted(namespace_patterns.items()):
-        yield NAMESPACE_PATTERN_FMT.format(name, pattern)
+        for name, pattern in sorted(namespace_patterns.items()):
+            yield NAMESPACE_PATTERN_FMT.format(name, pattern)
 
-    yield ''
+        yield ''
 
 
 def make_document_annotations(annotation_dict=None, annotation_patterns=None):
