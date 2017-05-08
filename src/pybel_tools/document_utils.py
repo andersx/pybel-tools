@@ -160,7 +160,7 @@ def make_document_namespaces(namespace_dict=None, namespace_patterns=None):
         for name, pattern in sorted(namespace_patterns.items()):
             yield NAMESPACE_PATTERN_FMT.format(name, pattern)
 
-        yield ''
+    yield ''
 
 
 def make_document_annotations(annotation_dict=None, annotation_patterns=None):
