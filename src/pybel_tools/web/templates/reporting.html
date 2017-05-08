@@ -49,7 +49,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for report in reports %}
+                    {% for report in reports if report.network is not none %}
                         <tr>
                             <td>{{ report.network.id }}</td>
                             <td>
