@@ -101,19 +101,22 @@ def plot_summary(graph, plt, **kwargs):
 def info_list(graph):
     """Returns useful information about the graph as a list of tuples
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :rtype: list
     """
     number_nodes = graph.number_of_nodes()
-    return [
-        ('Number of nodes', number_nodes),
-        ('Number of edges', graph.number_of_edges()),
+    result = [
+        ('Nodes', number_nodes),
+        ('Edges', graph.number_of_edges()),
         ('Network density', nx.density(graph)),
         ('Number weakly connected components', nx.number_weakly_connected_components(graph)),
-        ('Average in-degree', sum(graph.in_degree().values()) / float(number_nodes)),
-        ('Average out-degree', sum(graph.out_degree().values()) / float(number_nodes)),
+        ('Average degree', sum(graph.in_degree().values()) / float(number_nodes)),
     ]
+
+    if graph.warnings:
+        result.append(('Compilation warnings', len(graph.warnings)))
+
+    return result
 
 
 def info_json(graph):
