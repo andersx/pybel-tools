@@ -840,7 +840,7 @@ function initD3Force(graph, tree) {
         .attr("class", "node-name")
         // .attr("id", nodehashes[d])
         .attr("fill", "black")
-        .attr("dx", 12)
+        .attr("dx", 16)
         .attr("dy", ".35em")
         .text(function (d) {
             return d.cname
