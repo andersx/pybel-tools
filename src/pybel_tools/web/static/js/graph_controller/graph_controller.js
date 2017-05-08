@@ -185,7 +185,7 @@ function renderNetwork(tree) {
         initD3Force(data, tree);
     });
 
-    window.history.pushState("BiNE", "BiNE", "/explore/?" + renderParameters);
+    window.history.pushState("BiNE", "BiNE", "/explore?" + renderParameters);
 }
 
 function doAjaxCall(url) {
@@ -321,14 +321,14 @@ $(document).ready(function () {
         window.expandNodes = [];
         window.deleteNodes = [];
         var args = getDefaultAjaxParameters(tree);
-        window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
+        window.history.pushState("BiNE", "BiNE", "/explore?" + $.param(args, true));
     });
 
     // Comes back to the network id originally choosen
     $("#reset_all").on("click", function () {
         var args = {};
         args["graphid"] = window.networkID;
-        window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
+        window.history.pushState("BiNE", "BiNE", "/explore?" + $.param(args, true));
     });
 });
 
@@ -506,7 +506,7 @@ function initD3Force(graph, tree) {
 
                     initD3Force(data["json"], tree);
 
-                    window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
+                    window.history.pushState("BiNE", "BiNE", "/explore?" + node_param);
 
                 });
             },
@@ -535,7 +535,7 @@ function initD3Force(graph, tree) {
 
                     initD3Force(data["json"], tree);
 
-                    window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
+                    window.history.pushState("BiNE", "BiNE", "/explore?" + node_param);
 
                 });
 
