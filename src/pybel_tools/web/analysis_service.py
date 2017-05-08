@@ -10,9 +10,9 @@ from operator import itemgetter
 import flask
 import pandas
 from flask import render_template, redirect, url_for, jsonify, make_response
-from flask_login import login_required
+from flask_login import login_required, current_user
 from six import StringIO
-from sqlalchemy import Column, Integer, DateTime, Binary, Text, ForeignKey
+from sqlalchemy import Column, Integer, DateTime, Binary, Text, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 import pybel
@@ -48,6 +48,9 @@ class Experiment(Base):
     source = Column(Binary, doc='The source document holding the data')
     result = Column(Binary, doc='The result python dictionary')
 
+    user_id = Column(Integer)
+    username = Column(String(255))
+
     network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)))
     network = relationship('Network', foreign_keys=[network_id])
 
@@ -77,7 +80,7 @@ def build_analysis_service(app, manager, api):
             experiment_query = experiment_query.filter(Experiment.network_id == network_id)
 
         experiments = experiment_query.all()
-        return render_template('analysis_list.html', experiments=experiments)
+        return render_template('analysis_list.html', experiments=experiments, current_user=current_user)
 
     @app.route('/analysis/results/<int:analysis_id>')
     def view_analysis_results(analysis_id):
@@ -87,8 +90,21 @@ def build_analysis_service(app, manager, api):
             'analysis_results.html',
             experiment=experiment,
             columns=npa.RESULT_LABELS,
-            data=sorted([(k, v) for k, v in experiment.data.items() if v[0]], key=itemgetter(1))
+            data=sorted([(k, v) for k, v in experiment.data.items() if v[0]], key=itemgetter(1)),
+            current_user=current_user
         )
+
+    @app.route('/analysis/results/<int:analysis_id>/drop')
+    @login_required
+    def delete_analysis_results(analysis_id):
+        """Drops an analysis"""
+        if not current_user.admin:
+            flask.abort(403)
+
+        manager.session.query(Experiment).get(analysis_id).delete()
+        manager.session.commit()
+        flask.flash('Dropped Experiment #{}'.format(analysis_id))
+        return redirect(url_for('view_analyses'))
 
     @app.route('/analysis/upload/<int:network_id>', methods=('GET', 'POST'))
     @login_required
@@ -140,6 +156,8 @@ def build_analysis_service(app, manager, api):
             source=pickle.dumps(df),
             result=pickle.dumps(scores),
             permutations=form.permutations.data,
+            user_id=current_user.github_id,
+            username=current_user.username,
         )
         experiment.network = network
 
@@ -147,8 +165,6 @@ def build_analysis_service(app, manager, api):
         manager.session.commit()
 
         return redirect(url_for('view_analysis_results', analysis_id=experiment.id))
-
-    log.info('Added analysis service to %s', app)
 
     @app.route('/api/analysis/<analysis_id>')
     def get_analysis(analysis_id):
@@ -186,3 +202,5 @@ def build_analysis_service(app, manager, api):
         output.headers["Content-Disposition"] = "attachment; filename=cmpa_{}.csv".format(analysis_id)
         output.headers["Content-type"] = "text/csv"
         return output
+
+    log.info('Added analysis service to %s', app)
