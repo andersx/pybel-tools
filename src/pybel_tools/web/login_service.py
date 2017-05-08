@@ -25,14 +25,14 @@ class User(UserMixin):
         info = get_github_info(github_access_token)
         self.username = info['login']
         self.name = info['name']
-        self.github_id = info['id']
+        self.user_id = int(info['id'])
 
     def __repr__(self):
         return self.id
 
     @property
     def admin(self):
-        return self.github_id in administrator_ids or self.username in administrator_usernames
+        return self.user_id in administrator_ids or self.username in administrator_usernames
 
 
 def build_login_service(app, strict_login=False):

@@ -97,7 +97,7 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
         log.info('done storing %s [%d]', form.file.data.filename, network.id)
 
         try:
-            add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(),
+            add_network_reporting(manager, network, current_user, graph.number_of_nodes(),
                                   graph.number_of_edges(), len(graph.warnings), precompiled=False)
         except IntegrityError:
             log.exception('integrity error')

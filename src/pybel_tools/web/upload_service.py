@@ -58,7 +58,7 @@ def build_pickle_uploader_service(app, manager):
         log.info('done uploading %s [%d]', form.file.data.filename, network.id)
 
         try:
-            add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(),
+            add_network_reporting(manager, network, current_user, graph.number_of_nodes(),
                                   graph.number_of_edges(), len(graph.warnings), precompiled=True)
         except IntegrityError:
             log.exception('integrity error')

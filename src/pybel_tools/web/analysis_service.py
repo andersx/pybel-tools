@@ -49,6 +49,7 @@ class Experiment(Base):
     result = Column(Binary, doc='The result python dictionary')
 
     user_id = Column(Integer)
+    name = Column(String(255))
     username = Column(String(255))
 
     network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)))
@@ -156,7 +157,8 @@ def build_analysis_service(app, manager, api):
             source=pickle.dumps(df),
             result=pickle.dumps(scores),
             permutations=form.permutations.data,
-            user_id=current_user.github_id,
+            user_id=current_user.user_id,
+            name=current_user.name,
             username=current_user.username,
         )
         experiment.network = network
