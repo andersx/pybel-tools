@@ -222,8 +222,7 @@ $(document).ready(function () {
     // Set networkid as a global variable
     if ("graphid" in URLString) {
         window.networkID = URLString["graphid"];
-    }
-    else {
+    } else {
         window.networkID = "0";
     }
 
@@ -257,8 +256,7 @@ $(document).ready(function () {
     // Loads the network if autoload is an argument in the URL or render empty frame if not
     if (window.location.search.indexOf("autoload=yes") > -1) {
         renderNetwork(tree);
-    }
-    else {
+    } else {
         renderEmptyFrame();
     }
 
@@ -328,7 +326,6 @@ $(document).ready(function () {
 
     // Comes back to the network id originally choosen
     $("#reset_all").on("click", function () {
-
         var args = {};
         args["graphid"] = window.networkID;
         window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
@@ -366,14 +363,12 @@ function renderEmptyFrame() {
 
 function clearUsedDivs() {
     // Clean divs to repopulate them with the new network
-
     // Force div
     $("#graph-chart").empty();
     // Node search div
     $("#node-list").empty();
     // Edge search div
     $("#edge-list").empty();
-
 }
 
 ///////////////////////////////////////
@@ -479,8 +474,6 @@ function downloadText(response, name) {
 
 // Initialize d3.js force to plot the networks from neo4j json
 function initD3Force(graph, tree) {
-
-
     /////////////////////
     // d3-context-menu //
     /////////////////////
@@ -838,8 +831,7 @@ function initD3Force(graph, tree) {
         .style("stroke", function (d) {
             if ('pybel_highlight' in d) {
                 return d['pybel_highlight']
-            }
-            else {
+            } else {
                 return circleColor
             }
         });
