@@ -37,6 +37,7 @@
                     <thead>
                     <tr>
                         <th></th>
+                        <th></th>
                         <th>Network</th>
                         <th>Version</th>
                         <th>Nodes</th>
@@ -50,6 +51,7 @@
                     <tbody>
                     {% for report in reports %}
                         <tr>
+                            <td>{{ report.network.id }}</td>
                             <td>
                                 <a href="{{ url_for('view_summary', graph_id=report.network.id) }}"><span
                                         class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
