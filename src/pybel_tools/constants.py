@@ -73,9 +73,14 @@ belief_demo_namespaces_2 = {
     'PMIPFAM': 'pmipfam.belns',
 }
 
+DBSNP_PATTERN = 'rs[0-9]+'
+EC_PATTERN = '(\d+|\-)\.((\d+)|(\-))\.(\d+|\-)(\.(n)?(\d+|\-))*'
+INCHI_PATTERN = '^((InChI=)?[^J][0-9BCOHNSOPrIFla+\-\(\)\\\/,pqbtmsih]{6,})$'
+
 default_namespace_patterns = {
-    'dbSNP': 'rs[0-9]+',
-    'InChI': '^((InChI=)?[^J][0-9BCOHNSOPrIFla+\-\(\)\\\/,pqbtmsih]{6,})$'
+    'dbSNP': DBSNP_PATTERN,
+    'EC': EC_PATTERN,
+    'InChI': INCHI_PATTERN
 }
 
 openbel_2013_prefix = 'http://resource.belframework.org/belframework/20131211/annotation/'
