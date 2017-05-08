@@ -4,7 +4,7 @@ import logging
 
 import flask
 import requests
-from flask import Flask
+from flask import Flask, url_for
 
 from pybel import from_json_dict, to_json_dict
 from .utils import try_insert_graph, render_upload_error
@@ -45,6 +45,6 @@ def post(graph, service=None):
     :rtype: requests.Response
     """
     service = DEFAULT_SERVICE_URL if service is None else service
-    url = service + '/api/receive'
+    url = service + url_for('receive')
     headers = {'content-type': 'application/json'}
     return requests.post(url, json=to_json_dict(graph), headers=headers)
