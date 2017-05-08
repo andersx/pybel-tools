@@ -40,7 +40,7 @@
             <h1>PyBEL Web</h1>
         </div>
 
-        {{ util.flashed_messages(dismissible=True) }}
+        {{ util.flashed_messages(dismissible=True, container=False) }}
 
         <div class="panel panel-default">
             <div class="panel-body">
@@ -70,8 +70,9 @@
                     <h3 class="panel-title">Admin</h3>
                 </div>
                 <div class="panel-body">
-                    <a class="btn btn-info" href="{{ url_for('run_reload') }}" role="button">Reload Graphs</a>
                     <a class="btn btn-info" href="{{ url_for('view_reports') }}" role="button">View Reporting</a>
+                    <a class="btn btn-success" href="{{ url_for('run_reload') }}" role="button">Reload Graphs</a>
+                    <a class="btn btn-success" href="{{ url_for('ensure_simple') }}" role="button">Ensure Simple</a>
                     <a class="btn btn-danger" href="{{ url_for('drop_graphs') }}" role="button">Drop All Graphs</a>
                     <a class="btn btn-danger" href="{{ url_for('nuke') }}" role="button">Nuke Database</a>
                 </div>
