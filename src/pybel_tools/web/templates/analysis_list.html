@@ -39,7 +39,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for experiment in experiments %}
+                {% for experiment in experiments if experiment.network is not none %}
                     <tr>
                         <td>{{ experiment.id }} </td>
                         <td><a href="{{ url_for('view_analysis_results', analysis_id=experiment.id) }}"><span
