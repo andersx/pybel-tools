@@ -125,7 +125,7 @@ def make_document_metadata(name, contact, description, authors, version=None, co
     yield 'SET DOCUMENT ContactInfo = "{}"'.format(contact)
 
     if licenses:
-        yield 'SET DOCUMENT License = "{}"'.format(licenses)
+        yield 'SET DOCUMENT Licenses = "{}"'.format(licenses)
 
     if copyright:
         yield 'SET DOCUMENT Copyright = "{}"'.format(copyright)
