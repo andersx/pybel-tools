@@ -14,11 +14,11 @@ from sqlalchemy.exc import IntegrityError
 
 from pybel import from_lines
 from pybel.parser.parse_exceptions import InconsistientDefinitionError
-from .constants import integrity_message, reporting_log
+from .constants import integrity_message
 from .forms import CompileForm
+from .models import add_network_reporting
 from .utils import render_graph_summary
 from ..mutation.metadata import add_canonical_names
-from .models import add_network_reporting
 
 log = logging.getLogger(__name__)
 
@@ -95,7 +95,14 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
             return redirect(url_for('view_compile'))
 
         log.info('done storing %s [%d]', form.file.data.filename, network.id)
-        add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(), graph.number_of_edges(), len(graph.warnings), precompiled=False)
+
+        try:
+            add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(),
+                                  graph.number_of_edges(), len(graph.warnings), precompiled=False)
+        except IntegrityError:
+            log.exception('integrity error')
+            flash('problem with reporting service', category='warning')
+            manager.rollback()
 
         return redirect(url_for('view_summary', graph_id=network.id))
 

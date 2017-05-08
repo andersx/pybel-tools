@@ -9,7 +9,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 
 import pybel
-from .constants import integrity_message, reporting_log
+from .constants import integrity_message
 from .forms import UploadForm
 from .models import add_network_reporting
 
@@ -46,8 +46,8 @@ def build_pickle_uploader_service(app, manager):
         try:
             network = manager.insert_graph(graph)
         except IntegrityError:
-            log.exception('integrity error', category='error')
-            flash(integrity_message.format(graph.name, graph.version))
+            log.exception('integrity error')
+            flash(integrity_message.format(graph.name, graph.version), category='error')
             manager.rollback()
             return redirect(url_for('view_upload'))
         except Exception as e:
@@ -56,8 +56,14 @@ def build_pickle_uploader_service(app, manager):
             return redirect(url_for('view_upload'))
 
         log.info('done uploading %s [%d]', form.file.data.filename, network.id)
-        add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(),
-                              graph.number_of_edges(), len(graph.warnings), precompiled=True)
+
+        try:
+            add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(),
+                                  graph.number_of_edges(), len(graph.warnings), precompiled=True)
+        except IntegrityError:
+            log.exception('integrity error')
+            flash('problem with reporting service', category='warning')
+            manager.rollback()
 
         return redirect(url_for('view_summary', graph_id=network.id))
 
