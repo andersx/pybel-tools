@@ -281,7 +281,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
     # Web Pages
 
     @app.route('/', methods=['GET', 'POST'])
-    @app.route('/networks/', methods=['GET', 'POST'])
+    @app.route('/networks', methods=['GET', 'POST'])
     def view_networks():
         """Renders a page for the user to choose a network"""
         seed_subgraph_form = SeedSubgraphForm()
@@ -325,7 +325,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
             current_user=current_user,
         )
 
-    @app.route('/explore/', methods=['GET'])
+    @app.route('/explore', methods=['GET'])
     def view_explorer():
         """Renders a page for the user to explore a network"""
         return flask.render_template('explorer.html')

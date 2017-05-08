@@ -116,11 +116,15 @@
                         <div class="list-group-item-text">
                             <p>{{ descr }}</p>
                             <ul class="list-inline">
-                                <li><a href="/summary/{{ nid }}" class="btn btn-default">Summarize</a></li>
-                                <li><a href="/explore/?graphid={{ nid }}" class="btn btn-default">Explore</a></li>
+                                <li><a href="{{ url_for('view_summary', graph_id=nid) }}" class="btn btn-default">Summarize</a>
+                                </li>
+                                <li><a href="{{ url_for('view_explorer', graphid=nid) }}" class="btn btn-default">Explore</a>
+                                </li>
                                 {% if analysis_enabled %}
-                                    <li><a href="/analysis/upload/{{ nid }}" class="btn btn-default">Analyze</a></li>
-                                    <li><a href="/analysis/{{ nid }}" class="btn btn-default">Results</a></li>
+                                    <li><a href="{{ url_for('view_analysis_uploader', network_id=nid) }}"
+                                           class="btn btn-default">Analyze</a></li>
+                                    <li><a href="{{ url_for('view_analyses', network_id=nid) }}"
+                                           class="btn btn-default">Results</a></li>
                                 {% endif %}
                                 {% if current_user.admin %}
                                     <a class="btn btn-danger" href="{{ url_for('drop_network', network_id=nid) }}"
