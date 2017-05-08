@@ -190,6 +190,13 @@ def build_dictionary_service_admin(app, manager, api, basic_auth):
         graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
+    @app.route('/admin/ensure/simple')
+    @login_required
+    def ensure_simple():
+        url = 'https://raw.githubusercontent.com/pybel/pybel/develop/tests/bel/test_bel.bel'
+        graph = from_url(url, manager=manager)
+        return try_insert_graph(manager, graph, api)
+
     @app.route('/admin/ensure/gfam')
     @basic_auth.required
     def ensure_gfam():
