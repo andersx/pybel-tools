@@ -30,7 +30,6 @@ from ..summary.edge_summary import get_annotation_values_by_annotation
 from ..summary.error_summary import get_undefined_namespace_names
 from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
-
 log = logging.getLogger(__name__)
 
 DICTIONARY_SERVICE = 'dictionary_service'
@@ -214,7 +213,7 @@ def build_dictionary_service_admin(app, manager, api, basic_auth):
         manager.drop_database()
         manager.create_database()
         log.info('restarting dictionary service')
-        api.load_networks(force_reload=True)
+        api.clear()
         log.info('... the dust settles')
         return jsonify({'status': 200})
 

@@ -67,6 +67,9 @@ class DictionaryService(BaseService):
 
         log.info('initialized dictionary service')
 
+    def clear(self):
+        self.__init__(self.manager)
+
     def update_node_indexes(self, graph):
         """Updates identifiers for nodes based on addition order
 
