@@ -109,7 +109,7 @@ def info_list(graph):
         ('Nodes', number_nodes),
         ('Edges', graph.number_of_edges()),
         ('Network density', nx.density(graph)),
-        ('Number weakly connected components', nx.number_weakly_connected_components(graph)),
+        ('Components', nx.number_weakly_connected_components(graph)),
         ('Average degree', sum(graph.in_degree().values()) / float(number_nodes)),
     ]
 
