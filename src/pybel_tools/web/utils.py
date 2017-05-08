@@ -8,6 +8,7 @@ import flask
 import networkx as nx
 from flask import render_template, jsonify, Flask
 from flask_bootstrap import Bootstrap
+from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
 
 from pybel.canonicalize import decanonicalize_node
@@ -163,6 +164,7 @@ def render_graph_summary(graph_id, graph, api=None):
         undefined_annotations=sorted(undefined_annotations),
         unused_annotations=sorted(unused_annotations),
         unused_list_annotation_values=sorted(unused_list_annotation_values.items()),
+        current_user=current_user
     )
 
 

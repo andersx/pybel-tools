@@ -108,6 +108,10 @@
                                     <li><a href="/analysis/upload/{{ nid }}" class="btn btn-default">Analyze</a></li>
                                     <li><a href="/analysis/{{ nid }}" class="btn btn-default">Results</a></li>
                                 {% endif %}
+                                {% if current_user.admin %}
+                                    <a class="btn btn-danger" href="{{ url_for('drop_network', network_id=nid) }}"
+                                       role="button">Drop</a>
+                                {% endif %}
                             </ul>
                         </div>
                     </div>

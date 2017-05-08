@@ -10,7 +10,7 @@ import networkx as nx
 from flask import Flask, request, jsonify, url_for, redirect, make_response
 from flask import render_template
 from flask_basicauth import BasicAuth
-from flask_login import current_user
+from flask_login import current_user, login_required
 from requests.compat import unquote
 from six import StringIO
 
@@ -197,9 +197,12 @@ def build_dictionary_service_admin(app, manager, api, basic_auth):
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/nuke/')
-    @basic_auth.required
+    @login_required
     def nuke():
         """Destroys the database and recreates it"""
+        if not current_user.admin:
+            flask.abort(403)
+
         log.info('nuking database')
         manager.drop_database()
         manager.create_database()
@@ -211,24 +214,33 @@ def build_dictionary_service_admin(app, manager, api, basic_auth):
 
 def build_api_admin(app, manager, basic_auth):
     @app.route('/admin/rollback')
-    @basic_auth.required
+    @login_required
     def rollback():
         """Rolls back the transaction for when something bad happens"""
+        if not current_user.admin:
+            flask.abort(403)
+
         manager.rollback()
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/graphs/drop/<network_id>')
-    @basic_auth.required
+    @login_required
     def drop_graph(network_id):
         """Drops a specific graph"""
+        if not current_user.admin:
+            flask.abort(403)
+
         log.info('dropping graphs %s', network_id)
         manager.drop_graph(network_id)
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/graphs/dropall')
-    @basic_auth.required
+    @login_required
     def drop_graphs():
         """Drops all graphs"""
+        if not current_user.admin:
+            flask.abort(403)
+
         log.info('dropping all graphs')
         manager.drop_graphs()
         return jsonify({'status': 200})
@@ -359,6 +371,16 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
 
         graph = api.get_network(network_id)
         return jsonify(graph.name)
+
+    @app.route('/api/network/<int:network_id>/drop')
+    @login_required
+    def drop_network(network_id):
+        """Drops a given network"""
+        if not current_user.admin:
+            flask.abort(403)
+        manager.drop_graph(network_id)
+        flask.flash('Dropped network {}'.format(network_id))
+        return redirect(url_for('view_networks'))
 
     @app.route('/api/tree/')
     def get_tree_api():

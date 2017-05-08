@@ -50,6 +50,10 @@
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Nodelink JSON</a>
                 <a class="btn btn-default" href="{{ url_for('get_network', graphid=graph_id, format='cx') }}"
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CX JSON</a>
+
+                {% if current_user.admin %}
+                    <a class="btn btn-danger" href="{{ url_for('drop_network', network_id=graph_id) }}" role="button">Drop</a>
+                {% endif %}
             </div>
         </div>
 
