@@ -110,3 +110,5 @@ def get_shortest_undirected_path_between_subgraphs(graph, a, b):
     """
     ug = graph.to_undirected()
     return _get_shortest__path_between_subgraphs_helper(ug, a, b)
+
+# TODO @ddomingof find path root function
