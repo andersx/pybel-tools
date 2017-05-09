@@ -23,7 +23,7 @@ from ..analysis import npa
 from ..analysis.npa import RESULT_LABELS
 from ..filters.node_deletion import remove_nodes_by_namespace
 from ..integration import overlay_type_data
-from ..mutation.collapse import collapse_variants_to_genes, collapse_by_central_dogma_to_genes
+from ..mutation.collapse import rewire_variants_to_genes, collapse_by_central_dogma_to_genes
 
 log = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ def build_analysis_service(app, manager, api):
 
         remove_nodes_by_namespace(graph, {'MGI', 'RGD'})
         collapse_by_central_dogma_to_genes(graph)
-        collapse_variants_to_genes(graph)
+        rewire_variants_to_genes(graph)
 
         overlay_type_data(graph, data, LABEL, GENE, 'HGNC', overwrite=False, impute=0)
 

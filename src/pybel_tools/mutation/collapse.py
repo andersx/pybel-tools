@@ -14,7 +14,10 @@ __all__ = [
     'build_central_dogma_collapse_gene_dict',
     'collapse_by_central_dogma',
     'collapse_by_central_dogma_to_genes',
-    'collapse_variants_to_genes',
+    'collapse_by_central_dogma_to_genes_out_place',
+    'rewire_variants_to_genes',
+    'collapse_variants',
+    'collapse_variants_out_place',
     'opening_on_central_dogma',
 ]
 
@@ -170,10 +173,29 @@ def collapse_by_central_dogma_to_genes(graph):
     collapse_nodes(graph, collapse_dict)
 
 
+@pipeline.mutator
+def collapse_by_central_dogma_to_genes_out_place(graph):
+    """Collapses all nodes from the central dogma (:data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`, 
+    :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE`, in-place. This 
+    function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
+    
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    
+    Equivalent to:
+    
+    >>> infer_central_dogma(graph)
+    >>> collapse_nodes(graph, build_central_dogma_collapse_gene_dict(graph))
+    """
+    result = graph.copy()
+    collapse_by_central_dogma_to_genes(result)
+    return result
+
+
 @pipeline.in_place_mutator
-def collapse_variants_to_genes(graph):
+def rewire_variants_to_genes(graph):
     """Finds all protein variants that are pointing to a gene and not a protein and fixes them by changing their
-    function to be :data:`pybel.constants.GENE`
+    function to be :data:`pybel.constants.GENE`, in place
 
     :param pybel.BELGraph graph: A BEL graph
     
@@ -186,6 +208,29 @@ def collapse_variants_to_genes(graph):
             continue
         if any(d[RELATION] == TRANSCRIBED_TO for u, v, d in graph.in_edges_iter(data=True)):
             graph.node[node][FUNCTION] = GENE
+
+
+@pipeline.in_place_mutator
+def collapse_variants(graph):
+    """Collapses all ``hasVariant`` edges to the parent node, in place
+    
+    :param pybel.BELGraph graph: A BEL Graph
+    """
+    for u, v, d in graph.edges_iter(data=True):
+        if d[RELATION] == HAS_VARIANT:
+            collapse_pair(u, v)
+
+
+@pipeline.mutator
+def collapse_variants_out_place(graph):
+    """Collapses all ``hasVariant`` edges to the parent node, not in place
+
+    :param pybel.BELGraph graph: A BEL Graph
+    :rtype" pybel.BELGraph
+    """
+    result = graph.copy()
+    collapse_variants(result)
+    return result
 
 
 @pipeline.in_place_mutator
