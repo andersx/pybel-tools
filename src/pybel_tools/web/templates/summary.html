@@ -36,7 +36,7 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
                     <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
                 </a>
                 <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
@@ -454,6 +454,8 @@
             </div>
         {% endif %}
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}
 
 {% block scripts %}

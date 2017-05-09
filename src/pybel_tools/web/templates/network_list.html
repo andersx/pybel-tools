@@ -44,6 +44,9 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
                 <a class="btn btn-default" href="{{ url_for('view_compile') }}" role="button">Compile a BEL Script</a>
                 <a class="btn btn-default" href="{{ url_for('view_upload') }}" role="button">Upload a Pre-compiled
                     Pickle</a>
@@ -65,9 +68,13 @@
         </div>
 
         {% if current_user.admin %}
-            <div class="panel panel-info">
+            <div class="panel panel-info" id="admin-panel">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Admin</h3>
+                    <h3 class="panel-title">Admin
+                        <button type="button" class="close" data-target="#admin-panel" data-dismiss="alert">
+                            <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        </button>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <a class="btn btn-info" href="{{ url_for('view_reports') }}" role="button">View Reporting</a>
@@ -78,26 +85,6 @@
                 </div>
             </div>
         {% endif %}
-
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <p>This web application provides an interface for users to interact with the functions in the Python
-                    software packages: <a href="http://pybel.readthedocs.io/">PyBEL</a> and <a
-                            href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a>. From this page, you can begin to
-                    explore the networks stored in the knowledge base stratified by the source BEL script,
-                    by nodes and other biological entities of <a href="#seedNodePanel">interest</a>, or by certain
-                    authors and publications of <a href="#seedProvenancePanel">interest</a>.
-                </p>
-
-                <p>It is maintained by <a href="https://github.com/cthoyt">Charles Tapley Hoyt</a> and Daniel
-                    Domingo-Fernandez at the <a
-                            href="https://www.scai.fraunhofer.de/en/business-research-areas/bioinformatics.html">Fraunhofer
-                        SCAI Department of Bioinformatics</a> with support from the <a
-                            href="https://www.imi.europa.eu/">IMI</a> projects, <a href="http://www.aetionomy.eu/">AETIONOMY</a>
-                    and <a href="http://www.phago.eu/">PHAGO</a>.
-                </p>
-            </div>
-        </div>
 
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -196,4 +183,6 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}

@@ -68,7 +68,7 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
                     <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
                 </a>
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#info-graph">
@@ -693,4 +693,6 @@
             </div><!-- /.Modal content -->
         </div><!-- /.Modal dialog -->
     </div><!-- /.info-graph Modal -->
+
+    {% include "footer.html" %}
 {% endblock %}

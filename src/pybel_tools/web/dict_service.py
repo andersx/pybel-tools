@@ -30,6 +30,7 @@ from ..summary.edge_summary import get_annotation_values_by_annotation
 from ..summary.error_summary import get_undefined_namespace_names
 from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
+
 log = logging.getLogger(__name__)
 
 DICTIONARY_SERVICE = 'dictionary_service'
@@ -287,6 +288,10 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
     # Web Pages
 
     @app.route('/', methods=['GET', 'POST'])
+    def home():
+        """Renders the home page"""
+        return render_template('index.html')
+
     @app.route('/networks', methods=['GET', 'POST'])
     def view_networks():
         """Renders a page for the user to choose a network"""
