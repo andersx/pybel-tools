@@ -15,8 +15,7 @@ def get_github_info(token):
     return requests.get('https://api.github.com/user', params={'access_token': token}).json()
 
 
-administrator_ids = {5069736}
-administrator_usernames = {'cthoyt', 'ddomingof'}
+administrator_usernames = {'cthoyt', 'ddomingof', 'cebel'}
 
 
 class User(UserMixin):
@@ -32,7 +31,7 @@ class User(UserMixin):
 
     @property
     def admin(self):
-        return self.user_id in administrator_ids or self.username in administrator_usernames
+        return self.username in administrator_usernames
 
     @property
     def display(self):
