@@ -4,7 +4,7 @@
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
 
-{% block title %}Networks{% endblock %}
+{% block title %}Network Store{% endblock %}
 
 {% block styles %}
     {{ super() }}
@@ -37,7 +37,7 @@
 {% block content %}
     <div class="container">
         <div class="page-header">
-            <h1>PyBEL Web</h1>
+            <h1>Network Store</h1>
         </div>
 
         {{ util.flashed_messages(dismissible=True, container=False) }}
@@ -47,14 +47,6 @@
                 <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
                     <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
                 </a>
-                <a class="btn btn-default" href="{{ url_for('view_compile') }}" role="button">Compile a BEL Script</a>
-                <a class="btn btn-default" href="{{ url_for('view_upload') }}" role="button">Upload a Pre-compiled
-                    Pickle</a>
-                <a class="btn btn-default" href="{{ url_for('view_definitions') }}" role="button">View Stored
-                    Definitions</a>
-                <a class="btn btn-default" href="{{ url_for('get_boilerplate') }}" role="button">Generate a BEL
-                    Template</a>
-
                 <div class="pull-right">
                     {% if current_user.is_authenticated %}
                         <a class="btn btn-default" href="https://github.com/{{ current_user.username }}">Logged in
@@ -77,11 +69,23 @@
                     </h3>
                 </div>
                 <div class="panel-body">
-                    <a class="btn btn-info" href="{{ url_for('view_reports') }}" role="button">View Reporting</a>
-                    <a class="btn btn-success" href="{{ url_for('run_reload') }}" role="button">Reload Graphs</a>
-                    <a class="btn btn-success" href="{{ url_for('ensure_simple') }}" role="button">Ensure Simple</a>
-                    <a class="btn btn-danger" href="{{ url_for('drop_graphs') }}" role="button">Drop All Graphs</a>
-                    <a class="btn btn-danger" href="{{ url_for('nuke') }}" role="button">Nuke Database</a>
+                    <h4>Actions</h4>
+                    <p>
+                        <a class="btn btn-info" href="{{ url_for('view_reports') }}" role="button">View Reporting</a>
+                        <a class="btn btn-success" href="{{ url_for('run_reload') }}" role="button">Reload Graphs</a>
+
+                        <a class="btn btn-danger" href="{{ url_for('drop_graphs') }}" role="button">Drop All Graphs</a>
+                        <a class="btn btn-danger" href="{{ url_for('nuke') }}" role="button">Nuke Database</a>
+                    </p>
+                    <h4>Ensure BEL Documents</h4>
+                    <p>
+                        <a class="btn btn-success" href="{{ url_for('ensure_simple') }}" role="button">Simple</a>
+                        <a class="btn btn-success" href="{{ url_for('ensure_small_corpus') }}" role="button">Small
+                            Corpus</a>
+                        <a class="btn btn-success" href="{{ url_for('ensure_large_corpus') }}" role="button">Large
+                            Corpus</a>
+                        <a class="btn btn-success" href="{{ url_for('ensure_gfam') }}" role="button">Gene Families</a>
+                    </p>
                 </div>
             </div>
         {% endif %}
