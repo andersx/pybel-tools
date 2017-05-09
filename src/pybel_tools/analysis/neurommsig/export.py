@@ -184,6 +184,8 @@ def write_neurommsig_bel(file, df, disease, nift_values):
     print('SET MeSHDisease = "{}"\n'.format(disease), file=file)
 
     missing_features = set()
+    fixed_caps = set()
+    nift_value_originals = set(nift_values.values())
 
     for pathway, pathway_df in df.groupby(pathway_column):
         print('SET Subgraph = "{}"'.format(pathway), file=file)
@@ -211,8 +213,10 @@ def write_neurommsig_bel(file, df, disease, nift_values):
                 if clinical_feature.lower() not in nift_values:
                     missing_features.add(clinical_feature)
                     continue
-                normalized_clinical_feature = nift_values[clinical_feature.lower()]  # fix capitalization
-                print('g(HGNC:{}) -- a(NIFT:{})'.format(gene, ensure_quotes(normalized_clinical_feature)), file=file)
+                if clinical_feature not in nift_value_originals:
+                    fixed_caps.add((clinical_feature, nift_values[clinical_feature.lower()]))
+                    clinical_feature = nift_values[clinical_feature.lower()]  # fix capitalization
+                print('g(HGNC:{}) -- a(NIFT:{})'.format(gene, ensure_quotes(clinical_feature)), file=file)
 
         print('UNSET Subgraph\n', file=file)
 
@@ -223,6 +227,10 @@ def write_neurommsig_bel(file, df, disease, nift_values):
     log.warning('Missing Features in %s', disease)
     for feature in missing_features:
         log.warning(feature)
+
+    log.warning('Fixed capitalization')
+    for broken, fixed in fixed_caps:
+        log.warning('%s -> %s', broken, fixed)
 
 
 if __name__ == '__main__':
