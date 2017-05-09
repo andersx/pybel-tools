@@ -324,7 +324,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
 
         return flask.render_template(
             'network_list.html',
-            data=manager.list_graphs(),
+            data=reversed(manager.list_graphs()),
             provenance_form=seed_provenance_form,
             subgraph_form=seed_subgraph_form,
             analysis_enabled=analysis_enabled,
