@@ -34,6 +34,10 @@ class User(UserMixin):
     def admin(self):
         return self.user_id in administrator_ids or self.username in administrator_usernames
 
+    @property
+    def display(self):
+        return self.name if self.name else self.username
+
 
 def build_login_service(app, strict_login=False):
     """Adds the login service
