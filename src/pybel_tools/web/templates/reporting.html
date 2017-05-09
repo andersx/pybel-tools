@@ -62,7 +62,9 @@
                             <td>{{ report.number_nodes }}</td>
                             <td>{{ report.number_edges }}</td>
                             <td>{{ report.number_warnings }}</td>
-                            <td>{{ report.name }} ({{ report.username }})</td>
+                            <td>
+                                <a href="https://github.com/{{ report.username }}">{{ report.name if report.name is not none else report.username }}</a>
+                            </td>
                             <td>{{ 'Pickle' if report.precompiled else 'BEL' }}</td>
                             <td>{{ report.created.strftime('%Y-%m-%d %H:%M') }}</td>
                         </tr>
