@@ -38,6 +38,10 @@ DATE_VERSION_FMT = '%Y%m%d'
 DEFAULT_NS_DESCRIPTION = 'This namespace was serialized by PyBEL Tools'
 
 
+def get_date():
+    return time.strftime(DATE_VERSION_FMT)
+
+
 def make_namespace_header(name, keyword, domain, query_url=None, description=None, species=None, version=None,
                           created=None):
     """Makes the ``[Namespace]`` section of a BELNS file
@@ -64,7 +68,7 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     yield 'Keyword={}'.format(keyword)
     yield 'NameString={}'.format(name)
     yield 'DomainString={}'.format(domain)
-    yield 'VersionString={}'.format(version if version else time.strftime(DATE_VERSION_FMT))
+    yield 'VersionString={}'.format(version if version else get_date())
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
     yield 'DescriptionString={}'.format(
         DEFAULT_NS_DESCRIPTION if description is None else description.strip().replace('\n', ''))
@@ -254,7 +258,7 @@ def make_annotation_header(keyword, description=None, usage=None, version=None, 
     yield '[AnnotationDefinition]'
     yield 'Keyword={}'.format(keyword)
     yield 'TypeString={}'.format('list')
-    yield 'VersionString={}'.format(version if version else time.strftime(DATE_VERSION_FMT))
+    yield 'VersionString={}'.format(version if version else get_date())
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
 
     if description is not None:
