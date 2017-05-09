@@ -111,4 +111,15 @@ def get_shortest_undirected_path_between_subgraphs(graph, a, b):
     ug = graph.to_undirected()
     return _get_shortest__path_between_subgraphs_helper(ug, a, b)
 
+
 # TODO @ddomingof find path root function
+
+def find_path_root(graph, path_nodes):
+    """
+    
+    :param pybel.BELGraph graph: A BEL Graph
+    :param list[tuple] path: A list of nodes in their order in a path
+    :return: 
+    """
+    g = graph.subgraph(path_nodes)
+    raise NotImplementedError
