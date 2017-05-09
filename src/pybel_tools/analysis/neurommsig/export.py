@@ -240,4 +240,4 @@ if __name__ == '__main__':
     pd_path = os.path.join(neurommsig_excel_dir, 'PD.xlsx')
     pd_df = preprocess(pd_path)
     with open(os.path.join(bms_base, 'aetionomy', 'parkinsons', 'neurommsigdb_pd.bel'), 'w') as file:
-        write_neurommsig_bel(file, ad_df, mesh_parkinson, nift_values)
+        write_neurommsig_bel(file, pd_df, mesh_parkinson, nift_values)
