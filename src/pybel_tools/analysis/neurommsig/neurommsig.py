@@ -12,8 +12,8 @@ from collections import Counter
 import networkx as nx
 
 from pybel.constants import GENE
-from ..filters.node_selection import get_nodes_by_function
-from ..mutation.inference import infer_central_dogma
+from filters.node_selection import get_nodes_by_function
+from mutation.inference import infer_central_dogma
 
 
 def calc_betweenness_centality(graph):
