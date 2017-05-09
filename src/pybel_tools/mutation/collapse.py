@@ -179,8 +179,8 @@ def collapse_by_central_dogma_to_genes_out_place(graph):
     :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE`, in-place. This 
     function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
+    :rtype: pybel.BELGraph
     
     Equivalent to:
     
@@ -226,7 +226,7 @@ def collapse_variants_out_place(graph):
     """Collapses all ``hasVariant`` edges to the parent node, not in place
 
     :param pybel.BELGraph graph: A BEL Graph
-    :rtype" pybel.BELGraph
+    :rtype: pybel.BELGraph
     """
     result = graph.copy()
     collapse_variants(result)
