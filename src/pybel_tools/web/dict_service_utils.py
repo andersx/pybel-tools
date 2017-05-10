@@ -137,7 +137,7 @@ class DictionaryService(BaseService):
             log.info('tried re-adding graph [%s] %s', network_id, graph.name)
             return
 
-        log.info('loading network [%s] %s', network_id, graph.name)
+        log.info('loading network [%s] %s v%s', network_id, graph.name, graph.version)
 
         log.debug('parsing authors')
         parse_authors(graph)
