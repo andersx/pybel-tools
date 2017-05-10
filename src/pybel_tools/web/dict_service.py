@@ -262,7 +262,7 @@ def build_api_admin(app, manager):
         manager.rollback()
         return jsonify({'status': 200})
 
-    @app.route('/admin/manage/graphs/drop/<network_id>')
+    @app.route('/admin/manage/graphs/drop/<int:network_id>')
     @login_required
     def drop_graph(network_id):
         """Drops a specific graph"""
@@ -278,6 +278,44 @@ def build_api_admin(app, manager):
         raise_for_not_admin()
         log.info('dropping all graphs')
         manager.drop_graphs()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/namespaces/drop/<int:namespace_id>')
+    @login_required
+    def drop_namespace(namespace_id):
+        raise_for_not_admin()
+        log.info('dropping namespace %s', namespace_id)
+        manager.session.query(Namespace).get(namespace_id).delete()
+        manager.session.commit()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/namespaces/dropall')
+    @login_required
+    def drop_namespaces():
+        """Drops all namespaces"""
+        raise_for_not_admin()
+        log.info('dropping all namespaces')
+        manager.session.query(Namespace).delete()
+        manager.session.commit()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/annotations/drop/<annotation_id>')
+    @login_required
+    def drop_annotation(annotation_id):
+        raise_for_not_admin()
+        log.info('dropping annotation %s', annotation_id)
+        manager.session.query(Annotation).get(annotation_id).delete()
+        manager.session.commit()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/annotations/dropall')
+    @login_required
+    def drop_annotations():
+        """Drops all annotations"""
+        raise_for_not_admin()
+        log.info('dropping all annotations')
+        manager.session.query(Annotation).delete()
+        manager.session.commit()
         return jsonify({'status': 200})
 
 
@@ -376,6 +414,7 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
             'definitions_list.html',
             namespaces=manager.session.query(Namespace).order_by(Namespace.keyword).all(),
             annotations=manager.session.query(Annotation).order_by(Annotation.keyword).all(),
+            current_user=current_user,
         )
 
     # Data Service
