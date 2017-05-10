@@ -73,7 +73,6 @@
                     <p>
                         <a class="btn btn-info" href="{{ url_for('view_reports') }}" role="button">View Reporting</a>
                         <a class="btn btn-success" href="{{ url_for('run_reload') }}" role="button">Reload Graphs</a>
-
                         <a class="btn btn-danger" href="{{ url_for('drop_graphs') }}" role="button">Drop All Graphs</a>
                         <a class="btn btn-danger" href="{{ url_for('nuke') }}" role="button">Nuke Database</a>
                     </p>
@@ -85,6 +84,8 @@
                         <a class="btn btn-success" href="{{ url_for('ensure_large_corpus') }}" role="button">Large
                             Corpus</a>
                         <a class="btn btn-success" href="{{ url_for('ensure_gfam') }}" role="button">Gene Families</a>
+                        <a class="btn btn-danger" href="{{ url_for('ensure_aetionomy') }}" role="button">Compile BMS - AETIONOMY</a>
+                        <a class="btn btn-danger" href="{{ url_for('upload_aetionomy') }}" role="button">Upload BMS - AETIONOMY</a>
                     </p>
                 </div>
             </div>

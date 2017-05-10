@@ -3,13 +3,13 @@
 """This module runs the dictionary-backed PyBEL API"""
 
 import logging
+import time
 from operator import itemgetter
 
 import flask
 import networkx as nx
 from flask import Flask, request, jsonify, url_for, redirect, make_response
 from flask import render_template
-from flask_basicauth import BasicAuth
 from flask_login import current_user, login_required
 from requests.compat import unquote
 from six import StringIO
@@ -23,7 +23,9 @@ from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
 from .utils import render_graph_summary
 from .utils import try_insert_graph, sanitize_list_of_str
+from ..constants import BMS_BASE
 from ..definition_utils import write_namespace
+from ..ioutils import convert_recursive, upload_recursive
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary.edge_summary import get_annotation_values_by_annotation
@@ -74,6 +76,11 @@ BLACK_LIST = {
     FILTERS,
     FILTER_PATHOLOGIES,
 }
+
+
+def raise_for_not_admin():
+    if not current_user.admin:
+        flask.abort(403)
 
 
 def get_tree_annotations(graph):
@@ -153,39 +160,44 @@ def get_graph_from_request(api):
     return graph
 
 
-def build_dictionary_service_admin(app, manager, api, basic_auth):
+def build_dictionary_service_admin(app, manager, api):
     @app.route('/admin/reload')
-    @basic_auth.required
+    @login_required
     def run_reload():
         """Reloads the networks and supernetwork"""
+        raise_for_not_admin()
         api.load_networks(force_reload=True)
         return jsonify({'status': 200})
 
     @app.route('/admin/enrich')
-    @basic_auth.required
+    @login_required
     def run_enrich_authors():
         """Enriches information in network. Be patient"""
+        raise_for_not_admin()
         fix_pubmed_citations(api.universe)
         return jsonify({'status': 200})
 
     @app.route('/admin/ensure/small')
-    @basic_auth.required
+    @login_required
     def ensure_small_corpus():
         """Parses the small corpus"""
+        raise_for_not_admin()
         graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/large')
-    @basic_auth.required
+    @login_required
     def ensure_large_corpus():
         """Parses the large corpus"""
+        raise_for_not_admin()
         graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/abstract3')
-    @basic_auth.required
+    @login_required
     def ensure_abstract3():
         """Ensures Selventa Example 3"""
+        raise_for_not_admin()
         url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
         graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
@@ -193,23 +205,40 @@ def build_dictionary_service_admin(app, manager, api, basic_auth):
     @app.route('/admin/ensure/simple')
     @login_required
     def ensure_simple():
+        raise_for_not_admin()
         url = 'https://raw.githubusercontent.com/pybel/pybel/develop/tests/bel/test_bel.bel'
         graph = from_url(url, manager=manager)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/gfam')
-    @basic_auth.required
+    @login_required
     def ensure_gfam():
+        raise_for_not_admin()
         graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
         return try_insert_graph(manager, graph, api)
+
+    @app.route('/admin/ensure/aetionomy')
+    @login_required
+    def ensure_aetionomy():
+        raise_for_not_admin()
+        t = time.time()
+        convert_recursive(os.path.join(os.environ[BMS_BASE], 'aetionomy'), connection=manager, upload=True,
+                          enrich_citations=True)
+        return jsonify({'status': 200, 'time': time.time() - t})
+
+    @app.route('/admin/upload/aetionomy')
+    @login_required
+    def upload_aetionomy():
+        raise_for_not_admin()
+        t = time.time()
+        upload_recursive(os.path.join(os.environ[BMS_BASE], 'aetionomy'), connection=manager)
+        return jsonify({'status': 200, 'time': time.time() - t})
 
     @app.route('/admin/nuke/')
     @login_required
     def nuke():
         """Destroys the database and recreates it"""
-        if not current_user.admin:
-            flask.abort(403)
-
+        raise_for_not_admin()
         log.info('nuking database')
         manager.drop_database()
         manager.create_database()
@@ -219,14 +248,12 @@ def build_dictionary_service_admin(app, manager, api, basic_auth):
         return jsonify({'status': 200})
 
 
-def build_api_admin(app, manager, basic_auth):
+def build_api_admin(app, manager):
     @app.route('/admin/rollback')
     @login_required
     def rollback():
         """Rolls back the transaction for when something bad happens"""
-        if not current_user.admin:
-            flask.abort(403)
-
+        raise_for_not_admin()
         manager.rollback()
         return jsonify({'status': 200})
 
@@ -234,9 +261,7 @@ def build_api_admin(app, manager, basic_auth):
     @login_required
     def drop_graph(network_id):
         """Drops a specific graph"""
-        if not current_user.admin:
-            flask.abort(403)
-
+        raise_for_not_admin()
         log.info('dropping graphs %s', network_id)
         manager.drop_graph(network_id)
         return jsonify({'status': 200})
@@ -245,16 +270,13 @@ def build_api_admin(app, manager, basic_auth):
     @login_required
     def drop_graphs():
         """Drops all graphs"""
-        if not current_user.admin:
-            flask.abort(403)
-
+        raise_for_not_admin()
         log.info('dropping all graphs')
         manager.drop_graphs()
         return jsonify({'status': 200})
 
 
-def build_dictionary_service(app, manager, check_version=True, admin_password=None, analysis_enabled=False,
-                             eager=False):
+def build_dictionary_service(app, manager, check_version=True, analysis_enabled=False, eager=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -275,15 +297,9 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
     api.load_networks(check_version=check_version, eager=eager)
     log.info('pre-loaded the dict service')
 
-    if admin_password is not None:
-        app.config['BASIC_AUTH_USERNAME'] = 'pybel'
-        app.config['BASIC_AUTH_PASSWORD'] = admin_password
-
-        basic_auth = BasicAuth(app)
-        build_dictionary_service_admin(app, manager, api, basic_auth)
-        build_api_admin(app, manager, basic_auth)
-
-        log.info('added admin functions to dict service')
+    build_dictionary_service_admin(app, manager, api)
+    build_api_admin(app, manager)
+    log.info('added admin functions to dict service')
 
     # Web Pages
 

@@ -28,7 +28,6 @@ INSTALL_REQUIRES = [
     'flask',
     'flask-bootstrap',
     'flask-wtf',
-    'flask-basicauth',
     'GitHub-Flask',
     'flask-login',
     'networkx',

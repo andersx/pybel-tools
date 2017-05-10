@@ -3,7 +3,6 @@ requests
 flask
 flask-bootstrap
 flask-wtf
-flask-basicauth
 flask-login
 GitHub-Flask
 networkx

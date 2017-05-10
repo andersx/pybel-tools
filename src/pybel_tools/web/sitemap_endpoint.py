@@ -3,6 +3,7 @@ import logging
 import sys
 
 from flask import url_for, render_template
+from flask_login import current_user
 
 import pybel.utils
 from ..utils import get_version
@@ -10,7 +11,7 @@ from ..utils import get_version
 log = logging.getLogger(__name__)
 
 
-def build_sitemap_endpoint(app, route=None, show_admin=False):
+def build_sitemap_endpoint(app, route=None):
     """Builds the sitemap endpoint"""
 
     @app.route("/admin" if route is None else route)
@@ -22,7 +23,7 @@ def build_sitemap_endpoint(app, route=None, show_admin=False):
             try:
                 url = url_for(rule.endpoint)
                 item = url, rule.endpoint
-                if not show_admin and (url.startswith('/admin') or url.startswith('/api/admin')):
+                if not current_user.admin and (url.startswith('/admin') or url.startswith('/api/admin')):
                     continue
                 elif url.startswith('/api'):
                     api_links.append(item)
