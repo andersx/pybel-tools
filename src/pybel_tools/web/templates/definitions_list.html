@@ -48,6 +48,8 @@
                                     <dt>Description</dt>
                                     <dd>{{ namespace.description }}</dd>
                                 {% endif %}
+                                <dt>Uploaded</dt>
+                                <dd>{{ namespace.uploaded }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -78,6 +80,12 @@
                                     <dt>Description</dt>
                                     <dd>{{ annotation.description }}</dd>
                                 {% endif %}
+                                {% if annotation.usage is not none %}
+                                    <dt>Usage</dt>
+                                    <dd>{{ annotation.usage }}</dd>
+                                {% endif %}
+                                <dt>Uploaded</dt>
+                                <dd>{{ annotation.uploaded }}</dd>
                             </dl>
                         </div>
                     </div>
