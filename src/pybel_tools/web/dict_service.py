@@ -285,7 +285,7 @@ def build_api_admin(app, manager):
     def drop_namespace(namespace_id):
         raise_for_not_admin()
         log.info('dropping namespace %s', namespace_id)
-        manager.session.query(Namespace).get(namespace_id).delete()
+        manager.session.query(Namespace).filter(Namespace.id == namespace_id).delete()
         manager.session.commit()
         return jsonify({'status': 200})
 
@@ -304,7 +304,7 @@ def build_api_admin(app, manager):
     def drop_annotation(annotation_id):
         raise_for_not_admin()
         log.info('dropping annotation %s', annotation_id)
-        manager.session.query(Annotation).get(annotation_id).delete()
+        manager.session.query(Annotation).filter(Annotation.id == annotation_id).delete()
         manager.session.commit()
         return jsonify({'status': 200})
 
