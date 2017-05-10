@@ -26,6 +26,7 @@ from .utils import try_insert_graph, sanitize_list_of_str
 from ..constants import BMS_BASE
 from ..definition_utils import write_namespace
 from ..ioutils import convert_recursive, upload_recursive
+from ..ioutils import convert_recursive, upload_recursive, get_paths_recursive
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary.edge_summary import get_annotation_values_by_annotation
@@ -233,6 +234,11 @@ def build_dictionary_service_admin(app, manager, api):
         t = time.time()
         upload_recursive(os.path.join(os.environ[BMS_BASE], 'aetionomy'), connection=manager)
         return jsonify({'status': 200, 'time': time.time() - t})
+
+    @app.route('/admin/list/bms/pickles')
+    def list_bms_pickles():
+        raise_for_not_admin()
+        return jsonify(list(get_paths_recursive(os.environ[BMS_BASE], extension='.gpickle')))
 
     @app.route('/admin/nuke/')
     @login_required
