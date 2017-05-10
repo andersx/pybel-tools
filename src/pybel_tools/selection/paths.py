@@ -118,8 +118,11 @@ def find_root_in_path(graph, path_nodes):
     
     :param pybel.BELGraph graph: A BEL Graph
     :param list[tuple] path: A list of nodes in their order in a path
-    :return: 
-    """
+    :rtype: pybel.BELGraph 
+    :return: graph: graph of the path
+    :rtype: tuple
+    :return: root node
+      """
     path_graph = graph.subgraph(path_nodes)
 
     # node_in_degree_tuple: list of tuples with (node,in_degree_of_node) in ascending order
@@ -144,4 +147,4 @@ def find_root_in_path(graph, path_nodes):
     else:
         root_tuple = node_in_degree_tuple[0]
 
-    return root_tuple[0]
+    return path_graph, root_tuple[0]
