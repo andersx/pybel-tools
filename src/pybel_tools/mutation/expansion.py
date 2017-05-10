@@ -391,6 +391,7 @@ def enrich_unqualified(universe, graph):
     enrich_variants(universe, graph)
 
 
+# TODO should this bother checking multiple relationship types?
 @pipeline.uni_in_place_mutator
 def expand_internal(universe, graph, edge_filters=None):
     """Edges between entities in the subgraph that pass the given filters
@@ -403,7 +404,7 @@ def expand_internal(universe, graph, edge_filters=None):
     """
     edge_filter = concatenate_edge_filters(*edge_filters) if edge_filters else keep_edge_permissive
 
-    for u, v in itt.product(graph.nodes_iter(), 2):
+    for u, v in itt.product(graph.nodes_iter(), repeat=2):
         if graph.has_edge(u, v) or not universe.has_edge(u, v):
             continue
 

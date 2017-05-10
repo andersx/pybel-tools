@@ -16,6 +16,7 @@ from pybel.manager.models import Network
 from .base_service import BaseService
 from .utils import calc_betweenness_centality
 from ..constants import CNAME
+from ..mutation.expansion import expand_internal
 from ..mutation.inference import infer_central_dogma
 from ..mutation.merge import left_merge
 from ..mutation.metadata import parse_authors, add_canonical_names, fix_pubmed_citations
@@ -307,6 +308,10 @@ class DictionaryService(BaseService):
             filter_pathologies=filter_pathologies,
             **annotations
         )
+
+        # Only expand on internal edges if we've done some adding
+        if seed_method or expand_nodes:
+            expand_internal(graph, result)
 
         result.graph['PYBEL_RELABELED'] = True
 
