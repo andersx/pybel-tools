@@ -21,6 +21,8 @@
             <h1 id="network-name">PyBEL Web</h1>
         </div>
 
+        {{ util.flashed_messages(dismissible=True, container=False) }}
+
         {% if current_user.admin %}
             <div class="panel panel-info" id="admin-panel">
                 <div class="panel-heading">

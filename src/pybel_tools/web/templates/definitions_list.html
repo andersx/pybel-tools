@@ -17,6 +17,8 @@
             <h1>Definition Store</h1>
         </div>
 
+        {{ util.flashed_messages(dismissible=True, container=False) }}
+
         <div class="panel panel-default">
             <div class="panel-body">
                 <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
