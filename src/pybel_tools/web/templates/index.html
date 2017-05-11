@@ -47,9 +47,8 @@
                 <p>This web application provides an interface for users to interact with the functions in the Python
                     software packages: <a href="http://pybel.readthedocs.io/">PyBEL</a> and <a
                             href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a>. From this page, you can begin to
-                    explore the networks stored in the knowledge base stratified by the source BEL script,
-                    by nodes and other biological entities of <a href="#seedNodePanel">interest</a>, or by certain
-                    authors and publications of <a href="#seedProvenancePanel">interest</a>.
+                    explore the networks stored in the knowledge base stratified by the source BEL script, by nodes
+                    and other biological entities of interest, or by certain authors and publications of interest.
                 </p>
             </div>
         </div>
@@ -104,9 +103,9 @@
                         <div class="thumbnail home-link">
                             <!--<img src="http://placehold.it/350x150" alt="...">-->
                             <div class="caption">
-                                <h3>Curation</h3>
-                                <p>We provide tools to generate a template BEL script given a list of PubMed
-                                    identifiers or merge multiple namespaces.</p>
+                                <h3>Curation Tools</h3>
+                                <p>Generate a template BEL script given a list of PubMed identifiers or merge
+                                    multiple BEL namespace files.</p>
                                 <p>
                                     <a href="{{ url_for('get_boilerplate') }}" class="btn btn-primary">Generate</a>
                                     <a href="{{ url_for('merge_namespaces') }}" class="btn btn-primary">Merge</a>
