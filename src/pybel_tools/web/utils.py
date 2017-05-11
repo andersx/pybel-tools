@@ -125,7 +125,7 @@ def render_graph_summary(graph_id, graph, api=None):
                                      get_mutually_unstable_correlation_triples(graph))
 
     unstable_correlation_triplets = list(itt.chain.from_iterable([
-        ((a, b, c, 'Seperate') for a, b, c in separate_unstable_triples),
+        ((a, b, c, 'Separate') for a, b, c in separate_unstable_triples),
         ((a, b, c, 'Mutual') for a, b, c in mutually_unstable_triples),
     ]))
 
