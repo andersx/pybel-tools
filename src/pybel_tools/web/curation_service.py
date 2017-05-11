@@ -2,6 +2,7 @@
 
 import codecs
 import logging
+import re
 
 from flask import render_template, request, make_response, jsonify
 from flask_wtf import FlaskForm
@@ -13,9 +14,28 @@ from wtforms.validators import DataRequired, Email
 from pybel.constants import NAMESPACE_DOMAIN_TYPES
 from pybel.utils import parse_bel_resource
 from ..definition_utils import write_namespace
+from ..document_utils import write_boilerplate
 from ..recuration.suggestions import get_ols_search, get_ols_suggestion
 
 log = logging.getLogger(__name__)
+
+
+class BoilerplateForm(FlaskForm):
+    """Builds a form for generating BEL script templates"""
+    name = fields.StringField('Document Name', validators=[DataRequired()])
+    description = fields.StringField('Document Description', validators=[DataRequired()])
+    authors = fields.StringField('Authors', validators=[DataRequired()])
+    contact_email = fields.StringField('Contact Email', validators=[DataRequired(), Email()])
+    pmids = fields.StringField('PubMed Identifiers, separated by commas')
+    licenses = fields.RadioField(
+        'License',
+        choices=[
+            ('CC BY 4.0', 'Add the CC BY 4.0 license'),
+            ('Other/Proprietary', 'Add an "Other/Proprietary" license')
+        ],
+        default='CC BY 4.0'
+    )
+    submit = fields.SubmitField('Generate')
 
 
 class MergeNamespaceForm(FlaskForm):
@@ -65,11 +85,40 @@ def get_resource_from_request_file(file):
     return parse_bel_resource(codecs.iterdecode(file, 'utf-8'))
 
 
-def build_merge_service(app):
+def build_curation_service(app):
     """Adds the endpoint for merging BEL namespcaes
 
     :param flask.Flask app: A Flask application
     """
+
+    @app.route('/curation/bel/template', methods=['GET', 'POST'])
+    def get_boilerplate():
+        """Serves the form for building a template BEL script"""
+        form = BoilerplateForm()
+
+        if not form.validate_on_submit():
+            return render_template('boilerplate.html', form=form)
+
+        si = StringIO()
+
+        pmids = [int(x.strip()) for x in form.pmids.data.split(',') if x]
+
+        write_boilerplate(
+            document_name=form.name.data,
+            contact=form.contact_email.data,
+            description=form.description.data,
+            authors=form.authors.data,
+            licenses=form.licenses.data,
+            pmids=pmids,
+            file=si
+        )
+
+        identifier = re.sub(r"\s+", '_', form.name.data.lower())
+
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = "attachment; filename={}.bel".format(identifier)
+        output.headers["Content-type"] = "text/plain"
+        return output
 
     @app.route('/curation/namespace/merge', methods=['GET', 'POST'])
     def merge_namespaces():
@@ -122,7 +171,6 @@ def build_merge_service(app):
                                    page_title='Validate Namespace')
 
         resource = parse_bel_resource(codecs.iterdecode(form.file.data.stream, 'utf-8'))
-        log.info('resource has %d names', len(resource['Values']))
         search_fn = get_ols_search if form.search_type.data == 'search' else get_ols_suggestion
 
         results = {}
@@ -130,8 +178,6 @@ def build_merge_service(app):
             response = search_fn(name)
             results[name] = response['response']['docs']
 
-        log.info('got %d results', len(results))
-
         return jsonify(results)
 
-    log.info('added curation services to %s', app)
+    log.info('added curation service to %s', app)

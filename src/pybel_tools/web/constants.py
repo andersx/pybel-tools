@@ -12,3 +12,5 @@ PYBEL_GITHUB_CLIENT_SECRET = 'PYBEL_GITHUB_CLIENT_SECRET'
 
 integrity_message = "A graph with the same name ({}) and version ({}) already exists. If there have been changes since the last version, try bumping the version number."
 reporting_log = logging.getLogger('pybelreporting')
+
+DEFAULT_SERVICE_URL = 'http://pybel.scai.fraunhofer.de'

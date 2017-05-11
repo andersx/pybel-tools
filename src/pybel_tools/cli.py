@@ -21,10 +21,8 @@ from getpass import getuser
 
 import click
 
-import pybel
-from pybel import from_pickle, to_database, from_lines
-from pybel.constants import PYBEL_LOG_DIR
-from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
+from pybel import from_pickle, to_database, from_lines, from_url
+from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
 from pybel.manager.cache import build_manager
 from pybel.utils import get_version as pybel_version
 from .constants import GENE_FAMILIES, NAMED_COMPLEXES
@@ -35,15 +33,14 @@ from .mutation.metadata import fix_pubmed_citations
 from .utils import get_version, enable_cool_mode
 from .web import receiver_service
 from .web.analysis_service import build_analysis_service
-from .web.boilerplate_service import build_boilerplate_service
 from .web.compilation_service import build_synchronous_compiler_service
-from .web.constants import SECRET_KEY, reporting_log
+from .web.constants import SECRET_KEY, reporting_log, DEFAULT_SERVICE_URL
+from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
 from .web.login_service import build_login_service
-from .web.merge_service import build_merge_service
 from .web.parser_endpoint import build_parser_service
-from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
+from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
@@ -98,7 +95,7 @@ def small_corpus(connection, enrich_authors, use_edge_store, debug):
     """Caches the Selventa Small Corpus"""
     set_debug_param(debug)
     manager = build_manager(connection)
-    graph = pybel.from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
     if enrich_authors:
         fix_pubmed_citations(graph)
     manager.insert_graph(graph, store_parts=use_edge_store)
@@ -113,7 +110,7 @@ def large_corpus(connection, enrich_authors, use_edge_store, debug):
     """Caches the Selventa Large Corpus"""
     set_debug_param(debug)
     manager = build_manager(connection)
-    graph = pybel.from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
     if enrich_authors:
         fix_pubmed_citations(graph)
     manager.insert_graph(graph, store_parts=use_edge_store)
@@ -128,7 +125,7 @@ def gene_families(connection, enrich_authors, use_edge_store, debug):
     """Caches the HGNC Gene Family memberships"""
     set_debug_param(debug)
     manager = build_manager(connection)
-    graph = pybel.from_url(GENE_FAMILIES, manager=manager)
+    graph = from_url(GENE_FAMILIES, manager=manager)
     if enrich_authors:
         fix_pubmed_citations(graph)
     manager.insert_graph(graph, store_parts=use_edge_store)
@@ -143,7 +140,7 @@ def named_complexes(connection, enrich_authors, use_edge_store, debug):
     """Caches GO Named Protein Complexes memberships"""
     set_debug_param(debug)
     manager = build_manager(connection)
-    graph = pybel.from_url(NAMED_COMPLEXES, manager=manager)
+    graph = from_url(NAMED_COMPLEXES, manager=manager)
     if enrich_authors:
         fix_pubmed_citations(graph)
     manager.insert_graph(graph, store_parts=use_edge_store)
@@ -256,9 +253,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     build_synchronous_compiler_service(app, manager=manager)
     build_pickle_uploader_service(app, manager=manager)
     build_analysis_service(app, manager=manager, api=api)
-    build_boilerplate_service(app)
+    build_curation_service(app)
     build_reporting_service(app, manager=manager)
-    build_merge_service(app)
 
     if run_database_service:
         build_database_service(app, manager)

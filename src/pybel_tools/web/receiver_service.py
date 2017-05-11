@@ -7,11 +7,10 @@ import requests
 from flask import Flask, url_for
 
 from pybel import from_json_dict, to_json_dict
+from .constants import DEFAULT_SERVICE_URL
 from .utils import try_insert_graph, render_upload_error
 
 log = logging.getLogger(__name__)
-
-DEFAULT_SERVICE_URL = 'http://pybel.scai.fraunhofer.de'
 
 
 def build_receiver_service(app, manager):
