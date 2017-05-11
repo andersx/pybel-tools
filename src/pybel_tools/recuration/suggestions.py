@@ -72,3 +72,24 @@ def help_suggest_name(namespace, name, metadata_parser, suggestion_cache):
         suggestion_cache[namespace, name].append(putative)
 
     return suggestion_cache[namespace, name]
+
+
+if __name__ == '__main__':
+    from pybel.utils import get_bel_resource
+    import os
+    import json
+    ptsd_ns_path = os.path.join(os.environ['OWNCLOUD_BASE'], 'namespaces', 'ptsd.belns')
+    ns = get_bel_resource(ptsd_ns_path)
+
+    c=0
+    for name in ns['Values']:
+        r = get_ols_search(name)
+
+        print(name)
+        if r['response']['numFound'] == 0:
+            continue
+        print(json.dumps(r['response']['docs'], indent=2))
+        c+=1
+        if c > 20:
+            break
+

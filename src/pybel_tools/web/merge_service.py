@@ -3,8 +3,7 @@
 import codecs
 import logging
 
-from flask import render_template, request, make_response
-from flask_bootstrap import Bootstrap
+from flask import render_template, request, make_response, jsonify
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from six import StringIO
@@ -14,6 +13,7 @@ from wtforms.validators import DataRequired, Email
 from pybel.constants import NAMESPACE_DOMAIN_TYPES
 from pybel.utils import parse_bel_resource
 from ..definition_utils import write_namespace
+from ..recuration.suggestions import get_ols_search, get_ols_suggestion
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +43,28 @@ class MergeNamespaceForm(FlaskForm):
     submit = fields.SubmitField('Merge')
 
 
+class ValidateNamespaceForm(FlaskForm):
+    """Builds a form for validating a namespace"""
+    file = FileField('BEL Namespace File', validators=[
+        DataRequired(),
+        FileAllowed(['belns'], 'Only files with the *.belns extension are allowed')
+    ])
+    search_type = fields.RadioField(
+        'Search Type',
+        choices=[
+            ('search', 'Search'),
+            ('suggest', 'Suggest')
+        ],
+        default='search'
+    )
+    submit = fields.SubmitField('Validate')
+
+
+def get_resource_from_request_file(file):
+    """Iterates over a file stream and gets a BEL resource"""
+    return parse_bel_resource(codecs.iterdecode(file, 'utf-8'))
+
+
 def build_merge_service(app):
     """Adds the endpoint for merging BEL namespcaes
 
@@ -65,10 +87,7 @@ def build_merge_service(app):
 
         for file in files:
             log.warning('file: %s', file)
-            lines = list(codecs.iterdecode(file, 'utf-8'))
-            for line in lines:
-                print(line)
-            resource = parse_bel_resource(lines)
+            resource = parse_bel_resource(codecs.iterdecode(file, 'utf-8'))
             names |= set(resource['Values'])
 
         si = StringIO()
@@ -92,3 +111,27 @@ def build_merge_service(app):
         output.headers["Content-Disposition"] = "attachment; filename={}.belns".format(form.keyword.data)
         output.headers["Content-type"] = "text/csv"
         return output
+
+    @app.route('/curation/namespace/validate', methods=['GET', 'POST'])
+    def validate_namespace():
+        """Provides suggestions for namespace curation"""
+        form = ValidateNamespaceForm()
+
+        if not form.validate_on_submit():
+            return render_template('generic_form.html', form=form, page_header="Validate Namespace",
+                                   page_title='Validate Namespace')
+
+        resource = parse_bel_resource(codecs.iterdecode(form.file.data.stream, 'utf-8'))
+        log.info('resource has %d names', len(resource['Values']))
+        search_fn = get_ols_search if form.search_type.data == 'search' else get_ols_suggestion
+
+        results = {}
+        for name in sorted(resource['Values']):
+            response = search_fn(name)
+            results[name] = response['response']['docs']
+
+        log.info('got %d results', len(results))
+
+        return jsonify(results)
+
+    log.info('added curation services to %s', app)
