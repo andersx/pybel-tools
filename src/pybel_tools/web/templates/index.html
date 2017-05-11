@@ -105,9 +105,12 @@
                             <!--<img src="http://placehold.it/350x150" alt="...">-->
                             <div class="caption">
                                 <h3>Curation</h3>
-                                <p>Generate a template BEL script given a list of PubMed identifiers</p>
-                                <a href="{{ url_for('get_boilerplate') }}" class="btn btn-primary btn-block">Generate
-                                    Template</a>
+                                <p>We provide tools to generate a template BEL script given a list of PubMed
+                                    identifiers or merge multiple namespaces.</p>
+                                <p>
+                                    <a href="{{ url_for('get_boilerplate') }}" class="btn btn-primary">Generate</a>
+                                    <a href="{{ url_for('merge_namespaces') }}" class="btn btn-primary">Merge</a>
+                                </p>
                             </div>
                         </div>
                     </div>

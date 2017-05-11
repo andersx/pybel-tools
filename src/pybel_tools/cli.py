@@ -41,6 +41,7 @@ from .web.constants import SECRET_KEY, reporting_log
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
 from .web.login_service import build_login_service
+from .web.merge_service import build_merge_service
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
 from .web.reporting_service import build_reporting_service
@@ -257,6 +258,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     build_analysis_service(app, manager=manager, api=api)
     build_boilerplate_service(app)
     build_reporting_service(app, manager=manager)
+    build_merge_service(app)
 
     if run_database_service:
         build_database_service(app, manager)
