@@ -21,6 +21,22 @@
             <h1 id="network-name">PyBEL Web</h1>
         </div>
 
+        {% if current_user.admin %}
+            <div class="panel panel-info" id="admin-panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Admin
+                        <button type="button" class="close" data-target="#admin-panel" data-dismiss="alert">
+                            <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        </button>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <a class="btn btn-info" href="{{ url_for('rollback') }}" role="button">Rollback</a>
+                    <a class="btn btn-danger" href="{{ url_for('nuke') }}" role="button">Nuke Database</a>
+                </div>
+            </div>
+        {% endif %}
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Introduction</h3>
