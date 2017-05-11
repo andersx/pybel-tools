@@ -33,20 +33,14 @@ def render_upload_error(exc):
     
     :type exc: Exception
     """
-    return render_template(
-        'parse_error.html',
-        error_title='Upload Error',
-        error_text=str(exc),
-    )
+    return render_template('parse_error.html', error_title='Upload Error', error_text=str(exc))
 
 
 def try_insert_graph(manager, graph, api=None):
     """Inserts a graph and sends an okay message if success. else renders upload page
     
-    :param manager: 
     :type manager: pybel.manager.cache.CacheManager
-    :param graph: 
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: The HTTP response to use as a Flask response
     """
     try:
@@ -85,7 +79,7 @@ def get_app():
 def sanitize_list_of_str(l):
     """Strips all strings in a list and filters to the non-empty ones
     
-    :type l: list[str]
+    :type l: iter[str]
     :rtype: list[str]
     """
     return [e for e in (e.strip() for e in l) if e]
@@ -166,10 +160,6 @@ def render_graph_summary(graph_id, graph, api=None):
         unused_list_annotation_values=sorted(unused_list_annotation_values.items()),
         current_user=current_user
     )
-
-
-def canonicalize_node_keys(d, graph):
-    return {graph.node[node][CNAME] for node, value in d.items()}
 
 
 def calc_betweenness_centality(graph):
