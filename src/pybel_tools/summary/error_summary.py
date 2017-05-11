@@ -45,6 +45,12 @@ def count_naked_names(graph):
     return Counter(e.name for _, _, e, _ in graph.warnings if isinstance(e, NakedNameWarning))
 
 
+def get_namespaces_with_incorrect_names(graph):
+    """Returns the set of all namespaces with incorrect names in the graph"""
+    return {e.namespace for _, _, e, _ in graph.warnings if
+            isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning))}
+
+
 def get_incorrect_names(graph, namespace):
     """Returns the set of all incorrect names from the given namespace in the graph
 
