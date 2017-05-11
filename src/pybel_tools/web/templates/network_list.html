@@ -71,10 +71,12 @@
                 <div class="panel-body">
                     <h4>Actions</h4>
                     <p>
-                        <a class="btn btn-info" href="{{ url_for('view_reports') }}" role="button">View Reporting</a>
+                        <a class="btn btn-info" href="{{ url_for('view_reports') }}" role="button">View Pretty
+                            Reporting</a>
+                        <a class="btn btn-info" href="{{ url_for('list_reporting') }}" role="button">View Reporting
+                            Log</a>
                         <a class="btn btn-success" href="{{ url_for('run_reload') }}" role="button">Reload Graphs</a>
                         <a class="btn btn-danger" href="{{ url_for('drop_graphs') }}" role="button">Drop All Graphs</a>
-                        <a class="btn btn-danger" href="{{ url_for('nuke') }}" role="button">Nuke Database</a>
                     </p>
                     <h4>Ensure BEL Documents</h4>
                     <p>
