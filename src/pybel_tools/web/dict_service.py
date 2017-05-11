@@ -410,8 +410,13 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
     @app.route('/summary/<int:graph_id>')
     def view_summary(graph_id):
         """Renders a page with the parsing errors for a given BEL script"""
-        graph = manager.get_graph_by_id(graph_id)
-        graph = from_bytes(graph.blob, check_version=check_version)
+        try:
+            network = manager.get_graph_by_id(graph_id)
+            graph = from_bytes(network.blob, check_version=check_version)
+        except:
+            flask.flash("Problem getting graph {}".format(graph_id), category='error')
+            return redirect(url_for('view_summary'))
+
         return render_graph_summary(graph_id, graph, api)
 
     @app.route('/definitions')
