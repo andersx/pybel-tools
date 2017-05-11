@@ -29,7 +29,7 @@ from ..ioutils import convert_recursive, upload_recursive, get_paths_recursive
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary.edge_summary import get_annotation_values_by_annotation
-from ..summary.error_summary import get_undefined_namespace_names
+from ..summary.error_summary import get_undefined_namespace_names, get_incorrect_names
 from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
 
@@ -334,12 +334,8 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
     :type app: Flask
     :param manager: A PyBEL cache manager
     :type manager: pybel.manager.cache.CacheManager
-    :param preload: Should the networks be preloaded?
-    :type preload: bool
     :param check_version: Should the versions of the networks be checked during loading?
     :type check_version: bool
-    :param admin_password: The administrator password for accessing restricted web pages
-    :type admin_password: str
     """
     api = DictionaryService(manager=manager)
 
@@ -594,12 +590,7 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         """Return list of blacklist constants"""
         return jsonify(sorted(BLACK_LIST))
 
-    @app.route('/api/nsbuilder/<int:graph_id>/<namespace>')
-    def download_undefined_namespace(graph_id, namespace):
-        """Outputs a namespace built for this undefined namespace"""
-        graph = api.get_network(graph_id)
-        names = get_undefined_namespace_names(graph, namespace)
-
+    def _build_namespace_helper(graph, namespace, names):
         si = StringIO()
 
         write_namespace(
@@ -618,6 +609,20 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         output.headers["Content-Disposition"] = "attachment; filename={}.belns".format(namespace)
         output.headers["Content-type"] = "text/plain"
         return output
+
+    @app.route('/api/namespace/builder/undefined/<int:graph_id>/<namespace>')
+    def download_undefined_namespace(graph_id, namespace):
+        """Outputs a namespace built for this undefined namespace"""
+        graph = api.get_network(graph_id)
+        names = get_undefined_namespace_names(graph, namespace)
+        return _build_namespace_helper(graph, namespace, names)
+
+    @app.route('/api/namespace/builder/incorrect/<int:graph_id>/<namespace>')
+    def download_missing_namespace(graph_id, namespace):
+        """Outputs a namespace built from the missing names in the given namespace"""
+        graph = api.get_network(graph_id)
+        names = get_incorrect_names(graph, namespace)
+        return _build_namespace_helper(graph, namespace, names)
 
     log.info('Added dictionary service to %s', app)
 
