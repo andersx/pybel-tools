@@ -38,14 +38,13 @@ class User(UserMixin):
         return self.name if self.name else self.username
 
 
-def build_login_service(app, strict_login=False):
+def build_login_service(app):
     """Adds the login service
     
     Before adding this service, both ``GITHUB_CLIENT_ID`` and ``GITHUB_CLIENT_SECRET`` need to be set in the app's
     configuration
     
     :param flask.Flask app: A Flask app
-    :param bool strict_login: Should users be forced to add a name to their GitHub accounts to use PyBEL Web?
     """
     app.config.update({
         'GITHUB_CLIENT_ID': os.environ[PYBEL_GITHUB_CLIENT_ID],
@@ -81,9 +80,9 @@ def build_login_service(app, strict_login=False):
 
         user = User(access_token)
 
-        if strict_login and not user.name:
-            flash('Please add a name to your GitHub account to use PyBEL Web')
-            return redirect(url_for('view_networks'))
+        if app.config.get('PYBEL_WEB_STRICT_LOGIN') and not user.name:
+            flash('Please add your name to your GitHub account to use PyBEL Web')
+            return redirect(url_for('index'))
 
         login_user(user)
 
