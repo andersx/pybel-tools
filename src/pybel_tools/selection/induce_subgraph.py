@@ -290,8 +290,8 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
 
     # Apply filters
     if filter_pathologies:
-        remove_nodes_by_function(graph, PATHOLOGY)
-        remove_isolated_nodes(graph)
+        remove_nodes_by_function(result, PATHOLOGY)
+        remove_isolated_nodes(result)
 
     return result
 

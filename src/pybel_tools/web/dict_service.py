@@ -378,12 +378,14 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         elif seed_provenance_form.validate_on_submit() and seed_provenance_form.submit_provenance.data:
             authors = sanitize_list_of_str(seed_provenance_form.author_list.data.split(','))
             pmids = sanitize_list_of_str(seed_provenance_form.pubmed_list.data.split(','))
+            filter_pathologies = seed_provenance_form.filter_pathologies.data
             log.info('got prov: %s', dict(authors=authors, pmids=pmids))
             url = url_for('view_explorer', **{
                 GRAPH_ID: '0',
                 SEED_TYPE: SEED_TYPE_PROVENANCE,
                 SEED_DATA_PMIDS: pmids,
                 SEED_DATA_AUTHORS: authors,
+                FILTER_PATHOLOGIES: filter_pathologies,
                 AUTOLOAD: 'yes',
             })
             log.info('redirecting to %s', url)
