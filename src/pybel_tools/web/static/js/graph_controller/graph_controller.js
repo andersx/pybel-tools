@@ -144,11 +144,8 @@ function getSeedMethodFromURL(args, url) {
             }
         }
         if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] ||
-            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
-            args["nodes"] = url["nodes"];
-        }
-        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] ||
-            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
+            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"] ||
+            "upstream" === url["seed_method"] || "downstream" === url["seed_method"]) {
             args["nodes"] = url["nodes"];
         }
     }

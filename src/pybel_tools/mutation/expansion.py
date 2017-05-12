@@ -42,6 +42,11 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
+def _update_node_helper(universe, graph):
+    for node in graph.nodes_iter():
+        graph.node[node].update(universe.node[node])
+
+
 @pipeline.uni_mutator
 def get_upstream_causal_subgraph(graph, nbunch):
     """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
@@ -53,16 +58,37 @@ def get_upstream_causal_subgraph(graph, nbunch):
     :return: A BEL Graph
     :rtype: pybel.BELGraph
     """
-    bg = BELGraph()
+    result = BELGraph()
 
     for u, v, k, d in graph.in_edges_iter(nbunch, keys=True, data=True):
         if d[RELATION] in CAUSAL_RELATIONS:
-            bg.add_edge(u, v, key=k, attr_dict=d)
+            result.add_edge(u, v, key=k, attr_dict=d)
 
-    for node in bg.nodes_iter():
-        bg.node[node].update(graph.node[node])
+    _update_node_helper(graph, result)
 
-    return bg
+    return result
+
+
+@pipeline.uni_mutator
+def get_downstream_causal_subgraph(graph, nbunch):
+    """Induces a subgraph from all of the downstream causal entities of the nodes in the nbunch
+
+    :param graph: A BEL Graph
+    :type graph: pybel.BELGraph
+    :param nbunch: A BEL node or iterable of BEL nodes
+    :type nbunch: tuple or list of tuples
+    :return: A BEL Graph
+    :rtype: pybel.BELGraph
+    """
+    result = BELGraph()
+
+    for u, v, k, d in graph.out_edges_iter(nbunch, keys=True, data=True):
+        if d[RELATION] in CAUSAL_RELATIONS:
+            result.add_edge(u, v, key=k, attr_dict=d)
+
+    _update_node_helper(graph, result)
+
+    return result
 
 
 def get_peripheral_successor_edges(graph, subgraph):
@@ -528,6 +554,16 @@ def expand_upstream_causal_subgraph(universe, graph):
     :param pybel.BELGraph universe: A BEL graph representing the universe of all knowledge
     :param pybel.BELGraph graph: The target BEL graph to enrich with upstream causal controllers of contained nodes
     """
-    for node in graph.nodes():
-        upstream = get_upstream_causal_subgraph(universe, node)
-        left_merge(graph, upstream)
+    upstream = get_upstream_causal_subgraph(universe, graph.nodes())
+    left_merge(graph, upstream)
+
+
+@pipeline.uni_in_place_mutator
+def expand_downstream_causal_subgraph(universe, graph):
+    """Adds the downstream causal relations to the given subgraph
+
+    :param pybel.BELGraph universe: A BEL graph representing the universe of all knowledge
+    :param pybel.BELGraph graph: The target BEL graph to enrich with downstream causal controllers of contained nodes
+    """
+    downstream = get_downstream_causal_subgraph(universe, graph.nodes())
+    left_merge(graph, downstream)

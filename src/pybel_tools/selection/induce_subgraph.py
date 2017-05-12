@@ -3,14 +3,15 @@
 import logging
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA, PATHOLOGY
+from pybel.constants import ANNOTATIONS, PATHOLOGY
 from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
 from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
     edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
 from ..filters.node_deletion import remove_nodes_by_function
 from ..filters.node_filters import filter_nodes
-from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
+from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods, get_upstream_causal_subgraph, \
+    expand_upstream_causal_subgraph, get_downstream_causal_subgraph, expand_downstream_causal_subgraph
 from ..mutation.highlight import highlight_nodes, highlight_edges
 from ..mutation.merge import left_merge
 from ..mutation.utils import remove_isolated_nodes
@@ -42,6 +43,7 @@ SEED_TYPE_DOUBLE_NEIGHBORS = 'dneighbors'
 SEED_TYPE_PATHS = 'shortest_paths'
 SEED_TYPE_PROVENANCE = 'provenance'
 SEED_TYPE_UPSTREAM = 'upstream'
+SEED_TYPE_DOWNSTREAM = 'downstream'
 
 SEED_TYPES = {
     SEED_TYPE_INDUCTION,
@@ -50,6 +52,7 @@ SEED_TYPES = {
     SEED_TYPE_PATHS,
     SEED_TYPE_PROVENANCE,
     SEED_TYPE_UPSTREAM,
+    SEED_TYPE_DOWNSTREAM
 }
 
 
@@ -178,9 +181,7 @@ def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    result = get_subgraph_by_edge_filter(graph, build_annotation_value_filter(annotation, value))
-    result.name = '{} - ({}: {})'.format(graph.name, annotation, value)
-    return result
+    return get_subgraph_by_edge_filter(graph, build_annotation_value_filter(annotation, value))
 
 
 @pipeline.mutator
@@ -218,8 +219,34 @@ def get_causal_subgraph(graph):
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    result = get_subgraph_by_edge_filter(graph, edge_is_causal)
-    result.graph[GRAPH_METADATA][METADATA_NAME] = '{} - Induced Causal Subgraph'.format(graph.name)
+    return get_subgraph_by_edge_filter(graph, edge_is_causal)
+
+
+@pipeline.mutator
+def get_multi_causal_upstream(graph, nodes):
+    """Gets all the causal uptream subgraphs from the nodes
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :param nodes: The nodes to expand above
+    :return: A subgraph of the original BEL graph
+    :rtype: pybel.BELGraph
+    """
+    result = get_upstream_causal_subgraph(graph, nodes)
+    expand_upstream_causal_subgraph(graph, result)
+    return result
+
+
+@pipeline.mutator
+def get_multi_causal_downstream(graph, nodes):
+    """Gets all the causal uptream subgraphs from the nodes
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param nodes: The nodes to expand above
+    :return: A subgraph of the original BEL graph
+    :rtype: pybel.BELGraph
+    """
+    result = get_downstream_causal_subgraph(graph, nodes)
+    expand_downstream_causal_subgraph(graph, result)
     return result
 
 
@@ -262,6 +289,10 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
         result = get_subgraph_by_provenance(graph, seed_data)
     elif seed_method == SEED_TYPE_DOUBLE_NEIGHBORS:
         result = get_subgraph_by_second_neighbors(graph, seed_data)
+    elif seed_method == SEED_TYPE_UPSTREAM:
+        result = get_multi_causal_upstream(graph, seed_data)
+    elif seed_method == SEED_TYPE_DOWNSTREAM:
+        result = get_multi_causal_downstream(graph, seed_data)
     elif not seed_method:  # Otherwise, don't seed a subgraph
         result = graph.copy()
         log.debug('no seed function - using full network: %s', result.name)
