@@ -349,16 +349,15 @@ def enrich_variants_helper(universe, graph, function):
     :param str function: The function by which the subject of each triple is filtered
     """
     nodes = list(get_nodes_by_function(graph, function))
-    for v in nodes:
-        for u, _, d in universe.in_edges_iter(v, data=True):
-            if d[RELATION] != HAS_VARIANT:
-                continue
+    for u, v, d in universe.in_edges_iter(nodes, data=True):
+        if d[RELATION] != HAS_VARIANT:
+            continue
 
-            if u not in graph:
-                graph.add_node(u, attr_dict=universe.node[u])
+        if u not in graph:
+            graph.add_node(u, attr_dict=universe.node[u])
 
-            if v not in graph.edge[u] or unqualified_edge_code[HAS_VARIANT] not in graph.edge[u][v]:
-                graph.add_unqualified_edge(u, v, HAS_VARIANT)
+        if v not in graph.edge[u] or unqualified_edge_code[HAS_VARIANT] not in graph.edge[u][v]:
+            graph.add_unqualified_edge(u, v, HAS_VARIANT)
 
 
 @pipeline.uni_in_place_mutator
