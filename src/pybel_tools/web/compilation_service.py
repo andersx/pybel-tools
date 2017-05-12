@@ -16,7 +16,7 @@ from pybel import from_lines
 from pybel.parser.parse_exceptions import InconsistientDefinitionError
 from .constants import integrity_message
 from .forms import CompileForm
-from .models import add_network_reporting
+from .models import add_network_reporting, log_graph
 from .utils import render_graph_summary
 from ..mutation.metadata import add_canonical_names
 
@@ -77,19 +77,23 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
 
         if not enable_cache:
             flash('Sorry, graph storage is not currently enabled.', category='warning')
+            log_graph(graph, current_user, precompiled=False)
             return render_graph_summary(0, graph)
 
         if not form.save_network.data and not form.save_edge_store.data:
+            log_graph(graph, current_user, precompiled=False)
             return render_graph_summary(0, graph)
 
         try:
             network = manager.insert_graph(graph, store_parts=form.save_edge_store.data)
         except IntegrityError:
+            log_graph(graph, current_user, precompiled=False, failed=True)
             log.exception('integrity error')
             flash(integrity_message.format(graph.name, graph.version), category='error')
             manager.rollback()
             return redirect(url_for('view_compile'))
         except Exception as e:
+            log_graph(graph, current_user, precompiled=False, failed=True)
             log.exception('general storage error')
             flash("Error storing in database: {}".format(e), category='error')
             return redirect(url_for('view_compile'))
