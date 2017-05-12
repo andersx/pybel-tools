@@ -104,7 +104,6 @@ def get_graph_from_request(api):
     :rtype: pybel.BELGraph
     """
 
-
     network_id = request.args.get(GRAPH_ID)
 
     if network_id is not None:
@@ -137,7 +136,11 @@ def get_graph_from_request(api):
     expand_nodes = request.args.get(APPEND_PARAM)
     remove_nodes = request.args.get(REMOVE_PARAM)
     filters = request.args.getlist(FILTERS)
-    filter_pathologies = FILTER_PATHOLOGIES in request.args
+
+    filter_pathologies = request.args.get(FILTER_PATHOLOGIES)
+
+    if filter_pathologies and filter_pathologies in {'True', True}:
+        filter_pathologies = True
 
     if expand_nodes:
         expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
@@ -360,6 +363,9 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         """Renders a page for the user to choose a network"""
         seed_subgraph_form = SeedSubgraphForm()
         seed_provenance_form = SeedProvenanceForm()
+
+        log.debug(seed_subgraph_form.data)
+        log.debug(seed_provenance_form.data)
 
         if seed_subgraph_form.validate_on_submit() and seed_subgraph_form.submit_subgraph.data:
             seed_data_nodes = seed_subgraph_form.node_list.data.split(',')
