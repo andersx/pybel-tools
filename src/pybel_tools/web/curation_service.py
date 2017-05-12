@@ -178,6 +178,6 @@ def build_curation_service(app):
             response = search_fn(name)
             results[name] = response['response']['docs']
 
-        return jsonify(results)
+        return render_template('namespace_validation.html', data=results)
 
     log.info('added curation service to %s', app)

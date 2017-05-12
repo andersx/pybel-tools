@@ -1,0 +1,69 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}Namespace Validation{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    href='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'/>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
+{% endblock %}
+
+
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>Namespace Validation</h1>
+        </div>
+
+        {{ util.flashed_messages(dismissible=True, container=False) }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <div class="pull-right">
+                    {% if current_user.is_authenticated %}
+                        <a class="btn btn-default" href="https://github.com/{{ current_user.username }}">Logged in
+                            as {{ current_user.display }}</a>
+                        <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">Log Out</a>
+                    {% else %}
+                        <a class="btn btn-default" href="{{ url_for('login') }}" role="button">Log In</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Curated Networks</h3>
+            </div>
+            <div class="panel-body">
+                <p>Each curated network is backed by a BEL script. Below are options to summarize the networks'
+                    contents, explore them with an in-browser navigator, or run analyses with data sets such as
+                    differential gene expression data.</p>
+            </div>
+            <div class="list-group">
+                {% for name, result in data.items() %}
+                    <div class="list-group-item">
+                        <h4 class="list-group-item-heading">{{ name }}</h4>
+                        <div class="list-group-item-text">
+                            <dl class="list-inline dl-horizontal">
+                                {% for k, v in result.items() %}
+                                    <dt>{{ k }}</dt>
+                                    <dd>{{ v }}</dd>
+                                {% endfor %}
+                            </dl>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% include "footer.html" %}
+{% endblock %}
