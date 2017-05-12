@@ -47,7 +47,10 @@ class SeedProvenanceForm(FlaskForm):
 
 class CompileForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
-    file = FileField('My BEL script', validators=[DataRequired()])
+    file = FileField('My BEL script', validators=[
+        DataRequired(),
+        FileAllowed(['bel'], 'Only files with the *.bel extension are allowed')
+    ])
     suggest_name_corrections = BooleanField('Suggest name corrections')
     suggest_naked_name = BooleanField('My document contains unqualified names - suggest appropriate namespaces')
     allow_nested = BooleanField('My document contains nested statements')
