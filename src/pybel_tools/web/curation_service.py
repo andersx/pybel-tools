@@ -159,7 +159,7 @@ def build_curation_service(app):
 
         output = make_response(si.getvalue())
         output.headers["Content-Disposition"] = "attachment; filename={}.belns".format(form.keyword.data)
-        output.headers["Content-type"] = "text/csv"
+        output.headers["Content-type"] = "text/plain"
         return output
 
     @app.route('/curation/namespace/validate', methods=['GET', 'POST'])
@@ -182,7 +182,7 @@ def build_curation_service(app):
 
         return render_template(
             'namespace_validation.html',
-                               data=results,
+            data=results,
             timer=round(time.time() - t),
             namespace_name=resource['Namespace']['NameString']
         )
