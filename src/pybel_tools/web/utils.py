@@ -19,7 +19,7 @@ from ..constants import CNAME
 from ..summary import get_contradiction_summary, count_functions, count_relations, count_error_types, get_translocated, \
     get_degradations, get_activities, count_namespaces, group_errors
 from ..summary.edge_summary import count_diseases, get_unused_annotations, get_unused_list_annotation_values
-from ..summary.error_summary import get_undefined_namespaces, get_undefined_annotations
+from ..summary.error_summary import get_undefined_namespaces, get_undefined_annotations, get_namespaces_with_incorrect_names
 from ..summary.export import info_list
 from ..summary.node_properties import count_variants
 from ..summary.node_summary import get_unused_namespaces
@@ -125,6 +125,7 @@ def render_graph_summary(graph_id, graph, api=None):
 
     undefined_namespaces = get_undefined_namespaces(graph)
     undefined_annotations = get_undefined_annotations(graph)
+    namespaces_with_incorrect_names = get_namespaces_with_incorrect_names(graph)
 
     unused_namespaces = get_unused_namespaces(graph)
     unused_annotations = get_unused_annotations(graph)
@@ -158,7 +159,8 @@ def render_graph_summary(graph_id, graph, api=None):
         undefined_annotations=sorted(undefined_annotations),
         unused_annotations=sorted(unused_annotations),
         unused_list_annotation_values=sorted(unused_list_annotation_values.items()),
-        current_user=current_user
+        current_user=current_user,
+        namespaces_with_incorrect_names=namespaces_with_incorrect_names
     )
 
 

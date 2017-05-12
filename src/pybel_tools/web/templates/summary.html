@@ -116,6 +116,21 @@
             </div>
         {% endif %}
 
+        {% if namespaces_with_incorrect_names is defined and namespaces_with_incorrect_names|length > 0 %}
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Namespaces with Incorrect Names</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        {% for namespace in namespaces_with_incorrect_names %}
+                            <li>{{ namespace }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
         {% if undefined_annotation is defined and undefined_annotations|length > 0 %}
             <div class="panel panel-danger">
                 <div class="panel-heading">
