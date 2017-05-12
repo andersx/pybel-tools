@@ -403,10 +403,10 @@
             </div>
         {% endif %}
 
-        {% if unstable_correlation_triplets is defined and unstable_correlation_triplets|length > 0 %}
+        {% if contradictory_triplets is defined and contradictory_triplets|length > 0 %}
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Unstable Triplets</h3>
+                    <h3 class="panel-title">Contradictory Triplets</h3>
                 </div>
                 <div class="panel-body">
                     <p>Analysis of triple stability comes from a deep graph theoretic background. It identifies
@@ -435,6 +435,43 @@
                         <dd>When <code>A decreases B</code>, <code>A decreases C</code>, and <code>C negativeCorrelation
                             A</code>.
                         </dd>
+                    </dl>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Node A</th>
+                                <th>Node B</th>
+                                <th>Node C</th>
+                                <th>Type</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for a, b, c, label in contradictory_triplets %}
+                                <tr>
+                                    <td>{{ a }}</td>
+                                    <td>{{ b }}</td>
+                                    <td>{{ c }}</td>
+                                    <td>{{ label }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+
+        {% if unstable_triplets is defined and unstable_triplets|length > 0 %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unstable Triplets</h3>
+                </div>
+                <div class="panel-body">
+                    <p>Like unstable pairs, unstable triplets require additional context to understand their
+                        mechanisms of regulation.</p>
+                    <dl>
                         <dt>Chaotic Triplets</dt>
                         <dd>A triplet of nodes that mutually increase each other, such as when <code>A increases
                             B</code>,
@@ -457,7 +494,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {% for a, b, c, label in unstable_correlation_triplets %}
+                            {% for a, b, c, label in unstable_triplets %}
                                 <tr>
                                     <td>{{ a }}</td>
                                     <td>{{ b }}</td>
@@ -471,6 +508,7 @@
                 </div>
             </div>
         {% endif %}
+
     </div>
 
     {% include "footer.html" %}

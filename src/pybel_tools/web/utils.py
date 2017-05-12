@@ -116,17 +116,22 @@ def render_graph_summary(graph_id, graph, api=None):
     contradictory_pairs = list((decanonicalize_node(graph, u), decanonicalize_node(graph, v), relation) for
                                u, v, relation in get_contradiction_summary(graph))
 
-    unstable_triplets = itt.chain.from_iterable([
+    contradictory_triplets = itt.chain.from_iterable([
         ((a, b, c, 'Separate') for a, b, c in get_separate_unstable_correlation_triples(graph)),
         ((a, b, c, 'Mutual') for a, b, c in get_mutually_unstable_correlation_triples(graph)),
-        ((a, b, c, 'Jens Type A') for a, b, c in get_jens_unstable_alpha(graph)),
+        ((a, b, c, 'Jens') for a, b, c in get_jens_unstable_alpha(graph)),
         ((a, b, c, 'Increase Mismatch') for a, b, c in get_increase_mismatch_triplets(graph)),
         ((a, b, c, 'Decrease Mismatch') for a, b, c in get_decrease_mismatch_triplets(graph)),
+
+    ])
+
+    contradictory_triplets = [(dcn(a), dcn(b), dcn(c), d) for a, b, c, d in contradictory_triplets]
+
+    unstable_triplets = itt.chain.from_iterable([
         ((a, b, c, 'Chaotic') for a, b, c in get_chaotic_triplets(graph)),
         ((a, b, c, 'Dampened') for a, b, c in get_dampened_triplets(graph)),
     ])
-
-    unstable_triplets = [(dcn(a), dcn(b), dcn(c), d) for a,b,c,d in unstable_triplets]
+    unstable_triplets = [(dcn(a), dcn(b), dcn(c), d) for a, b, c, d in unstable_triplets]
 
     undefined_namespaces = get_undefined_namespaces(graph)
     undefined_annotations = get_undefined_annotations(graph)
@@ -155,7 +160,8 @@ def render_graph_summary(graph_id, graph, api=None):
         info_list=info_list(graph),
         contradictions=contradictory_pairs,
         unstable_pairs=unstable_pairs,
-        unstable_correlation_triplets=unstable_triplets,
+        contradictory_triplets=contradictory_triplets,
+        unstable_triplets=unstable_triplets,
         graph=graph,
         graph_id=graph_id,
         time=None,
