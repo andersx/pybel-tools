@@ -8,7 +8,6 @@
 
 {% block styles %}
     {{ super() }}
-    href='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'/>
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
 {% endblock %}
 
@@ -40,26 +39,33 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Curated Networks</h3>
+                <h3 class="panel-title">Name Search</h3>
             </div>
             <div class="panel-body">
-                <p>Each curated network is backed by a BEL script. Below are options to summarize the networks'
-                    contents, explore them with an in-browser navigator, or run analyses with data sets such as
-                    differential gene expression data.</p>
+                <p>The names from {{ namespace_name }} were searched using the Ontology Lookup Service. </p>
+                <p>Processing took {{ timer }} seconds.</p>
             </div>
             <div class="list-group">
-                {% for name, result in data.items() %}
-                    <div class="list-group-item">
-                        <h4 class="list-group-item-heading">{{ name }}</h4>
-                        <div class="list-group-item-text">
-                            <dl class="list-inline dl-horizontal">
-                                {% for k, v in result.items() %}
-                                    <dt>{{ k }}</dt>
-                                    <dd>{{ v }}</dd>
+                {% for name, results in data.items() %}
+                    {% if results is defined and results|length > 0 %}
+                        <div class="list-group-item">
+                            <h4 class="list-group-item-heading">{{ name }}</h4>
+                            <div class="list-group-item-text">
+                                {% for result in results %}
+                                    {% if result['is_defining_ontology'] %}
+                                        <dl class="list-inline dl-horizontal">
+                                            <dt>Ontology</dt>
+                                            <dd>{{ result['ontology_name'] }}</dd>
+                                            <dt>Label</dt>
+                                            <dd>{{ result['label'] }}</dd>
+                                            <dt>Identifier</dt>
+                                            <dd><a href="{{ result['iri'] }}">{{ result['obo_id'] }}</a></dd>
+                                        </dl>
+                                    {% endif %}
                                 {% endfor %}
-                            </dl>
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>

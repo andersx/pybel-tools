@@ -3,8 +3,9 @@
 import codecs
 import logging
 import re
+import time
 
-from flask import render_template, request, make_response, jsonify
+from flask import render_template, request, make_response
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from six import StringIO
@@ -171,13 +172,19 @@ def build_curation_service(app):
                                    page_title='Validate Namespace')
 
         resource = parse_bel_resource(codecs.iterdecode(form.file.data.stream, 'utf-8'))
-        search_fn = get_ols_search if form.search_type.data == 'search' else get_ols_suggestion
 
+        search_fn = get_ols_search if form.search_type.data == 'search' else get_ols_suggestion
+        t = time.time()
         results = {}
         for name in sorted(resource['Values']):
             response = search_fn(name)
             results[name] = response['response']['docs']
 
-        return render_template('namespace_validation.html', data=results)
+        return render_template(
+            'namespace_validation.html',
+                               data=results,
+            timer=round(time.time() - t),
+            namespace_name=resource['Namespace']['NameString']
+        )
 
     log.info('added curation service to %s', app)
