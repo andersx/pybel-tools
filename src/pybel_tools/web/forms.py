@@ -7,7 +7,7 @@ from wtforms.fields import BooleanField, RadioField, HiddenField
 from wtforms.validators import DataRequired, Email
 
 from ..selection.induce_subgraph import SEED_TYPE_INDUCTION, SEED_TYPE_PATHS, SEED_TYPE_NEIGHBORS, \
-    SEED_TYPE_DOUBLE_NEIGHBORS
+    SEED_TYPE_DOUBLE_NEIGHBORS, SEED_TYPE_UPSTREAM
 
 
 class UploadForm(FlaskForm):
@@ -29,6 +29,7 @@ class SeedSubgraphForm(FlaskForm):
             (SEED_TYPE_NEIGHBORS, 'Induce a subgraph over the given nodes and expand to their first neighbors'),
             (SEED_TYPE_DOUBLE_NEIGHBORS, 'Induce a subgraph over the given nodes and expand to their second neighbors'),
             (SEED_TYPE_PATHS, 'Induce a subgraph over the nodes in all shortest paths between the given nodes'),
+            (SEED_TYPE_UPSTREAM, 'Generate an upstream candidate mechanism'),
         ],
         default=SEED_TYPE_INDUCTION)
     filter_pathologies = BooleanField('Filter pathology nodes', default=False)
