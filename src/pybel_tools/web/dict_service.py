@@ -104,6 +104,7 @@ def get_graph_from_request(api):
     :rtype: pybel.BELGraph
     """
 
+
     network_id = request.args.get(GRAPH_ID)
 
     if network_id is not None:
