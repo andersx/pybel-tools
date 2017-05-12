@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 
-from pybel.constants import ANNOTATIONS
+from pybel.constants import *
 from ..filters.node_filters import keep_node_permissive, concatenate_node_filters
 from ..utils import check_has_annotation
 
@@ -75,3 +75,34 @@ def group_nodes_by_annotation_filtered(graph, node_filters=None, annotation='Sub
     """
     node_filter = concatenate_node_filters(node_filters)
     return {k: {n for n in v if node_filter(graph, n)} for k, v in group_nodes_by_annotation(graph, annotation).items()}
+
+
+def get_mapped(graph, namespace, names):
+    """ Returns defaultdict with keys: nodes that match the namespace and in names and values other nodes (complexes, variants, orthologous...) or this node.
+    
+    :param graph: A BEL graph
+    :type graph: pybel.BELGraph
+    :param namespace: Namespace
+    :type namespace: str
+    :param names: List or set of values from which we want to map nodes from
+    :type names: list or set
+    :return: 
+    """
+
+    mapped_nodes = defaultdict(set)
+
+    for u, v, d in graph.edges_iter(data=True):
+
+        if d[RELATION] in {HAS_MEMBER, HAS_COMPONENT} and NAMESPACE in graph.node[v] and graph.node[v][
+            NAMESPACE] == namespace and graph.node[v][NAME] in names:
+            mapped_nodes[v].append(u)
+
+        elif d[RELATION] == HAS_VARIANT and NAMESPACE in graph.node[u] and graph.node[u][NAMESPACE] == namespace and \
+                        graph.node[u][NAME] in names:
+            mapped_nodes[u].append(v)
+
+        elif d[RELATION] == ORTHOLOGOUS and NAMESPACE in graph.node[u] and graph.node[u][NAMESPACE] == namespace and \
+                        graph.node[u][NAME] in names:
+            mapped_nodes[u].append(v)
+
+    return dict(mapped_nodes)
