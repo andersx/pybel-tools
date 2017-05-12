@@ -17,6 +17,11 @@ __all__ = [
     'get_separate_unstable_correlation_triples',
     'get_mutually_unstable_correlation_triples',
     'jens_transformation',
+    'get_jens_unstable_alpha',
+    'get_increase_mismatch_triplets',
+    'get_decrease_mismatch_triplets',
+    'get_chaotic_triplets',
+    'get_dampened_triplets'
 ]
 
 log = logging.getLogger(__name__)
@@ -206,15 +211,14 @@ def find_3_cycles_digraph(graph):
     """Gets a set of triples representing the 3-cycles from a directional graph. Each 3-cycle is returned once,
     with nodes in sorted order.
     
-    :param networkx.DiGraph graph: 
+    :param networkx.DiGraph graph: A directional graph
     :rtype: set[tuple]
     """
     results = set()
-    for a in graph.nodes_iter():
-        for b in graph.edge[a]:
-            for c in graph.edge[b]:
-                if graph.has_edge(c, a) and sorted([a, b, c], key=str) not in results:
-                    results.add((a, b, c))
+    for a, b in graph.edges_iter():
+        for c in graph.successors(b):
+            if graph.has_edge(c, a):
+                results.add(tuple(sorted([a, b, c], key=str)))
     return results
 
 
@@ -267,12 +271,18 @@ def get_decrease_mismatch_triplets(graph):
 
 
 def _get_disregulated_triplets_helper(graph, relation_set):
+    """
+    
+    :param pybel.BELGraph graph: A BEL graph 
+    :param set[str] relation_set: A set of relations to keep 
+    :return: 
+    """
     result = DiGraph()
-    for u, v, k, d in graph.edges_iter(keys=True, data=True):
+    for u, v, d in graph.edges_iter(data=True):
         if d[RELATION] in relation_set:
             result.add_edge(u, v)
     for node in result.nodes_iter():
-        result[node].update(graph.node[node])
+        result.node[node].update(graph.node[node])
     return find_3_cycles_digraph(result)
 
 
