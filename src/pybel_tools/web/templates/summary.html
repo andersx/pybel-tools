@@ -125,7 +125,7 @@
                     <ul>
                         {% for namespace in namespaces_with_incorrect_names %}
                             <li>
-                                <a href="{{ url_for('download_missing_namespace', graph_id=graph_id, namespace=undefined_namespace) }}">{{ namespace }}</a>
+                                <a href="{{ url_for('download_missing_namespace', graph_id=graph_id, namespace=namespace) }}">{{ namespace }}</a>
                             </li>
                         {% endfor %}
                     </ul>
