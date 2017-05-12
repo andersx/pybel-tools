@@ -337,15 +337,18 @@
                         <table class="table table-hover">
                             <thead>
                             <tr>
+                                <th></th>
                                 <th>Source</th>
                                 <th>Relations</th>
                                 <th>Target</th>
-
                             </tr>
                             </thead>
                             <tbody>
-                            {% for source, target, relations in contradictions %}
+                            {% for source, aid, target, bid, relations in contradictions %}
                                 <tr>
+                                    <td>
+                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid], autoload='yes') }}"><span
+                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
                                     <td>{{ source }}</td>
                                     <td>{{ ', '.join(relations) }}</td>
                                     <td>{{ target }}</td>
@@ -383,17 +386,21 @@
                         <table class="table table-hover">
                             <thead>
                             <tr>
+                                <th></th>
+                                <th>Type</th>
                                 <th>Node A</th>
                                 <th>Node B</th>
-                                <th>Type</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {% for a, b, label in unstable_pairs %}
+                            {% for a, aid, b, bid, label in unstable_pairs %}
                                 <tr>
+                                    <td>
+                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid], autoload='yes') }}"><span
+                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                                    <td>{{ label }}</td>
                                     <td>{{ a }}</td>
                                     <td>{{ b }}</td>
-                                    <td>{{ label }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -440,19 +447,23 @@
                         <table class="table table-hover">
                             <thead>
                             <tr>
+                                <th></th>
+                                <th>Type</th>
                                 <th>Node A</th>
                                 <th>Node B</th>
                                 <th>Node C</th>
-                                <th>Type</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {% for a, b, c, label in contradictory_triplets %}
+                            {% for a, aid, b, bid, c, cid, label in contradictory_triplets %}
                                 <tr>
+                                    <td>
+                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid, cid], autoload='yes') }}"><span
+                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                                    <td>{{ label }}</td>
                                     <td>{{ a }}</td>
                                     <td>{{ b }}</td>
                                     <td>{{ c }}</td>
-                                    <td>{{ label }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -487,19 +498,23 @@
                         <table class="table table-hover">
                             <thead>
                             <tr>
+                                <th></th>
+                                <th>Type</th>
                                 <th>Node A</th>
                                 <th>Node B</th>
                                 <th>Node C</th>
-                                <th>Type</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {% for a, b, c, label in unstable_triplets %}
+                            {% for a, aid, b, bid, c, cid, label in unstable_triplets %}
                                 <tr>
+                                    <td>
+                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid, cid], autoload='yes') }}"><span
+                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                                    <td>{{ label }}</td>
                                     <td>{{ a }}</td>
                                     <td>{{ b }}</td>
                                     <td>{{ c }}</td>
-                                    <td>{{ label }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>

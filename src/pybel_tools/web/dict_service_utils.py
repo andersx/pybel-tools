@@ -239,6 +239,9 @@ class DictionaryService(BaseService):
 
         return nid
 
+    def get_node_id(self, node):
+        return self.node_nid[node]
+
     def get_node_by_id(self, node_id):
         """Returns the node tuple based on the node id
 

@@ -85,6 +85,50 @@ def sanitize_list_of_str(l):
     return [e for e in (e.strip() for e in l) if e]
 
 
+def render_graph_summary_no_api(graph):
+    """Renders the graph summary page if not saving the graph"""
+    hub_data = {graph.node[node][CNAME]: count for node, count in Counter(graph.degree()).most_common(25)}
+    centrality_data = {graph.node[node][CNAME]: count for node, count in
+                       calc_betweenness_centality(graph).most_common(25)}
+    disease_data = {graph.node[node][CNAME]: count for node, count in count_diseases(graph).most_common(25)}
+
+    undefined_namespaces = get_undefined_namespaces(graph)
+    undefined_annotations = get_undefined_annotations(graph)
+    namespaces_with_incorrect_names = get_namespaces_with_incorrect_names(graph)
+
+    unused_namespaces = get_unused_namespaces(graph)
+    unused_annotations = get_unused_annotations(graph)
+    unused_list_annotation_values = get_unused_list_annotation_values(graph)
+
+    return render_template(
+        'summary.html',
+        chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
+        chart_2_data=prepare_c3(count_relations(graph), 'Relationship Type'),
+        chart_3_data=prepare_c3(count_error_types(graph), 'Error Type'),
+        chart_4_data=prepare_c3({
+            'Translocations': len(get_translocated(graph)),
+            'Degradations': len(get_degradations(graph)),
+            'Molecular Activities': len(get_activities(graph))
+        }, 'Modifier Type'),
+        chart_5_data=prepare_c3(count_variants(graph), 'Node Variants'),
+        chart_6_data=prepare_c3(count_namespaces(graph), 'Namespaces'),
+        chart_7_data=prepare_c3(hub_data, 'Top Hubs'),
+        chart_8_data=prepare_c3(centrality_data, 'Top Central'),
+        chart_9_data=prepare_c3(disease_data, 'Pathologies'),
+        error_groups=count_dict_values(group_errors(graph)).most_common(20),
+        info_list=info_list(graph),
+        graph=graph,
+        time=None,
+        undefined_namespaces=sorted(undefined_namespaces),
+        unused_namespaces=sorted(unused_namespaces),
+        undefined_annotations=sorted(undefined_annotations),
+        unused_annotations=sorted(unused_annotations),
+        unused_list_annotation_values=sorted(unused_list_annotation_values.items()),
+        current_user=current_user,
+        namespaces_with_incorrect_names=namespaces_with_incorrect_names
+    )
+
+
 def render_graph_summary(graph_id, graph, api=None):
     """Renders the graph summary page
     
@@ -93,28 +137,24 @@ def render_graph_summary(graph_id, graph, api=None):
     :param DictionaryService api: 
     :return: 
     """
-    if api is not None:
-        hub_data = api.get_top_degree(graph_id)
-        centrality_data = api.get_top_centrality(graph_id)
-        disease_data = api.get_top_comorbidities(graph_id)
-    else:
-        hub_data = {graph.node[node][CNAME]: count for node, count in Counter(graph.degree()).most_common(25)}
-        centrality_data = {graph.node[node][CNAME]: count for node, count in
-                           calc_betweenness_centality(graph).most_common(25)}
-        disease_data = {graph.node[node][CNAME]: count for node, count in count_diseases(graph).most_common(25)}
+    if api is None:
+        return render_graph_summary_no_api(graph)
+
+    hub_data = api.get_top_degree(graph_id)
+    centrality_data = api.get_top_centrality(graph_id)
+    disease_data = api.get_top_comorbidities(graph_id)
 
     def dcn(node):
         return decanonicalize_node(graph, node)
 
-    unstable_pairs = list(itt.chain.from_iterable([
-        ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Chaotic') for u, v, in
-         get_chaotic_pairs(graph)),
-        ((decanonicalize_node(graph, u), decanonicalize_node(graph, v), 'Dampened') for u, v, in
-         get_dampened_pairs(graph)),
-    ]))
+    unstable_pairs = itt.chain.from_iterable([
+        ((u, v, 'Chaotic') for u, v, in get_chaotic_pairs(graph)),
+        ((u, v, 'Dampened') for u, v, in get_dampened_pairs(graph)),
+    ])
+    unstable_pairs = [(dcn(u), api.get_node_id(u), dcn(v), api.get_node_id(v), label) for u, v, label in unstable_pairs]
 
-    contradictory_pairs = list((decanonicalize_node(graph, u), decanonicalize_node(graph, v), relation) for
-                               u, v, relation in get_contradiction_summary(graph))
+    contradictory_pairs = [(dcn(u), api.get_node_id(u), dcn(v), api.get_node_id(v), relation) for u, v, relation in
+                           get_contradiction_summary(graph)]
 
     contradictory_triplets = itt.chain.from_iterable([
         ((a, b, c, 'Separate') for a, b, c in get_separate_unstable_correlation_triples(graph)),
@@ -125,13 +165,15 @@ def render_graph_summary(graph_id, graph, api=None):
 
     ])
 
-    contradictory_triplets = [(dcn(a), dcn(b), dcn(c), d) for a, b, c, d in contradictory_triplets]
+    contradictory_triplets = [(dcn(a), api.get_node_id(a), dcn(b), api.get_node_id(b), dcn(c), api.get_node_id(c), d)
+                              for a, b, c, d in contradictory_triplets]
 
     unstable_triplets = itt.chain.from_iterable([
         ((a, b, c, 'Chaotic') for a, b, c in get_chaotic_triplets(graph)),
         ((a, b, c, 'Dampened') for a, b, c in get_dampened_triplets(graph)),
     ])
-    unstable_triplets = [(dcn(a), dcn(b), dcn(c), d) for a, b, c, d in unstable_triplets]
+    unstable_triplets = [(dcn(a), api.get_node_id(a), dcn(b), api.get_node_id(b), dcn(c), api.get_node_id(c), d) for
+                         a, b, c, d in unstable_triplets]
 
     undefined_namespaces = get_undefined_namespaces(graph)
     undefined_annotations = get_undefined_annotations(graph)
