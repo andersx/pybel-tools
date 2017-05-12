@@ -124,7 +124,9 @@
                 <div class="panel-body">
                     <ul>
                         {% for namespace in namespaces_with_incorrect_names %}
-                            <li>{{ namespace }}</li>
+                            <li>
+                                <a href="{{ url_for('download_missing_namespace', graph_id=graph_id, namespace=undefined_namespace) }}">{{ namespace }}</a>
+                            </li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -165,38 +167,6 @@
                             <li>{{ unused_annotation }}</li>
                         {% endfor %}
                     </ul>
-                </div>
-            </div>
-        {% endif %}
-
-        {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
-            <div class="panel panel-warning">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Unused List Annotation Values</h3>
-                </div>
-                <div class="panel-body">
-                    <p>The source BEL script contained the following list annotations, but no references to the
-                        following values. It is suggested to prune these values from the list definitions. This box
-                        will not show annotations that are wholly unused, since they already appear in the Unused
-                        Annotations box.</p>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th>Annotation</th>
-                                <th>Values</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for annotation, values in unused_list_annotation_values %}
-                                <tr>
-                                    <td>{{ annotation }}</td>
-                                    <td>{{ values }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         {% endif %}
@@ -311,6 +281,38 @@
                                 <tr>
                                     <td><code>{{ k }}</code></td>
                                     <td>{{ v }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unused List Annotation Values</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained the following list annotations, but no references to the
+                        following values. It is suggested to prune these values from the list definitions. </p>
+                    <p><strong>Note:</strong> this may be due to errors occurring in all statements with these
+                        annotations.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Annotation</th>
+                                <th>Values</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for annotation, values in unused_list_annotation_values %}
+                                <tr>
+                                    <td>{{ annotation }}</td>
+                                    <td>{{ values }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
