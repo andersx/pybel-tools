@@ -601,7 +601,7 @@ function initD3Force(graph, tree) {
         .range([8, 24]);
 
     // Simulation parameters
-    var linkDistance = 100, fCharge = -1000, linkStrength = 0.7, collideStrength = 1;
+    var linkDistance = 100, fCharge = -1700, linkStrength = 0.7, collideStrength = 1;
 
     // Simulation defined with variables
     var simulation = d3.forceSimulation()
