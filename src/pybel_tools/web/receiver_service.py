@@ -6,7 +6,7 @@ import flask
 import requests
 from flask import Flask, url_for
 
-from pybel import from_json_dict, to_json_dict
+from pybel import from_json, to_json
 from .constants import DEFAULT_SERVICE_URL
 from .utils import try_insert_graph, render_upload_error
 
@@ -26,7 +26,7 @@ def build_receiver_service(app, manager):
     def receive():
         """Receives a JSON serialized BEL graph"""
         try:
-            graph = from_json_dict(flask.request.get_json())
+            graph = from_json(flask.request.get_json())
         except Exception as e:
             return render_upload_error(e)
 
@@ -46,4 +46,4 @@ def post(graph, service=None):
     service = DEFAULT_SERVICE_URL if service is None else service
     url = service + url_for('receive')
     headers = {'content-type': 'application/json'}
-    return requests.post(url, json=to_json_dict(graph), headers=headers)
+    return requests.post(url, json=to_json(graph), headers=headers)

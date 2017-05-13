@@ -5,7 +5,7 @@ import logging
 from flask import send_file, Response, jsonify
 from six import BytesIO, StringIO
 
-from pybel import to_cx_json, to_bel_lines, to_graphml, to_bytes, to_csv
+from pybel import to_cx, to_bel_lines, to_graphml, to_bytes, to_csv
 from pybel.constants import GRAPH_ANNOTATION_LIST
 from ..mutation.metadata import serialize_authors
 
@@ -55,7 +55,7 @@ def serve_network(graph, serve_format=None):
         return jsonify(data)
 
     if serve_format == 'cx':
-        data = to_cx_json(graph)
+        data = to_cx(graph)
         return jsonify(data)
 
     if serve_format == 'bytes':
