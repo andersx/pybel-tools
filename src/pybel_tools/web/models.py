@@ -72,6 +72,10 @@ def log_graph(graph, current_user, precompiled=False, failed=False):
 
 def add_network_reporting(manager, network, current_user, number_nodes, number_edges, number_warnings,
                           precompiled=False):
+    reporting_log.info('%s (%s) %s %s v%s with %d nodes, %d edges, and %d warnings', current_user.name,
+                       current_user.username, 'uploaded' if precompiled else 'compiled', network.name, network.version,
+                       number_nodes, number_edges, number_warnings)
+    
     report = Report(
         network=network,
         user_id=current_user.user_id,
@@ -84,7 +88,3 @@ def add_network_reporting(manager, network, current_user, number_nodes, number_e
     )
     manager.session.add(report)
     manager.session.commit()
-
-    reporting_log.info('%s (%s) %s %s v%s with %d nodes, %d edges, and %d warnings', current_user.name,
-                       current_user.username, 'uploaded' if precompiled else 'compiled', network.name, network.version,
-                       number_nodes, number_edges, number_warnings)
