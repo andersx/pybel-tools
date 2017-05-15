@@ -9,6 +9,7 @@ import time
 from collections import Counter
 
 import networkx as nx
+from sqlalchemy import func
 
 from pybel import from_bytes, BELGraph
 from pybel.canonicalize import decanonicalize_node, calculate_canonical_name
@@ -386,3 +387,7 @@ class DictionaryService(BaseService):
         graph = self.get_network(network_id)
         cm = count_diseases(graph)
         return {self.get_cname(node): v for node, v in cm.most_common(count)}
+
+    def list_graphs(self):
+        """Lists the most recently uploaded version of each network"""
+        return self.manager.session.query(Network).group_by(Network.name).having(func.max(Network.created)).all()

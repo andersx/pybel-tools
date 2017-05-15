@@ -107,26 +107,29 @@
                     differential gene expression data.</p>
             </div>
             <div class="list-group">
-                {% for nid, name, vers, descr in data %}
+                {% for network in networks %}
                     <div class="list-group-item">
-                        <h4 class="list-group-item-heading">{{ name }}
-                            <small class="text-muted">{{ vers }}</small>
+                        <h4 class="list-group-item-heading">{{ network.name }}
+                            <small class="text-muted">{{ network.version }}</small>
                         </h4>
                         <div class="list-group-item-text">
-                            <p>{{ descr }}</p>
+                            <p>{{ network.description }}</p>
                             <ul class="list-inline">
-                                <li><a href="{{ url_for('view_summary', graph_id=nid) }}" class="btn btn-default">Summarize</a>
+                                <li><a href="{{ url_for('view_summary', graph_id=network.id) }}"
+                                       class="btn btn-default">Summarize</a>
                                 </li>
-                                <li><a href="{{ url_for('view_explorer', graphid=nid) }}" class="btn btn-default">Explore</a>
+                                <li><a href="{{ url_for('view_explorer', graphid=network.id) }}"
+                                       class="btn btn-default">Explore</a>
                                 </li>
                                 {% if analysis_enabled %}
-                                    <li><a href="{{ url_for('view_analysis_uploader', network_id=nid) }}"
+                                    <li><a href="{{ url_for('view_analysis_uploader', network_id=network.id) }}"
                                            class="btn btn-default">Analyze</a></li>
-                                    <li><a href="{{ url_for('view_analyses', network_id=nid) }}"
+                                    <li><a href="{{ url_for('view_analyses', network_id=network.id) }}"
                                            class="btn btn-default">Results</a></li>
                                 {% endif %}
                                 {% if current_user.admin %}
-                                    <a class="btn btn-danger" href="{{ url_for('drop_network', network_id=nid) }}"
+                                    <a class="btn btn-danger"
+                                       href="{{ url_for('drop_network', network_id=network.id) }}"
                                        role="button">Drop</a>
                                 {% endif %}
                             </ul>

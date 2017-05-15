@@ -400,7 +400,7 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
 
         return flask.render_template(
             'network_list.html',
-            data=reversed(manager.list_graphs()),
+            networks=api.list_graphs(),
             provenance_form=seed_provenance_form,
             subgraph_form=seed_subgraph_form,
             analysis_enabled=analysis_enabled,
