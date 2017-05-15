@@ -95,14 +95,14 @@ def get_mapped(graph, namespace, names):
 
         if d[RELATION] in {HAS_MEMBER, HAS_COMPONENT} and NAMESPACE in graph.node[v] and graph.node[v][
             NAMESPACE] == namespace and graph.node[v][NAME] in names:
-            mapped_nodes[v].append(u)
+            mapped_nodes[v].add(u)
 
         elif d[RELATION] == HAS_VARIANT and NAMESPACE in graph.node[u] and graph.node[u][NAMESPACE] == namespace and \
                         graph.node[u][NAME] in names:
-            mapped_nodes[u].append(v)
+            mapped_nodes[u].add(v)
 
         elif d[RELATION] == ORTHOLOGOUS and NAMESPACE in graph.node[u] and graph.node[u][NAMESPACE] == namespace and \
                         graph.node[u][NAME] in names:
-            mapped_nodes[u].append(v)
+            mapped_nodes[u].add(v)
 
     return dict(mapped_nodes)
