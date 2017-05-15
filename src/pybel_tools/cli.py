@@ -217,9 +217,10 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, directory
 @click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
+@click.option('--preload', is_flag=True, help='Preload cache')
 @click.option('--echo-sql', is_flag=True)
 def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_receiver_service, run_all, secret_key, echo_sql):
+        run_receiver_service, run_all, secret_key, preload, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
     if debug < 3:
@@ -247,6 +248,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
         check_version=(not skip_check_version),
         analysis_enabled=True,
         eager=eager,
+        preload=preload,
     )
 
     build_sitemap_endpoint(app)
