@@ -330,7 +330,7 @@ def build_api_admin(app, manager):
         return jsonify({'status': 200})
 
 
-def build_dictionary_service(app, manager, check_version=True, analysis_enabled=False, eager=False):
+def build_dictionary_service(app, manager, check_version=True, analysis_enabled=False, preload=False, eager=False):
     """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
     with :func:`get_dict_service`
 
@@ -343,9 +343,10 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
     """
     api = DictionaryService(manager=manager)
 
-    log.info('loading networks')
-    api.load_networks(check_version=check_version, eager=eager)
-    log.info('pre-loaded the dict service')
+    if preload:
+        log.info('preloading networks')
+        api.load_networks(check_version=check_version, eager=eager)
+        log.info('pre-loaded the dict service')
 
     build_dictionary_service_admin(app, manager, api)
     build_api_admin(app, manager)
