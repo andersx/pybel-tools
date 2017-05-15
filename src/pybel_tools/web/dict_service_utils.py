@@ -390,4 +390,5 @@ class DictionaryService(BaseService):
 
     def list_graphs(self):
         """Lists the most recently uploaded version of each network"""
-        return self.manager.session.query(Network).group_by(Network.name).having(func.max(Network.created)).all()
+        return self.manager.session.query(Network).group_by(Network.name).having(func.max(Network.created)).order_by(
+            Network.created.desc()).all()
