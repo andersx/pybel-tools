@@ -9,6 +9,8 @@ printing summary information, and exporting summarized graphs
 
 from __future__ import print_function
 
+import logging
+
 import networkx as nx
 import pandas as pd
 
@@ -22,6 +24,8 @@ __all__ = [
     'info_json',
     'print_summary',
 ]
+
+log = logging.getLogger(__name__)
 
 
 def plot_summary_axes(graph, lax, rax):
@@ -110,8 +114,13 @@ def info_list(graph):
         ('Edges', graph.number_of_edges()),
         ('Network density', nx.density(graph)),
         ('Components', nx.number_weakly_connected_components(graph)),
-        ('Average degree', sum(graph.in_degree().values()) / float(number_nodes)),
+
     ]
+
+    try:
+        result.append(('Average degree', sum(graph.in_degree().values()) / float(number_nodes)))
+    except ZeroDivisionError:
+        log.info('Graph has no nodes')
 
     if graph.warnings:
         result.append(('Compilation warnings', len(graph.warnings)))
