@@ -17,7 +17,7 @@ class DatabaseService(BaseService):
         :rtype: list
         """
         network_ls = self.manager.get_network(as_dict_list=True)
-        return [(n['id'], n['name'], n['version']) for n in network_ls]
+        return network_ls  # [(n['id'], n['name'], n['version']) for n in network_ls]
 
     def get_namespaces(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
         """Provides a list of namespaces filtered by the given parameters.
