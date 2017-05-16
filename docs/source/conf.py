@@ -168,7 +168,7 @@ texinfo_documents = [
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'pybel': ('http://pybel.readthedocs.io/en/latest/', None),
-    'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None)
+    'pandas': ('http://pandas-docs.github.io/pandas-docs-travis/', None)
 }
 
 autodoc_member_order = 'bysource'
