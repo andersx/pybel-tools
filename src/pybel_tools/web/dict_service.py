@@ -250,6 +250,13 @@ def build_dictionary_service_admin(app, manager, api):
         raise_for_not_admin()
         return flask.send_file(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
 
+    @app.route('/admin/list/logins')
+    @login_required
+    def list_logins():
+        """Sends the reporting log as a text file"""
+        raise_for_not_admin()
+        return flask.send_file(os.path.join(PYBEL_LOG_DIR, 'logins.txt'))
+
     @app.route('/admin/nuke/')
     @login_required
     def nuke():

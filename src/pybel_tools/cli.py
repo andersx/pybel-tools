@@ -38,7 +38,7 @@ from .web.constants import SECRET_KEY, reporting_log, DEFAULT_SERVICE_URL
 from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
-from .web.login_service import build_login_service
+from .web.login_service import build_login_service, login_log
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
@@ -52,12 +52,16 @@ datefmt = '%H:%M:%S'
 fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 reporting_log.setLevel(logging.DEBUG)
-fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
-fh.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(message)s")
-fh.setFormatter(formatter)
-reporting_log.addHandler(fh)
+reporting_fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
+reporting_fh.setLevel(logging.DEBUG)
+reporting_fh.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+reporting_log.addHandler(reporting_fh)
 
+login_log.setLevel(logging.DEBUG)
+login_log_fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'logins.txt'))
+login_log_fh.setLevel(logging.DEBUG)
+login_log_fh.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+login_log.addHandler(login_log_fh)
 
 def set_debug(level):
     logging.basicConfig(level=level, format=fmt, datefmt=datefmt)

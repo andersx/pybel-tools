@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import os
 
 import flask
@@ -9,6 +10,8 @@ from flask_github import GitHub
 from flask_login import LoginManager, UserMixin, login_required, login_user, logout_user, current_user
 
 from .constants import PYBEL_GITHUB_CLIENT_ID, PYBEL_GITHUB_CLIENT_SECRET
+
+login_log = logging.getLogger('pybel.web.login')
 
 
 def get_github_info(token):
@@ -69,7 +72,8 @@ def build_login_service(app):
         if session.get('user_id', None) is None:
             return github.authorize()
         else:
-            return 'Already logged in'
+            flask.flash('Already logged in')
+            return redirect(url_for('index'))
 
     @app.route('/github-callback')
     @github.authorized_handler
@@ -85,6 +89,7 @@ def build_login_service(app):
             return redirect(url_for('index'))
 
         login_user(user)
+        login_log.info('Login from %s by %s (%s)', request.remote_addr, user.name, user.username)
 
         return redirect(next_url)
 
