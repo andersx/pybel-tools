@@ -474,8 +474,8 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
     @app.route('/api/tree/')
     def get_tree_api():
         """Builds the annotation tree data structure for a given graph"""
-        graph = get_graph_from_request(api)
-        return jsonify(get_tree_annotations(graph))
+        graph_id = request.args.get(GRAPH_ID)
+        return jsonify(get_tree_annotations(api.get_network(graph_id)))
 
     @app.route('/api/paths/')
     def get_paths_api():
