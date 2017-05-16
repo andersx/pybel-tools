@@ -238,6 +238,14 @@ def build_dictionary_service_admin(app, manager, api):
         upload_recursive(os.path.join(os.environ[BMS_BASE], 'aetionomy'), connection=manager)
         return jsonify({'status': 200, 'time': time.time() - t})
 
+    @app.route('/admin/upload/selventa')
+    @login_required
+    def upload_selventa():
+        raise_for_not_admin()
+        t = time.time()
+        upload_recursive(os.path.join(os.environ[BMS_BASE], 'selventa'), connection=manager)
+        return jsonify({'status': 200, 'time': time.time() - t})
+
     @app.route('/admin/list/bms/pickles')
     def list_bms_pickles():
         raise_for_not_admin()
