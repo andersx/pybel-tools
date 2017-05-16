@@ -5,7 +5,7 @@
 PyBEL Tools is tested on Python3 installations on Mac OS and Linux on 
 `Travis CI <https://travis-ci.org/pybel/pybel-tools>`_.
 
-.. warning:: Python2 and Windows compatibility haven't been tested
+.. warning:: Python2 and Windows are not thoroughly tested
 
 Installation
 ------------
@@ -25,6 +25,23 @@ Download the most recent code from `GitHub <https://github.com/pybel/pybel-tools
 .. code-block:: sh
 
    $ python3 -m pip install git+https://github.com/pybel/pybel-tools.git@develop
+   
+   
+For Developers
+~~~~~~~~~~~~~~
+Clone the repository from `GitHub <https://github.com/pybel/pybel-tools>`_ and install in editable mode with:
+
+.. code-block:: sh
+
+   $ git clone https://github.com/pybel/pybel-tools.git@develop
+   $ cd pybel-tools
+   $ python3 -m pip install -e .
+   
+Caveats
+-------
+PyBEL Tools contains many dependencies, including the scientific Python Stack (numpy, scipy, etc.). This makes 
+installation difficult for Windows users, for whom Python cannot easily build C extensions. We recommend using an 
+`Anaconda <https://www.continuum.io/downloads>`_ distribution of Python, which includes these precompiled.
 """
 
 from . import analysis

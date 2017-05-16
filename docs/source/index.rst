@@ -1,9 +1,13 @@
 PyBEL Tools Documentation
 =========================
 
-:code:`pybel_tools` provides extra functions to deal with BEL graphs parsed by :code:`pybel`.
+`PyBEL Tools <http://pybel-tools.readthedocs.io/>`_ is a suite of tools built on top of
+`PyBEL <http://pybel.readthedocs.io>`_ to facilitate data management, integration, and analysis.
 
-.. automodule:: pybel_tools
+.. toctree::
+   :maxdepth: 2
+
+   installation
 
 .. toctree::
    :maxdepth: 2
