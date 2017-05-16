@@ -236,7 +236,7 @@ def write_neurommsig_bel(file, df, disease, nift_values):
 if __name__ == '__main__':
     bms_base = os.environ['BMS_BASE']
     neurommsig_base = os.environ['NEUROMMSIG_BASE']
-    neurommsig_excel_dir = os.path.join(neurommsig_base, 'pathways', 'Scripts', 'Load_models', 'excels')
+    neurommsig_excel_dir = os.path.join(neurommsig_base, 'resources', 'excels')
 
     nift_values = get_nift_values()
 
