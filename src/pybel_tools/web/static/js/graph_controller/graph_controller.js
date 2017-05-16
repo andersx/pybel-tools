@@ -923,10 +923,10 @@ function initD3Force(graph, tree) {
         var nodeObject = {};
 
         if (node.cname) {
-            nodeObject["Node"] = node.name + " (ID: " + node.id + ")";
+            nodeObject["Node"] = node.cname + " (ID: " + node.id + ")";
         }
         if (node.name) {
-            nodeObject["Name"] = node.name;
+            nodeObject["Name"] = node.cname;
         }
         if (node.function) {
             nodeObject["Function"] = node.function;
