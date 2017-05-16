@@ -5,6 +5,7 @@
 import flask
 from flask import Flask
 from flask import jsonify
+from flask import request
 
 from .database_service_utils import DatabaseService
 
@@ -45,111 +46,70 @@ def build_database_service(app, manager):
     set_database_service(app, api)
 
     @app.route('/api/namespaces', methods=['GET'])
-    def list_namespaces():
-        all_namespaces = api.get_namespaces()
-        return jsonify(all_namespaces)
+    def get_namespaces_args():
+        if 'network_id' in request.args:
+            network_id = int(request.args.get('network_id'))
+            result = api.get_namespaces(network_id=network_id)
+        elif 'keyword' in request.args:
+            keyword = request.args.get('keyword')
+            result = api.get_namespaces(name_list=True, keyword=keyword)
+        else:
+            result = api.get_namespaces()
 
-    @app.route('/api/namespaces/by_network/<int:network_id>', methods=['GET'])
-    def namespaces_by_network(network_id):
-        network_namespaces = api.get_namespaces(network_id=network_id)
-        return jsonify(network_namespaces)
-
-    @app.route('/api/namespace/<keyword>', methods=['GET'])
-    def list_names(keyword):
-        names = api.get_namespaces(name_list=True, keyword=keyword)
-        return jsonify(names)
-
-    @app.route('/api/annotations', methods=['GET'])
-    def list_annotations():
-        all_annotations = api.get_annotations()
-        return jsonify(all_annotations)
-
-    @app.route('/api/annotations/by_network/<int:network_id>', methods=['GET'])
-    def annotations_by_network(network_id):
-        network_annotations = api.get_annotations(network_id=network_id)
-        return jsonify(network_annotations)
-
-    @app.route('/api/annotation/<keyword>', methods=['GET'])
-    def list_annotation_names(keyword):
-        annotation_names = api.get_annotations(name_list=True, keyword=keyword)
-        return jsonify(annotation_names)
+        return jsonify(result)
 
     @app.route('/api/citations', methods=['GET'])
-    def list_citations():
-        citations = api.get_citations()
-        return jsonify(citations)
+    def get_citations_args():
+        if request.args.get('network_id'):
+            network_id = int(request.args.get('network_id'))
+            result = api.get_citations(network_id=network_id)
+        else:
+            result = api.get_citations(author=request.args.get('author'))
 
-    @app.route('/api/citations/by_network/<int:network_id>', methods=['GET'])
-    def citations_by_network(network_id):
-        citations = api.get_citations(network_id=network_id)
-        return jsonify(citations)
+        return jsonify(result)
 
-    @app.route('/api/citations/by_author/<author>', methods=['GET'])
-    def list_citations_by_author(author):
-        citations = api.get_citations(author=author)
-        return jsonify(citations)
+    @app.route('/api/edges', methods=['GET'])
+    def get_edges_args():
+        result = None
+        offset = request.args.get('offset')
+        start_str, stop_str = offset.split(':') if offset else [0, 500]
+        start = int(start_str) if start_str else 0
+        stop = int(stop_str) if stop_str else None
+        if 'statement' in request.args:
+            statement_bel = request.args.get('statement')
+            result = api.get_edges(statement=statement_bel)
+        elif 'network_id' in request.args:
+            network_id = int(request.args.get('network_id'))
+            result = api.get_edges(network_id, offset_start=start, offset_end=stop)
+        elif 'annotation' in request.args:
+            annotation = request.args.get('annotation')
+            if annotation:
+                annotation_keyword, annotation_name = annotation.split(':')
+                result = api.get_edges(annotations={annotation_keyword: annotation_name})
+        if result is None:
+            source_bel = request.args.get('source')
+            target_bel = request.args.get('target')
+            relation = request.args.get('relation')
+            pmid = request.args.get('pmid')
+            author = request.args.get('author')
+            result = api.get_edges(pmid=pmid, source=source_bel, target=target_bel, relation=relation, author=author)
 
-    @app.route('/api/edges/by_bel/statement/<statement_bel>', methods=['GET'])
-    def edges_by_bel_statement(statement_bel):
-        edges = api.get_edges(statement=statement_bel)
-        return jsonify(edges)
+        return jsonify(result)
 
-    @app.route('/api/edges/by_bel/source/<source_bel>', methods=['GET'])
-    def edges_by_bel_source(source_bel):
-        edges = api.get_edges(source=source_bel)
-        return jsonify(edges)
+    @app.route('/api/nodes', methods=['GET'])
+    def get_nodes_args():
+        node_bel = request.args.get('bel')
+        namespace = request.args.get('namespace')
+        name = request.args.get('name')
 
-    @app.route('/api/edges/by_bel/target/<target_bel>', methods=['GET'])
-    def edges_by_bel_target(target_bel):
-        edges = api.get_edges(target=target_bel)
-        return jsonify(edges)
+        if 'network_id' in request.args:
+            offset = request.args.get('offset')
+            start_str, stop_str = offset.split(':') if offset else [0, 500]
+            start = int(start_str) if start_str else 0
+            stop = int(stop_str) if stop_str else None
+            network_id = int(request.args.get('network_id'))
+            result = api.get_nodes(network_id=network_id, offset_start=start, offset_end=stop)
+        else:
+            result = api.get_nodes(bel=node_bel, namespace=namespace, name=name)
 
-    @app.route('/api/edges/by_network/<int:network_id>', methods=['GET'])
-    def edges_by_network(network_id):
-        edges = api.get_edges(network_id=network_id)
-        return jsonify(edges)
-
-    @app.route('/api/edges/by_network/<int:network_id>/offset/<int:offset_start>/<int:offset_end>', methods=['GET'])
-    def edges_by_network_offset(network_id, offset_start, offset_end):
-        edges = api.get_edges(network_id=network_id, offset_start=offset_start, offset_end=offset_end)
-        return jsonify(edges)
-
-    @app.route('/api/edges/by_pmid/<int:pmid>', methods=['GET'])
-    def edges_by_pmid(pmid):
-        edges = api.get_edges(pmid=pmid)
-        return jsonify(edges)
-
-    @app.route('/api/edges/by_author/<author>', methods=['GET'])
-    def edges_by_author(author):
-        edges = api.get_edges(author=author)
-        return jsonify(edges)
-
-    @app.route('/api/edges/by_annotation/<annotation_name>/<annotation_value>', methods=['GET'])
-    def edges_by_annotation(annotation_name, annotation_value):
-        edges = api.get_edges(annotations={annotation_name: annotation_value})
-        return jsonify(edges)
-
-    @app.route('/api/nodes/by_bel/<node_bel>', methods=['GET'])
-    def nodes_by_bel(node_bel):
-        nodes = api.get_nodes(bel=node_bel)
-        return jsonify(nodes)
-
-    @app.route('/api/nodes/by_name/<node_name>', methods=['GET'])
-    def nodes_by_name(node_name):
-        nodes = api.get_nodes(name=node_name)
-        return jsonify(nodes)
-
-    @app.route('/api/nodes/by_namespace/<node_namespace>', methods=['GET'])
-    def nodes_by_namespace(node_namespace):
-        nodes = api.get_nodes(namespace=node_namespace)
-        return jsonify(nodes)
-
-    @app.route('/api/nodes/by_defined_name/<node_namespace>/<node_name>', methods=['GET'])
-    def nodes_by_namespace_name(node_namespace, node_name):
-        nodes = api.get_nodes(namespace=node_namespace, name=node_name)
-        return jsonify(nodes)
-
-    @app.route('/api/nodes/by_network/<int:network_id>', methods=['GET'])
-    def nodes_by_network(network_id):
-        nodes = api.get_nodes(network_id=network_id)
-        return jsonify(nodes)
+        return jsonify(result)

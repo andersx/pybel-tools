@@ -40,7 +40,12 @@ class DatabaseService(BaseService):
 
         if network_id:
             network = self.manager.get_network(network_id=network_id)[0]
-            result = [namespace.data for namespace in network.namespaces[offset_start:offset_end]]
+            namespace_definitions = [namespace.data for namespace in network.namespaces[offset_start:offset_end]]
+
+            result = {
+                'network': network.data,
+                'namespace_definitions': namespace_definitions
+            }
 
         if name_list and keyword:
             keyword_url_dict = self.manager.get_namespace_urls(keyword_url_dict=True)
@@ -50,7 +55,7 @@ class DatabaseService(BaseService):
 
             result = {
                 'namespace_definition': namespace_data,
-                'names': self.manager.namespace_cache[namespace_url]
+                'namespace_names': self.manager.namespace_cache[namespace_url]
             }
 
         if not result:
@@ -79,7 +84,12 @@ class DatabaseService(BaseService):
 
         if network_id:
             network = self.manager.get_network(network_id=network_id)[0]
-            result = [annotation.data for annotation in network.annotations[offset_start:offset_end]]
+            annotation_definitions = [annotation.data for annotation in network.annotations[offset_start:offset_end]]
+
+            result = {
+                'network': network.data,
+                'annotation_definitions': annotation_definitions
+            }
 
         if name_list:
             if name_list and keyword:
@@ -116,7 +126,12 @@ class DatabaseService(BaseService):
 
         if network_id:
             network = self.manager.get_network(network_id=network_id)[0]
-            result = [citation.data for citation in network.citations[offset_start:offset_end]]
+            citations = [citation.data for citation in network.citations[offset_start:offset_end]]
+
+            result = {
+                'network': network.data,
+                'citations': citations
+            }
 
         if author:
             result = self.manager.get_citation(author=author, as_dict_list=True)
@@ -170,9 +185,19 @@ class DatabaseService(BaseService):
                 offset_start -= 1
             if offset_start == offset_end:
                 offset_end += 1
+            if offset_start > offset_end:
+                tmp = offset_start
+                offset_start = offset_end
+                offset_end = tmp
+                result['offset']['WARNING'] = 'Offset_start > offset_end => Was turned arround!'
 
-            result['edges'] = [edge.data_min for edge in network.edges[offset_start:offset_end]]
+            if offset_end:
+                result['edges'] = [edge.data_min for edge in network.edges[offset_start:offset_end]]
+            else:
+                result['edges'] = [edge.data_min for edge in network.edges[offset_start:]]
+
             result['number_of_edges'] = len(result['edges'])
+
             return result
 
         if author and citation is None and pmid is None:
