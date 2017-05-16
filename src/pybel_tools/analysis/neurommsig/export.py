@@ -9,6 +9,7 @@ import logging
 import re
 from functools import partial
 
+
 import pandas as pd
 
 from pybel.constants import *
