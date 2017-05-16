@@ -42,3 +42,19 @@ class TestMapping(unittest.TestCase):
 
         self.assertEqual({'complex(p(HGNC:CCL2), p(HGNC:CCR2))', 'chemokine protein family'}, mapped_nodes['CCR2'])
         self.assertEqual({'complex(p(HGNC:CCL2), p(HGNC:CCR2))', 'chemokine protein family'}, mapped_nodes['CCR2'])
+
+
+    def test_orthologus_mapping(self):
+        g = BELGraph()
+
+        g.add_node('Ccl2', attr_dict={NAMESPACE: 'MGI', NAME: 'Ccl2'})
+        g.add_node('CCL2', attr_dict={NAMESPACE: 'HGNC', NAME: 'CCL2'})
+
+        g.add_edge('CCL2', 'Ccl2', **{RELATION: ORTHOLOGOUS})
+
+        mapped_nodes = get_mapped(g, 'HGNC', {'CCL2'})
+
+        self.assertEqual(1, len(mapped_nodes))
+        self.assertIn('CCL2', mapped_nodes)
+
+        self.assertEqual({'Ccl2'}, mapped_nodes['CCL2'])
