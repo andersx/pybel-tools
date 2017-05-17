@@ -272,7 +272,7 @@ def build_dictionary_service_admin(app, manager, api):
         raise_for_not_admin()
         log.info('nuking database')
         manager.drop_database()
-        manager.create_database()
+        manager.create_all()
         log.info('restarting dictionary service')
         api.clear()
         log.info('... the dust settles')
