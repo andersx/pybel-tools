@@ -375,6 +375,7 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         return render_template('index.html')
 
     @app.route('/networks', methods=['GET', 'POST'])
+    @login_required
     def view_networks():
         """Renders a page for the user to choose a network"""
         seed_subgraph_form = SeedSubgraphForm()
@@ -462,6 +463,7 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         return jsonify(info_json(api.get_network(network_id)))
 
     @app.route('/api/network/', methods=['GET'])
+    @login_required
     def get_network():
         """Builds a graph from the given network id and sends it in the given format"""
         graph = get_graph_from_request(api)
@@ -487,6 +489,7 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         return redirect(url_for('view_networks'))
 
     @app.route('/api/tree/')
+    @login_required
     def get_tree_api():
         """Builds the annotation tree data structure for a given graph"""
         graph_id = request.args.get(GRAPH_ID)
