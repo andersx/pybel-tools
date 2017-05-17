@@ -252,7 +252,9 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
     if basic_security:
         app.config.update({
-            'SECURITY_REGISTERABLE': False
+            'SECURITY_REGISTERABLE': True,
+            'SECURITY_CONFIRMABLE': False,
+            'SECURITY_SEND_REGISTER_EMAIL': False,
         })
         Base.metadata.bind = manager.engine
         Base.query = manager.session.query_property()
