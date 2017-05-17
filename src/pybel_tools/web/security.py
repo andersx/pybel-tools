@@ -7,10 +7,10 @@ from flask import redirect
 from flask import url_for
 from flask_security import Security, SQLAlchemyUserDatastore, \
     UserMixin, RoleMixin
-from flask_security.forms import RegisterForm
+from flask_security.forms import RegisterForm, get_form_field_label
 from sqlalchemy import Table, Integer, Column, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
-from wtforms.fields import StringField
+from wtforms.fields import StringField, SubmitField
 from wtforms.validators import DataRequired
 
 from pybel.manager.models import Base
@@ -53,6 +53,7 @@ class User(Base, UserMixin):
 class ExtendedRegisterForm(RegisterForm):
     first_name = StringField('First Name', [DataRequired()])
     last_name = StringField('Last Name', [DataRequired()])
+    submit = SubmitField(get_form_field_label('register'))
 
 
 def build_security_service(app, manager):
