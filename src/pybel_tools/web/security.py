@@ -50,6 +50,10 @@ class User(Base, UserMixin):
     def display(self):
         return self.email
 
+    @property
+    def admin(self):
+        return self.has_role(PYBEL_ADMIN_ROLL_NAME)
+
 
 class ExtendedRegisterForm(RegisterForm):
     first_name = StringField('First Name', [DataRequired()])
