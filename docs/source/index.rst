@@ -19,6 +19,7 @@ Links
    :name: springboard
 
    installation
+   cookbook
 
 .. toctree::
    :maxdepth: 2
@@ -54,7 +55,6 @@ Links
    :caption: Other Utilities
    :name: utilities
 
-   cookbook
    definitions
    documentutils
    utilities
