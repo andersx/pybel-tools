@@ -56,10 +56,13 @@ def build_flask_security_app(app, manager):
     # Create a user to test with
     @app.before_first_request
     def create_user():
-        manager.create_all()
-        user_datastore.create_user(email='matt@nobien.net', password='password')
-        manager.session.commit()
-
+        try:
+            manager.create_all()
+            user_datastore.create_user(email='matt@nobien.net', password='password')
+            manager.session.commit()
+        except:
+            manager.session.rollback()
+            
     # Views
     @app.route('/test')
     @login_required

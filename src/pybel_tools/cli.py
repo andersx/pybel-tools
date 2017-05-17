@@ -24,6 +24,7 @@ import click
 from pybel import from_pickle, to_database, from_lines, from_url
 from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
 from pybel.manager.cache import build_manager
+from pybel.manager.models import Base
 from pybel.utils import get_version as pybel_version
 from .constants import GENE_FAMILIES, NAMED_COMPLEXES
 from .definition_utils import write_namespace, export_namespaces
@@ -38,10 +39,11 @@ from .web.constants import SECRET_KEY, reporting_log, DEFAULT_SERVICE_URL
 from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
-from .web.login_service import build_login_service, login_log
+from .web.login_service import login_log
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
+from .web.security import build_flask_security_app
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
 from .web.utils import get_app
@@ -62,6 +64,7 @@ login_log_fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'logins.txt'))
 login_log_fh.setLevel(logging.DEBUG)
 login_log_fh.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
 login_log.addHandler(login_log_fh)
+
 
 def set_debug(level):
     logging.basicConfig(level=level, format=fmt, datefmt=datefmt)
@@ -243,8 +246,10 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
 
     manager = build_manager(connection, echo=echo_sql)
+    Base.metadata.bind = manager.engine
+    Base.query = manager.session.query_property()
 
-    build_login_service(app)
+    build_flask_security_app(app, manager)
 
     api = build_dictionary_service(
         app,
