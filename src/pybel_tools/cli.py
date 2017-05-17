@@ -39,11 +39,11 @@ from .web.constants import SECRET_KEY, reporting_log, DEFAULT_SERVICE_URL
 from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
-from .web.login_service import login_log
+from .web.github_login_service import build_github_login_service, login_log
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
-from .web.security import build_flask_security_app
+from .web.security import build_security_service
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
 from .web.utils import get_app
@@ -224,10 +224,11 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, directory
 @click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
-@click.option('--preload', is_flag=True, help='Preload cache')
+@click.option('--no-preload', is_flag=True, help='Do not preload cache')
+@click.option('--basic-security', is_flag=True, help='use basic security instead of github')
 @click.option('--echo-sql', is_flag=True)
 def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_receiver_service, run_all, secret_key, preload, echo_sql):
+        run_receiver_service, run_all, secret_key, no_preload, basic_security, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
     if debug < 3:
@@ -243,13 +244,21 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
         log.info('Running on port: %d', port)
 
     app = get_app()
-    app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
+    app.config.update({
+        SECRET_KEY: secret_key if secret_key else 'pybel_default_dev_key',
+    })
 
     manager = build_manager(connection, echo=echo_sql)
-    Base.metadata.bind = manager.engine
-    Base.query = manager.session.query_property()
 
-    build_flask_security_app(app, manager)
+    if basic_security:
+        app.config.update({
+            'SECURITY_REGISTERABLE': False
+        })
+        Base.metadata.bind = manager.engine
+        Base.query = manager.session.query_property()
+        build_security_service(app, manager)
+    else:
+        build_github_login_service(app)
 
     api = build_dictionary_service(
         app,
@@ -257,7 +266,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
         check_version=(not skip_check_version),
         analysis_enabled=True,
         eager=eager,
-        preload=preload,
+        preload=(not no_preload),
     )
 
     build_sitemap_endpoint(app)

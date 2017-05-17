@@ -41,7 +41,7 @@ class User(UserMixin):
         return self.name if self.name else self.username
 
 
-def build_login_service(app):
+def build_github_login_service(app):
     """Adds the login service
     
     Before adding this service, both ``GITHUB_CLIENT_ID`` and ``GITHUB_CLIENT_SECRET`` need to be set in the app's

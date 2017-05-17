@@ -6,9 +6,12 @@ import flask
 from flask import redirect
 from flask import url_for
 from flask_security import Security, SQLAlchemyUserDatastore, \
-    UserMixin, RoleMixin, login_required
+    UserMixin, RoleMixin
+from flask_security.forms import RegisterForm
 from sqlalchemy import Table, Integer, Column, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
+from wtforms.fields import StringField
+from wtforms.validators import DataRequired
 
 from pybel.manager.models import Base
 
@@ -42,8 +45,17 @@ class User(Base, UserMixin):
     roles = relationship('Role', secondary=roles_users,
                          backref=backref('users', lazy='dynamic'))
 
+    @property
+    def display(self):
+        return self.email
 
-def build_flask_security_app(app, manager):
+
+class ExtendedRegisterForm(RegisterForm):
+    first_name = StringField('First Name', [DataRequired()])
+    last_name = StringField('Last Name', [DataRequired()])
+
+
+def build_security_service(app, manager):
     """Builds the Flask-Security Login Protocol
 
     :param flask.Flask app: 
@@ -51,20 +63,21 @@ def build_flask_security_app(app, manager):
     :return: 
     """
     user_datastore = SQLAlchemyUserDatastore(manager, User, Role)
-    Security(app, user_datastore)
+    Security(app, user_datastore, register_form=ExtendedRegisterForm)
 
-    # Create a user to test with
     @app.before_first_request
     def create_user():
         try:
             manager.create_all()
-            user_datastore.create_user(email='matt@nobien.net', password='password')
+            user_datastore.create_user(email='guest@scai.fraunhofer.de', password='guest')
             manager.session.commit()
         except:
             manager.session.rollback()
-            
-    # Views
-    @app.route('/test')
-    @login_required
-    def test_home():
-        return redirect(url_for('index'))
+
+    @app.route('/wrap/logout')
+    def logout():
+        return redirect(url_for('security.logout'))
+
+    @app.route('/wrap/login')
+    def login():
+        return redirect(url_for('security.login'))
