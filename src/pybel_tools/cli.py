@@ -35,7 +35,7 @@ from .utils import get_version, enable_cool_mode
 from .web import receiver_service
 from .web.analysis_service import build_analysis_service
 from .web.compilation_service import build_synchronous_compiler_service
-from .web.constants import SECRET_KEY, reporting_log, DEFAULT_SERVICE_URL
+from .web.constants import reporting_log, DEFAULT_SERVICE_URL, PYBEL_WEB_PASSWORD_SALT
 from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
@@ -245,7 +245,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
     app = get_app()
     app.config.update({
-        SECRET_KEY: secret_key if secret_key else 'pybel_default_dev_key',
+        'SECRET_KEY': secret_key if secret_key else 'pybel_default_dev_key',
     })
 
     manager = build_manager(connection, echo=echo_sql)
@@ -255,6 +255,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
             'SECURITY_REGISTERABLE': True,
             'SECURITY_CONFIRMABLE': False,
             'SECURITY_SEND_REGISTER_EMAIL': False,
+            'SECURITY_PASSWORD_HASH': 'pbkdf2_sha512',
+            'SECURITY_PASSWORD_SALT': os.environ[PYBEL_WEB_PASSWORD_SALT],
         })
         Base.metadata.bind = manager.engine
         Base.query = manager.session.query_property()
