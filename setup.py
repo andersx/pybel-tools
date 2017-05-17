@@ -30,6 +30,7 @@ INSTALL_REQUIRES = [
     'flask-wtf',
     'GitHub-Flask',
     'flask-login',
+    'flask-security',
     'networkx',
     'pybel',
     'click',
