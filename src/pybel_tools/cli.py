@@ -43,7 +43,7 @@ from .web.github_login_service import build_github_login_service, login_log
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
-from .web.security import build_security_service
+from .web.security import build_security_service, User, Role, PYBEL_ADMIN_ROLL_NAME
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
 from .web.utils import get_app
@@ -360,12 +360,71 @@ def boilerplate(document_name, contact, description, pmids, version, copyright, 
 
 @document.command()
 @click.argument('namespaces', nargs=-1)
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('-p', '--path', type=click.File('r'), default=sys.stdin, help='Input BEL file path. Defaults to stdin.')
 @click.option('-d', '--directory', help='Output directory. Defaults to current working directory')
-def serialize_namespaces(namespaces, path, directory):
+def serialize_namespaces(namespaces, connection, path, directory):
     """Parses a BEL document then serializes the given namespaces (errors and all) to the given directory"""
-    graph = from_lines(path)
+    graph = from_lines(path, manager=connection)
     export_namespaces(namespaces, graph, directory)
+
+
+@main.group()
+def manage():
+    """Manage database"""
+
+
+@manage.group()
+def user():
+    """Manage users"""
+
+
+@user.command()
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+def ls(connection):
+    manager = build_manager(connection)
+    for u in manager.session.query(User).all():
+        click.echo('{}\t{}\t{}'.format(u.id, u.email, ','.join(r.name for r in u.roles)))
+
+
+@user.command()
+@click.argument('user_id')
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+def add_admin(user_id, connection):
+    """Adds admin privileges to a given account"""
+    manager = build_manager(connection)
+    u = manager.session.query(User).get(user_id)
+    r = manager.session.query(Role).filter(Role.name == PYBEL_ADMIN_ROLL_NAME).one()
+    u.roles.append(r)
+    manager.session.commit()
+
+
+@manage.group()
+def role():
+    """Manage roles"""
+
+
+@role.command()
+@click.argument('name')
+@click.option('-d', '--description')
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+def add_role(name, description, connection):
+    """Creates a new role"""
+    manager = build_manager(connection)
+    try:
+        r = Role(name=name, description=description)
+        manager.session.add(r)
+        manager.session.commit()
+    except:
+        manager.rollback()
+
+
+@role.command()
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+def ls(connection):
+    manager = build_manager(connection)
+    for r in manager.session.query(Role).all():
+        click.echo('{}\t{}\t{}'.format(r.id, r.name, r.description))
 
 
 if __name__ == '__main__':
