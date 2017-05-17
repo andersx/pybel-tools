@@ -14,14 +14,18 @@ from pybel.manager.models import Base
 
 login_log = logging.getLogger('pybel.web.login')
 
+PYBEL_WEB_ROLE_TABLE = 'pybel_role'
+PYBEL_WEB_USER_TABLE = 'pybel_user'
+
 # Define models
 roles_users = Table('roles_users', Base.metadata,
-                    Column('user_id', Integer, ForeignKey('user.id')),
-                    Column('role_id', Integer, ForeignKey('role.id')))
+                    Column('user_id', Integer, ForeignKey('{}.id'.format(PYBEL_WEB_USER_TABLE))),
+                    Column('role_id', Integer, ForeignKey('{}.id'.format(PYBEL_WEB_ROLE_TABLE))))
 
 
 class Role(Base, RoleMixin):
     """Stores user roles"""
+    __tablename__ = PYBEL_WEB_ROLE_TABLE
     id = Column(Integer(), primary_key=True)
     name = Column(String(80), unique=True)
     description = Column(String(255))
@@ -29,6 +33,7 @@ class Role(Base, RoleMixin):
 
 class User(Base, UserMixin):
     """Stores users"""
+    __tablename__ = PYBEL_WEB_USER_TABLE
     id = Column(Integer, primary_key=True)
     email = Column(String(255), unique=True)
     password = Column(String(255))
@@ -56,7 +61,7 @@ def build_flask_security_app(app, manager):
         manager.session.commit()
 
     # Views
-    @app.route('/')
+    @app.route('/test')
     @login_required
-    def home():
+    def test_home():
         return redirect(url_for('index'))
