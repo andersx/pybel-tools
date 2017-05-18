@@ -1,3 +1,12 @@
+/**
+ * This JS file controls the QueryBuilder forms as well as autocompletions in network_list.html
+ *
+ * @summary   QueryBuilder of PyBEL explorer
+ *
+ * @requires jquery, select2
+ *
+ */
+
 $(document).ready(function () {
 
     // returns joined string with the properties of the selected elements in select2Element. Property can be the text or id

@@ -1,3 +1,14 @@
+/**
+ * This JS file controls all network rendering as well as
+ *  annotation tree and other filter options and controls
+ *  URL for querying the PyBEL-tools API.
+ *
+ * @summary   Network controller of PyBEL explorer
+ *
+ * @requires jquery, d3, d3-context-menu, inspire-tree, blob
+ *
+ */
+
 function getSelectedNodesFromTree(tree) {
     var selectedNodes = tree.selected(true);
 
