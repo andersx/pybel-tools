@@ -378,6 +378,8 @@ def serialize_namespaces(namespaces, connection, path, directory):
 def manage(ctx, connection):
     """Manage database"""
     ctx.obj = build_manager(connection)
+    Base.metadata.bind = ctx.obj.engine
+    Base.query = ctx.obj.session.query_property()
 
 
 @manage.group()
@@ -401,6 +403,7 @@ def add(ctx, email, password):
     """Creates a new user"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     ds.create_user(email=email, password=password)
+    ds.commit()
 
 
 @user.command()
@@ -409,7 +412,9 @@ def add(ctx, email, password):
 def delete(ctx, email):
     """Deletes a user"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
-    ds.delete_user(email)
+    u = ds.find_user(email=email)
+    ds.delete_user(u)
+    ds.commit()
 
 
 @user.command()
@@ -419,6 +424,7 @@ def make_admin(ctx, email):
     """Makes a given user an admin"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     ds.add_role_to_user(email, PYBEL_ADMIN_ROLE_NAME)
+    ds.commit()
 
 
 @user.command()
@@ -428,6 +434,7 @@ def make_admin(ctx, email):
 def add_role(ctx, email, role):
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     ds.add_role_to_user(email, role)
+    ds.commit()
 
 
 @manage.group()
@@ -443,6 +450,7 @@ def add(ctx, name, description):
     """Creates a new role"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     ds.create_role(name=name, description=description)
+    ds.commit()
 
 
 @role.command()
