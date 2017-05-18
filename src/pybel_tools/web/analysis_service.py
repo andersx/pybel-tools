@@ -56,11 +56,12 @@ def build_analysis_service(app, manager, api):
     def view_analysis_results(analysis_id):
         """View the results of a given analysis"""
         experiment = manager.session.query(Experiment).get(analysis_id)
+        experiment_data = pickle.loads(experiment.result)
         return render_template(
             'analysis_results.html',
             experiment=experiment,
             columns=npa.RESULT_LABELS,
-            data=sorted([(k, v) for k, v in experiment.data.items() if v[0]], key=itemgetter(1)),
+            data=sorted([(k, v) for k, v in experiment_data.items() if v[0]], key=itemgetter(1)),
             current_user=current_user
         )
 
@@ -126,9 +127,7 @@ def build_analysis_service(app, manager, api):
             source=pickle.dumps(df),
             result=pickle.dumps(scores),
             permutations=form.permutations.data,
-            user_id=current_user.user_id,
-            name=current_user.name,
-            username=current_user.username,
+            user=current_user,
         )
         experiment.network = network
 
@@ -142,8 +141,7 @@ def build_analysis_service(app, manager, api):
         """Returns data from analysis"""
         graph = get_graph_from_request(api)
         experiment = manager.session.query(Experiment).get(analysis_id)
-        data = experiment.data
-
+        data = pickle.loads(experiment.result)
         results = [{'node': node, 'data': data[api.nid_node[node]]} for node in graph.nodes_iter() if
                    api.nid_node[node] in data]
 
@@ -154,7 +152,7 @@ def build_analysis_service(app, manager, api):
         """Returns data from analysis"""
         graph = get_graph_from_request(api)
         experiment = manager.session.query(Experiment).get(analysis_id)
-        data = experiment.data
+        data = pickle.loads(experiment.result)
         # position 3 is the 'median' score
         results = {node: data[api.nid_node[node]][3] for node in graph.nodes_iter() if api.nid_node[node] in data}
 
@@ -167,7 +165,8 @@ def build_analysis_service(app, manager, api):
         si = StringIO()
         cw = csv.writer(si)
         csv_list = [('Namespace', 'Name') + tuple(RESULT_LABELS)]
-        csv_list.extend((ns, n) + tuple(v) for (_, ns, n), v in experiment.data.items())
+        experiment_data = pickle.loads(experiment.result)
+        csv_list.extend((ns, n) + tuple(v) for (_, ns, n), v in experiment_data.items())
         cw.writerows(csv_list)
         output = make_response(si.getvalue())
         output.headers["Content-Disposition"] = "attachment; filename=cmpa_{}.csv".format(analysis_id)

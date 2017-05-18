@@ -8,9 +8,10 @@ from operator import itemgetter
 
 import flask
 import networkx as nx
-from flask import Flask, request, jsonify, url_for, redirect, make_response
 from flask import render_template
+from flask import request, jsonify, url_for, redirect, make_response
 from flask_login import current_user, login_required
+from flask_security import roles_required, roles_accepted
 from requests.compat import unquote
 from six import StringIO
 
@@ -164,112 +165,130 @@ def get_graph_from_request(api):
     return graph
 
 
+def get_networks_with_permission(api):
+    """Gets all networks tagged as public or uploaded by the current user
+    
+    :param DictionaryService api: 
+    :return: A list of all networks tagged as public or uploaded by the current user
+    :rtype: list[Network]
+    """
+    if not current_user.is_authenticated:
+        return api.list_public_graphs()
+
+    if current_user.admin or current_user.has_role('scai'):
+        return api.list_graphs()
+
+    networks = api.list_public_graphs()
+
+    public_ids = {network.id for network in networks}
+
+    for report in current_user.reports:
+        if report.network_id in public_ids:
+            continue
+        networks.append(report.network)
+
+    return networks
+
+
 def build_dictionary_service_admin(app, manager, api):
     @app.route('/admin/reload')
-    @login_required
+    @roles_required('admin')
     def run_reload():
         """Reloads the networks and supernetwork"""
-        raise_for_not_admin()
         api.load_networks(force_reload=True)
         return jsonify({'status': 200})
 
     @app.route('/admin/enrich')
-    @login_required
+    @roles_required('admin')
     def run_enrich_authors():
         """Enriches information in network. Be patient"""
-        raise_for_not_admin()
         fix_pubmed_citations(api.universe)
         return jsonify({'status': 200})
 
     @app.route('/admin/ensure/small')
-    @login_required
+    @roles_required('admin')
     def ensure_small_corpus():
-        """Parses the small corpus"""
-        raise_for_not_admin()
+        """Parses and stores the small corpus"""
         graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/large')
-    @login_required
+    @roles_required('admin')
     def ensure_large_corpus():
         """Parses the large corpus"""
-        raise_for_not_admin()
         graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/abstract3')
-    @login_required
+    @roles_required('admin')
     def ensure_abstract3():
-        """Ensures Selventa Example 3"""
-        raise_for_not_admin()
+        """Parses and stores Selventa Example 3"""
         url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
         graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/simple')
-    @login_required
+    @roles_required('admin')
     def ensure_simple():
-        raise_for_not_admin()
+        """Parses and stores the PyBEL Test BEL Script"""
         url = 'https://raw.githubusercontent.com/pybel/pybel/develop/tests/bel/test_bel.bel'
         graph = from_url(url, manager=manager)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/gfam')
-    @login_required
+    @roles_required('admin')
     def ensure_gfam():
-        raise_for_not_admin()
+        """Parses and stores the HGNC Gene Family Definitions"""
         graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/aetionomy')
-    @login_required
+    @roles_required('admin')
     def ensure_aetionomy():
-        raise_for_not_admin()
+        """Parses and stores the AETIONOMY resources from the Biological Model Store repository"""
         t = time.time()
         convert_recursive(os.path.join(os.environ[BMS_BASE], 'aetionomy'), connection=manager, upload=True,
                           enrich_citations=True)
         return jsonify({'status': 200, 'time': time.time() - t})
 
     @app.route('/admin/upload/aetionomy')
-    @login_required
+    @roles_required('admin')
     def upload_aetionomy():
-        raise_for_not_admin()
+        """Uploads the gpickles in the AETIONOMY section of the Biological Model Store repository"""
         t = time.time()
         upload_recursive(os.path.join(os.environ[BMS_BASE], 'aetionomy'), connection=manager)
         return jsonify({'status': 200, 'time': time.time() - t})
 
     @app.route('/admin/upload/selventa')
-    @login_required
+    @roles_required('admin')
     def upload_selventa():
-        raise_for_not_admin()
+        """Uploads the gpickles in the Selventa section of the Biological Model Store repository"""
         t = time.time()
         upload_recursive(os.path.join(os.environ[BMS_BASE], 'selventa'), connection=manager)
         return jsonify({'status': 200, 'time': time.time() - t})
 
     @app.route('/admin/list/bms/pickles')
+    @roles_required('admin')
     def list_bms_pickles():
-        raise_for_not_admin()
+        """Lists the precompiled gpickles in the Biological Model Store repository"""
         return jsonify(list(get_paths_recursive(os.environ[BMS_BASE], extension='.gpickle')))
 
     @app.route('/admin/list/reporting')
-    @login_required
+    @roles_required('admin')
     def list_reporting():
         """Sends the reporting log as a text file"""
-        raise_for_not_admin()
         return flask.send_file(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
 
     @app.route('/admin/list/logins')
-    @login_required
+    @roles_required('admin')
     def list_logins():
         """Sends the reporting log as a text file"""
-        raise_for_not_admin()
         return flask.send_file(os.path.join(PYBEL_LOG_DIR, 'logins.txt'))
 
     @app.route('/admin/nuke/')
-    @login_required
+    @roles_required('admin')
     def nuke():
         """Destroys the database and recreates it"""
-        raise_for_not_admin()
         log.info('nuking database')
         manager.drop_database()
         manager.create_all()
@@ -278,83 +297,79 @@ def build_dictionary_service_admin(app, manager, api):
         log.info('... the dust settles')
         return jsonify({'status': 200})
 
+    @app.route('/admin/network/make_public/<int:network_id>')
+    @roles_accepted('admin', 'scai')
+    def make_network_public(network_id):
+        api.network_public[network_id] = True
+        return redirect(url_for('view_networks'))
+
 
 def build_api_admin(app, manager):
     @app.route('/admin/rollback')
-    @login_required
+    @roles_required('admin')
     def rollback():
         """Rolls back the transaction for when something bad happens"""
-        raise_for_not_admin()
         manager.rollback()
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/graphs/drop/<int:network_id>')
-    @login_required
+    @roles_required('admin')
     def drop_graph(network_id):
         """Drops a specific graph"""
-        raise_for_not_admin()
         log.info('dropping graphs %s', network_id)
         manager.drop_graph(network_id)
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/graphs/dropall')
-    @login_required
+    @roles_required('admin')
     def drop_graphs():
         """Drops all graphs"""
-        raise_for_not_admin()
         log.info('dropping all graphs')
         manager.drop_graphs()
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/namespaces/drop/<int:namespace_id>')
-    @login_required
+    @roles_required('admin')
     def drop_namespace(namespace_id):
-        raise_for_not_admin()
         log.info('dropping namespace %s', namespace_id)
         manager.session.query(Namespace).filter(Namespace.id == namespace_id).delete()
         manager.session.commit()
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/namespaces/dropall')
-    @login_required
+    @roles_required('admin')
     def drop_namespaces():
         """Drops all namespaces"""
-        raise_for_not_admin()
         log.info('dropping all namespaces')
         manager.session.query(Namespace).delete()
         manager.session.commit()
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/annotations/drop/<annotation_id>')
-    @login_required
+    @roles_required('admin')
     def drop_annotation(annotation_id):
-        raise_for_not_admin()
         log.info('dropping annotation %s', annotation_id)
         manager.session.query(Annotation).filter(Annotation.id == annotation_id).delete()
         manager.session.commit()
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/annotations/dropall')
-    @login_required
+    @roles_required('admin')
     def drop_annotations():
         """Drops all annotations"""
-        raise_for_not_admin()
         log.info('dropping all annotations')
         manager.session.query(Annotation).delete()
         manager.session.commit()
         return jsonify({'status': 200})
 
 
-def build_dictionary_service(app, manager, check_version=True, analysis_enabled=False, preload=False, eager=False):
-    """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
-    with :func:`get_dict_service`
+def build_dictionary_service(app, manager, check_version=True, analysis_enabled=False, preload=True, eager=False):
+    """Builds the PyBEL Dictionary-Backed API Service. Returns the latent DictonaryService.
 
-    :param app: A Flask App
-    :type app: Flask
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
-    :param check_version: Should the versions of the networks be checked during loading?
-    :type check_version: bool
+    :param flask.Flask app: A Flask App
+    :param pybel.manager.cache.CacheManager manager: A PyBEL cache manager
+    :param bool check_version: Should the versions of the networks be checked during loading?
+    :rtype: DictionaryService
     """
     api = DictionaryService(manager=manager)
 
@@ -375,7 +390,6 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         return render_template('index.html')
 
     @app.route('/networks', methods=['GET', 'POST'])
-    @login_required
     def view_networks():
         """Renders a page for the user to choose a network"""
         seed_subgraph_form = SeedSubgraphForm()
@@ -415,9 +429,11 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
             log.info('redirecting to %s', url)
             return redirect(url)
 
+        networks = get_networks_with_permission(api)
+
         return flask.render_template(
             'network_list.html',
-            networks=api.list_graphs(),
+            networks=networks,
             provenance_form=seed_provenance_form,
             subgraph_form=seed_subgraph_form,
             analysis_enabled=analysis_enabled,

@@ -50,13 +50,7 @@
                     <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
                 </a>
                 <div class="pull-right">
-                    {% if current_user.is_authenticated %}
-                        <a class="btn btn-default" href="https://github.com/{{ current_user.username }}">Logged in
-                            as {{ current_user.display }}</a>
-                        <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">Log Out</a>
-                    {% else %}
-                        <a class="btn btn-default" href="{{ url_for('login') }}" role="button">Log In</a>
-                    {% endif %}
+                    {% include "login_buttons.html" %}
                 </div>
             </div>
         </div>
@@ -135,6 +129,11 @@
                                     <a class="btn btn-danger"
                                        href="{{ url_for('drop_network', network_id=network.id) }}"
                                        role="button">Drop</a>
+                                {% endif %}
+                                {% if current_user.has_role('scai') or current_user.admin %}
+                                    <a class="btn btn-success"
+                                       href="{{ url_for('make_network_public', network_id=network.id) }}" role="button">Make
+                                        Public</a>
                                 {% endif %}
                             </ul>
                         </div>

@@ -388,11 +388,13 @@ def user():
 
 
 @user.command()
+@click.option('-p', '--with-passwords', is_flag=True)
 @click.pass_context
-def ls(ctx):
+def ls(ctx, with_passwords):
     """Lists all users"""
     for u in ctx.obj.session.query(User).all():
-        click.echo('{}\t{}'.format(u.email, ','.join(r.name for r in u.roles)))
+        click.echo('{}\t{}\t{}\t{}{}'.format(u.email, u.first_name, u.last_name, ','.join(r.name for r in u.roles),
+                                             '\t{}'.format(u.password) if with_passwords else ''))
 
 
 @user.command()
@@ -402,9 +404,11 @@ def ls(ctx):
 def add(ctx, email, password):
     """Creates a new user"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
-    ds.create_user(email=email, password=password)
-    ds.commit()
-
+    try:
+        ds.create_user(email=email, password=password)
+        ds.commit()
+    except:
+        log.exception("Couldn't create user")
 
 @user.command()
 @click.argument('email')
@@ -423,9 +427,11 @@ def delete(ctx, email):
 def make_admin(ctx, email):
     """Makes a given user an admin"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
-    ds.add_role_to_user(email, PYBEL_ADMIN_ROLE_NAME)
-    ds.commit()
-
+    try:
+        ds.add_role_to_user(email, 'admin')
+        ds.commit()
+    except:
+        log.exception("Couldn't make admin")
 
 @user.command()
 @click.argument('email')
@@ -433,9 +439,11 @@ def make_admin(ctx, email):
 @click.pass_context
 def add_role(ctx, email, role):
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
-    ds.add_role_to_user(email, role)
-    ds.commit()
-
+    try:
+        ds.add_role_to_user(email, role)
+        ds.commit()
+    except:
+        log.exception("Couldn't add role")
 
 @manage.group()
 def role():
@@ -449,9 +457,11 @@ def role():
 def add(ctx, name, description):
     """Creates a new role"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
-    ds.create_role(name=name, description=description)
-    ds.commit()
-
+    try:
+        ds.create_role(name=name, description=description)
+        ds.commit()
+    except:
+        log.exception("Couldn't create role")
 
 @role.command()
 @click.pass_context

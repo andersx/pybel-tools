@@ -45,6 +45,9 @@ class DictionaryService(BaseService):
         #: dictionary of {int id: BELGraph graph}
         self.networks = {}
 
+        #: dictionary of {int id: bool public}
+        self.network_public = {}
+
         #: dictionary of {tuple node: int id}
         self.node_nid = {}
 
@@ -392,3 +395,8 @@ class DictionaryService(BaseService):
         """Lists the most recently uploaded version of each network"""
         return self.manager.session.query(Network).group_by(Network.name).having(func.max(Network.created)).order_by(
             Network.created.desc()).all()
+
+    def list_public_graphs(self):
+        """Lists the graphs that have been made public"""
+        networks = self.list_graphs()
+        return [network for network in networks if self.network_public.get(network.id)]

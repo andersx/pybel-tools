@@ -3,10 +3,9 @@
 import logging
 
 import flask
-from flask import redirect
-from flask import url_for
+from flask import redirect, url_for, jsonify, render_template
 from flask_security import Security, SQLAlchemyUserDatastore, \
-    UserMixin, RoleMixin
+    UserMixin, RoleMixin, roles_required
 from flask_security.forms import RegisterForm, get_form_field_label
 from sqlalchemy import Table, Integer, Column, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
@@ -41,10 +40,11 @@ class User(Base, UserMixin):
     id = Column(Integer, primary_key=True)
     email = Column(String(255), unique=True)
     password = Column(String(255))
+    first_name = Column(String(255))
+    last_name = Column(String(255))
     active = Column(Boolean)
     confirmed_at = Column(DateTime)
-    roles = relationship('Role', secondary=roles_users,
-                         backref=backref('users', lazy='dynamic'))
+    roles = relationship('Role', secondary=roles_users, backref=backref('users', lazy='dynamic'))
 
     @property
     def display(self):
@@ -52,7 +52,11 @@ class User(Base, UserMixin):
 
     @property
     def admin(self):
-        return self.has_role(PYBEL_ADMIN_ROLE_NAME)
+        """Is this user an administrator?"""
+        return self.has_role('admin')
+
+    def __str__(self):
+        return self.email
 
 
 class ExtendedRegisterForm(RegisterForm):
@@ -75,8 +79,8 @@ def build_security_service(app, manager):
     def create_user():
         try:
             manager.create_all()
-            user_datastore.create_user(email='guest@scai.fraunhofer.de', password='guest')
-            user_datastore.create_role(name=PYBEL_ADMIN_ROLE_NAME, description='Administrator of PyBEL Web')
+            user_datastore.create_role(name='admin', description='Administrator of PyBEL Web')
+            user_datastore.create_role(name='scai', description='Users of PyBEL Web from Fraunhofer SCAI')
             manager.session.commit()
         except:
             manager.session.rollback()
@@ -88,3 +92,22 @@ def build_security_service(app, manager):
     @app.route('/wrap/login')
     def login():
         return redirect(url_for('security.login'))
+
+    @app.route('/admin/user/<user>/add_role/<role>')
+    @roles_required('admin')
+    def add_user_role(user, role):
+        user_datastore.add_role_to_user(user, role)
+        user_datastore.commit()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/user/list')
+    @roles_required('admin')
+    def list_users():
+        return jsonify(manager.session.query(User).all())
+
+    @app.route('/users')
+    @roles_required('admin')
+    def view_users():
+        return render_template('view_users.html', users=manager.session.query(User).all())
+
+
