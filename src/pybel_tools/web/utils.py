@@ -86,7 +86,11 @@ def sanitize_list_of_str(l):
 
 
 def render_graph_summary_no_api(graph):
-    """Renders the graph summary page if not saving the graph"""
+    """Renders the graph summary page if not saving the graph
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :return: A Flask Resposne object
+    """
     hub_data = {graph.node[node][CNAME]: count for node, count in Counter(graph.degree()).most_common(25)}
     centrality_data = {graph.node[node][CNAME]: count for node, count in
                        calc_betweenness_centality(graph).most_common(25)}
