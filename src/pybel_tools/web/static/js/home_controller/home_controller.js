@@ -61,7 +61,7 @@ $(document).ready(function () {
     $("#author_selection").select2({
         minimumInputLength: 2,
         multiple: true,
-        placeholder: "Please type authors here",
+        placeholder: "Please type your authors of interest here",
         ajax: {
             url: function () {
                 return "/api/suggestion/authors/";
@@ -92,7 +92,7 @@ $(document).ready(function () {
     $("#pubmed_selection").select2({
         minimumInputLength: 2,
         multiple: true,
-        placeholder: "Please type PubMed Identifiers here",
+        placeholder: "Please type your PubMed identifiers of interest here",
         ajax: {
             url: function () {
                 return "/api/suggestion/pubmed/";
