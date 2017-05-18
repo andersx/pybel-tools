@@ -390,7 +390,7 @@ def user():
 def ls(ctx):
     """Lists all users"""
     for u in ctx.obj.session.query(User).all():
-        click.echo('{}\t{}\t{}'.format(u.id, u.email, ','.join(r.name for r in u.roles)))
+        click.echo('{}\t{}'.format(u.email, ','.join(r.name for r in u.roles)))
 
 
 @user.command()
@@ -401,6 +401,15 @@ def add(ctx, email, password):
     """Creates a new user"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     ds.create_user(email=email, password=password)
+
+
+@user.command()
+@click.argument('email')
+@click.pass_context
+def delete(ctx, email):
+    """Deletes a user"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    ds.delete_user(email)
 
 
 @user.command()
@@ -441,7 +450,7 @@ def add(ctx, name, description):
 def ls(ctx):
     """Lists roles"""
     for r in ctx.obj.session.query(Role).all():
-        click.echo('{}\t{}\t{}'.format(r.id, r.name, r.description))
+        click.echo('{}\t{}'.format(r.name, r.description))
 
 
 if __name__ == '__main__':
