@@ -20,6 +20,7 @@ import sys
 from getpass import getuser
 
 import click
+from flask_security import SQLAlchemyUserDatastore
 
 from pybel import from_pickle, to_database, from_lines, from_url
 from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
@@ -43,7 +44,7 @@ from .web.github_login_service import build_github_login_service, login_log
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
-from .web.security import build_security_service, User, Role, PYBEL_ADMIN_ROLL_NAME
+from .web.security import build_security_service, User, Role, PYBEL_ADMIN_ROLE_NAME
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
 from .web.utils import get_app
@@ -372,8 +373,11 @@ def serialize_namespaces(namespaces, connection, path, directory):
 
 
 @main.group()
-def manage():
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+@click.pass_context
+def manage(ctx, connection):
     """Manage database"""
+    ctx.obj = build_manager(connection)
 
 
 @manage.group()
@@ -382,23 +386,39 @@ def user():
 
 
 @user.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
-def ls(connection):
-    manager = build_manager(connection)
-    for u in manager.session.query(User).all():
+@click.pass_context
+def ls(ctx):
+    """Lists all users"""
+    for u in ctx.obj.session.query(User).all():
         click.echo('{}\t{}\t{}'.format(u.id, u.email, ','.join(r.name for r in u.roles)))
 
 
 @user.command()
-@click.argument('user_id')
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
-def add_admin(user_id, connection):
-    """Adds admin privileges to a given account"""
-    manager = build_manager(connection)
-    u = manager.session.query(User).get(user_id)
-    r = manager.session.query(Role).filter(Role.name == PYBEL_ADMIN_ROLL_NAME).one()
-    u.roles.append(r)
-    manager.session.commit()
+@click.argument('email')
+@click.argument('password')
+@click.pass_context
+def add(ctx, email, password):
+    """Creates a new user"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    ds.create_user(email=email, password=password)
+
+
+@user.command()
+@click.argument('email')
+@click.pass_context
+def make_admin(ctx, email):
+    """Makes a given user an admin"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    ds.add_role_to_user(email, PYBEL_ADMIN_ROLE_NAME)
+
+
+@user.command()
+@click.argument('email')
+@click.argument('role')
+@click.pass_context
+def add_role(ctx, email, role):
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    ds.add_role_to_user(email, role)
 
 
 @manage.group()
@@ -409,23 +429,18 @@ def role():
 @role.command()
 @click.argument('name')
 @click.option('-d', '--description')
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
-def add_role(name, description, connection):
+@click.pass_context
+def add(ctx, name, description):
     """Creates a new role"""
-    manager = build_manager(connection)
-    try:
-        r = Role(name=name, description=description)
-        manager.session.add(r)
-        manager.session.commit()
-    except:
-        manager.rollback()
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    ds.create_role(name=name, description=description)
 
 
 @role.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
-def ls(connection):
-    manager = build_manager(connection)
-    for r in manager.session.query(Role).all():
+@click.pass_context
+def ls(ctx):
+    """Lists roles"""
+    for r in ctx.obj.session.query(Role).all():
         click.echo('{}\t{}\t{}'.format(r.id, r.name, r.description))
 
 

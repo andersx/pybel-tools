@@ -19,7 +19,7 @@ login_log = logging.getLogger('pybel.web.login')
 
 PYBEL_WEB_ROLE_TABLE = 'pybel_role'
 PYBEL_WEB_USER_TABLE = 'pybel_user'
-PYBEL_ADMIN_ROLL_NAME = 'admin'
+PYBEL_ADMIN_ROLE_NAME = 'admin'
 
 # Define models
 roles_users = Table('roles_users', Base.metadata,
@@ -52,7 +52,7 @@ class User(Base, UserMixin):
 
     @property
     def admin(self):
-        return self.has_role(PYBEL_ADMIN_ROLL_NAME)
+        return self.has_role(PYBEL_ADMIN_ROLE_NAME)
 
 
 class ExtendedRegisterForm(RegisterForm):
@@ -76,7 +76,7 @@ def build_security_service(app, manager):
         try:
             manager.create_all()
             user_datastore.create_user(email='guest@scai.fraunhofer.de', password='guest')
-            user_datastore.create_role(name=PYBEL_ADMIN_ROLL_NAME, description='Administrator of PyBEL Web')
+            user_datastore.create_role(name=PYBEL_ADMIN_ROLE_NAME, description='Administrator of PyBEL Web')
             manager.session.commit()
         except:
             manager.session.rollback()
