@@ -395,9 +395,6 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         seed_subgraph_form = SeedSubgraphForm()
         seed_provenance_form = SeedProvenanceForm()
 
-        log.debug(seed_subgraph_form.data)
-        log.debug(seed_provenance_form.data)
-
         if seed_subgraph_form.validate_on_submit() and seed_subgraph_form.submit_subgraph.data:
             seed_data_nodes = seed_subgraph_form.node_list.data.split(',')
             seed_method = seed_subgraph_form.seed_method.data
