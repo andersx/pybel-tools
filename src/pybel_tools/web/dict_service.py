@@ -357,7 +357,7 @@ def build_api_admin(app):
     log.info('added api admin functions')
 
 
-def build_dictionary_service(app, check_version=True, preload=True, eager=False):
+def build_dictionary_service(app):
     """Builds the PyBEL Dictionary-Backed API Service.
 
     :param flask.Flask app: A Flask App
@@ -366,9 +366,10 @@ def build_dictionary_service(app, check_version=True, preload=True, eager=False)
     manager = get_manager(app)
     api = get_api(app)
 
-    if preload:
+    if app.config.get('PYBEL_DS_PRELOAD', True):
         log.info('preloading networks')
-        api.load_networks(check_version=check_version, eager=eager)
+        api.load_networks(check_version=app.config.get('PYBEL_DS_CHECK_VERSION', True),
+                          eager=app.config.get('PYBEL_DS_EAGER', False))
         log.info('pre-loaded the dict service')
 
     build_dictionary_service_admin(app)

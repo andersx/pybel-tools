@@ -120,28 +120,21 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
     config = {
         'SECRET_KEY': secret_key if secret_key else 'pybel_default_dev_key',
-        PYBEL_CONNECTION: connection
-    }
-
-    app = create_application(config=config)
-
-    app.config.update({
         'SECURITY_REGISTERABLE': True,
         'SECURITY_CONFIRMABLE': False,
         'SECURITY_SEND_REGISTER_EMAIL': False,
         'SECURITY_PASSWORD_HASH': 'pbkdf2_sha512',
         'SECURITY_PASSWORD_SALT': os.environ[PYBEL_WEB_PASSWORD_SALT],
-    })
+        PYBEL_CONNECTION: connection,
+        'PYBEL_DS_CHECK_VERSION': not skip_check_version,
+        'PYBEL_DS_EAGER': eager,
+        'PYBEL_DS_PRELOAD': not no_preload,
+    }
+
+    app = create_application(config=config)
 
     build_security_service(app)
-
-    build_dictionary_service(
-        app,
-        check_version=(not skip_check_version),
-        eager=eager,
-        preload=(not no_preload),
-    )
-
+    build_dictionary_service(app)
     build_sitemap_endpoint(app)
     build_synchronous_compiler_service(app)
     build_pickle_uploader_service(app)
