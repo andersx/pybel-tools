@@ -30,6 +30,7 @@ from pybel.utils import get_version as pybel_version
 from .constants import GENE_FAMILIES, NAMED_COMPLEXES
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
+from .web.async import build_celery_app
 from .ioutils import convert_recursive, upload_recursive
 from .mutation.metadata import fix_pubmed_citations
 from .utils import get_version, enable_cool_mode
@@ -223,13 +224,13 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, directory
 @click.option('--run-database-service', is_flag=True, help='Enable the database service')
 @click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
 @click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
+@click.option('--run-async-compiler', is_flag=True, help='Enable the asynchronous compiler')
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
 @click.option('--no-preload', is_flag=True, help='Do not preload cache')
-@click.option('--basic-security', is_flag=True, help='use basic security instead of github')
 @click.option('--echo-sql', is_flag=True)
 def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_receiver_service, run_all, secret_key, no_preload, basic_security, echo_sql):
+        run_receiver_service, run_async_compiler, run_all, secret_key, no_preload, echo_sql):
     """Runs PyBEL Web"""
     set_debug_param(debug)
     if debug < 3:
@@ -251,19 +252,16 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
     manager = build_manager(connection, echo=echo_sql)
 
-    if basic_security:
-        app.config.update({
-            'SECURITY_REGISTERABLE': True,
-            'SECURITY_CONFIRMABLE': False,
-            'SECURITY_SEND_REGISTER_EMAIL': False,
-            'SECURITY_PASSWORD_HASH': 'pbkdf2_sha512',
-            'SECURITY_PASSWORD_SALT': os.environ[PYBEL_WEB_PASSWORD_SALT],
-        })
-        Base.metadata.bind = manager.engine
-        Base.query = manager.session.query_property()
-        build_security_service(app, manager)
-    else:
-        build_github_login_service(app)
+    app.config.update({
+        'SECURITY_REGISTERABLE': True,
+        'SECURITY_CONFIRMABLE': False,
+        'SECURITY_SEND_REGISTER_EMAIL': False,
+        'SECURITY_PASSWORD_HASH': 'pbkdf2_sha512',
+        'SECURITY_PASSWORD_SALT': os.environ[PYBEL_WEB_PASSWORD_SALT],
+    })
+    Base.metadata.bind = manager.engine
+    Base.query = manager.session.query_property()
+    build_security_service(app, manager)
 
     api = build_dictionary_service(
         app,
@@ -280,6 +278,9 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     build_analysis_service(app, manager=manager, api=api)
     build_curation_service(app)
     build_reporting_service(app, manager=manager)
+
+    if run_async_compiler:
+        build_celery_app(app, manager)
 
     if run_database_service:
         build_database_service(app, manager)
