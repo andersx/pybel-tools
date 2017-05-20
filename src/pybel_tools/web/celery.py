@@ -1,5 +1,14 @@
 # -*- encoding: utf-8 -*-
 
+"""
+Resources:
+
+1. https://citizen-stig.github.io/2016/02/17/using-celery-with-flask-factories.html
+2. https://github.com/citizen-stig/celery-with-flask-factories
+3. https://blog.miguelgrinberg.com/post/celery-and-the-flask-application-factory-pattern
+4. http://flask.pocoo.org/docs/0.12/patterns/celery/
+"""
+
 from celery import Celery
 
 
