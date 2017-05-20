@@ -1,0 +1,57 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block head %}
+    {{ super() }}
+    {{ fixes.ie8() }}
+
+    {% include "google_analytics.html" %}
+{% endblock %}
+
+
+{% block styles %}
+    {{ super() }}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
+{% endblock %}
+
+{% block title %}Compile{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>BEL Web Compiler</h1>
+        </div>
+
+        {{ util.flashed_messages(dismissible=True, container=False) }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <div class="pull-right">
+                    {% include "login_buttons.html" %}
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>What to Do Next?</h4>
+                <p>Asynchronous compilation is an experimental feature currently and doesn't provide as immediate
+                    feedback as synchronous compilation. Compilation usually is pretty fast, and takes less than 5-10
+                    minutes. If you don't see your network appear in the <a href="{{ url_for('view_networks') }}">network
+                        list</a> soon, assume there was a problem. In the future, this application will send emails with
+                    feedback</p>
+                <h4>Task</h4>
+                <p>Your task has the identifier <code>{{ task.id }}</code></p>
+            </div>
+        </div>
+    </div>
+
+    {% include "footer.html" %}
+{% endblock %}
+
