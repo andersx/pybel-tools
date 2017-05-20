@@ -14,6 +14,7 @@ from wtforms.validators import DataRequired
 
 from pybel.manager.models import Base
 
+log = logging.getLogger(__name__)
 login_log = logging.getLogger('pybel.web.login')
 
 PYBEL_WEB_ROLE_TABLE = 'pybel_role'
@@ -32,6 +33,9 @@ class Role(Base, RoleMixin):
     id = Column(Integer(), primary_key=True)
     name = Column(String(80), unique=True)
     description = Column(String(255))
+
+    def __str__(self):
+        return self.name
 
 
 class User(Base, UserMixin):
@@ -70,7 +74,8 @@ def build_security_service(app, manager):
 
     :param flask.Flask app: 
     :param pybel.manager.cache.CacheManager manager: 
-    :return: 
+    :return: The instance of the user data store object
+    :rtype: SQLAlchemyUserDatastore
     """
     user_datastore = SQLAlchemyUserDatastore(manager, User, Role)
     Security(app, user_datastore, register_form=ExtendedRegisterForm)
@@ -100,6 +105,13 @@ def build_security_service(app, manager):
         user_datastore.commit()
         return jsonify({'status': 200})
 
+    @app.route('/admin/user/<user>/remove_role/<role>')
+    @roles_required('admin')
+    def remove_user_role(user, role):
+        user_datastore.remove_role_from_user(user, role)
+        user_datastore.commit()
+        return jsonify({'status': 200})
+
     @app.route('/admin/user/list')
     @roles_required('admin')
     def list_users():
@@ -110,4 +122,15 @@ def build_security_service(app, manager):
     def view_users():
         return render_template('view_users.html', users=manager.session.query(User).all())
 
+    @app.route('/api/user/<int:user_id>/delete')
+    @roles_required('admin')
+    def delete_user(user_id):
+        """Deletes a user"""
+        u = User.query.get(user_id)
+        user_datastore.delete_user(u)
+        user_datastore.commit()
+        return jsonify({'status': 200, 'action': 'deleted user', 'user': u})
 
+    log.info('built security service')
+
+    return user_datastore

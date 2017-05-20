@@ -8,10 +8,19 @@
 {% block content %}
     <div class="container">
         <div class="page-header">
-            <h1>Login</h1>
+            <h1>PyBEL Web Login</h1>
         </div>
 
         {{ util.flashed_messages(dismissible=True, container=False) }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>This application is in beta, and we'd love to share all of our new features with you. Sometimes this
+                    means our database breaks, we might lose your data, and you might have to register again.
+                    Sorry for the inconvenience!
+                </p>
+            </div>
+        </div>
 
         <div class="panel panel-default">
             <div class="panel-body">
@@ -19,6 +28,7 @@
 
                 {% if security.registerable %}
                     <p>Don't have an account? <a href="
+
                             {{ url_for_security('register') }}{% if 'next' in request.args %}?next={{ request.args.next|urlencode }}{% endif %}">Register.</a>
                     </p>
                 {% endif %}
