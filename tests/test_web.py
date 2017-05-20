@@ -19,7 +19,7 @@ class WebTest(unittest.TestCase):
         self.app_instance = create_application()
         self.app_instance.config.update({
             'SECRET_KEY': TEST_SECRET_KEY,
-            PYBEL_CONNECTION: self.db_file
+            PYBEL_CONNECTION: 'sqlite:///' + self.db_file
         })
 
         FlaskPybel(self.app_instance)
