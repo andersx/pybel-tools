@@ -28,6 +28,7 @@ __all__ = [
     'get_contradictory_pairs',
     'get_contradiction_summary',
     'count_diseases',
+    'get_tree_annotations',
 ]
 
 
@@ -306,3 +307,15 @@ def count_diseases(graph):
     :rtype: Counter
     """
     return Counter(_disease_iterator(graph))
+
+
+def get_tree_annotations(graph):
+    """Builds tree structure with annotation for a given graph
+    
+    :param pybel.BELGraph graph: A BEL Graph
+    :return: The JSON structure necessary for building the tree box
+    :rtype: list[dict]
+    """
+    annotations = get_annotation_values_by_annotation(graph)
+    return [{'text': annotation, 'children': [{'text': value} for value in sorted(values)]} for annotation, values in
+            sorted(annotations.items())]

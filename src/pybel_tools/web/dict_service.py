@@ -19,6 +19,7 @@ from pybel import from_bytes
 from pybel import from_url
 from pybel.constants import *
 from pybel.manager.models import Namespace, Annotation
+from ..edge_summary import get_tree_annotations
 from .dict_service_utils import DictionaryService
 from .extension import get_manager, get_api
 from .forms import SeedProvenanceForm, SeedSubgraphForm
@@ -30,7 +31,6 @@ from ..definition_utils import write_namespace
 from ..ioutils import convert_recursive, upload_recursive, get_paths_recursive
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
-from ..summary.edge_summary import get_annotation_values_by_annotation
 from ..summary.error_summary import get_undefined_namespace_names, get_incorrect_names
 from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
@@ -78,19 +78,6 @@ BLACK_LIST = {
     FILTERS,
     FILTER_PATHOLOGIES,
 }
-
-
-def get_tree_annotations(graph):
-    """Builds tree structure with annotation for a given graph
-    
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :return: The JSON structure necessary for building the tree box
-    :rtype: list[dict]
-    """
-    annotations = get_annotation_values_by_annotation(graph)
-    return [{'text': annotation, 'children': [{'text': value} for value in sorted(values)]} for annotation, values in
-            sorted(annotations.items())]
 
 
 def get_graph_from_request(api):
