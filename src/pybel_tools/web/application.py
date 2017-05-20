@@ -6,7 +6,7 @@ import flask
 from flask import Flask
 from flask_bootstrap import Bootstrap
 
-from .async import async_blueprint
+from .async_compilation_service import async_blueprint
 from .extension import FlaskPybel
 
 log = logging.getLogger(__name__)

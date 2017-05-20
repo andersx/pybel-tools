@@ -4,7 +4,6 @@ import unittest
 
 from pybel.constants import PYBEL_CONNECTION
 from pybel_tools.web.application import create_application
-from pybel_tools.web.extension import FlaskPybel
 from pybel_tools.web.security import build_security_service
 
 TEST_USER_USERNAME = 'test@example.com'
@@ -16,13 +15,12 @@ class WebTest(unittest.TestCase):
     def setUp(self):
         self.db_fd, self.db_file = tempfile.mkstemp()
 
-        self.app_instance = create_application()
-        self.app_instance.config.update({
+        config = {
             'SECRET_KEY': TEST_SECRET_KEY,
             PYBEL_CONNECTION: 'sqlite:///' + self.db_file
-        })
+        }
 
-        FlaskPybel(self.app_instance)
+        self.app_instance = create_application(config)
 
         self.user_datastore = build_security_service(self.app_instance)
         self.user_datastore.create_user(email=TEST_USER_USERNAME, password=TEST_USER_PASSWORD)
