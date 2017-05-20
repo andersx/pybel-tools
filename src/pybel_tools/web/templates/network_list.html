@@ -74,7 +74,7 @@
                         <a class="btn btn-success" href="{{ url_for('run_reload') }}" role="button">Reload Graphs</a>
                         <a class="btn btn-danger" href="{{ url_for('drop_graphs') }}" role="button">Drop All Graphs</a>
                     </p>
-                    <h4>Ensure BEL Documents</h4>
+                    <h4>Ensure Remote BEL Documents</h4>
                     <p>
                         <a class="btn btn-success" href="{{ url_for('ensure_simple') }}" role="button">Simple</a>
                         <a class="btn btn-success" href="{{ url_for('ensure_small_corpus') }}" role="button">Small
@@ -82,6 +82,9 @@
                         <a class="btn btn-success" href="{{ url_for('ensure_large_corpus') }}" role="button">Large
                             Corpus</a>
                         <a class="btn btn-success" href="{{ url_for('ensure_gfam') }}" role="button">Gene Families</a>
+                    </p>
+                    <h4>Ensure BMS BEL Documents</h4>
+                    <p>
                         <a class="btn btn-info" href="{{ url_for('list_bms_pickles') }}" role="button">List BMS
                             Pickles</a>
                         <a class="btn btn-warning" href="{{ url_for('upload_aetionomy') }}" role="button">Upload
