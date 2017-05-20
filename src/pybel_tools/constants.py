@@ -35,7 +35,6 @@ default_namespace_names = {
     'MGI': 'mgi-mouse-genes.belns',
     'RGD': 'rgd-rat-genes.belns',
     'SCOMP': 'selventa-named-complexes.belns',
-    'SDIS': 'selventa-legacy-diseases.belns',
     'SFAM': 'selventa-protein-families.belns',
     'SP': 'swissprot.belns',
     'SPID': 'swissprot-ids.belns',
