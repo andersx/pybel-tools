@@ -19,7 +19,6 @@ from pybel import from_bytes
 from pybel import from_url
 from pybel.constants import *
 from pybel.manager.models import Namespace, Annotation
-from ..edge_summary import get_tree_annotations
 from .dict_service_utils import DictionaryService
 from .extension import get_manager, get_api
 from .forms import SeedProvenanceForm, SeedSubgraphForm
@@ -31,6 +30,7 @@ from ..definition_utils import write_namespace
 from ..ioutils import convert_recursive, upload_recursive, get_paths_recursive
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
+from ..summary.edge_summary import get_tree_annotations
 from ..summary.error_summary import get_undefined_namespace_names, get_incorrect_names
 from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
