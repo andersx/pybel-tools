@@ -7,6 +7,7 @@ from flask import Flask
 from flask import jsonify
 
 from .database_service_utils import DatabaseService
+from .extension import get_manager
 
 DATABASE_SERVICE = 'database_service'
 
@@ -33,14 +34,12 @@ def set_database_service(app, service):
     app.config[DATABASE_SERVICE] = service
 
 
-def build_database_service(app, manager):
+def build_database_service(app):
     """Builds the PyBEL Database-Backed API Service.
 
-    :param app: A Flask App
-    :type app: Flask
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
+    :param flask.Flask app: A Flask App
     """
+    manager = get_manager(app)
     api = DatabaseService(manager=manager)
     set_database_service(app, api)
 

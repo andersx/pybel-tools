@@ -14,7 +14,6 @@ problems--the code will get executed twice:
 Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
-import logging
 import os
 import sys
 from getpass import getuser
@@ -23,32 +22,31 @@ import click
 from flask_security import SQLAlchemyUserDatastore
 
 from pybel import from_pickle, to_database, from_lines, from_url
-from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
+from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection, PYBEL_CONNECTION
 from pybel.manager.cache import build_manager
 from pybel.manager.models import Base
 from pybel.utils import get_version as pybel_version
 from .constants import GENE_FAMILIES, NAMED_COMPLEXES
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
-from .web.async import build_celery_app
 from .ioutils import convert_recursive, upload_recursive
 from .mutation.metadata import fix_pubmed_citations
 from .utils import get_version, enable_cool_mode
 from .web import receiver_service
 from .web.analysis_service import build_analysis_service
+from .web.application import create_application
 from .web.compilation_service import build_synchronous_compiler_service
-from .web.constants import reporting_log, DEFAULT_SERVICE_URL, PYBEL_WEB_PASSWORD_SALT
+from .web.constants import *
 from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
-from .web.github_login_service import build_github_login_service, login_log
+from .web.github_login_service import login_log
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
-from .web.security import build_security_service, User, Role, PYBEL_ADMIN_ROLE_NAME
+from .web.security import build_security_service, User, Role
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
-from .web.utils import get_app
 
 log = logging.getLogger(__name__)
 
@@ -88,6 +86,81 @@ def set_debug_param(debug):
 @click.version_option()
 def main():
     pass
+
+
+@main.command()
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+@click.option('--host', help='Flask host. Defaults to localhost')
+@click.option('--port', type=int, help='Flask port. Defaults to 5000')
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+@click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
+@click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+@click.option('-e', '--eager', is_flag=True, help="Eagerly preload all data and perform enrichments")
+@click.option('--run-database-service', is_flag=True, help='Enable the database service')
+@click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
+@click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
+@click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
+@click.option('--secret-key', help='Set the CSRF secret key')
+@click.option('--no-preload', is_flag=True, help='Do not preload cache')
+def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
+        run_receiver_service, run_all, secret_key, no_preload):
+    """Runs PyBEL Web"""
+    set_debug_param(debug)
+    if debug < 3:
+        enable_cool_mode()
+
+    log.info('Running PyBEL v%s', pybel_version())
+    log.info('Running PyBEL Tools v%s', get_version())
+
+    if host is not None:
+        log.info('Running on host: %s', host)
+
+    if port is not None:
+        log.info('Running on port: %d', port)
+
+    config = {
+        'SECRET_KEY': secret_key if secret_key else 'pybel_default_dev_key',
+        PYBEL_CONNECTION: connection
+    }
+
+    app = create_application(config=config)
+
+    app.config.update({
+        'SECURITY_REGISTERABLE': True,
+        'SECURITY_CONFIRMABLE': False,
+        'SECURITY_SEND_REGISTER_EMAIL': False,
+        'SECURITY_PASSWORD_HASH': 'pbkdf2_sha512',
+        'SECURITY_PASSWORD_SALT': os.environ[PYBEL_WEB_PASSWORD_SALT],
+    })
+
+    build_security_service(app)
+
+    build_dictionary_service(
+        app,
+        check_version=(not skip_check_version),
+        eager=eager,
+        preload=(not no_preload),
+    )
+
+    build_sitemap_endpoint(app)
+    build_synchronous_compiler_service(app)
+    build_pickle_uploader_service(app)
+    build_analysis_service(app)
+    build_curation_service(app)
+    build_reporting_service(app)
+
+    if run_database_service:
+        build_database_service(app)
+
+    if run_parser_service or run_all:
+        build_parser_service(app)
+
+    if run_receiver_service or run_all:
+        build_receiver_service(app)
+
+    log.info('Done building %s', app)
+
+    app.run(debug=flask_debug, host=host, port=port)
 
 
 @main.group()
@@ -213,89 +286,6 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, directory
                       store_parts=store_parts, enrich_citations=(not no_enrich_authors))
 
 
-@main.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
-@click.option('--host', help='Flask host. Defaults to localhost')
-@click.option('--port', type=int, help='Flask port. Defaults to 5000')
-@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-@click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
-@click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-@click.option('-e', '--eager', is_flag=True, help="Eagerly preload all data and perform enrichments")
-@click.option('--run-database-service', is_flag=True, help='Enable the database service')
-@click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
-@click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
-@click.option('--run-async-compiler', is_flag=True, help='Enable the asynchronous compiler')
-@click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
-@click.option('--secret-key', help='Set the CSRF secret key')
-@click.option('--no-preload', is_flag=True, help='Do not preload cache')
-@click.option('--echo-sql', is_flag=True)
-def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_receiver_service, run_async_compiler, run_all, secret_key, no_preload, echo_sql):
-    """Runs PyBEL Web"""
-    set_debug_param(debug)
-    if debug < 3:
-        enable_cool_mode()
-
-    log.info('Running PyBEL v%s', pybel_version())
-    log.info('Running PyBEL Tools v%s', get_version())
-
-    if host is not None:
-        log.info('Running on host: %s', host)
-
-    if port is not None:
-        log.info('Running on port: %d', port)
-
-    app = get_app()
-    app.config.update({
-        'SECRET_KEY': secret_key if secret_key else 'pybel_default_dev_key',
-    })
-
-    manager = build_manager(connection, echo=echo_sql)
-
-    app.config.update({
-        'SECURITY_REGISTERABLE': True,
-        'SECURITY_CONFIRMABLE': False,
-        'SECURITY_SEND_REGISTER_EMAIL': False,
-        'SECURITY_PASSWORD_HASH': 'pbkdf2_sha512',
-        'SECURITY_PASSWORD_SALT': os.environ[PYBEL_WEB_PASSWORD_SALT],
-    })
-    Base.metadata.bind = manager.engine
-    Base.query = manager.session.query_property()
-    build_security_service(app, manager)
-
-    api = build_dictionary_service(
-        app,
-        manager=manager,
-        check_version=(not skip_check_version),
-        analysis_enabled=True,
-        eager=eager,
-        preload=(not no_preload),
-    )
-
-    build_sitemap_endpoint(app)
-    build_synchronous_compiler_service(app, manager=manager)
-    build_pickle_uploader_service(app, manager=manager)
-    build_analysis_service(app, manager=manager, api=api)
-    build_curation_service(app)
-    build_reporting_service(app, manager=manager)
-
-    if run_async_compiler:
-        build_celery_app(app, manager)
-
-    if run_database_service:
-        build_database_service(app, manager)
-
-    if run_parser_service or run_all:
-        build_parser_service(app)
-
-    if run_receiver_service or run_all:
-        build_receiver_service(app, manager=manager)
-
-    log.info('Done building %s', app)
-
-    app.run(debug=flask_debug, host=host, port=port)
-
-
 @main.group()
 def definition():
     """Definition file utilities"""
@@ -411,6 +401,7 @@ def add(ctx, email, password):
     except:
         log.exception("Couldn't create user")
 
+
 @user.command()
 @click.argument('email')
 @click.pass_context
@@ -434,6 +425,7 @@ def make_admin(ctx, email):
     except:
         log.exception("Couldn't make admin")
 
+
 @user.command()
 @click.argument('email')
 @click.argument('role')
@@ -445,6 +437,7 @@ def add_role(ctx, email, role):
         ds.commit()
     except:
         log.exception("Couldn't add role")
+
 
 @manage.group()
 def role():
@@ -463,6 +456,7 @@ def add(ctx, name, description):
         ds.commit()
     except:
         log.exception("Couldn't create role")
+
 
 @role.command()
 @click.pass_context

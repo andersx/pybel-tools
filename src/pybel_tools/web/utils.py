@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import itertools as itt
-import logging
 from collections import Counter
 
 import flask
 import networkx as nx
-from flask import render_template, jsonify, Flask
-from flask_bootstrap import Bootstrap
+from flask import render_template, jsonify
 from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
 
 from pybel.canonicalize import decanonicalize_node
-from .constants import integrity_message
+from .constants import *
 from ..analysis.stability import *
 from ..constants import CNAME
 from ..summary import get_contradiction_summary, count_functions, count_relations, count_error_types, get_translocated, \
@@ -62,18 +60,6 @@ def try_insert_graph(manager, graph, api=None):
         flask.flash("Error storing in database")
         log.exception('Upload error')
         return render_upload_error(e)
-
-
-def get_app():
-    """Builds a Flask app for the PyBEL web service
-    
-    :rtype: flask.Flask
-    """
-    app = Flask(__name__)
-    log.debug('made app %s', app)
-    Bootstrap(app)
-    log.debug('added bootstrap to app %s', app)
-    return app
 
 
 def sanitize_list_of_str(l):

@@ -20,6 +20,7 @@ from pybel import from_url
 from pybel.constants import *
 from pybel.manager.models import Namespace, Annotation
 from .dict_service_utils import DictionaryService
+from .extension import get_manager, get_api
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .send_utils import serve_network
 from .utils import render_graph_summary
@@ -79,13 +80,8 @@ BLACK_LIST = {
 }
 
 
-def raise_for_not_admin():
-    if not current_user.admin:
-        flask.abort(403)
-
-
 def get_tree_annotations(graph):
-    """ Builds tree structure with annotation for a given graph
+    """Builds tree structure with annotation for a given graph
     
     :param graph: A BEL Graph
     :type graph: pybel.BELGraph
@@ -190,7 +186,11 @@ def get_networks_with_permission(api):
     return networks
 
 
-def build_dictionary_service_admin(app, manager, api):
+def build_dictionary_service_admin(app):
+    """Dictionary Service Admin Functions"""
+    manager = get_manager(app)
+    api = get_api(app)
+
     @app.route('/admin/reload')
     @roles_required('admin')
     def run_reload():
@@ -303,8 +303,13 @@ def build_dictionary_service_admin(app, manager, api):
         api.network_public[network_id] = True
         return redirect(url_for('view_networks'))
 
+    log.info('added dict service admin functions')
 
-def build_api_admin(app, manager):
+
+def build_api_admin(app):
+    """API Admin functions"""
+    manager = get_manager(app)
+
     @app.route('/admin/rollback')
     @roles_required('admin')
     def rollback():
@@ -362,25 +367,25 @@ def build_api_admin(app, manager):
         manager.session.commit()
         return jsonify({'status': 200})
 
+    log.info('added api admin functions')
 
-def build_dictionary_service(app, manager, check_version=True, analysis_enabled=False, preload=True, eager=False):
-    """Builds the PyBEL Dictionary-Backed API Service. Returns the latent DictonaryService.
+
+def build_dictionary_service(app, check_version=True, preload=True, eager=False):
+    """Builds the PyBEL Dictionary-Backed API Service.
 
     :param flask.Flask app: A Flask App
-    :param pybel.manager.cache.CacheManager manager: A PyBEL cache manager
     :param bool check_version: Should the versions of the networks be checked during loading?
-    :rtype: DictionaryService
     """
-    api = DictionaryService(manager=manager)
+    manager = get_manager(app)
+    api = get_api(app)
 
     if preload:
         log.info('preloading networks')
         api.load_networks(check_version=check_version, eager=eager)
         log.info('pre-loaded the dict service')
 
-    build_dictionary_service_admin(app, manager, api)
-    build_api_admin(app, manager)
-    log.info('added admin functions to dict service')
+    build_dictionary_service_admin(app)
+    build_api_admin(app)
 
     # Web Pages
 
@@ -433,7 +438,7 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
             networks=networks,
             provenance_form=seed_provenance_form,
             subgraph_form=seed_subgraph_form,
-            analysis_enabled=analysis_enabled,
+            analysis_enabled=True,
             current_user=current_user,
         )
 
@@ -666,5 +671,3 @@ def build_dictionary_service(app, manager, check_version=True, analysis_enabled=
         return _build_namespace_helper(graph, namespace, names)
 
     log.info('Added dictionary service to %s', app)
-
-    return api

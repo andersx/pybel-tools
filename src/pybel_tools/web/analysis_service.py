@@ -16,6 +16,7 @@ import pybel
 from pybel.constants import GENE
 from pybel.manager.models import Network
 from .dict_service import get_graph_from_request
+from .extension import get_manager, get_api
 from .forms import DifferentialGeneExpressionForm
 from .models import Experiment
 from .. import generation
@@ -30,15 +31,13 @@ log = logging.getLogger(__name__)
 LABEL = 'dgxa'
 
 
-def build_analysis_service(app, manager, api):
+def build_analysis_service(app):
     """Builds the analysis service
     
-    :param app: A Flask application
-    :type app: flask.Flask
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.CacheManager
-    :param DictionaryService api: The dictionary service API
+    :param flask.Flask app: A Flask application
     """
+    manager = get_manager(app)
+    api = get_api(app)
 
     @app.route('/analysis/')
     @app.route('/analysis/<network_id>')

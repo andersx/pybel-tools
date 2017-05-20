@@ -4,23 +4,22 @@ import logging
 
 import flask
 import requests
-from flask import Flask, url_for
+from flask import url_for
 
 from pybel import from_json, to_json
 from .constants import DEFAULT_SERVICE_URL
+from .extension import get_manager
 from .utils import try_insert_graph, render_upload_error
 
 log = logging.getLogger(__name__)
 
 
-def build_receiver_service(app, manager):
+def build_receiver_service(app):
     """This service receives graphs as JSON requests, decodes, then uploads them
 
-    :param app: A Flask application
-    :type app: Flask
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
+    :param flask.Flask app: A Flask application
     """
+    manager = get_manager(app)
 
     @app.route('/api/receive', methods=['POST'])
     def receive():

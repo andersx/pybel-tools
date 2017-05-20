@@ -13,6 +13,7 @@ from wtforms.fields import StringField, SubmitField
 from wtforms.validators import DataRequired
 
 from pybel.manager.models import Base
+from .extension import get_manager
 
 log = logging.getLogger(__name__)
 login_log = logging.getLogger('pybel.web.login')
@@ -69,14 +70,14 @@ class ExtendedRegisterForm(RegisterForm):
     submit = SubmitField(get_form_field_label('register'))
 
 
-def build_security_service(app, manager):
+def build_security_service(app):
     """Builds the Flask-Security Login Protocol
 
     :param flask.Flask app: 
-    :param pybel.manager.cache.CacheManager manager: 
     :return: The instance of the user data store object
     :rtype: SQLAlchemyUserDatastore
     """
+    manager = get_manager(app)
     user_datastore = SQLAlchemyUserDatastore(manager, User, Role)
     Security(app, user_datastore, register_form=ExtendedRegisterForm)
 

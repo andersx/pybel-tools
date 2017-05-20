@@ -10,19 +10,19 @@ from sqlalchemy.exc import IntegrityError
 
 import pybel
 from .constants import integrity_message
+from .extension import get_manager
 from .forms import UploadForm
 from .models import add_network_reporting
 
 log = logging.getLogger(__name__)
 
 
-def build_pickle_uploader_service(app, manager):
+def build_pickle_uploader_service(app):
     """Adds the endpoints for uploading pickle files
 
     :param flask.Flask app: A Flask application
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
     """
+    manager = get_manager(app)
 
     @app.route('/upload', methods=['GET', 'POST'])
     @login_required

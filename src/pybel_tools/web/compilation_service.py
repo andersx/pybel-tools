@@ -15,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from pybel import from_lines
 from pybel.parser.parse_exceptions import InconsistientDefinitionError
 from .constants import integrity_message
+from .extension import get_manager
 from .forms import CompileForm
 from .models import add_network_reporting, log_graph
 from .utils import render_graph_summary
@@ -29,15 +30,13 @@ def render_error(exception):
     return render_template('parse_error.html', error_text=str(exception), traceback_lines=traceback_lines)
 
 
-def build_synchronous_compiler_service(app, manager, enable_cache=True):
+def build_synchronous_compiler_service(app, enable_cache=True):
     """Adds the endpoints for a synchronous web validation web app
 
     :param flask.Flask app: A Flask application
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
-    :param enable_cache: Should the user be given the option to cache graphs?
-    :type enable_cache: bool
+    :param bool enable_cache: Should the user be given the option to cache graphs?
     """
+    manager = get_manager(app)
 
     @app.route('/compile', methods=['GET', 'POST'])
     @login_required
