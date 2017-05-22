@@ -116,6 +116,9 @@
                         <div class="list-group-item-text">
                             <p>{{ network.description }}</p>
                             <ul class="list-inline">
+                                {% if current_user.is_authenticated and current_user.admin %}
+                                    <li><span class="btn btn-default">{{ network.id }}</span></li>
+                                {% endif %}
                                 <li><a href="{{ url_for('view_summary', graph_id=network.id) }}"
                                        class="btn btn-default">Summarize</a>
                                 </li>
@@ -130,13 +133,16 @@
                                 {% endif %}
                                 {% if current_user.is_authenticated %}
                                     {% if current_user.admin %}
-                                        <a class="btn btn-danger"
-                                           href="{{ url_for('drop_network', network_id=network.id) }}" role="button">Drop</a>
+                                        <li><a class="btn btn-danger"
+                                               href="{{ url_for('drop_network', network_id=network.id) }}"
+                                               role="button">Drop</a></li>
                                     {% endif %}
                                     {% if current_user.has_role('scai') or current_user.admin %}
-                                        <a class="btn btn-success"
-                                           href="{{ url_for('make_network_public', network_id=network.id) }}"
-                                           role="button">Make Public</a>
+                                        {% if network.report and not network.report[0].public %}
+                                            <li><a class="btn btn-success"
+                                                   href="{{ url_for('make_network_public', network_id=network.id) }}"
+                                                   role="button">Make Public</a></li>
+                                        {% endif %}
                                     {% endif %}
                                 {% endif %}
                             </ul>

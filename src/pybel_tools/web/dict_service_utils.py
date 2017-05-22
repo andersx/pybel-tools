@@ -45,9 +45,6 @@ class DictionaryService(BaseService):
         #: dictionary of {int id: BELGraph graph}
         self.networks = {}
 
-        #: dictionary of {int id: bool public}
-        self.network_public = {}
-
         #: dictionary of {tuple node: int id}
         self.node_nid = {}
 
@@ -403,7 +400,7 @@ class DictionaryService(BaseService):
         for network in self.list_graphs():
             if not network.report:  # no report means uploaded automatically or by admin
                 results.append(network)
-            elif network.report.public:
+            elif network.report[0].public:
                 results.append(network)
 
         return results

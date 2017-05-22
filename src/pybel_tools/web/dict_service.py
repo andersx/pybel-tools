@@ -12,6 +12,7 @@ from flask import render_template
 from flask import request, jsonify, url_for, redirect, make_response
 from flask_security import roles_required, roles_accepted, current_user, login_required
 from requests.compat import unquote
+from .models import Report
 from six import StringIO
 
 from pybel import from_bytes
@@ -280,7 +281,10 @@ def build_dictionary_service_admin(app):
     @app.route('/admin/network/make_public/<int:network_id>')
     @roles_accepted('admin', 'scai')
     def make_network_public(network_id):
-        api.network_public[network_id] = True
+        report = manager.session.query(Report).filter(Report.network_id == network_id).one()
+        report.public = True
+        manager.commit()
+
         return redirect(url_for('view_networks'))
 
     log.info('added dict service admin functions')
@@ -438,7 +442,7 @@ def build_dictionary_service(app):
         """Renders a page with the parsing errors for a given BEL script"""
         try:
             network = manager.get_graph_by_id(graph_id)
-            graph = from_bytes(network.blob, check_version=check_version)
+            graph = from_bytes(network.blob, check_version=app.config.get('PYBEL_DS_CHECK_VERSION'))
         except:
             flask.flash("Problem getting graph {}".format(graph_id), category='error')
             return redirect(url_for('view_summary'))
