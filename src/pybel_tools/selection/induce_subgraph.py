@@ -4,7 +4,7 @@ import logging
 
 from pybel import BELGraph
 from pybel.constants import ANNOTATIONS, PATHOLOGY
-from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
+from .paths import get_nodes_in_all_shortest_paths, get_nodes_in_dijkstra_paths
 from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
     edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
@@ -25,7 +25,7 @@ __all__ = [
     'get_subgraph_by_node_filter',
     'get_subgraph_by_neighborhood',
     'get_subgraph_by_second_neighbors',
-    'get_subgraph_by_shortest_paths',
+    'get_subgraph_by_all_shortest_paths',
     'get_subgraph_by_annotation_value',
     'get_subgraph_by_data',
     'get_subgraph_by_pubmed',
@@ -129,7 +129,7 @@ def get_subgraph_by_second_neighbors(graph, nodes, filter_pathologies=False):
 
 
 @pipeline.mutator
-def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
+def get_subgraph_by_all_shortest_paths(graph, nodes, cutoff=None, weight=None):
     """Induces a subgraph over the nodes in the pairwise shortest paths between all of the nodes in the given list
 
     :param pybel.BELGraph graph: A BEL graph
@@ -142,10 +142,7 @@ def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
     :return: A BEL graph induced over the nodes appearing in the shortest paths between the given nodes
     :rtype: pybel.BELGraph
     """
-    if weight is None:
-        return graph.subgraph(get_nodes_in_shortest_paths(graph, nodes, cutoff=cutoff))
-    else:
-        return graph.subgraph(get_nodes_in_dijkstra_paths(graph, nodes, cutoff=cutoff, weight=weight))
+    return graph.subgraph(get_nodes_in_all_shortest_paths(graph, nodes, weight=weight))
 
 
 @pipeline.mutator
@@ -282,7 +279,7 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     if seed_method == SEED_TYPE_INDUCTION:
         result = get_subgraph_by_induction(graph, seed_data)
     elif seed_method == SEED_TYPE_PATHS:
-        result = get_subgraph_by_shortest_paths(graph, seed_data)
+        result = get_subgraph_by_all_shortest_paths(graph, seed_data)
     elif seed_method == SEED_TYPE_NEIGHBORS:
         result = get_subgraph_by_neighborhood(graph, seed_data)
     elif seed_method == SEED_TYPE_PROVENANCE:
