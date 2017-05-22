@@ -30,7 +30,7 @@ def create_application(**kwargs):
 
     if 'PYBEL_WEB_CONFIG' in os.environ:
         log.info('importing config from %s', os.environ['PYBEL_WEB_CONFIG'])
-        app.config.from_envvar('PYBEL_WEB_CONFIG')
+        app.config.from_json(os.environ['PYBEL_WEB_CONFIG'])
 
     app.config.update(kwargs)
 
