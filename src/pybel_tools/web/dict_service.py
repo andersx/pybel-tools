@@ -656,4 +656,26 @@ def build_dictionary_service(app):
         names = get_incorrect_names(graph, namespace)
         return _build_namespace_helper(graph, namespace, names)
 
+    @app.route('/overlap')
+    def get_node_overlap_image():
+        import pyupset as pyu
+        import matplotlib.pyplot as plt
+        import pandas as pd
+        from six import BytesIO
+
+        network_ids = request.args.get('networks')
+        if not network_ids:
+            return flask.abort(500)
+
+        networks = [api.get_network(int(network_id.strip())) for network_id in network_ids.split(',')]
+
+        data_dict = {network.name.replace('_', ' '): pd.DataFrame(network.nodes()) for network in networks}
+        pyu.plot(data_dict)
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        output = make_response(buf.getvalue())
+        output.headers["Content-type"] = "image/png"
+        return output
+
     log.info('Added dictionary service to %s', app)
