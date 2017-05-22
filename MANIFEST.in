@@ -13,3 +13,6 @@ include *.rst *.txt LICENSE tox.ini *.yml docs/Makefile .coveragerc .codecov.yml
 
 include Dockerfile
 global-exclude examples *.owl
+
+global-exclude alembic alembic/*
+global-exclude scripts scripts/*

@@ -351,7 +351,7 @@ def build_api_admin(app):
     @app.route('/admin/config')
     @roles_required('admin')
     def view_config():
-        return jsonify(app.config)
+        return jsonify({k: str(v) for k, v in app.config.items()})
 
     log.info('added api admin functions')
 
