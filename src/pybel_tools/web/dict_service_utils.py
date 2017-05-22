@@ -398,5 +398,12 @@ class DictionaryService(BaseService):
 
     def list_public_graphs(self):
         """Lists the graphs that have been made public"""
-        networks = self.list_graphs()
-        return [network for network in networks if network.report.public]
+        results = []
+
+        for network in self.list_graphs():
+            if not network.report:  # no report means uploaded automatically or by admin
+                results.append(network)
+            elif network.report.public:
+                results.append(network)
+
+        return results
