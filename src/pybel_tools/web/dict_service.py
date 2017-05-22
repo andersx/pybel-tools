@@ -10,8 +10,7 @@ import flask
 import networkx as nx
 from flask import render_template
 from flask import request, jsonify, url_for, redirect, make_response
-from flask_login import current_user, login_required
-from flask_security import roles_required, roles_accepted
+from flask_security import roles_required, roles_accepted, current_user, login_required
 from requests.compat import unquote
 from six import StringIO
 
