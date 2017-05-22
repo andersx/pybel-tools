@@ -9,7 +9,6 @@ from networkx import all_shortest_paths
 
 __all__ = [
     'get_nodes_in_all_shortest_paths',
-    'get_nodes_in_dijkstra_paths',
     'get_shortest_directed_path_between_subgraphs',
     'get_shortest_undirected_path_between_subgraphs',
 ]

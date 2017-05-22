@@ -4,7 +4,7 @@ import logging
 
 from pybel import BELGraph
 from pybel.constants import ANNOTATIONS, PATHOLOGY
-from .paths import get_nodes_in_all_shortest_paths, get_nodes_in_dijkstra_paths
+from .paths import get_nodes_in_all_shortest_paths
 from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
     edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
