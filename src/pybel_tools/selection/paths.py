@@ -2,8 +2,8 @@
 
 
 import itertools as itt
-from itertools import product
-
+from itertools import product, tee
+from pybel.constants import *
 import networkx as nx
 from networkx import all_shortest_paths
 
@@ -13,6 +13,59 @@ __all__ = [
     'get_shortest_directed_path_between_subgraphs',
     'get_shortest_undirected_path_between_subgraphs',
 ]
+
+default_edge_ranking = {
+    INCREASES: 2,
+    DIRECTLY_INCREASES: 3,
+    DECREASES: 2,
+    DIRECTLY_DECREASES: 3,
+    RATE_LIMITING_STEP_OF: 0,
+    CAUSES_NO_CHANGE: 0, REGULATES: 0,
+    NEGATIVE_CORRELATION: 2,
+    POSITIVE_CORRELATION: 2,
+    ASSOCIATION: 1,
+    HAS_MEMBER: 0,
+    HAS_PRODUCT: 0,
+    HAS_COMPONENT: 0,
+    HAS_VARIANT: 0,
+    HAS_REACTANT: 0,
+    TRANSLATED_TO: 0,
+    TRANSCRIBED_TO: 0,
+    IS_A: 0,
+    SUBPROCESS_OF: 0,
+    ANALOGOUS_TO: 0,
+    BIOMARKER_FOR: 0,
+    PROGONSTIC_BIOMARKER_FOR: 0,
+    EQUIVALENT_TO: 0
+}
+
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
+
+def rank_path(graph, path, edge_ranking=None):
+    """Takes in a path (a list of nodes in the graph) and calculates a score
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param list[tuple] path: A list of nodes in the path (includes terminal nodes)
+    :param dict edge_ranking: relationship: score dictionary
+    :return: The score for the edge
+    :rtype: int
+    """
+
+    edge_ranking = default_edge_ranking if edge_ranking is None else edge_ranking
+
+    path_score = 0
+
+    for u, v in pairwise(path):
+        path_score += max(
+            {edge_ranking[relation] for relation in {d[RELATION] for d in graph.edge[u][v].values()}})
+
+    return path_score
 
 
 def get_nodes_in_all_shortest_paths(graph, nodes, weight=None):
