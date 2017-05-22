@@ -144,6 +144,11 @@
                                                    role="button">Make Public</a></li>
                                         {% endif %}
                                     {% endif %}
+                                    {% if current_user.is_authenticated and network.report and network.report[0].user == current_user %}
+                                        <li><a class="btn btn-success"
+                                               href="{{ url_for('make_user_network_public', user_id=current_user.id, network_id=network.id) }}"
+                                               role="button">Make Public</a></li>
+                                    {% endif %}
                                 {% endif %}
                             </ul>
                         </div>

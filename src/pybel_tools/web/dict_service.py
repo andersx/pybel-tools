@@ -12,16 +12,16 @@ from flask import render_template
 from flask import request, jsonify, url_for, redirect, make_response
 from flask_security import roles_required, roles_accepted, current_user, login_required
 from requests.compat import unquote
-from .models import Report
 from six import StringIO
 
 from pybel import from_bytes
 from pybel import from_url
 from pybel.constants import *
-from pybel.manager.models import Namespace, Annotation
+from pybel.manager.models import Namespace, Annotation, Network
 from .dict_service_utils import DictionaryService
 from .extension import get_manager, get_api
 from .forms import SeedProvenanceForm, SeedSubgraphForm
+from .models import Report
 from .send_utils import serve_network
 from .utils import render_graph_summary
 from .utils import try_insert_graph, sanitize_list_of_str
@@ -285,6 +285,20 @@ def build_dictionary_service_admin(app):
         report.public = True
         manager.commit()
 
+        flask.flash('Made {} public'.format(report.network))
+        return redirect(url_for('view_networks'))
+
+    @app.route('/api/network/make_public/<int:user_id>/<int:network_id>')
+    @login_required
+    def make_user_network_public(user_id, network_id):
+        if current_user.id != user_id:
+            return flask.abort(402)
+
+        report = manager.session.query(Report).filter(Report.network_id == network_id, Report.user_id == user_id).one()
+        report.public = True
+        manager.commit()
+
+        flask.flash('Made {} public'.format(report.network))
         return redirect(url_for('view_networks'))
 
     log.info('added dict service admin functions')
