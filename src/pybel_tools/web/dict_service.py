@@ -348,6 +348,11 @@ def build_api_admin(app):
         manager.session.commit()
         return jsonify({'status': 200})
 
+    @app.route('/admin/config')
+    @roles_required('admin')
+    def view_config():
+        return jsonify(app.config)
+
     log.info('added api admin functions')
 
 

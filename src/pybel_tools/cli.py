@@ -95,8 +95,9 @@ def main():
 @click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
 @click.option('--secret-key', help='Set the CSRF secret key')
 @click.option('--no-preload', is_flag=True, help='Do not preload cache')
+@click.option('--config', help='A config JSON file')
 def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_receiver_service, run_all, secret_key, no_preload):
+        run_receiver_service, run_all, secret_key, no_preload, config):
     """Runs PyBEL Web"""
     set_debug_param(debug)
     if debug < 3:
@@ -111,20 +112,9 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     if port is not None:
         log.info('Running on port: %d', port)
 
-    config = {
-        'SECRET_KEY': secret_key if secret_key else 'pybel_default_dev_key',
-        'SECURITY_REGISTERABLE': True,
-        'SECURITY_CONFIRMABLE': False,
-        'SECURITY_SEND_REGISTER_EMAIL': False,
-        'SECURITY_PASSWORD_HASH': 'pbkdf2_sha512',
-        'SECURITY_PASSWORD_SALT': os.environ[PYBEL_WEB_PASSWORD_SALT],
-        PYBEL_CONNECTION: connection,
-        'PYBEL_DS_CHECK_VERSION': not skip_check_version,
-        'PYBEL_DS_EAGER': eager,
-        'PYBEL_DS_PRELOAD': not no_preload,
-    }
+    config = {}
 
-    app = create_application(config=config)
+    app = create_application()
 
     build_security_service(app)
     build_dictionary_service(app)
