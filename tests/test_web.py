@@ -17,7 +17,15 @@ class WebTest(unittest.TestCase):
 
         config = {
             'SECRET_KEY': TEST_SECRET_KEY,
-            PYBEL_CONNECTION: 'sqlite:///' + self.db_file
+            PYBEL_CONNECTION: 'sqlite:///' + self.db_file,
+            'SECURITY_REGISTERABLE': True,
+            'SECURITY_CONFIRMABLE': False,
+            'SECURITY_SEND_REGISTER_EMAIL': False,
+            'SECURITY_PASSWORD_HASH': 'pbkdf2_sha512',
+            'SECURITY_PASSWORD_SALT': 'abcdefghijklmnopqeureasaggwdgs',
+            'PYBEL_DS_CHECK_VERSION': True,
+            'PYBEL_DS_EAGER': True,
+            'PYBEL_DS_PRELOAD': True,
         }
 
         self.app_instance = create_application(config)

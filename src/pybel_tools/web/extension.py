@@ -8,7 +8,11 @@ from .dict_service_utils import DictionaryService
 
 class _FlaskPybelState:
     def __init__(self, manager):
-        self.manager = build_manager(manager)
+        """Stores the application-wide PyBEL data
+        
+        :param pybel.manager.cache.CacheManager manager: A cache manager
+        """
+        self.manager = manager
         self.api = DictionaryService(manager=self.manager)
 
 
@@ -23,8 +27,6 @@ class FlaskPybel:
         """
         :param flask.Flask app: 
         """
-        app.config.setdefault(PYBEL_CONNECTION, None)
-
         manager = build_manager(app.config.get(PYBEL_CONNECTION))
 
         Base.metadata.bind = manager.engine
