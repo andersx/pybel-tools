@@ -6,11 +6,12 @@ import re
 import time
 
 from flask import render_template, request, make_response
+from flask_security import login_required, current_user
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from six import StringIO
 from wtforms import fields
-from wtforms.validators import DataRequired, Email
+from wtforms.validators import DataRequired
 
 from pybel.constants import NAMESPACE_DOMAIN_TYPES
 from pybel.utils import parse_bel_resource
@@ -25,8 +26,6 @@ class BoilerplateForm(FlaskForm):
     """Builds a form for generating BEL script templates"""
     name = fields.StringField('Document Name', validators=[DataRequired()])
     description = fields.StringField('Document Description', validators=[DataRequired()])
-    authors = fields.StringField('Authors', validators=[DataRequired()])
-    contact_email = fields.StringField('Contact Email', validators=[DataRequired(), Email()])
     pmids = fields.StringField('PubMed Identifiers, separated by commas')
     licenses = fields.RadioField(
         'License',
@@ -48,11 +47,9 @@ class MergeNamespaceForm(FlaskForm):
     name = fields.StringField('Name', validators=[DataRequired()])
     keyword = fields.StringField('Keyword', validators=[DataRequired()])
     description = fields.StringField('Description', validators=[DataRequired()])
+    species = fields.StringField('Species Taxonomy Identifiers', validators=[DataRequired()], default='9606')
     domain = fields.RadioField('Domain', choices=[(x, x) for x in sorted(NAMESPACE_DOMAIN_TYPES)])
-    authors = fields.StringField('Authors', validators=[DataRequired()])
-    contact_email = fields.StringField('Contact Email', validators=[DataRequired(), Email()])
     citation = fields.StringField('Citation Name', validators=[DataRequired()])
-    species = fields.StringField('Species', validators=[DataRequired()], default='9606')
     licenses = fields.RadioField(
         'License',
         choices=[
@@ -93,6 +90,7 @@ def build_curation_service(app):
     """
 
     @app.route('/curation/bel/template', methods=['GET', 'POST'])
+    @login_required
     def get_boilerplate():
         """Serves the form for building a template BEL script"""
         form = BoilerplateForm()
@@ -106,9 +104,9 @@ def build_curation_service(app):
 
         write_boilerplate(
             document_name=form.name.data,
-            contact=form.contact_email.data,
+            contact=current_user.email,
             description=form.description.data,
-            authors=form.authors.data,
+            authors=current_user.name,
             licenses=form.licenses.data,
             pmids=pmids,
             file=si
@@ -122,6 +120,7 @@ def build_curation_service(app):
         return output
 
     @app.route('/curation/namespace/merge', methods=['GET', 'POST'])
+    @login_required
     def merge_namespaces():
         """Serves the page for merging bel namespaces"""
         form = MergeNamespaceForm()
@@ -147,7 +146,8 @@ def build_curation_service(app):
             namespace_keyword=form.keyword.data,
             namespace_species=form.species.data,
             namespace_description=form.description.data,
-            author_name=form.authors.data,
+            author_name=current_user.name,
+            author_contact=current_user.email,
             citation_name=form.citation.data,
             citation_description='This namespace was created by the PyBEL Web namespace merge service',
             namespace_domain=form.domain.data,

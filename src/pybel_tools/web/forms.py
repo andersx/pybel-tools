@@ -16,6 +16,7 @@ class UploadForm(FlaskForm):
         DataRequired(message="You must provide a PyBEL gpickle file"),
         FileAllowed(['gpickle'], 'Only files with the *.gpickle extension are allowed')
     ])
+    public = BooleanField('Make my knowledge assembly be made publicly available', default=True)
     submit = fields.SubmitField('Upload')
 
 
@@ -55,8 +56,9 @@ class CompileForm(FlaskForm):
     suggest_naked_name = BooleanField('My document contains unqualified names - suggest appropriate namespaces')
     allow_nested = BooleanField('My document contains nested statements')
     citation_clearing = BooleanField("My document sometimes has evidences before citations - disable citation clearing")
-    save_network = BooleanField('Save my network for later viewing')
-    save_edge_store = BooleanField('Save my network and cache in edge store for querying and exploration')
+    save_network = BooleanField('Save my knowledge assembly for later viewing')
+    save_edge_store = BooleanField('Save my knowledge assembly and cache in edge store for querying and exploration')
+    public = BooleanField('Make my knowledge assembly be made publicly available', default=True)
     encoding = RadioField(
         'Encoding',
         choices=[

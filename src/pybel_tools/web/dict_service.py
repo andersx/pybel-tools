@@ -266,12 +266,6 @@ def build_dictionary_service_admin(app):
         """Sends the reporting log as a text file"""
         return flask.send_file(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
 
-    @app.route('/admin/list/logins')
-    @roles_required('admin')
-    def list_logins():
-        """Sends the reporting log as a text file"""
-        return flask.send_file(os.path.join(PYBEL_LOG_DIR, 'logins.txt'))
-
     @app.route('/admin/nuke/')
     @roles_required('admin')
     def nuke():

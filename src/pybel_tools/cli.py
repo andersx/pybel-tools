@@ -40,7 +40,6 @@ from .web.constants import *
 from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
-from .web.github_login_service import login_log
 from .web.parser_endpoint import build_parser_service
 from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
@@ -58,12 +57,6 @@ reporting_fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
 reporting_fh.setLevel(logging.DEBUG)
 reporting_fh.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
 reporting_log.addHandler(reporting_fh)
-
-login_log.setLevel(logging.DEBUG)
-login_log_fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'logins.txt'))
-login_log_fh.setLevel(logging.DEBUG)
-login_log_fh.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
-login_log.addHandler(login_log_fh)
 
 
 def set_debug(level):
@@ -157,68 +150,67 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
 
 
 @main.group()
-def ensure():
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+@click.pass_context
+def ensure(ctx, connection):
     """Utilities for ensuring data"""
+    ctx.obj = build_manager(connection)
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def small_corpus(connection, enrich_authors, use_edge_store, debug):
+@click.pass_context
+def small_corpus(ctx, enrich_authors, use_edge_store, debug):
     """Caches the Selventa Small Corpus"""
     set_debug_param(debug)
-    manager = build_manager(connection)
-    graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    graph = from_url(SMALL_CORPUS_URL, manager=ctx.obj, citation_clearing=False, allow_nested=True)
     if enrich_authors:
         fix_pubmed_citations(graph)
-    manager.insert_graph(graph, store_parts=use_edge_store)
+    ctx.obj.insert_graph(graph, store_parts=use_edge_store)
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def large_corpus(connection, enrich_authors, use_edge_store, debug):
+@click.pass_context
+def large_corpus(ctx, enrich_authors, use_edge_store, debug):
     """Caches the Selventa Large Corpus"""
     set_debug_param(debug)
-    manager = build_manager(connection)
-    graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    graph = from_url(LARGE_CORPUS_URL, manager=ctx.obj, citation_clearing=False, allow_nested=True)
     if enrich_authors:
         fix_pubmed_citations(graph)
-    manager.insert_graph(graph, store_parts=use_edge_store)
+    ctx.obj.insert_graph(graph, store_parts=use_edge_store)
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def gene_families(connection, enrich_authors, use_edge_store, debug):
+@click.pass_context
+def gene_families(ctx, enrich_authors, use_edge_store, debug):
     """Caches the HGNC Gene Family memberships"""
     set_debug_param(debug)
-    manager = build_manager(connection)
-    graph = from_url(GENE_FAMILIES, manager=manager)
+    graph = from_url(GENE_FAMILIES, manager=ctx.obj)
     if enrich_authors:
         fix_pubmed_citations(graph)
-    manager.insert_graph(graph, store_parts=use_edge_store)
+    ctx.obj.insert_graph(graph, store_parts=use_edge_store)
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def named_complexes(connection, enrich_authors, use_edge_store, debug):
+@click.pass_context
+def named_complexes(ctx, enrich_authors, use_edge_store, debug):
     """Caches GO Named Protein Complexes memberships"""
     set_debug_param(debug)
-    manager = build_manager(connection)
-    graph = from_url(NAMED_COMPLEXES, manager=manager)
+    graph = from_url(NAMED_COMPLEXES, manager=ctx.obj)
     if enrich_authors:
         fix_pubmed_citations(graph)
-    manager.insert_graph(graph, store_parts=use_edge_store)
+    ctx.obj.insert_graph(graph, store_parts=use_edge_store)
 
 
 @main.group()
@@ -366,6 +358,31 @@ def manage(ctx, connection):
     Base.query = ctx.obj.session.query_property()
 
 
+@manage.command()
+@click.option('-f', '--file', type=click.File('r'), default=sys.stdin, help='Input user/role file')
+@click.pass_context
+def load(ctx, file):
+    """Dump stuff for loading later (in lieu of having proper migrations)"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    for line in file:
+        email, first, last, roles, password = line.strip().split('\t')
+        u = ds.find_user(email=email)
+
+        if not u:
+            u = ds.create_user(email=email, first_name=first, last_name=last, password=password)
+            log.info('added %s', u)
+            ds.commit()
+        for role_name in roles.strip().split(','):
+            r = ds.find_role(role_name)
+            if not r:
+                r = ds.create_role(name=role_name)
+                ds.commit()
+            if not u.has_role(r):
+                ds.add_role_to_user(u, r)
+
+    ds.commit()
+
+
 @manage.group()
 def user():
     """Manage users"""
@@ -398,7 +415,7 @@ def add(ctx, email, password):
 @user.command()
 @click.argument('email')
 @click.pass_context
-def delete(ctx, email):
+def rm(ctx, email):
     """Deletes a user"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     u = ds.find_user(email=email)
@@ -449,6 +466,18 @@ def add(ctx, name, description):
         ds.commit()
     except:
         log.exception("Couldn't create role")
+
+
+@role.command()
+@click.argument('name')
+@click.pass_context
+def rm(ctx, name):
+    """Deletes a user"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    u = ds.find_role(name)
+    if u:
+        ds.delete(u)
+        ds.commit()
 
 
 @role.command()

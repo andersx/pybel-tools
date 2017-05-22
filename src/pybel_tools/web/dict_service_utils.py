@@ -399,4 +399,4 @@ class DictionaryService(BaseService):
     def list_public_graphs(self):
         """Lists the graphs that have been made public"""
         networks = self.list_graphs()
-        return [network for network in networks if self.network_public.get(network.id)]
+        return [network for network in networks if network.report.public]

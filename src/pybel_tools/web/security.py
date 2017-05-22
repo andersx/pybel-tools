@@ -52,13 +52,13 @@ class User(Base, UserMixin):
     roles = relationship('Role', secondary=roles_users, backref=backref('users', lazy='dynamic'))
 
     @property
-    def display(self):
-        return self.email
-
-    @property
     def admin(self):
         """Is this user an administrator?"""
         return self.has_role('admin')
+
+    @property
+    def name(self):
+        return '{} {}'.format(self.first_name, self.last_name)
 
     def __str__(self):
         return self.email
@@ -83,13 +83,10 @@ def build_security_service(app):
 
     @app.before_first_request
     def create_user():
-        try:
-            manager.create_all()
-            user_datastore.create_role(name='admin', description='Administrator of PyBEL Web')
-            user_datastore.create_role(name='scai', description='Users of PyBEL Web from Fraunhofer SCAI')
-            manager.session.commit()
-        except:
-            manager.session.rollback()
+        manager.create_all()
+        user_datastore.find_or_create_role(name='admin', description='Administrator of PyBEL Web')
+        user_datastore.find_or_create_role(name='scai', description='Users of PyBEL Web from Fraunhofer SCAI')
+        manager.session.commit()
 
     @app.route('/wrap/logout')
     def logout():

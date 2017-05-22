@@ -101,7 +101,8 @@ def build_synchronous_compiler_service(app, enable_cache=True):
 
         try:
             add_network_reporting(manager, network, current_user, graph.number_of_nodes(),
-                                  graph.number_of_edges(), len(graph.warnings), precompiled=False)
+                                  graph.number_of_edges(), len(graph.warnings), precompiled=False,
+                                  public=form.public.data)
         except IntegrityError:
             log.exception('integrity error')
             flash('problem with reporting service', category='warning')

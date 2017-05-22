@@ -11,6 +11,7 @@ from .constants import reporting_log
 from .security import PYBEL_WEB_USER_TABLE
 
 PYBEL_EXPERIMENT_TABLE_NAME = 'pybel_experiment'
+PYBEL_REPORT_TABLE_NAME = 'pybel_report'
 
 
 class Experiment(Base):
@@ -35,7 +36,7 @@ class Experiment(Base):
 
 class Report(Base):
     """Stores information about compilation and uploading events"""
-    __tablename__ = 'pybel_report'
+    __tablename__ = PYBEL_REPORT_TABLE_NAME
 
     network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)), primary_key=True,
                         doc='The network that was uploaded')
@@ -45,6 +46,7 @@ class Report(Base):
     user = relationship('User', foreign_keys=[user_id], backref='reports')
 
     created = Column(DateTime, default=datetime.datetime.utcnow, doc='The date and time of upload')
+    public = Column(Boolean, nullable=False, default=False, doc='Should the network be viewable to the public?')
     precompiled = Column(Boolean, doc='Was this document uploaded as a BEL script or a precompiled gpickle?')
     number_nodes = Column(Integer)
     number_edges = Column(Integer)
@@ -65,7 +67,7 @@ def log_graph(graph, current_user, precompiled=False, failed=False):
 
 
 def add_network_reporting(manager, network, current_user, number_nodes, number_edges, number_warnings,
-                          precompiled=False):
+                          precompiled=False, public=True):
     reporting_log.info('%s %s %s v%s with %d nodes, %d edges, and %d warnings', current_user,
                        'uploaded' if precompiled else 'compiled', network.name, network.version, number_nodes,
                        number_edges, number_warnings)
@@ -77,6 +79,7 @@ def add_network_reporting(manager, network, current_user, number_nodes, number_e
         number_nodes=number_nodes,
         number_edges=number_edges,
         number_warnings=number_warnings,
+        public=public,
     )
     manager.session.add(report)
     manager.session.commit()
