@@ -10,7 +10,7 @@ TEST_USER_USERNAME = 'test@example.com'
 TEST_USER_PASSWORD = 'password'
 TEST_SECRET_KEY = 'pybel_web_tests'
 
-
+@unittest.skip
 class WebTest(unittest.TestCase):
     def setUp(self):
         self.db_fd, self.db_file = tempfile.mkstemp()
