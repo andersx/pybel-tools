@@ -29,7 +29,6 @@ INSTALL_REQUIRES = [
     'flask-bootstrap',
     'flask-wtf',
     'GitHub-Flask',
-    'flask-login',
     'flask-security',
     'networkx',
     'pybel',
