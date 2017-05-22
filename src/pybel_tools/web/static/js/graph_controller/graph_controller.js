@@ -347,8 +347,6 @@ function renderEmptyFrame() {
     e = d.documentElement;
     g = d.getElementsByTagName("body")[0];
 
-    var border = 1, bordercolor = 'black';
-
     var graphDiv = $("#graph-chart");
     var w = graphDiv.width(), h = graphDiv.height();
 
@@ -364,13 +362,6 @@ function renderEmptyFrame() {
         .attr("fill", "#fcfbfb")
         .style("pointer-events", "all");
 
-    // Border
-    svg.append("rect")
-        .attr("height", h)
-        .attr("width", w)
-        .style("stroke", bordercolor)
-        .style("fill", "none")
-        .style("stroke-width", border);
 
     // Text
     svg.append("text")
@@ -680,7 +671,6 @@ function initD3Force(graph, tree) {
     var nominalStroke = 2.5;
     // Zoom variables
     var minZoom = 0.1, maxZoom = 10;
-    var border = 1, bordercolor = "black";
 
     var svg = d3.select("#graph-chart").append("svg")
         .attr("width", w)
@@ -728,14 +718,6 @@ function initD3Force(graph, tree) {
     function zoomed() {
         g.attr("transform", d3.event.transform);
     }
-
-    // Border
-    svg.append("rect")
-        .attr("height", h)
-        .attr("width", w)
-        .style("stroke", bordercolor)
-        .style("fill", "none")
-        .style("stroke-width", border);
 
     // g = svg object where the graph will be appended
     var g = svg.append("g");
