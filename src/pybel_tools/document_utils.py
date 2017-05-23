@@ -9,6 +9,7 @@ import sys
 import time
 from itertools import islice
 from operator import itemgetter
+from xml.etree import ElementTree
 
 import requests
 
@@ -21,7 +22,8 @@ __all__ = [
     'make_document_metadata',
     'make_document_namespaces',
     'make_document_annotations',
-    'make_document_statement_group',
+    'make_pubmed_abstract_group',
+    'make_pubmed_gene_group',
     'write_boilerplate',
 ]
 
@@ -30,6 +32,9 @@ NAMESPACE_URL_FMT = 'DEFINE NAMESPACE {} AS URL "{}"'
 NAMESPACE_PATTERN_FMT = 'DEFINE NAMESPACE {} AS PATTERN "{}"'
 ANNOTATION_URL_FMT = 'DEFINE ANNOTATION {} AS URL "{}"'
 ANNOTATION_PATTERN_FMT = 'DEFINE ANNOTATION {} AS PATTERN "{}"'
+
+#: Allows for querying the Entrez Gene Summary utility by formatting with an entrez id or list of comma seperated ids
+PUBMED_GENE_QUERY_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gene&id={}'
 
 
 def split_document(lines):
@@ -185,7 +190,7 @@ def make_document_annotations(annotation_dict=None, annotation_patterns=None):
     yield ''
 
 
-def make_document_statement_group(pmids):
+def make_pubmed_abstract_group(pmids):
     """Builds a skeleton for the citations' statements
     
     :param pmids: A list of PubMed identifiers
@@ -208,9 +213,27 @@ def make_document_statement_group(pmids):
         yield '\nUNSET Evidence\nUNSET Citation'
 
 
+def make_pubmed_gene_group(entrez_ids):
+    """Builds a skeleton for gene summaries
+    
+    :param list[str] entrez_ids: A list of entrez id's to query the pubmed service 
+    :return: An iterator over statement lines for NCBI entrez gene summaries
+    :rtype iter[str]
+    """
+    url = PUBMED_GENE_QUERY_URL.format(','.join(str(x).strip() for x in entrez_ids))
+    response = requests.get(url)
+    tree = ElementTree.fromstring(response.content)
+
+    for x in tree.findall('./DocumentSummarySet/DocumentSummary'):
+        yield '\n# {}'.format(x.find('Description').text)
+        yield 'SET Citation = {{"Other", "PubMed Gene", "{}"}}'.format(x.attrib['uid'])
+        yield 'SET Evidence = "{}"'.format(x.find('Summary').text.strip().replace('\n', ''))
+        yield '\nUNSET Evidence\nUNSET Citation'
+
+
 def write_boilerplate(document_name, contact, description, authors, version=None, copyright=None,
                       licenses=None, namespace_dict=None, namespace_patterns=None, annotations_dict=None,
-                      annotations_patterns=None, pmids=None, file=None):
+                      annotations_patterns=None, pmids=None, entrez_ids=None, file=None):
     """Writes a boilerplate BEL document, with standard document metadata, definitions. Optionally, if a
     list of PubMed identifiers are given, the citations and abstracts will be written for each.
 
@@ -221,12 +244,14 @@ def write_boilerplate(document_name, contact, description, authors, version=None
     :param str version: The version. Defaults to current date in format YYYYMMDD.
     :param str copyright: Copyright information about this document
     :param str licenses: The license applied to this document
-    :param file file: A writable file or file-like. If None, defaults to :data:`sys.stdout`
+    
     :param dict[str, str] namespace_dict: an optional dictionary of {str name: str URL} of namespaces
     :param dict[str, str] namespace_patterns: An optional dictionary of {str name: str regex} namespaces
     :param dict[str, str] annotations_dict: An optional dictionary of {str name: str URL} of annotations
     :param dict[str, str] annotations_patterns: An optional dictionary of {str name: str regex} annotations
-    :param iter[str] or iter[int] pmids: an optional list of PMID's to auto-populate with citation and abstract
+    :param iter[str] or iter[int] pmids: A list of PubMed identifiers to auto-populate with citation and abstract
+    :param iter[str] or iter[int] entrez_ids: A list of Entrez identifiers to autopopulate the gene summary as evidence
+    :param file file: A writable file or file-like. If None, defaults to :data:`sys.stdout`
     """
     file = sys.stdout if file is None else file
 
@@ -254,5 +279,9 @@ def write_boilerplate(document_name, contact, description, authors, version=None
     print('#' * 80 + '\n', file=file)
 
     if pmids is not None:
-        for line in make_document_statement_group(pmids):
+        for line in make_pubmed_abstract_group(pmids):
+            print(line, file=file)
+
+    if entrez_ids is not None:
+        for line in make_pubmed_gene_group(entrez_ids):
             print(line, file=file)

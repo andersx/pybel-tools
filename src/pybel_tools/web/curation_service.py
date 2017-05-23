@@ -27,6 +27,7 @@ class BoilerplateForm(FlaskForm):
     name = fields.StringField('Document Name', validators=[DataRequired()])
     description = fields.StringField('Document Description', validators=[DataRequired()])
     pmids = fields.StringField('PubMed Identifiers, separated by commas')
+    entrez_ids = fields.StringField('Entrez Identifiers, separated by commas')
     licenses = fields.RadioField(
         'License',
         choices=[
@@ -101,6 +102,7 @@ def build_curation_service(app):
         si = StringIO()
 
         pmids = [int(x.strip()) for x in form.pmids.data.split(',') if x]
+        entrez_ids = [int(x.strip()) for x in form.entrez_ids.data.split(',') if x]
 
         write_boilerplate(
             document_name=form.name.data,
@@ -109,6 +111,7 @@ def build_curation_service(app):
             authors=current_user.name,
             licenses=form.licenses.data,
             pmids=pmids,
+            entrez_ids=entrez_ids,
             file=si
         )
 
