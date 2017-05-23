@@ -215,10 +215,10 @@ def make_pubmed_abstract_group(pmids):
 
 def make_pubmed_gene_group(entrez_ids):
     """Builds a skeleton for gene summaries
-    
+
     :param list[str] entrez_ids: A list of entrez id's to query the pubmed service 
     :return: An iterator over statement lines for NCBI entrez gene summaries
-    :rtype iter[str]
+    :rtype: iter[str]
     """
     url = PUBMED_GENE_QUERY_URL.format(','.join(str(x).strip() for x in entrez_ids))
     response = requests.get(url)
