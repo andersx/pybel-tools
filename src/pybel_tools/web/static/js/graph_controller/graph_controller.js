@@ -997,40 +997,26 @@ function initD3Force(graph, tree) {
         }
     }
 
-    // Search functionality to check if array exists in an array of arrays
-    function searchForArray(haystack, needle) {
-        var i, j, current;
-        for (i = 0; i < haystack.length; ++i) {
-            if (needle.length === haystack[i].length) {
-                current = haystack[i];
-                for (j = 0; j < needle.length && needle[j] === current[j]; ++j);
-                if (j === needle.length)
-                    return i;
-            }
-        }
-        return -1;
-    }
-
     // Filter nodes in list
-    function nodesNotInArray(nodeArray) {
+    function nodesNotInArray(nodeArray, property) {
         return svg.selectAll(".node").filter(function (el) {
-            return nodeArray.indexOf(el.id) < 0;
+            return nodeArray.indexOf(el[property]) < 0;
         });
     }
 
     // Filter nodes in list
-    function nodesInArray(nodeArray) {
+    function nodesInArray(nodeArray, property) {
         return svg.selectAll(".node").filter(function (el) {
-            return nodeArray.indexOf(el.id) >= 0;
+            return nodeArray.indexOf(el[property]) >= 0;
         });
 
     }
 
     // Filter nodes in list keeping the order of the nodeArray
-    function nodesInArrayKeepOrder(nodeArray) {
+    function nodesInArrayKeepOrder(nodeArray, property) {
         return nodeArray.map(function (el) {
             var nodeObject = svg.selectAll(".node").filter(function (node) {
-                return el === node.id;
+                return el === node[property]
             });
             return nodeObject._groups[0][0]
         });
@@ -1081,7 +1067,7 @@ function initD3Force(graph, tree) {
         });
     }
 
-    function hideNodesTextInPaths(data, visualization) {
+    function hideNodesTextInPaths(data, visualization, property) {
 
         // Array with all nodes in all paths
         var nodesInPaths = [];
@@ -1094,7 +1080,7 @@ function initD3Force(graph, tree) {
 
         // Filter the text whose innerHTML is not belonging to the list of nodeIDs
         var textNotInPaths = g.selectAll(".node-name").filter(function (d) {
-            return nodesInPaths.indexOf(d.id) < 0;
+            return nodesInPaths.indexOf(d[property]) < 0;
         });
 
         if (visualization !== true) {
@@ -1111,7 +1097,7 @@ function initD3Force(graph, tree) {
         });
     }
 
-    function highlightEdges(edgeArray) {
+    function highlightEdges(edgeArray, property) {
 
         // Array with names of the nodes in the selected edge
         var nodesInEdges = [];
@@ -1119,15 +1105,15 @@ function initD3Force(graph, tree) {
         // Filtered not selected links
         var edgesNotInArray = g.selectAll(".link").filter(function (edgeObject) {
 
-            if (edgeArray.indexOf(edgeObject.source.cname + " " + edgeObject.relation + " " + edgeObject.target.cname) >= 0) {
-                nodesInEdges.push(edgeObject.source.cname);
-                nodesInEdges.push(edgeObject.target.cname);
+            if (edgeArray.indexOf(edgeObject.source[property] + " " + edgeObject.relation + " " + edgeObject.target[property]) >= 0) {
+                nodesInEdges.push(edgeObject.source[property]);
+                nodesInEdges.push(edgeObject.target[property]);
             }
             else return edgeObject;
         });
 
         var nodesNotInEdges = node.filter(function (nodeObject) {
-            return nodesInEdges.indexOf(nodeObject.cname) < 0;
+            return nodesInEdges.indexOf(nodeObject[property]) < 0;
         });
 
         nodesNotInEdges.style("opacity", "0.1");
@@ -1135,18 +1121,18 @@ function initD3Force(graph, tree) {
 
     }
 
-    // Highlight nodes from array of ids and change the opacity of the rest of nodes
-    function highlightNodes(nodeArray) {
+    // Highlight nodes from array and property of filtering and change the opacity of the rest of nodes
+    function highlightNodes(nodeArray, property) {
 
         // Filter not mapped nodes to change opacity
         var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
-            return searchForArray(nodeArray, el.cname) < 0;
+            return nodeArray.indexOf(el[property]) < 0;
         });
 
         // Not mapped links
         var notMappedEdges = g.selectAll(".link").filter(function (el) {
             // Source and target should be present in the edge
-            return !((searchForArray(nodeArray, el.source.cname) >= 0 || searchForArray(nodeArray, el.target.cname) >= 0));
+            return !(nodeArray.indexOf(el.source[property]) >= 0 || nodeArray.indexOf(el.target[property]) >= 0);
         });
 
         nodesNotInArray.style("opacity", "0.1");
@@ -1266,7 +1252,9 @@ function initD3Force(graph, tree) {
 
         nodeNames.push(value.cname);
 
-        $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='circle " + value.function + "'></div><span>" + value.cname + "</span></li>");
+        $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'>" +
+            "<div class='circle " + value.function + "'>" +
+            "</div><span class='node-" + value.id + "'>" + value.cname + "</span></li>");
     });
 
     var duplicates = findDuplicates(nodeNames);
@@ -1290,11 +1278,12 @@ function initD3Force(graph, tree) {
         event.preventDefault();
         var checkedItems = [];
         $(".node-checkbox:checked").each(function (idx, li) {
-            checkedItems.push(li.parentElement.childNodes[2].innerHTML);
+            // Get the class of the span element (node-ID) Strips "node-" and evaluate the string to integer
+            checkedItems.push(parseInt(li.parentElement.childNodes[2].className.replace("node-", "")));
         });
 
         resetAttributes();
-        highlightNodes(checkedItems);
+        highlightNodes(checkedItems, 'id');
         resetAttributesDoubleClick();
 
     });
@@ -1325,7 +1314,7 @@ function initD3Force(graph, tree) {
 
         resetAttributes();
 
-        highlightEdges(checkedItems);
+        highlightEdges(checkedItems, 'cname');
 
         resetAttributesDoubleClick()
     });
@@ -1364,7 +1353,7 @@ function initD3Force(graph, tree) {
                         resetAttributes();
 
                         // Apply changes in style for select paths
-                        hideNodesTextInPaths(paths, checkbox);
+                        hideNodesTextInPaths(paths, checkbox, 'id');
                         colorPaths(paths, checkbox);
                         resetAttributesDoubleClick()
                     }
@@ -1483,9 +1472,9 @@ function initD3Force(graph, tree) {
                 data: $.param(args, true),
                 success: function (data) {
 
-                    var nodesToIncrease = nodesInArrayKeepOrder(data);
+                    var nodesToIncrease = nodesInArrayKeepOrder(data, 'id');
 
-                    var nodesToReduce = nodesNotInArray(data);
+                    var nodesToReduce = nodesNotInArray(data, 'id');
 
                     // Reduce to 7 radius the nodes not in top x
                     $.each(nodesToReduce._groups[0], function (index, value) {
@@ -1558,7 +1547,7 @@ function initD3Force(graph, tree) {
                     // Keys are stored as strings need conversation to JS numbers
                     var nodeIDStrings = Object.keys(normalizedData);
 
-                    var mappedNodes = nodesInArrayKeepOrder(nodeIDStrings.map(Number));
+                    var mappedNodes = nodesInArrayKeepOrder(nodeIDStrings.map(Number), 'id');
 
                     $.each(mappedNodes, function (index, value) {
                         // Order is maintain so it uses the index to get iterate over normalizedData applying (constant/midrange)
