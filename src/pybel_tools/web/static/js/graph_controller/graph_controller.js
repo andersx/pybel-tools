@@ -1362,7 +1362,7 @@ function initD3Force(graph, tree) {
                         // Change style in force
                         resetAttributes();
 
-                        var nodesNotInPath = nodesNotInArray(paths);
+                        var nodesNotInPath = nodesNotInArray(paths, 'id');
 
                         var edgesNotInPath = g.selectAll(".link").filter(function (el) {
                             // Source and target should be present in the edge and the distance in the array should be one
