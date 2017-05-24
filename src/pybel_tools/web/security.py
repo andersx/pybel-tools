@@ -127,7 +127,7 @@ def build_security_service(app):
         u = User.query.get(user_id)
         user_datastore.delete_user(u)
         user_datastore.commit()
-        return jsonify({'status': 200, 'action': 'deleted user', 'user': u})
+        return jsonify({'status': 200, 'action': 'deleted user', 'user': str(u)})
 
     log.info('built security service')
 
