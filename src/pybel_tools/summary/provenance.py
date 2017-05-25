@@ -31,8 +31,7 @@ log = logging.getLogger(__name__)
 def _generate_citation_dict(graph):
     """Prepares a citation data dictionary from a graph. This is a helper function
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A dictionary of {citation type: {(reference, name) -> {set of (source node, target node)}}}
     :rtype: dict
     """
@@ -64,8 +63,7 @@ def iter_pmids(graph):
 def get_pmids(graph):
     """Gets the set of all PubMed identifiers cited in the construction of a graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A set of all PubMed identifiers cited in the construction of this graph
     :rtype: set[str]
     """
@@ -75,8 +73,7 @@ def get_pmids(graph):
 def get_pmid_by_keyword(keyword, graph=None, pmids=None):
     """Gets the set of PubMed identifiers beginning with the given keyword string
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param keyword: The beginning of a PubMed identifier
     :type keyword: str
     :param pmids: A set of pre-cached PubMed identifiers
@@ -96,8 +93,7 @@ def get_pmid_by_keyword(keyword, graph=None, pmids=None):
 def count_pmids(graph):
     """Counts the frequency of PubMed documents in a graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A Counter from {(pmid, name): frequency}
     :rtype: collections.Counter
     """
@@ -107,8 +103,7 @@ def count_pmids(graph):
 def count_citations(graph, **annotations):
     """Counts the citations in a graph based on a given filter
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotations: The annotation filters to use
     :type annotations: dict
     :return: A counter from {(citation type, citation reference): frequency}
@@ -130,8 +125,7 @@ def count_citations(graph, **annotations):
 def count_citations_by_annotation(graph, annotation='Subgraph'):
     """Groups the citation counters by subgraphs induced by the annotation
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to use to group the graph
     :type annotation: str
     :return: A dictionary of Counters {subgraph name: Counter from {citation: frequency}}
@@ -151,8 +145,7 @@ def count_citations_by_annotation(graph, annotation='Subgraph'):
 def count_authors(graph):
     """Counts the contributions of each author to the given graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A Counter from {author name: frequency}
     :rtype: collections.Counter
     """
@@ -171,8 +164,7 @@ def count_authors(graph):
 def count_author_publications(graph):
     """Counts the number of publications of each author to the given graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A Counter from {author name: frequency}
     :rtype: collections.Counter
     """
@@ -191,8 +183,7 @@ def count_author_publications(graph):
 def get_authors(graph):
     """Gets the set of all authors in the given graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A set of author names
     :rtype: set[str]
     """
@@ -233,8 +224,7 @@ def get_authors_by_keyword(keyword, graph=None, authors=None):
 def count_authors_by_annotation(graph, annotation='Subgraph'):
     """Groups the author counters by subgraphs induced by the annotation
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to use to group the graph
     :type annotation: str
     :return: A dictionary of Counters {subgraph name: Counter from {author: frequency}}
@@ -255,8 +245,7 @@ def get_evidences_by_pmid(graph, pmids):
     """Gets a dictionary from the given PubMed identifiers to the sets of all evidence strings associated with each
     in the graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param pmids: An iterable of PubMed identifiers, as strings. Is consumed and converted to a set.
     :type pmids: str or iter[str]
     :return: A dictionary of {pmid: set of all evidence strings}

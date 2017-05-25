@@ -81,8 +81,7 @@ def collapse_nodes(graph, dict_of_sets_of_nodes):
 def build_central_dogma_collapse_dict(graph):
     """Builds a dictionary to direct the collapsing on the central dogma
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A dictionary of {node: set of nodes}
     :rtype: dict
     """
@@ -111,8 +110,7 @@ def build_central_dogma_collapse_dict(graph):
 def build_central_dogma_collapse_gene_dict(graph):
     """Builds a dictionary to direct the collapsing on the central dogma
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A dictionary of {node: set of nodes}
     :rtype: dict
     """
@@ -143,8 +141,7 @@ def collapse_by_central_dogma(graph):
     """Collapses all nodes from the central dogma (GENE, RNA, PROTEIN) to PROTEIN, or most downstream possible entity,
     in place. This function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_dict`.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     
     Equivalent to:
     
@@ -160,8 +157,7 @@ def collapse_by_central_dogma_to_genes(graph):
     :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE`, in-place. This 
     function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     
     Equivalent to:
     
@@ -238,8 +234,7 @@ def opening_on_central_dogma(graph):
     """Infers central dogmatic relations with :func:`infer_central_dogma` then successively prunes gene leaves then
     RNA leaves with :func:`prune_central_dogma` to connect disparate elements in a knowledge assembly
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
 
     Equivalent to:
 
@@ -257,8 +252,7 @@ def collapse_by_opening_on_central_dogma(graph):
     gene node to its RNA/miRNA node, then possibly from RNA to protein if available. Wraps :func:`infer_central_dogma`
     and :func:`collapse_by_central_dogma`.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
 
     Equivalent to:
 
@@ -280,8 +274,7 @@ def collapse_by_opening_by_central_dogma_to_genes(graph):
     
     Wraps :func:`infer_central_dogma` and :func:`collapse_by_central_dogma_to_genes`.
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
 
     Equivalent to:
 

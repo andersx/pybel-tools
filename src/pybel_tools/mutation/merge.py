@@ -39,10 +39,8 @@ def left_merge(g, h):
 def right_merge(g, h):
     """Performs :func:`left_merge` on the arguments in the opposite order.
 
-    :param g: A BEL Graph
-    :type g: pybel.BELGraph
-    :param h: A BEL Graph
-    :type h: pybel.BELGraph
+    :param pybel.BELGraph g: A BEL Graph
+    :param pybel.BELGraph h: A BEL Graph
     """
     left_merge(h, g)
 
@@ -53,8 +51,7 @@ def collapse_consistent_edges(graph):
 
     .. warning:: This operation doesn't preserve evidences or other annotations
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL Graph
     """
     for u, v in get_consistent_edges(graph):
         rel = [d[RELATION] for d in graph.edge[u][v].values()][0]

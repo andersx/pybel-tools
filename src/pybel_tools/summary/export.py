@@ -37,8 +37,7 @@ def plot_summary_axes(graph, lax, rax):
     1. Count of nodes, grouped by function type
     2. Count of edges, grouped by relation type
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param lax: An axis object from matplotlib
     :param rax: An axis object from matplotlib
 
@@ -78,8 +77,7 @@ def plot_summary(graph, plt, **kwargs):
     1. Count of nodes, grouped by function type
     2. Count of edges, grouped by relation type
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param plt: Give :code:`matplotlib.pyplot` to this parameter
     :param kwargs: keyword arguments to give to :func:`plt.subplots`
 
@@ -131,8 +129,7 @@ def info_list(graph):
 def info_json(graph):
     """Returns useful information about the graph as a dictionary
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :rtype: dict
     """
     return dict(info_list(graph))
@@ -141,8 +138,7 @@ def info_json(graph):
 def info_str(graph):
     """Puts useful information about the graph in a string
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :rtype: str
     """
     return '\n'.join('{}: {}'.format(k, v) for k, v in info_list(graph))
@@ -151,8 +147,7 @@ def info_str(graph):
 def print_summary(graph, file=None):
     """Prints useful information about the graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param file: A writeable file or file-like object. If None, defaults to :data:`sys.stdout`
     """
     print(info_str(graph), file=file)

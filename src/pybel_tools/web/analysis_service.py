@@ -106,7 +106,7 @@ def build_analysis_service(app):
 
         data = {k: v for _, k, v in df.itertuples()}
 
-        network = manager.get_graph_by_id(network_id)
+        network = manager.get_network_by_id(network_id)
         graph = pybel.from_bytes(network.blob)
 
         remove_nodes_by_namespace(graph, {'MGI', 'RGD'})

@@ -455,7 +455,7 @@ def build_dictionary_service(app):
     def view_summary(graph_id):
         """Renders a page with the parsing errors for a given BEL script"""
         try:
-            network = manager.get_graph_by_id(graph_id)
+            network = manager.get_network_by_id(graph_id)
             graph = from_bytes(network.blob, check_version=app.config.get('PYBEL_DS_CHECK_VERSION'))
         except:
             flask.flash("Problem getting graph {}".format(graph_id), category='error')

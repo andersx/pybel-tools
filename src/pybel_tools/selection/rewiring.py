@@ -17,8 +17,7 @@ from ..utils import is_edge_consistent
 def all_edges_consistent(graph):
     """Returns if all edges are consistent in a graph. Wraps :func:`pybel_tools.utils.is_edge_consistent`
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: Are all edges consistent
     :rtype: bool
     """
@@ -33,8 +32,7 @@ def rewire_targets(graph, p):
     - For BEL graphs, assumes edge consistency (all edges between two given nodes are have the same relation)
     - Doesn't make self-edges
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param p: The probability of rewiring
     :return: A rewired BEL graph
     """

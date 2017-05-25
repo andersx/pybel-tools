@@ -15,8 +15,7 @@ __all__ = [
 def get_nodes_by_function(graph, function):
     """Get all nodes of a given type.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param function: The BEL function to filter by
     :type function: str
     :return: An iterable of all BEL nodes with the given function
@@ -29,8 +28,7 @@ def get_nodes_by_function(graph, function):
 def get_nodes_by_namespace(graph, namespace):
     """Returns an iterator over nodes with the given namespace
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param namespace: The namespace to filter
     :type namespace: str
     :return: An iterable over nodes with the given function and namspace
@@ -43,8 +41,7 @@ def get_nodes_by_namespace(graph, namespace):
 def get_nodes_by_function_namespace(graph, function, namespace):
     """Returns an iterator over nodes with the given function and namespace
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param function: The function to filter
     :type function: str
     :param namespace: The namespace to filter

@@ -11,8 +11,7 @@ __all__ = [
 def search_node_names(graph, query):
     """Searches for nodes containing a given string
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param query: The search query
     :type query: str or iter[str]
     :return: An iterator over nodes whose names match the search query
@@ -25,8 +24,7 @@ def search_node_names(graph, query):
 def search_node_cnames(graph, query):
     """Searches for nodes whose canonical names contain a given string(s)
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param query: The search query
     :type query: str or iter[str]
     :return: An iterator over nodes whose canonical names match the search query

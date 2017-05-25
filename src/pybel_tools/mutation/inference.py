@@ -32,8 +32,7 @@ def _infer_converter_helper(node, data, new_function):
 def infer_central_dogmatic_translations(graph):
     """For all Protein entities, adds the missing origin RNA and RNA-Protein translation edge
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     """
     for node, data in graph.nodes(data=True):
         if data[FUNCTION] == PROTEIN and NAMESPACE in data and VARIANTS not in data:
@@ -46,8 +45,7 @@ def infer_central_dogmatic_translations(graph):
 def infer_central_dogmatic_transcriptions(graph):
     """For all RNA entities, adds the missing origin Gene and Gene-RNA transcription edge
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     """
     for node, data in graph.nodes(data=True):
         if data[FUNCTION] in {MIRNA, RNA} and NAMESPACE in data and VARIANTS not in data:
@@ -61,8 +59,7 @@ def infer_central_dogma(graph):
     """Adds all RNA-Protein translations then all Gene-RNA transcriptions by applying
     :func:`infer_central_dogmatic_translations` then :func:`infer_central_dogmatic_transcriptions`
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     """
     infer_central_dogmatic_translations(graph)
     infer_central_dogmatic_transcriptions(graph)
@@ -74,8 +71,7 @@ def infer_missing_two_way_edges(graph):
 
     Use: two way edges from BEL definition and/or axiomatic inverses of membership relations
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     """
     for u, v, k, d in graph.edges_iter(data=True, keys=True):
         if d[RELATION] in TWO_WAY_RELATIONS:
@@ -104,8 +100,7 @@ def infer_missing_inverse_edge(graph, relations):
 def infer_missing_backwards_edge(graph, u, v, k):
     """Adds the same edge, but in the opposite direction if not already present
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param u: A BEL node
     :type u: tuple
     :param v: A BEL node
@@ -125,10 +120,8 @@ def infer_missing_backwards_edge(graph, u, v, k):
 def enrich_internal_unqualified_edges(graph, subgraph):
     """Adds the missing unqualified edges between entities in the subgraph that are contained within the full graph
 
-    :param graph: The full BEL graph
-    :type graph: pybel.BELGraph
-    :param subgraph: The query BEL subgraph
-    :type subgraph: pybel.BELGraph
+    :param pybel.BELGraph graph: The full BEL graph
+    :param pybel.BELGraph subgraph: The query BEL subgraph
     """
     for u, v in itt.combinations(subgraph.nodes_iter(), 2):
         if not graph.has_edge(u, v):

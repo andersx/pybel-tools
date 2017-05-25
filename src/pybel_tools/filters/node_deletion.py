@@ -16,8 +16,7 @@ __all__ = [
 def remove_filtered_nodes(graph, node_filters):
     """Removes nodes passing the given node filters
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node_filters: A node filter list of node filters (graph, node) -> bool
     :type node_filters: types.FunctionType or iter[types.FunctionType]
     """
@@ -31,8 +30,7 @@ def remove_nodes_by_function(graph, function):
 
     This could be useful directly to remove pathologies.
     
-    :param graph: A BEL graph
-    :type: graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param function: The function to filter
     :type function: str
     """
@@ -46,8 +44,7 @@ def remove_nodes_by_namespace(graph, namespace):
     This might be useful to exclude information learned about distant species, such as excluding all information
     from MGI and RGD in diseases where mice and rats don't give much insight to the human disease mechanism.
 
-    :param graph: A BEL graph
-    :type: graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param namespace: The namespace to filter or iterable of namespaces
     :type namespace: str or iter[str]
     """
@@ -61,8 +58,7 @@ def remove_nodes_by_function_namespace(graph, function, namespace):
     This might be useful to exclude information learned about distant species, such as excluding all information
     from MGI and RGD in diseases where mice and rats don't give much insight to the human disease mechanism.
 
-    :param graph: A BEL graph
-    :type: graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param function: The function to filter
     :type function: str
     :param namespace: The namespace to filter or iterable of namespaces

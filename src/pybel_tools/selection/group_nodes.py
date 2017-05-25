@@ -16,8 +16,7 @@ __all__ = [
 def group_nodes_by_annotation(graph, annotation='Subgraph'):
     """Groups the nodes occurring in edges by the given annotation
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: An annotation to use to group edges
     :type annotation: str
     :return: dict of sets of BELGraph nodes
@@ -40,8 +39,7 @@ def average_node_annotation(graph, key, annotation='Subgraph', aggregator=None):
     """Groups graph into subgraphs and assigns each subgraph a score based on the average of all nodes values
     for the given node key
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param key: The key in the node data dictionary representing the experimental data
     :type key: str
     :param annotation: A BEL annotation to use to group nodes
@@ -65,8 +63,7 @@ def average_node_annotation(graph, key, annotation='Subgraph', aggregator=None):
 def group_nodes_by_annotation_filtered(graph, node_filters=None, annotation='Subgraph'):
     """Groups the nodes occurring in edges by the given annotation, with a node filter applied
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node_filters: A predicate or list of predicates (graph, node) -> bool
     :type node_filters: types.FunctionType or iter[types.FunctionType]
     :param annotation: The annotation to use for grouping
@@ -80,8 +77,7 @@ def group_nodes_by_annotation_filtered(graph, node_filters=None, annotation='Sub
 def get_mapped(graph, namespace, names):
     """ Returns defaultdict with keys: nodes that match the namespace and in names and values other nodes (complexes, variants, orthologous...) or this node.
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param namespace: Namespace
     :type namespace: str
     :param names: List or set of values from which we want to map nodes from

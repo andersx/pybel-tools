@@ -51,8 +51,7 @@ def _update_node_helper(universe, graph):
 def get_upstream_causal_subgraph(graph, nbunch):
     """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param nbunch: A BEL node or iterable of BEL nodes
     :type nbunch: tuple or list of tuples
     :return: A BEL Graph
@@ -73,8 +72,7 @@ def get_upstream_causal_subgraph(graph, nbunch):
 def get_downstream_causal_subgraph(graph, nbunch):
     """Induces a subgraph from all of the downstream causal entities of the nodes in the nbunch
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param nbunch: A BEL node or iterable of BEL nodes
     :type nbunch: tuple or list of tuples
     :return: A BEL Graph
@@ -95,8 +93,7 @@ def get_peripheral_successor_edges(graph, subgraph):
     """Gets the set of possible successor edges peripheral to the subgraph. The source nodes in this iterable are
     all inside the subgraph, while the targets are outside.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param subgraph: A set of nodes
     :return: An iterable of possible successor edges (4-tuples of node, node, key, data)
     :rtype: iter
@@ -111,8 +108,7 @@ def get_peripheral_predecessor_edges(graph, subgraph):
     """Gets the set of possible predecessor edges peripheral to the subgraph. The target nodes in this iterable
     are all inside the subgraph, while the sources are outside.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param subgraph: A set of nodes
     :return: An iterable on possible predecessor edges (4-tuples of node, node, key, data)
     :rtype: iter
@@ -150,8 +146,7 @@ def count_possible_predecessors(graph, subgraph):
 def get_subgraph_edges(graph, value, annotation='Subgraph', source_filter=None, target_filter=None):
     """Gets all edges from a given subgraph whose source and target nodes pass all of the given filters
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param value: The annotation value to search by
     :param annotation:  The annotation to search
     :param source_filter: Optional filter for source nodes (graph, node) -> bool
@@ -176,8 +171,7 @@ def get_subgraph_edges(graph, value, annotation='Subgraph', source_filter=None, 
 def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filters=None):
     """Gets a summary dictionary of all peripheral nodes to a given subgraph
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
@@ -227,8 +221,7 @@ def expand_periphery(graph, subgraph, node_filters=None, edge_filters=None, thre
     Edges could be added if they go to nodes that are involved in relationships that occur with more than the
     threshold (default 2) number of nodes in the subgraph.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
@@ -271,8 +264,7 @@ def infer_subgraph_expansion(graph, annotation='Subgraph'):
     1. Group subgraphs
     2. Build dictionary of {(u,v,k): {set of inferred subgraph names}}
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to infer
     :type annotation: str
     """

@@ -26,8 +26,7 @@ __all__ = [
 def count_error_types(graph):
     """Counts the occurrence of each type of error in a graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A Counter of {error type: frequency}
     :rtype: collections.Counter
     """
@@ -37,8 +36,7 @@ def count_error_types(graph):
 def count_naked_names(graph):
     """Counts the frequency of each naked name (names without namespaces)
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A Counter from {name: frequency}
     :rtype: collections.Counter
     """
@@ -54,8 +52,7 @@ def get_namespaces_with_incorrect_names(graph):
 def get_incorrect_names(graph, namespace):
     """Returns the set of all incorrect names from the given namespace in the graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param namespace: The namespace to filter by
     :type namespace: str
     :return: The set of all incorrect names from the given namespace in the graph
@@ -113,8 +110,7 @@ def get_undefined_annotation_values(graph, annotation):
 def calculate_incorrect_name_dict(graph):
     """Groups all of the incorrect identifiers in a dict of {namespace: list of erroneous names}
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A dictionary of {namespace: list of erroneous names}
     :rtype: dict[str, str]
     """
@@ -155,8 +151,7 @@ def calculate_suggestions(incorrect_name_dict, namespace_dict):
 def calculate_error_by_annotation(graph, annotation):
     """Groups the graph by a given annotation and builds lists of errors for each
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to group errors by
     :type annotation: str
     :return: A dictionary of {annotation value: list of errors}
@@ -182,8 +177,7 @@ def calculate_error_by_annotation(graph, annotation):
 def group_errors(graph):
     """Groups the errors together for analysis of the most frequent error
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A dictionary of {error string: list of line numbers}
     :rtype: dict[str, list[int]]
     """

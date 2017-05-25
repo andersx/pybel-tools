@@ -25,8 +25,7 @@ EDGE_HIGHLIGHT_DEFAULT_COLOR = 'orange'
 def highlight_nodes(graph, nodes=None, color=None):
     """Adds a highlight tag to the given nodes
     
-    :param graph: A BEL graph 
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param nodes: The nodes to add a highlight tag on
     :type nodes: iter[tuple]
     :param color: The color to highlight (use something that works with CSS)
@@ -65,8 +64,7 @@ def remove_highlight_nodes(graph, nodes=None):
 def highlight_edges(graph, edges=None, color=None):
     """Adds a highlight tag to the given edges
     
-    :param graph: A BEL graph 
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param edges: The edges (4-tuples of u, v, k, d) to add a highlight tag on
     :type edges: iter[tuple]
     :param color: The color to highlight (use something that works with CSS)
@@ -91,8 +89,7 @@ def is_edge_highlighted(graph, u, v, k, d):
 def remove_highlight_edges(graph, edges=None):
     """Removes the highlight from the given edges, or all edges if none given
     
-    :param graph: A BEL graph 
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param edges: The edges (4-tuple of u,v,k,d) to remove the highlight from)
     :type edges: iter[tuple]
     """

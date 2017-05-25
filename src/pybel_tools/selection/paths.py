@@ -110,8 +110,7 @@ def get_shortest_directed_path_between_subgraphs(graph, a, b):
     """Calculate the shortest path that occurs between two disconnected subgraphs A and B going through nodes in
     the source graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param a: A subgraph of :code:`graph`, disjoint from :code:`b`
     :type a: pybel.BELGraph
     :param b: A subgraph of :code:`graph`, disjoint from :code:`a`
@@ -125,8 +124,7 @@ def get_shortest_directed_path_between_subgraphs(graph, a, b):
 def get_shortest_undirected_path_between_subgraphs(graph, a, b):
     """Get the shortest path between two disconnected subgraphs A and B, disregarding directionality of edges in graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param a: A subgraph of :code:`graph`, disjoint from :code:`b`
     :type a: pybel.BELGraph
     :param b: A subgraph of :code:`graph`, disjoint from :code:`a`
