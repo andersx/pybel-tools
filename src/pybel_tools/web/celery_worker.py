@@ -2,7 +2,6 @@
 
 import requests.exceptions
 from celery.utils.log import get_task_logger
-from flask import url_for
 from flask_mail import Message
 from sqlalchemy.exc import IntegrityError
 
@@ -21,8 +20,6 @@ celery = create_celery(app)
 log = get_task_logger(__name__)
 
 
-# TODO add email notification
-
 @celery.task(name='pybelparser')
 def async_parser(lines, connection, current_user_id, current_user_email, public, allow_nested=False,
                  citation_clearing=False, store_parts=False):
@@ -39,14 +36,35 @@ def async_parser(lines, connection, current_user_id, current_user_email, public,
     except requests.exceptions.ConnectionError as e:
         message = 'Connection to resource could not be established.'
         log.exception(message)
+        with app.app_context():
+            mail.send(Message(
+                subject='Parsing Failed',
+                recipients=[current_user_email],
+                body=message,
+                sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
+            ))
         return message
     except InconsistientDefinitionError as e:
         message = '{} was defined multiple times.'.format(e.definition)
         log.exception(message)
+        with app.app_context():
+            mail.send(Message(
+                subject='Parsing Failed',
+                recipients=[current_user_email],
+                body=message,
+                sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
+            ))
         return message
     except Exception as e:
         message = 'Compilation error: {}'.format(e)
         log.exception(message)
+        with app.app_context():
+            mail.send(Message(
+                subject='Parsing Failed',
+                recipients=[current_user_email],
+                body=message,
+                sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
+            ))
         return message
 
     try:
@@ -55,10 +73,24 @@ def async_parser(lines, connection, current_user_id, current_user_email, public,
         message = integrity_message.format(graph.name, graph.version)
         log.exception(message)
         manager.rollback()
+        with app.app_context():
+            mail.send(Message(
+                subject='Upload Failed',
+                recipients=[current_user_email],
+                body=message,
+                sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
+            ))
         return message
     except Exception as e:
         message = "Error storing in database: {}".format(e)
         log.exception(message)
+        with app.app_context():
+            mail.send(Message(
+                subject='Upload Failed',
+                recipients=[current_user_email],
+                body=message,
+                sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
+            ))
         return message
 
     log.info('done storing [%d]', network.id)
@@ -81,13 +113,11 @@ def async_parser(lines, connection, current_user_id, current_user_email, public,
         return message
 
     with app.app_context():
-        completion_msg = Message(
+        mail.send(Message(
             subject='Parsing complete',
             recipients=[current_user_email],
             body='{} is done parsing.'.format(graph),
             sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
-        )
-
-        mail.send(completion_msg)
+        ))
 
     return network.id

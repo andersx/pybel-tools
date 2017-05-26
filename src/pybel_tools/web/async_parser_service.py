@@ -24,7 +24,7 @@ def view_async_parser():
     form = ParserForm(save_network=True)
 
     if not form.validate_on_submit():
-        flash('Using asynchronous parser service. This service is currently in beta.', category='danger')
+        flash('Using asynchronous parser service. This service is currently in beta.', category='warning')
         return render_template('parser.html', form=form, current_user=current_user)
 
     lines = codecs.iterdecode(form.file.data.stream, form.encoding.data)
