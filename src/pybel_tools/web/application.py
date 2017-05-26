@@ -64,7 +64,8 @@ def create_application(**kwargs):
                 sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
                 recipients=[app.config.get('PYBEL_WEB_STARTUP_NOTIFY')]
             )
-            mail.send(startup_message)
+            with app.app_context():
+                mail.send(startup_message)
 
     app.register_blueprint(async_blueprint)
 
