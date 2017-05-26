@@ -32,7 +32,10 @@ class FlaskPybel:
         Base.metadata.bind = manager.engine
         Base.query = manager.session.query_property()
 
-        app.extensions['pybel'] = _FlaskPybelState(manager)
+        state = _FlaskPybelState(manager)
+
+        app.extensions = getattr(app, 'extensions', {})
+        app.extensions['pybel'] = state
 
 
 def get_state(app):
