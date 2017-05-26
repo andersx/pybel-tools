@@ -533,6 +533,25 @@ def build_dictionary_service(app):
         flask.flash('Dropped network {}'.format(network_id))
         return redirect(url_for('view_networks'))
 
+    @app.route('/api/network/<int:network_id>/drop/<int:user_id>')
+    @login_required
+    def drop_user_network(network_id, user_id):
+        """Drops a given network"""
+        if current_user.id != user_id:
+            flask.abort(403)
+
+        try:
+            report = manager.session.query(Report).filter(Report.network_id == network_id, Report.user_id == user_id).one()
+            manager.session.delete(report.network)
+            manager.session.delete(report)
+            manager.commit()
+            flask.flash('Dropped network {}'.format(network_id))
+        except:
+            manager.rollback()
+            flask.flash('Problem dropping network {}'.format(network_id), category='error')
+            
+        return redirect(url_for('view_networks'))
+
     @app.route('/api/tree/')
     @login_required
     def get_tree_api():

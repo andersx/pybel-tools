@@ -136,7 +136,9 @@
                                         <li><a class="btn btn-danger" role="button"
                                                href="{{ url_for('drop_network', network_id=network.id) }}">Drop</a></li>
                                     {% elif network.report and network.report[0].user == current_user %}
-                                        <li><a class="btn btn-danger" role="button">Drop</a></li>
+                                        <li><a class="btn btn-danger" role="button"
+                                               href="{{ url_for('drop_user_network', network_id=network.id, user_id=current_user.id) }}">Drop</a>
+                                        </li>
                                     {% endif %}
                                     {% if current_user.has_role('scai') or current_user.admin %}
                                         {% if network.report and not network.report[0].public %}
