@@ -106,7 +106,7 @@
                 <div class="panel-body">
                     <p>The source BEL script contained references to the following namespaces, but they were never
                         used. It is suggested to delete their definitions from the BEL script to improve readability
-                        and compilation speed.</p>
+                        and parsing speed.</p>
                     <ul>
                         {% for unused_namespace in unused_namespaces %}
                             <li>{{ unused_namespace }}</li>
@@ -159,7 +159,7 @@
                 <div class="panel-body">
                     <p>The source BEL script contained references to the following annotations, but they were never
                         used. It is suggested to delete their definitions from the BEL script to improve readability
-                        and compilation speed.</p>
+                        and parsing speed.</p>
                     <p><strong>Note:</strong> this may be due to errors occurring in all statements with these
                         annotations.</p>
                     <ul>

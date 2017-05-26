@@ -46,7 +46,7 @@ class SeedProvenanceForm(FlaskForm):
     submit_provenance = fields.SubmitField('Submit Provenance')
 
 
-class CompileForm(FlaskForm):
+class ParserForm(FlaskForm):
     """Builds an upload form with wtf-forms"""
     file = FileField('My BEL script', validators=[
         DataRequired(),

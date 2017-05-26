@@ -53,29 +53,29 @@ class Report(Base):
     number_warnings = Column(Integer)
 
 
-def log_graph(graph, current_user, precompiled=False, failed=False):
+def log_graph(graph, current_user, preparsed=False, failed=False):
     """
     
     :param pybel.BELGraph graph:
     :param current_user: 
-    :param bool precompiled: 
+    :param bool preparsed: 
     :param bool failed:
     """
     reporting_log.info('%s%s %s %s v%s with %d nodes, %d edges, and %d warnings', 'FAILED ' if failed else '',
-                       current_user, 'uploaded' if precompiled else 'compiled', graph.name,
+                       current_user, 'uploaded' if preparsed else 'compiled', graph.name,
                        graph.version, graph.number_of_nodes(), graph.number_of_edges(), len(graph.warnings))
 
 
 def add_network_reporting(manager, network, current_user, number_nodes, number_edges, number_warnings,
-                          precompiled=False, public=True):
+                          preparsed=False, public=True):
     reporting_log.info('%s %s %s v%s with %d nodes, %d edges, and %d warnings', current_user,
-                       'uploaded' if precompiled else 'compiled', network.name, network.version, number_nodes,
+                       'uploaded' if preparsed else 'compiled', network.name, network.version, number_nodes,
                        number_edges, number_warnings)
 
     report = Report(
         network=network,
         user=current_user,
-        precompiled=precompiled,
+        precompiled=preparsed,
         number_nodes=number_nodes,
         number_edges=number_edges,
         number_warnings=number_warnings,

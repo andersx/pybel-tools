@@ -22,7 +22,7 @@ import click
 from flask_security import SQLAlchemyUserDatastore
 
 from pybel import from_pickle, to_database, from_lines, from_url
-from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection, PYBEL_CONNECTION
+from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
 from pybel.manager.cache import build_manager
 from pybel.manager.models import Base
 from pybel.utils import get_version as pybel_version
@@ -35,12 +35,12 @@ from .utils import get_version, enable_cool_mode
 from .web import receiver_service
 from .web.analysis_service import build_analysis_service
 from .web.application import create_application
-from .web.compilation_service import build_synchronous_compiler_service
 from .web.constants import *
 from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
 from .web.parser_endpoint import build_parser_service
+from .web.parser_service import build_synchronous_parser_service
 from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
 from .web.security import build_security_service, User, Role
@@ -119,7 +119,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     build_security_service(app)
     build_dictionary_service(app)
     build_sitemap_endpoint(app)
-    build_synchronous_compiler_service(app)
+    build_synchronous_parser_service(app)
     build_pickle_uploader_service(app)
     build_analysis_service(app)
     build_curation_service(app)

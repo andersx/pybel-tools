@@ -22,9 +22,9 @@ log = get_task_logger(__name__)
 
 # TODO add email notification
 
-@celery.task(name='pybelcompile')
-def async_compile(lines, connection, allow_nested=False, citation_clearing=False, store_parts=False):
-    log.info('starting compilation')
+@celery.task(name='pybelparser')
+def async_parser(lines, connection, allow_nested=False, citation_clearing=False, store_parts=False):
+    log.info('starting parsing')
     manager = build_manager(connection)
     try:
         graph = from_lines(
@@ -50,13 +50,13 @@ def async_compile(lines, connection, allow_nested=False, citation_clearing=False
     try:
         network = manager.insert_graph(graph, store_parts=store_parts)
     except IntegrityError:
-        log_graph(graph, current_user, precompiled=False, failed=True)
+        log_graph(graph, current_user, preparsed=False, failed=True)
         message = integrity_message.format(graph.name, graph.version)
         log.exception(message)
         manager.rollback()
         return message
     except Exception as e:
-        log_graph(graph, current_user, precompiled=False, failed=True)
+        log_graph(graph, current_user, preparsed=False, failed=True)
         message = "Error storing in database: {}".format(e)
         log.exception(message)
         return message
@@ -65,7 +65,7 @@ def async_compile(lines, connection, allow_nested=False, citation_clearing=False
 
     try:
         add_network_reporting(manager, network, current_user, graph.number_of_nodes(), graph.number_of_edges(),
-                              len(graph.warnings), precompiled=False)
+                              len(graph.warnings), preparsed=False)
     except IntegrityError:
         message = 'Problem with reporting service.'
         log.exception(message)

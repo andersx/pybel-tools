@@ -16,7 +16,7 @@ from pybel import from_lines
 from pybel.parser.parse_exceptions import InconsistientDefinitionError
 from .constants import integrity_message
 from .extension import get_manager
-from .forms import CompileForm
+from .forms import ParserForm
 from .models import add_network_reporting, log_graph
 from .utils import render_graph_summary
 from ..mutation.metadata import add_canonical_names
@@ -25,12 +25,12 @@ log = logging.getLogger(__name__)
 
 
 def render_error(exception):
-    """Displays an error in compilation/uploading"""
+    """Displays an error in parsing/uploading"""
     traceback_lines = traceback.format_exc().split('\n')
     return render_template('parse_error.html', error_text=str(exception), traceback_lines=traceback_lines)
 
 
-def build_synchronous_compiler_service(app, enable_cache=True):
+def build_synchronous_parser_service(app, enable_cache=True):
     """Adds the endpoints for a synchronous web validation web app
 
     :param flask.Flask app: A Flask application
@@ -38,14 +38,14 @@ def build_synchronous_compiler_service(app, enable_cache=True):
     """
     manager = get_manager(app)
 
-    @app.route('/compile', methods=['GET', 'POST'])
+    @app.route('/parser', methods=['GET', 'POST'])
     @login_required
-    def view_compile():
+    def view_parser():
         """An upload form for a BEL script"""
-        form = CompileForm(save_network=True)
+        form = ParserForm(save_network=True)
 
         if not form.validate_on_submit():
-            return render_template('compile.html', form=form, current_user=current_user)
+            return render_template('parser.html', form=form, current_user=current_user)
 
         log.info('Running on %s', form.file.data.filename)
 
@@ -68,40 +68,40 @@ def build_synchronous_compiler_service(app, enable_cache=True):
         except InconsistientDefinitionError as e:
             log.error('%s was defined multiple times', e.definition)
             flash('{} was defined multiple times.'.format(e.definition), category='error')
-            return redirect(url_for('view_compile'))
+            return redirect(url_for('view_parser'))
         except Exception as e:
-            log.exception('compilation error')
+            log.exception('parser error')
             flash('Compilation error: {}'.format(e))
-            return redirect(url_for('view_compile'))
+            return redirect(url_for('view_parser'))
 
         if not enable_cache:
             flash('Sorry, graph storage is not currently enabled.', category='warning')
-            log_graph(graph, current_user, precompiled=False)
+            log_graph(graph, current_user, preparsed=False)
             return render_graph_summary(0, graph)
 
         if not form.save_network.data and not form.save_edge_store.data:
-            log_graph(graph, current_user, precompiled=False)
+            log_graph(graph, current_user, preparsed=False)
             return render_graph_summary(0, graph)
 
         try:
             network = manager.insert_graph(graph, store_parts=form.save_edge_store.data)
         except IntegrityError:
-            log_graph(graph, current_user, precompiled=False, failed=True)
+            log_graph(graph, current_user, preparsed=False, failed=True)
             log.exception('integrity error')
             flash(integrity_message.format(graph.name, graph.version), category='error')
             manager.rollback()
-            return redirect(url_for('view_compile'))
+            return redirect(url_for('view_parser'))
         except Exception as e:
-            log_graph(graph, current_user, precompiled=False, failed=True)
+            log_graph(graph, current_user, preparsed=False, failed=True)
             log.exception('general storage error')
             flash("Error storing in database: {}".format(e), category='error')
-            return redirect(url_for('view_compile'))
+            return redirect(url_for('view_parser'))
 
         log.info('done storing %s [%d]', form.file.data.filename, network.id)
 
         try:
             add_network_reporting(manager, network, current_user, graph.number_of_nodes(),
-                                  graph.number_of_edges(), len(graph.warnings), precompiled=False,
+                                  graph.number_of_edges(), len(graph.warnings), preparsed=False,
                                   public=form.public.data)
         except IntegrityError:
             log.exception('integrity error')
@@ -110,4 +110,4 @@ def build_synchronous_compiler_service(app, enable_cache=True):
 
         return redirect(url_for('view_summary', graph_id=network.id))
 
-    log.info('Added synchronous compiler to %s', app)
+    log.info('Added synchronous parser to %s', app)

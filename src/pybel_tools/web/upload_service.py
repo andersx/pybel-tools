@@ -59,7 +59,7 @@ def build_pickle_uploader_service(app):
 
         try:
             add_network_reporting(manager, network, current_user, graph.number_of_nodes(),
-                                  graph.number_of_edges(), len(graph.warnings), precompiled=True,
+                                  graph.number_of_edges(), len(graph.warnings), preparsed=True,
                                   public=form.public.data)
         except IntegrityError:
             log.exception('integrity error')

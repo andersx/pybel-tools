@@ -80,7 +80,7 @@
                     mechanistic knowledge. It is built on top of the Python software libraries, <a
                             href="http://pybel.readthedocs.io/">PyBEL</a> and <a
                             href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> to take advantage of their
-                    compilation, validation, data interchange, and analytical functions.
+                    parsing, validation, data interchange, and analytical functions.
                     From this page, you can begin to explore the networks stored in the knowledge base stratified by
                     the source BEL script, by nodes and other biological entities of interest, or by certain
                     authors and publications of interest.
@@ -96,13 +96,13 @@
                             <div class="caption">
                                 <h3>Compiler</h3>
                                 <p>Compile and validate a BEL script with the option to store for later querying and
-                                    analyses. Automatic network analytics are run and presented after compilation.
-                                    Additionally, precompiled BEL scripts can be uploaded from Pickle files.</p>
+                                    analyses. Automatic network analytics are run and presented after parsing.
+                                    Additionally, preparsed BEL scripts can be uploaded from Pickle files.</p>
                                 <p>
-                                    <a href="{{ url_for('view_compile') }}" class="btn btn-primary">Compile BEL</a>
+                                    <a href="{{ url_for('view_parser') }}" class="btn btn-primary">Parse BEL</a>
                                     <a href="{{ url_for('view_upload') }}" class="btn btn-default">Upload Pickle</a>
                                     {% if current_user.admin %}
-                                        <a href="{{ url_for('async_compiler.view_async_compile') }}"
+                                        <a href="{{ url_for('async_parser.view_async_parser') }}"
                                            class="btn btn-danger">Async</a>
                                     {% endif %}
                                 </p>

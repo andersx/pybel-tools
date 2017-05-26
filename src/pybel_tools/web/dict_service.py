@@ -257,7 +257,7 @@ def build_dictionary_service_admin(app):
     @app.route('/admin/list/bms/pickles')
     @roles_required('admin')
     def list_bms_pickles():
-        """Lists the precompiled gpickles in the Biological Model Store repository"""
+        """Lists the preparsed gpickles in the Biological Model Store repository"""
         return jsonify(list(get_paths_recursive(os.environ[BMS_BASE], extension='.gpickle')))
 
     @app.route('/admin/list/reporting')
