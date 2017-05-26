@@ -42,6 +42,17 @@
 
         {{ util.flashed_messages(dismissible=True, container=False) }}
 
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <div class="pull-right">
+                    {% include "login_buttons.html" %}
+                </div>
+            </div>
+        </div>
+
         {% if current_user.admin %}
             <div class="panel panel-info" id="admin-panel">
                 <div class="panel-heading">
