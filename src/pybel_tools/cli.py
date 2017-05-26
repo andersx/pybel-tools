@@ -399,11 +399,10 @@ def add(ctx, email, password, admin):
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     try:
         u = ds.create_user(email=email, password=password)
+        u.confirmed_at = datetime.datetime.now()
 
         if admin:
             ds.add_role_to_user(u, 'admin')
-
-        u.confirmed_at = datetime.datetime.now()
 
         ds.commit()
     except:
