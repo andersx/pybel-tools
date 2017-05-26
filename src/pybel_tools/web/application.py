@@ -3,11 +3,12 @@
 import json
 import logging
 import os
+import time
 
 import flask
 from flask import Flask
 from flask_bootstrap import Bootstrap
-from flask_mail import Mail
+from flask_mail import Mail, Message
 
 from .async_compilation_service import async_blueprint
 from .extension import FlaskPybel
@@ -16,7 +17,7 @@ log = logging.getLogger(__name__)
 
 bootstrap_extension = Bootstrap()
 pybel_extension = FlaskPybel()
-mail_extension = Mail()
+mail = Mail()
 
 pybel_config_directory = os.path.join(os.path.expanduser('~'), '.config', 'pybel')
 json_conf_path = os.path.join(pybel_config_directory, 'config.json')
@@ -54,7 +55,16 @@ def create_application(**kwargs):
     pybel_extension.init_app(app)
 
     if app.config.get('MAIL_SERVER'):
-        mail_extension.init_app(app)
+        mail.init_app(app)
+
+        if app.config.get('PYBEL_WEB_STARTUP_NOTIFY'):
+            startup_message = Message(
+                subject="PyBEL Web Startup",
+                body="{}".format(time.asctime()),
+                sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
+                recipients=[app.config.get('PYBEL_WEB_STARTUP_NOTIFY')]
+            )
+            mail.send(startup_message)
 
     app.register_blueprint(async_blueprint)
 
