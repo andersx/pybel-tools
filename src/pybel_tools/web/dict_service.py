@@ -482,7 +482,7 @@ def build_dictionary_service(app):
             graph = from_bytes(network.blob, check_version=app.config.get('PYBEL_DS_CHECK_VERSION'))
         except:
             flask.flash("Problem getting graph {}".format(graph_id), category='error')
-            return redirect(url_for('view_summary'))
+            return redirect(url_for('view_networks'))
 
         return render_graph_summary(graph_id, graph, api)
 
