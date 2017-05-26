@@ -4,7 +4,6 @@
 
 from collections import Counter, defaultdict
 
-from fuzzywuzzy import process, fuzz
 
 from pybel.constants import ANNOTATIONS
 from pybel.parser.parse_exceptions import *
@@ -134,6 +133,8 @@ def calculate_suggestions(incorrect_name_dict, namespace_dict):
     :return: A dictionary of suggestions for each wrong (namespace, name) pair
     :rtype: dict
     """
+    from fuzzywuzzy import process, fuzz
+
     suggestions_cache = defaultdict(list)
 
     for namespace in incorrect_name_dict:

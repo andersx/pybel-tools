@@ -5,7 +5,6 @@
 import logging
 
 import requests
-from fuzzywuzzy import process, fuzz
 from requests.compat import quote_plus
 
 __all__ = [
@@ -60,6 +59,8 @@ def help_suggest_name(namespace, name, metadata_parser, suggestion_cache):
     :type suggestion_cache: dict or defaultdict
     :return: 
     """
+    from fuzzywuzzy import process, fuzz
+
     if (namespace, name) in suggestion_cache:
         return suggestion_cache[namespace, name]
 
@@ -78,10 +79,11 @@ if __name__ == '__main__':
     from pybel.utils import get_bel_resource
     import os
     import json
+
     ptsd_ns_path = os.path.join(os.environ['OWNCLOUD_BASE'], 'namespaces', 'ptsd.belns')
     ns = get_bel_resource(ptsd_ns_path)
 
-    c=0
+    c = 0
     for name in ns['Values']:
         r = get_ols_search(name)
 
@@ -89,7 +91,6 @@ if __name__ == '__main__':
         if r['response']['numFound'] == 0:
             continue
         print(json.dumps(r['response']['docs'], indent=2))
-        c+=1
+        c += 1
         if c > 20:
             break
-
