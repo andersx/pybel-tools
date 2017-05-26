@@ -60,28 +60,32 @@
                             {% endfor %}
                         </td>
                         <td>
-                            {% for report in user.reports %}
-                                <a href="{{ url_for('view_summary', graph_id=report.network.id) }}">{{ report.network }}</a>
-                            {% endfor %}
+                            <ul>
+                                {% for report in user.reports %}
+                                    <li>
+                                        <a href="{{ url_for('view_summary', graph_id=report.network.id) }}">{{ report.network }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
                         </td>
                         <td>
                             {% if user.has_role('scai') %}
-                                <a class="btn btn-danger"
+                                <a class="btn btn-danger" role="button"
                                    href="{{ url_for('remove_user_role', user=user.email, role='scai') }}">Remove
                                     SCAI</a>
                             {% else %}
-                                <a class="btn btn-info"
-                                   href="{{ url_for('add_user_role', user=user.email, role='scai') }}">Add
-                                    SCAI</a>
+                                <a class="btn btn-info" role="button"
+                                   href="{{ url_for('add_user_role', user=user.email, role='scai') }}">Add SCAI</a>
                             {% endif %}
-                        {% if user.has_role('admin') %}
-                            <a class="btn btn-danger"
-                               href="{{ url_for('remove_user_role', user=user.email, role='admin') }}">Remove Admin</a>
-                        {% else %}
-                            <a class="btn btn-info"
-                               href="{{ url_for('add_user_role', user=user.email, role='admin') }}">Add Admin</a>
-                        {% endif %}
-                            <a class="btn btn-info" href="{{ url_for('delete_user', user_id=user.id) }}">Remove</a>
+                            {% if user.has_role('admin') %}
+                                <a class="btn btn-danger" role="button"
+                                   href="{{ url_for('remove_user_role', user=user.email, role='admin') }}">Remove
+                                    Admin</a>
+                            {% else %}
+                                <a class="btn btn-info" role="button"
+                                   href="{{ url_for('add_user_role', user=user.email, role='admin') }}">Add Admin</a>
+                            {% endif %}
+                            <a class="btn btn-info" role="button" href="{{ url_for('delete_user', user_id=user.id) }}">Remove</a>
                         </td>
                     </tr>
                 {% endfor %}

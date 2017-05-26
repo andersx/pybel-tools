@@ -4,7 +4,7 @@
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
 
-{% block title %}PyBEL{% endblock %}
+{% block title %}PyBEL Web{% endblock %}
 
 {% block head %}
     {{ super() }}
@@ -97,14 +97,13 @@
                                 <h3>Parser</h3>
                                 <p>Parse and validate a BEL script with the option to store for later querying and
                                     analyses. Automatic network analytics are run and presented after parsing.
-                                    Additionally, pre-parsed BEL scripts can be uploaded from Pickle files. In red
-                                    is the currently experimental asynchronous parser.
+                                    Additionally, pre-parsed BEL scripts can be uploaded from Pickle files.
                                 </p>
                                 <p>
                                     <a href="{{ url_for('async_parser.view_async_parser') }}"
                                        class="btn btn-primary" role="button">Parse BEL</a>
                                     <a href="{{ url_for('view_upload') }}" class="btn btn-default"
-                                       role="button">Upload</a>
+                                       role="button">Upload Pickle</a>
                                 </p>
                             </div>
                         </div>
@@ -195,5 +194,3 @@
 
     {% include "footer.html" %}
 {% endblock %}
-
-
