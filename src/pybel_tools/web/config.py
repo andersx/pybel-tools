@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 class Config:
     """This is the default configuration to be used in a development envirionment. It assumes you have:
     
@@ -12,7 +14,7 @@ class Config:
 
     SECURITY_REGISTERABLE = True
     SECURITY_CONFIRMABLE = False
-    SECURITY_SEND_REGISTER_EMAIL = False,
+    SECURITY_SEND_REGISTER_EMAIL = False
     SECURITY_PASSWORD_HASH = 'pbkdf2_sha512'
     SECURITY_PASSWORD_SALT = 'pybel_default_salt'
 
