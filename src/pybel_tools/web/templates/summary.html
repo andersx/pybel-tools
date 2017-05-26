@@ -78,99 +78,6 @@
             </div>
         </div>
 
-        {% if undefined_namespaces is defined and undefined_namespaces|length > 0 %}
-            <div class="panel panel-danger">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Undefined Namespaces</h3>
-                </div>
-                <div class="panel-body">
-                    <p>The source BEL script contained references to the following namespaces, but they were never
-                        defined. Click the links to download them as enumerated namespaces, and update the BEL script
-                        accordingly.</p>
-                    <ul>
-                        {% for undefined_namespace in undefined_namespaces %}
-                            <li>
-                                <a href="{{ url_for('download_undefined_namespace', graph_id=graph_id, namespace=undefined_namespace) }}">{{ undefined_namespace }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        {% endif %}
-
-        {% if unused_namespaces is defined and unused_namespaces|length > 0 %}
-            <div class="panel panel-warning">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Unused Namespaces</h3>
-                </div>
-                <div class="panel-body">
-                    <p>The source BEL script contained references to the following namespaces, but they were never
-                        used. It is suggested to delete their definitions from the BEL script to improve readability
-                        and parsing speed.</p>
-                    <ul>
-                        {% for unused_namespace in unused_namespaces %}
-                            <li>{{ unused_namespace }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        {% endif %}
-
-        {% if namespaces_with_incorrect_names is defined and namespaces_with_incorrect_names|length > 0 %}
-            <div class="panel panel-danger">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Namespaces with Incorrect Names</h3>
-                </div>
-                <div class="panel-body">
-                    <ul>
-                        {% for namespace in namespaces_with_incorrect_names %}
-                            <li>
-                                <a href="{{ url_for('download_missing_namespace', graph_id=graph_id, namespace=namespace) }}">{{ namespace }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        {% endif %}
-
-        {% if undefined_annotation is defined and undefined_annotations|length > 0 %}
-            <div class="panel panel-danger">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Undefined Annotations</h3>
-                </div>
-                <div class="panel-body">
-                    <p>The source BEL script contained references to the following annotations, but they were never
-                        defined.
-                    </p>
-                    <ul>
-                        {% for undefined_annotation in undefined_annotations %}
-                            <li>{{ undefined_annotation }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        {% endif %}
-
-        {% if unused_annotations is defined and unused_annotations|length > 0 %}
-            <div class="panel panel-warning">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Unused Annotations</h3>
-                </div>
-                <div class="panel-body">
-                    <p>The source BEL script contained references to the following annotations, but they were never
-                        used. It is suggested to delete their definitions from the BEL script to improve readability
-                        and parsing speed.</p>
-                    <p><strong>Note:</strong> this may be due to errors occurring in all statements with these
-                        annotations.</p>
-                    <ul>
-                        {% for unused_annotation in unused_annotations %}
-                            <li>{{ unused_annotation }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        {% endif %}
-
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Network Statistics</h3>
@@ -228,6 +135,80 @@
                 </div>
             </div>
         </div>
+
+        <!-- Warnings -->
+
+        {% if unused_namespaces is defined and unused_namespaces|length > 0 %}
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unused Namespaces</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained references to the following namespaces, but they were never
+                        used. It is suggested to delete their definitions from the BEL script to improve readability
+                        and parsing speed.</p>
+                    <ul>
+                        {% for unused_namespace in unused_namespaces %}
+                            <li>{{ unused_namespace }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if unused_annotations is defined and unused_annotations|length > 0 %}
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unused Annotations</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained references to the following annotations, but they were never
+                        used. It is suggested to delete their definitions from the BEL script to improve readability
+                        and parsing speed.</p>
+                    <p><strong>Note:</strong> this may be due to errors occurring in all statements with these
+                        annotations.</p>
+                    <ul>
+                        {% for unused_annotation in unused_annotations %}
+                            <li>{{ unused_annotation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Unused List Annotation Values</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained the following list annotations, but no references to the
+                        following values. It is suggested to prune these values from the list definitions. </p>
+                    <p><strong>Note:</strong> this may be due to errors occurring in all statements with these
+                        annotations.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Annotation</th>
+                                <th>Values</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for annotation, values in unused_list_annotation_values %}
+                                <tr>
+                                    <td>{{ annotation }}</td>
+                                    <td>{{ values }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- BEL Parser Errors -->
 
         {% if graph.warnings|length > 0 %}
             <div class="panel panel-danger panel-table">
@@ -290,37 +271,62 @@
             </div>
         {% endif %}
 
-        {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
-            <div class="panel panel-warning">
+        {% if undefined_namespaces is defined and undefined_namespaces|length > 0 %}
+            <div class="panel panel-danger">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Unused List Annotation Values</h3>
+                    <h3 class="panel-title">Undefined Namespaces</h3>
                 </div>
                 <div class="panel-body">
-                    <p>The source BEL script contained the following list annotations, but no references to the
-                        following values. It is suggested to prune these values from the list definitions. </p>
-                    <p><strong>Note:</strong> this may be due to errors occurring in all statements with these
-                        annotations.</p>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th>Annotation</th>
-                                <th>Values</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for annotation, values in unused_list_annotation_values %}
-                                <tr>
-                                    <td>{{ annotation }}</td>
-                                    <td>{{ values }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    <p>The source BEL script contained references to the following namespaces, but they were never
+                        defined. Click the links to download them as enumerated namespaces, and update the BEL script
+                        accordingly.</p>
+                    <ul>
+                        {% for undefined_namespace in undefined_namespaces %}
+                            <li>
+                                <a href="{{ url_for('download_undefined_namespace', graph_id=graph_id, namespace=undefined_namespace) }}">{{ undefined_namespace }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
         {% endif %}
+
+        {% if undefined_annotation is defined and undefined_annotations|length > 0 %}
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Undefined Annotations</h3>
+                </div>
+                <div class="panel-body">
+                    <p>The source BEL script contained references to the following annotations, but they were never
+                        defined.
+                    </p>
+                    <ul>
+                        {% for undefined_annotation in undefined_annotations %}
+                            <li>{{ undefined_annotation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if namespaces_with_incorrect_names is defined and namespaces_with_incorrect_names|length > 0 %}
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Namespaces with Incorrect Names</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        {% for namespace in namespaces_with_incorrect_names %}
+                            <li>
+                                <a href="{{ url_for('download_missing_namespace', graph_id=graph_id, namespace=namespace) }}">{{ namespace }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Biogrammar -->
 
         {% if contradictions is defined and contradictions|length > 0 %}
             <div class="panel panel-default">
@@ -420,15 +426,13 @@
                     <dl>
                         <dt>Separately Unstable Triplet</dt>
                         <dd>When both <code>A positiveCorrelation B</code>, <code>B negativeCorrelation C</code>, but
-                            <code>C
-                                positiveCorrelation A</code>.
+                            <code>C positiveCorrelation A</code>.
                         </dd>
                         <dt>Mutually Unstable Triplets</dt>
                         <dd>When both <code>A negativeCorrelation B</code>, <code>B negativeCorrelation C</code>, and
-                            <code>C
-                                negativeCorrelation A</code>.
+                            <code>C negativeCorrelation A</code>.
                         </dd>
-                        <dt>Jens Unstable Triplet</dt>
+                        <dt>Jens Contradictory Triplet</dt>
                         <dd>When <code>A increases B</code>, <code>A decreases C</code>, and <code>C positiveCorrelation
                             A</code>.
                         </dd>
@@ -470,7 +474,6 @@
                 </div>
             </div>
         {% endif %}
-
 
         {% if unstable_triplets is defined and unstable_triplets|length > 0 %}
             <div class="panel panel-default">
@@ -521,7 +524,6 @@
                 </div>
             </div>
         {% endif %}
-
     </div>
 
     {% include "footer.html" %}
@@ -892,7 +894,6 @@
                 show: false
             }
         });
-
 
     </script>
 {% endblock %}
