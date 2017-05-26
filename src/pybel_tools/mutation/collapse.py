@@ -16,8 +16,10 @@ __all__ = [
     'collapse_by_central_dogma_to_genes',
     'collapse_by_central_dogma_to_genes_out_place',
     'rewire_variants_to_genes',
-    'collapse_variants',
-    'collapse_variants_out_place',
+    'collapse_all_variants',
+    'collapse_all_variants_out_place',
+    'collapse_gene_variants',
+    'collapse_protein_variants',
     'opening_on_central_dogma',
 ]
 
@@ -189,6 +191,36 @@ def collapse_by_central_dogma_to_genes_out_place(graph):
 
 
 @pipeline.in_place_mutator
+def _collapse_variants_by_function(graph, function):
+    """Collapses all of the given functions' variants' edges to their parents, in-place
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param str function: A BEL function
+    """
+    for parent_node, variant_node, d in graph.edges_iter(data=True):
+        if d[RELATION] == HAS_VARIANT and graph.node[parent_node][FUNCTION] == function:
+            collapse_pair(graph, parent_node, variant_node)
+
+
+@pipeline.in_place_mutator
+def collapse_protein_variants(graph):
+    """Collapses all protein's variants' edges to their parents, in-place
+
+    :param pybel.BELGraph graph: A BEL graph
+    """
+    _collapse_variants_by_function(graph, PROTEIN)
+
+
+@pipeline.in_place_mutator
+def collapse_gene_variants(graph):
+    """Collapses all gene's variants' edges to their parents, in-place
+
+    :param pybel.BELGraph graph: A BEL graph
+    """
+    _collapse_variants_by_function(graph, GENE)
+
+
+@pipeline.in_place_mutator
 def rewire_variants_to_genes(graph):
     """Finds all protein variants that are pointing to a gene and not a protein and fixes them by changing their
     function to be :data:`pybel.constants.GENE`, in place
@@ -207,7 +239,7 @@ def rewire_variants_to_genes(graph):
 
 
 @pipeline.in_place_mutator
-def collapse_variants(graph):
+def collapse_all_variants(graph):
     """Collapses all ``hasVariant`` edges to the parent node, in place
     
     :param pybel.BELGraph graph: A BEL Graph
@@ -218,14 +250,14 @@ def collapse_variants(graph):
 
 
 @pipeline.mutator
-def collapse_variants_out_place(graph):
+def collapse_all_variants_out_place(graph):
     """Collapses all ``hasVariant`` edges to the parent node, not in place
 
     :param pybel.BELGraph graph: A BEL Graph
     :rtype: pybel.BELGraph
     """
     result = graph.copy()
-    collapse_variants(result)
+    _collapse_variants_by_function(result)
     return result
 
 
