@@ -36,8 +36,12 @@ def create_application(**kwargs):
     app.config.from_object('pybel_tools.web.config.Config')
 
     if 'PYBEL_WEB_CONFIG' in os.environ:
-        log.info('importing config from %s', os.environ['PYBEL_WEB_CONFIG'])
-        app.config.from_json(os.path.expanduser(os.environ['PYBEL_WEB_CONFIG']))
+        env_conf_path = os.environ['PYBEL_WEB_CONFIG']
+        if not os.path.exists(env_conf_path):
+            log.warning('configuration from environment at %s does not exist', os.environ['PYBEL_WEB_CONFIG'])
+        else:
+            log.info('importing config from %s', os.environ['PYBEL_WEB_CONFIG'])
+            app.config.from_json(os.path.expanduser(os.environ['PYBEL_WEB_CONFIG']))
 
     if os.path.exists(json_conf_path):
         with open(json_conf_path) as f:
