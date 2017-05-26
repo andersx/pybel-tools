@@ -94,17 +94,19 @@
                         <div class="thumbnail home-link">
                             <!--<img src="http://placehold.it/350x150" alt="...">-->
                             <div class="caption">
-                                <h3>Compiler</h3>
-                                <p>Compile and validate a BEL script with the option to store for later querying and
+                                <h3>Parser</h3>
+                                <p>Parse and validate a BEL script with the option to store for later querying and
                                     analyses. Automatic network analytics are run and presented after parsing.
-                                    Additionally, preparsed BEL scripts can be uploaded from Pickle files.</p>
+                                    Additionally, pre-parsed BEL scripts can be uploaded from Pickle files. In red
+                                    is the currently experimental asynchronous parser.
+                                </p>
                                 <p>
-                                    <a href="{{ url_for('view_parser') }}" class="btn btn-primary">Parse BEL</a>
-                                    <a href="{{ url_for('view_upload') }}" class="btn btn-default">Upload Pickle</a>
-                                    {% if current_user.admin %}
-                                        <a href="{{ url_for('async_parser.view_async_parser') }}"
-                                           class="btn btn-danger">Async</a>
-                                    {% endif %}
+                                    <a href="{{ url_for('view_parser') }}" class="btn btn-primary"
+                                       role="button">Parse</a>
+                                    <a href="{{ url_for('view_upload') }}" class="btn btn-default"
+                                       role="button">Upload</a>
+                                    <a href="{{ url_for('async_parser.view_async_parser') }}"
+                                       class="btn btn-danger" role="button">Parse (async)</a>
                                 </p>
                             </div>
                         </div>
@@ -117,7 +119,8 @@
                                 <p>Select from a list of curated networks, then begin to explore with through
                                     automatically generated network analyses, interactive visualizations, and
                                     data-driven graph mining.</p>
-                                <a href="{{ url_for('view_networks') }}" class="btn btn-primary btn-block">List
+                                <a href="{{ url_for('view_networks') }}" class="btn btn-primary btn-block"
+                                   role="button">List
                                     Networks</a>
                             </div>
                         </div>
@@ -129,7 +132,8 @@
                                 <h3>Terminologies</h3>
                                 <p>View the ontologies and terminologies used in the knowledge base as namespaces and
                                     annotations</p>
-                                <a href="{{ url_for('view_definitions') }}" class="btn btn-primary btn-block">View
+                                <a href="{{ url_for('view_definitions') }}" class="btn btn-primary btn-block"
+                                   role="button">View
                                     Terminologies</a>
                             </div>
                         </div>
@@ -147,9 +151,9 @@
                                     multiple BEL namespace files, or give feedback on overlapping definitions in a
                                     given namespace.</p>
                                 <p>
-                                    <a href="{{ url_for('get_boilerplate') }}" class="btn btn-primary">Generate</a>
-                                    <a href="{{ url_for('merge_namespaces') }}" class="btn btn-primary">Merge</a>
-                                    <a href="{{ url_for('validate_namespace') }}" class="btn btn-primary">Validate</a>
+                                    <a href="{{ url_for('get_boilerplate') }}" class="btn btn-primary" role="button">Generate</a>
+                                    <a href="{{ url_for('merge_namespaces') }}" class="btn btn-primary" role="button">Merge</a>
+                                    <a href="{{ url_for('validate_namespace') }}" class="btn btn-primary" role="button">Validate</a>
                                 </p>
                             </div>
                         </div>
@@ -162,7 +166,7 @@
                                 <p>Build a network by investigating the knowledge related to interesting biological
                                     entities, chemical matter, authors, or publications.</p>
                                 <a href="{{ url_for('view_networks') }}#seedNodePanel"
-                                   class="btn btn-primary btn-block">Explore Knowledge Base</a>
+                                   class="btn btn-primary btn-block" role="button">Explore Knowledge Base</a>
                             </div>
                         </div>
                     </div>

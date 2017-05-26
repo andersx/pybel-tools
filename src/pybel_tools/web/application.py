@@ -53,7 +53,6 @@ def create_application(**kwargs):
 
     # Initialize extensions
     bootstrap_extension.init_app(app)
-    pybel_extension.init_app(app)
 
     if app.config.get('MAIL_SERVER'):
         mail = Mail(app)
@@ -67,6 +66,8 @@ def create_application(**kwargs):
             )
             with app.app_context():
                 mail.send(startup_message)
+
+    pybel_extension.init_app(app)
 
     app.register_blueprint(async_blueprint)
 
