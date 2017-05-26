@@ -3,7 +3,9 @@
 import json
 import logging
 import os
+import socket
 import time
+from getpass import getuser
 
 import flask
 from flask import Flask
@@ -17,7 +19,6 @@ log = logging.getLogger(__name__)
 
 bootstrap_extension = Bootstrap()
 pybel_extension = FlaskPybel()
-mail = Mail()
 
 pybel_config_directory = os.path.join(os.path.expanduser('~'), '.config', 'pybel')
 json_conf_path = os.path.join(pybel_config_directory, 'config.json')
@@ -55,12 +56,12 @@ def create_application(**kwargs):
     pybel_extension.init_app(app)
 
     if app.config.get('MAIL_SERVER'):
-        mail.init_app(app)
+        mail = Mail(app)
 
         if app.config.get('PYBEL_WEB_STARTUP_NOTIFY'):
             startup_message = Message(
-                subject="PyBEL Web Startup",
-                body="{}".format(time.asctime()),
+                subject="PyBEL Web - Startup",
+                body="PyBEL Web was started on {} by {} at {}".format(socket.gethostname(), getuser(), time.asctime()),
                 sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
                 recipients=[app.config.get('PYBEL_WEB_STARTUP_NOTIFY')]
             )
