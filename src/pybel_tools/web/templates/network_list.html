@@ -139,12 +139,11 @@
                                     {% endif %}
                                     {% if current_user.has_role('scai') or current_user.admin %}
                                         {% if network.report and not network.report[0].public %}
-                                            <li><a class="btn btn-success"
+                                            <li><a class="btn btn-danger"
                                                    href="{{ url_for('make_network_public', network_id=network.id) }}"
                                                    role="button">Make Public</a></li>
                                         {% endif %}
-                                    {% endif %}
-                                    {% if current_user.is_authenticated and network.report and network.report[0].user == current_user %}
+                                    {% elif network.report and network.report[0].user == current_user %}
                                         <li><a class="btn btn-success"
                                                href="{{ url_for('make_user_network_public', user_id=current_user.id, network_id=network.id) }}"
                                                role="button">Make Public</a></li>
