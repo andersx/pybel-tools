@@ -2,7 +2,9 @@
 
 import requests.exceptions
 from celery.utils.log import get_task_logger
+from flask import url_for
 from flask_login import current_user
+from flask_mail import Message
 from sqlalchemy.exc import IntegrityError
 
 from pybel import from_lines
@@ -14,7 +16,7 @@ from .celery import create_celery
 from .constants import integrity_message
 from .models import log_graph, add_network_reporting
 
-app = create_application()
+app, mail = create_application(get_mail=True)
 celery = create_celery(app)
 
 log = get_task_logger(__name__)
@@ -23,7 +25,7 @@ log = get_task_logger(__name__)
 # TODO add email notification
 
 @celery.task(name='pybelparser')
-def async_parser(lines, connection, allow_nested=False, citation_clearing=False, store_parts=False):
+def async_parser(lines, connection, email, allow_nested=False, citation_clearing=False, store_parts=False):
     log.info('starting parsing')
     manager = build_manager(connection)
     try:
@@ -72,5 +74,12 @@ def async_parser(lines, connection, allow_nested=False, citation_clearing=False,
         manager.rollback()
         return message
 
-    return network.id
+    completion_msg = Message(
+        subject='Parsing complete',
+        recipients=[email],
+        body='{} is done parsing. See: {}'.format(graph, url_for('view_summary', graph_id=network.id))
 
+    )
+    mail.send(completion_msg)
+
+    return network.id

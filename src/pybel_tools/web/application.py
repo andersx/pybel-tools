@@ -19,12 +19,13 @@ log = logging.getLogger(__name__)
 
 bootstrap_extension = Bootstrap()
 pybel_extension = FlaskPybel()
+mail = Mail()
 
 pybel_config_directory = os.path.join(os.path.expanduser('~'), '.config', 'pybel')
 json_conf_path = os.path.join(pybel_config_directory, 'config.json')
 
 
-def create_application(**kwargs):
+def create_application(get_mail=False, **kwargs):
     """Builds a Flask app for the PyBEL web service
     
     1. Loads default config
@@ -55,7 +56,7 @@ def create_application(**kwargs):
     bootstrap_extension.init_app(app)
 
     if app.config.get('MAIL_SERVER'):
-        mail = Mail(app)
+        mail.init_app(app)
 
         if app.config.get('PYBEL_WEB_STARTUP_NOTIFY'):
             startup_message = Message(
@@ -71,4 +72,7 @@ def create_application(**kwargs):
 
     app.register_blueprint(async_blueprint)
 
-    return app
+    if not get_mail:
+        return app
+    if get_mail:
+        return app, mail

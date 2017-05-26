@@ -6,7 +6,7 @@ import codecs
 import logging
 
 from flask import render_template, current_app, Blueprint, flash
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from pybel.constants import PYBEL_CONNECTION
 from .celery import create_celery
@@ -18,6 +18,7 @@ async_blueprint = Blueprint('async_parser', __name__)
 
 
 @async_blueprint.route('/asyncparser', methods=['GET', 'POST'])
+@login_required
 def view_async_parser():
     """Renders the parser form for asynchronous parsing"""
     form = ParserForm(save_network=True)
@@ -30,7 +31,7 @@ def view_async_parser():
     lines = list(lines)
 
     celery = create_celery(current_app)
-    task = celery.send_task('pybelparser', args=(lines, current_app.config.get(PYBEL_CONNECTION)))
+    task = celery.send_task('pybelparser', args=(lines, current_app.config.get(PYBEL_CONNECTION), current_user.email))
 
     flash('Queued parsing task {}.'.format(task))
 
