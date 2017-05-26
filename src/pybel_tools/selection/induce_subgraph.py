@@ -3,14 +3,15 @@
 import logging
 
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS, METADATA_NAME, GRAPH_METADATA, PATHOLOGY
-from .paths import get_nodes_in_shortest_paths, get_nodes_in_dijkstra_paths
+from pybel.constants import ANNOTATIONS, PATHOLOGY
+from .paths import get_nodes_in_all_shortest_paths
 from .. import pipeline
 from ..filters.edge_filters import filter_edges, build_pmid_inclusion_filter, build_author_inclusion_filter, \
     edge_is_causal, build_annotation_value_filter, build_annotation_dict_filter
 from ..filters.node_deletion import remove_nodes_by_function
 from ..filters.node_filters import filter_nodes
-from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods
+from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods, get_upstream_causal_subgraph, \
+    expand_upstream_causal_subgraph, get_downstream_causal_subgraph, expand_downstream_causal_subgraph
 from ..mutation.highlight import highlight_nodes, highlight_edges
 from ..mutation.merge import left_merge
 from ..mutation.utils import remove_isolated_nodes
@@ -24,7 +25,7 @@ __all__ = [
     'get_subgraph_by_node_filter',
     'get_subgraph_by_neighborhood',
     'get_subgraph_by_second_neighbors',
-    'get_subgraph_by_shortest_paths',
+    'get_subgraph_by_all_shortest_paths',
     'get_subgraph_by_annotation_value',
     'get_subgraph_by_data',
     'get_subgraph_by_pubmed',
@@ -41,6 +42,8 @@ SEED_TYPE_NEIGHBORS = 'neighbors'
 SEED_TYPE_DOUBLE_NEIGHBORS = 'dneighbors'
 SEED_TYPE_PATHS = 'shortest_paths'
 SEED_TYPE_PROVENANCE = 'provenance'
+SEED_TYPE_UPSTREAM = 'upstream'
+SEED_TYPE_DOWNSTREAM = 'downstream'
 
 SEED_TYPES = {
     SEED_TYPE_INDUCTION,
@@ -48,6 +51,8 @@ SEED_TYPES = {
     SEED_TYPE_DOUBLE_NEIGHBORS,
     SEED_TYPE_PATHS,
     SEED_TYPE_PROVENANCE,
+    SEED_TYPE_UPSTREAM,
+    SEED_TYPE_DOWNSTREAM
 }
 
 
@@ -124,7 +129,7 @@ def get_subgraph_by_second_neighbors(graph, nodes, filter_pathologies=False):
 
 
 @pipeline.mutator
-def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
+def get_subgraph_by_all_shortest_paths(graph, nodes, cutoff=None, weight=None):
     """Induces a subgraph over the nodes in the pairwise shortest paths between all of the nodes in the given list
 
     :param pybel.BELGraph graph: A BEL graph
@@ -137,10 +142,7 @@ def get_subgraph_by_shortest_paths(graph, nodes, cutoff=None, weight=None):
     :return: A BEL graph induced over the nodes appearing in the shortest paths between the given nodes
     :rtype: pybel.BELGraph
     """
-    if weight is None:
-        return graph.subgraph(get_nodes_in_shortest_paths(graph, nodes, cutoff=cutoff))
-    else:
-        return graph.subgraph(get_nodes_in_dijkstra_paths(graph, nodes, cutoff=cutoff, weight=weight))
+    return graph.subgraph(get_nodes_in_all_shortest_paths(graph, nodes, weight=weight))
 
 
 @pipeline.mutator
@@ -176,9 +178,7 @@ def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    result = get_subgraph_by_edge_filter(graph, build_annotation_value_filter(annotation, value))
-    result.name = '{} - ({}: {})'.format(graph.name, annotation, value)
-    return result
+    return get_subgraph_by_edge_filter(graph, build_annotation_value_filter(annotation, value))
 
 
 @pipeline.mutator
@@ -216,8 +216,34 @@ def get_causal_subgraph(graph):
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    result = get_subgraph_by_edge_filter(graph, edge_is_causal)
-    result.graph[GRAPH_METADATA][METADATA_NAME] = '{} - Induced Causal Subgraph'.format(graph.name)
+    return get_subgraph_by_edge_filter(graph, edge_is_causal)
+
+
+@pipeline.mutator
+def get_multi_causal_upstream(graph, nodes):
+    """Gets all the causal uptream subgraphs from the nodes
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :param nodes: The nodes to expand above
+    :return: A subgraph of the original BEL graph
+    :rtype: pybel.BELGraph
+    """
+    result = get_upstream_causal_subgraph(graph, nodes)
+    expand_upstream_causal_subgraph(graph, result)
+    return result
+
+
+@pipeline.mutator
+def get_multi_causal_downstream(graph, nodes):
+    """Gets all the causal uptream subgraphs from the nodes
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param nodes: The nodes to expand above
+    :return: A subgraph of the original BEL graph
+    :rtype: pybel.BELGraph
+    """
+    result = get_downstream_causal_subgraph(graph, nodes)
+    expand_downstream_causal_subgraph(graph, result)
     return result
 
 
@@ -253,13 +279,17 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     if seed_method == SEED_TYPE_INDUCTION:
         result = get_subgraph_by_induction(graph, seed_data)
     elif seed_method == SEED_TYPE_PATHS:
-        result = get_subgraph_by_shortest_paths(graph, seed_data)
+        result = get_subgraph_by_all_shortest_paths(graph, seed_data)
     elif seed_method == SEED_TYPE_NEIGHBORS:
         result = get_subgraph_by_neighborhood(graph, seed_data)
     elif seed_method == SEED_TYPE_PROVENANCE:
         result = get_subgraph_by_provenance(graph, seed_data)
     elif seed_method == SEED_TYPE_DOUBLE_NEIGHBORS:
         result = get_subgraph_by_second_neighbors(graph, seed_data)
+    elif seed_method == SEED_TYPE_UPSTREAM:
+        result = get_multi_causal_upstream(graph, seed_data)
+    elif seed_method == SEED_TYPE_DOWNSTREAM:
+        result = get_multi_causal_downstream(graph, seed_data)
     elif not seed_method:  # Otherwise, don't seed a subgraph
         result = graph.copy()
         log.debug('no seed function - using full network: %s', result.name)
@@ -288,8 +318,9 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
 
     # Apply filters
     if filter_pathologies:
-        remove_nodes_by_function(graph, PATHOLOGY)
-        remove_isolated_nodes(graph)
+        log.debug('filtering pathologies + removing isolated nodes')
+        remove_nodes_by_function(result, PATHOLOGY)
+        remove_isolated_nodes(result)
 
     return result
 

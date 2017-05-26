@@ -3,9 +3,8 @@ requests
 flask
 flask-bootstrap
 flask-wtf
-flask-basicauth
-flask-login
-flask-github
+flask-security
+GitHub-Flask
 networkx
 pybel
 click
@@ -15,3 +14,4 @@ fuzzywuzzy
 ipython
 scipy
 numpy
+celery

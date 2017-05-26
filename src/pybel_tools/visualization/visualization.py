@@ -31,8 +31,7 @@ def render_graph_template(context=None):
 def build_graph_context(graph, color_map=None):
     """Builds the data dictionary to be used by the Jinja templating engine in :py:func:`to_html`
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
                     to :data:`default_color_map`
     :type color_map: dict
@@ -55,8 +54,7 @@ def build_graph_context(graph, color_map=None):
 def to_html(graph, color_map=None):
     """Creates an HTML visualization for the given JSON representation of a BEL graph
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
                     to :data:`default_color_map`
     :type color_map: dict
@@ -69,8 +67,7 @@ def to_html(graph, color_map=None):
 def to_html_file(graph, file, color_map=None):
     """Writes the HTML visualization to a file or file-like
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
                     to :data:`default_color_map`
     :type color_map: dict
@@ -83,8 +80,7 @@ def to_html_file(graph, file, color_map=None):
 def to_html_path(graph, path, color_map=None):
     """Writes the HTML visualization to a file specified by the file path
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
                     to :data:`default_color_map`
     :type color_map: dict

@@ -17,7 +17,7 @@
             <h1>Compilation Error</h1>
         </div>
 
-        {{ util.flashed_messages(dismissible=True) }}
+        {{ util.flashed_messages(dismissible=True, container=False) }}
 
         <div class="panel panel-default panel-table">
             <div class="panel-heading">
@@ -41,6 +41,8 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}
 
 {% block head %}

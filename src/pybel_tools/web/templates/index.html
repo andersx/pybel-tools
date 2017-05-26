@@ -1,0 +1,186 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}PyBEL{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    {{ fixes.ie8() }}
+
+    {% include "google_analytics.html" %}
+{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
+    <style>
+        .home-link {
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript">
+        var maxHeight = 0;
+        $(".panel-body").find(".row").find(".col-sm-6").find(".thumbnail").each(function (idx, item) {
+            var height = $(item).height();
+            maxHeight = maxHeight > height ? maxHeight : height;
+        });
+        $(".panel-body").find(".row").find(".col-sm-6").find(".thumbnail").height(maxHeight);
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1 id="network-name">PyBEL Web</h1>
+        </div>
+
+        {{ util.flashed_messages(dismissible=True, container=False) }}
+
+        {% if current_user.admin %}
+            <div class="panel panel-info" id="admin-panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Admin
+                        <button type="button" class="close" data-target="#admin-panel" data-dismiss="alert">
+                            <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        </button>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <a class="btn btn-info" href="{{ url_for('view_users') }}" role="button">View Users</a>
+                    <a class="btn btn-info" href="{{ url_for('rollback') }}" role="button">Rollback</a>
+                    <a class="btn btn-danger" href="{{ url_for('nuke') }}" role="button">Nuke Database</a>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Introduction</h3>
+            </div>
+            <div class="panel-body">
+                <p>This web application provides an environment for exploring knowledge
+                    assemblies encoded in Biological Expression Language (BEL) to elucidate disease-specific,
+                    mechanistic knowledge. It is built on top of the Python software libraries, <a
+                            href="http://pybel.readthedocs.io/">PyBEL</a> and <a
+                            href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> to take advantage of their
+                    compilation, validation, data interchange, and analytical functions.
+                    From this page, you can begin to explore the networks stored in the knowledge base stratified by
+                    the source BEL script, by nodes and other biological entities of interest, or by certain
+                    authors and publications of interest.
+                </p>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <!--<img src="http://placehold.it/350x150" alt="...">-->
+                            <div class="caption">
+                                <h3>Compiler</h3>
+                                <p>Compile and validate a BEL script with the option to store for later querying and
+                                    analyses. Automatic network analytics are run and presented after compilation.
+                                    Additionally, precompiled BEL scripts can be uploaded from Pickle files.</p>
+                                <p>
+                                    <a href="{{ url_for('view_compile') }}" class="btn btn-primary">Compile BEL</a>
+                                    <a href="{{ url_for('view_upload') }}" class="btn btn-default">Upload Pickle</a>
+                                    {% if current_user.admin %}
+                                        <a href="{{ url_for('async_compiler.view_async_compile') }}"
+                                           class="btn btn-danger">Async</a>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail">
+                            <!--<img src="http://placehold.it/350x150" alt="...">-->
+                            <div class="caption home-link">
+                                <h3>Networks</h3>
+                                <p>Select from a list of curated networks, then begin to explore with through
+                                    automatically generated network analyses, interactive visualizations, and
+                                    data-driven graph mining.</p>
+                                <a href="{{ url_for('view_networks') }}" class="btn btn-primary btn-block">List
+                                    Networks</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <!--<img src="http://placehold.it/350x150" alt="...">-->
+                            <div class="caption">
+                                <h3>Terminologies</h3>
+                                <p>View the ontologies and terminologies used in the knowledge base as namespaces and
+                                    annotations</p>
+                                <a href="{{ url_for('view_definitions') }}" class="btn btn-primary btn-block">View
+                                    Terminologies</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <!--<img src="http://placehold.it/350x150" alt="...">-->
+                            <div class="caption">
+                                <h3>Curation Tools</h3>
+                                <p>Generate a template BEL script given a list of PubMed identifiers, merge
+                                    multiple BEL namespace files, or give feedback on overlapping definitions in a
+                                    given namespace.</p>
+                                <p>
+                                    <a href="{{ url_for('get_boilerplate') }}" class="btn btn-primary">Generate</a>
+                                    <a href="{{ url_for('merge_namespaces') }}" class="btn btn-primary">Merge</a>
+                                    <a href="{{ url_for('validate_namespace') }}" class="btn btn-primary">Validate</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <!--<img src="http://placehold.it/350x150" alt="...">-->
+                            <div class="caption">
+                                <h3>Query Builder</h3>
+                                <p>Build a network by investigating the knowledge related to interesting biological
+                                    entities, chemical matter, authors, or publications.</p>
+                                <a href="{{ url_for('view_networks') }}#seedNodePanel"
+                                   class="btn btn-primary btn-block">Explore Knowledge Base</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <!--<img src="http://placehold.it/350x150" alt="...">-->
+                            <div class="caption">
+                                <h3>Future Work</h3>
+                                <p>PyBEL is in constant development. Join us on the <a
+                                        href="https://github.com/pybel/pybel">core</a>, <a
+                                        href="https://github.com/pybel/pybel-tools">analytical tools</a>, or <a
+                                        href="https://github.com/pybel/pybel-notebooks">notebooks</a> repositories for
+                                    upcoming code, protocols, and pipelines. Future ideas include:
+                                </p>
+                                <ul>
+                                    <li>Chemical Enrichment Server</li>
+                                    <li>Interactive network query builder</li>
+                                    <li>Additional Entries in <a href="https://github.com/cthoyt/bio2bel">bio2bel</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "footer.html" %}
+{% endblock %}
+
+

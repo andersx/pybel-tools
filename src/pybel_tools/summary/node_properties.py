@@ -34,8 +34,7 @@ def is_causal_relation(graph, u, v, d):
 def get_causal_out_edges(graph, node):
     """Gets the out-edges to the given node that are causal
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A node
     :type node: tuple
     :return: A set of (source, target) pairs where the source is the given node
@@ -47,8 +46,7 @@ def get_causal_out_edges(graph, node):
 def get_causal_in_edges(graph, node):
     """Gets the in-edges to the given node that are causal
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A node
     :type node: tuple
     :return: A set of (source, target) pairs where the target is the given node
@@ -60,8 +58,7 @@ def get_causal_in_edges(graph, node):
 def has_causal_out_edges(graph, node):
     """Gets if the node has causal out edges
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A node
     :type node: tuple
     :return: If the node has causal out edges
@@ -73,8 +70,7 @@ def has_causal_out_edges(graph, node):
 def has_causal_in_edges(graph, node):
     """Gets if the node has causal in edges
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A node
     :type node: tuple
     :return: If the node has causal in edges
@@ -101,8 +97,7 @@ def get_causal_source_nodes(graph, function):
 
     These nodes are useful to identify because they generally don't provide any mechanistic insight.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param function: The function to filter by
     :type function: str
     :return: A set of source nodes
@@ -115,8 +110,7 @@ def get_causal_central_nodes(graph, function):
     """Returns a set of all nodes that have both an in-degree > 0 and out-degree > 0. This means
     that they are an integral part of a pathway, since they are both produced and consumed.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param function: The function to filter by
     :type function: str
     :return: A set of central ABUNDANCE nodes
@@ -129,8 +123,7 @@ def get_causal_sink_nodes(graph, function):
     """Returns a set of all ABUNDANCE nodes that have an causal out-degree of 0, which likely means that the knowledge
     assembly is incomplete, or there is a curation error.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param function: The function to filter by
     :type function: str
     :return: A set of sink ABUNDANCE nodes

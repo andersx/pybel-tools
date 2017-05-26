@@ -11,8 +11,7 @@ def get_leaves_by_type(graph, function=None, prune_threshold=1):
     """Returns an iterable over all nodes in graph (in-place) with only a connection to one node. Useful for gene and
      RNA. Allows for optional filter by function type.
 
-    :param graph: a BEL network
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param function: If set, filters by the node's function from :mod:`pybel.constants` like 
                     :data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`,  :data:`pybel.constants.PROTEIN`, or 
                     :data:`pybel.constants.BIOPROCESS`

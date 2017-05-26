@@ -9,20 +9,20 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 
 import pybel
-from .constants import integrity_message, reporting_log
+from .constants import integrity_message
+from .extension import get_manager
 from .forms import UploadForm
 from .models import add_network_reporting
 
 log = logging.getLogger(__name__)
 
 
-def build_pickle_uploader_service(app, manager):
+def build_pickle_uploader_service(app):
     """Adds the endpoints for uploading pickle files
 
     :param flask.Flask app: A Flask application
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
     """
+    manager = get_manager(app)
 
     @app.route('/upload', methods=['GET', 'POST'])
     @login_required
@@ -46,8 +46,8 @@ def build_pickle_uploader_service(app, manager):
         try:
             network = manager.insert_graph(graph)
         except IntegrityError:
-            log.exception('integrity error', category='error')
-            flash(integrity_message.format(graph.name, graph.version))
+            log.exception('integrity error')
+            flash(integrity_message.format(graph.name, graph.version), category='error')
             manager.rollback()
             return redirect(url_for('view_upload'))
         except Exception as e:
@@ -56,8 +56,15 @@ def build_pickle_uploader_service(app, manager):
             return redirect(url_for('view_upload'))
 
         log.info('done uploading %s [%d]', form.file.data.filename, network.id)
-        add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(),
-                              graph.number_of_edges(), len(graph.warnings), precompiled=True)
+
+        try:
+            add_network_reporting(manager, network, current_user, graph.number_of_nodes(),
+                                  graph.number_of_edges(), len(graph.warnings), precompiled=True,
+                                  public=form.public.data)
+        except IntegrityError:
+            log.exception('integrity error')
+            flash('problem with reporting service', category='warning')
+            manager.rollback()
 
         return redirect(url_for('view_summary', graph_id=network.id))
 

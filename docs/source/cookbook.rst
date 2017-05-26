@@ -1,5 +1,5 @@
-Command Line Cookbook
-=====================
+Cookbook
+========
 
 Pickling lots of BEL scripts
 ----------------------------

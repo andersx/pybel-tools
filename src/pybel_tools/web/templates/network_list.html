@@ -4,15 +4,7 @@
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
 
-{% block title %}Networks{% endblock %}
-
-{% block styles %}
-    {{ super() }}
-    <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
-    <link rel="stylesheet" type="text/css"
-          href='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'/>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
-{% endblock %}
+{% block title %}Network Store{% endblock %}
 
 {% block head %}
     {{ super() }}
@@ -22,6 +14,16 @@
             src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
     <script type="text/javascript"
             src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+
+    {% include "google_analytics.html" %}
+{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
+    <link rel="stylesheet" type="text/css"
+          href='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'/>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
 {% endblock %}
 
 {% block scripts %}
@@ -37,52 +39,64 @@
 {% block content %}
     <div class="container">
         <div class="page-header">
-            <h1>PyBEL Web</h1>
+            <h1>Network Store</h1>
         </div>
 
-        {{ util.flashed_messages(dismissible=True) }}
+        {{ util.flashed_messages(dismissible=True, container=False) }}
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('view_compile') }}"
-                   role="button">Compile a BEL Script</a>
-                <a class="btn btn-default" href="{{ url_for('view_upload') }}"
-                   role="button">Upload a Pre-compiled Pickle</a>
-                <a class="btn btn-default" href="{{ url_for('view_definitions') }}"
-                   role="button">View Stored Definitions</a>
-                <a class="btn btn-default" href="{{ url_for('get_boilerplate') }}"
-                   role="button">Generate a BEL template</a>
-
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
                 <div class="pull-right">
-                    {% if current_user.is_authenticated %}
-                        <span class="btn btn-default">Logged in as {{ current_user.name }}</span>
-                        <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">Log out</a>
-                    {% else %}
-                        <a class="btn btn-default" href="{{ url_for('login') }}" role="button">Login</a>
-                    {% endif %}
+                    {% include "login_buttons.html" %}
                 </div>
             </div>
         </div>
 
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <p>This web application provides an interface for users to interact with the functions in the Python
-                    software packages: <a href="http://pybel.readthedocs.io/">PyBEL</a> and <a
-                            href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a>. From this page, you can begin to
-                    explore the networks stored in the knowledge base stratified by the source BEL script,
-                    by nodes and other biological entities of interest, or by certain authors and publications of
-                    interest.
-                </p>
-
-                <p>It is maintained by <a href="https://github.com/cthoyt">Charles Tapley Hoyt</a> and Daniel
-                    Domingo-Fernandez at the <a
-                            href="https://www.scai.fraunhofer.de/en/business-research-areas/bioinformatics.html">Fraunhofer
-                        SCAI Department of Bioinformatics</a> with support from the <a
-                            href="https://www.imi.europa.eu/">IMI</a> projects, <a href="http://www.aetionomy.eu/>">AETIONOMY</a>
-                    and <a href="http://www.phago.eu/">PHAGO</a>.
-                </p>
+        {% if current_user.is_authenticated and current_user.admin %}
+            <div class="panel panel-info" id="admin-panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Admin
+                        <button type="button" class="close" data-target="#admin-panel" data-dismiss="alert">
+                            <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        </button>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <h4>Actions</h4>
+                    <p>
+                        <a class="btn btn-info" href="{{ url_for('view_reports') }}" role="button">View Pretty
+                            Reporting</a>
+                        <a class="btn btn-info" href="{{ url_for('list_reporting') }}" role="button">View Reporting
+                            Log</a>
+                        <a class="btn btn-success" href="{{ url_for('run_reload') }}" role="button">Reload Graphs</a>
+                        <a class="btn btn-danger" href="{{ url_for('drop_graphs') }}" role="button">Drop All Graphs</a>
+                    </p>
+                    <h4>Ensure Remote BEL Documents</h4>
+                    <p>
+                        <a class="btn btn-success" href="{{ url_for('ensure_simple') }}" role="button">Simple</a>
+                        <a class="btn btn-success" href="{{ url_for('ensure_small_corpus') }}" role="button">Small
+                            Corpus</a>
+                        <a class="btn btn-success" href="{{ url_for('ensure_large_corpus') }}" role="button">Large
+                            Corpus</a>
+                        <a class="btn btn-success" href="{{ url_for('ensure_gfam') }}" role="button">Gene Families</a>
+                    </p>
+                    <h4>Ensure BMS BEL Documents</h4>
+                    <p>
+                        <a class="btn btn-info" href="{{ url_for('list_bms_pickles') }}" role="button">List BMS
+                            Pickles</a>
+                        <a class="btn btn-warning" href="{{ url_for('upload_aetionomy') }}" role="button">Upload
+                            Aetionomy Pickles</a>
+                        <a class="btn btn-warning" href="{{ url_for('upload_selventa') }}" role="button">Upload Selventa
+                            Pickles</a>
+                        <a class="btn btn-danger" href="{{ url_for('ensure_aetionomy') }}" role="button">Compile BMS -
+                            AETIONOMY</a>
+                    </p>
+                </div>
             </div>
-        </div>
+        {% endif %}
 
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -94,19 +108,47 @@
                     differential gene expression data.</p>
             </div>
             <div class="list-group">
-                {% for nid, name, vers, descr in data %}
+                {% for network in networks %}
                     <div class="list-group-item">
-                        <h4 class="list-group-item-heading">{{ name }}
-                            <small class="text-muted">{{ vers }}</small>
+                        <h4 class="list-group-item-heading">{{ network.name }}
+                            <small class="text-muted">{{ network.version }}</small>
                         </h4>
                         <div class="list-group-item-text">
-                            <p>{{ descr }}</p>
+                            <p>{{ network.description }}</p>
                             <ul class="list-inline">
-                                <li><a href="/summary/{{ nid }}" class="btn btn-default">Summarize</a></li>
-                                <li><a href="/explore/?graphid={{ nid }}" class="btn btn-default">Explore</a></li>
+                                {% if current_user.is_authenticated and current_user.admin %}
+                                    <li><span class="btn btn-default">{{ network.id }}</span></li>
+                                {% endif %}
+                                <li><a href="{{ url_for('view_summary', graph_id=network.id) }}"
+                                       class="btn btn-default">Summarize</a>
+                                </li>
+                                <li><a href="{{ url_for('view_explorer', graphid=network.id) }}"
+                                       class="btn btn-default">Explore</a>
+                                </li>
                                 {% if analysis_enabled %}
-                                    <li><a href="/analysis/upload/{{ nid }}" class="btn btn-default">Analyze</a></li>
-                                    <li><a href="/analysis/{{ nid }}" class="btn btn-default">Results</a></li>
+                                    <li><a href="{{ url_for('view_analysis_uploader', network_id=network.id) }}"
+                                           class="btn btn-default">Analyze</a></li>
+                                    <li><a href="{{ url_for('view_analyses', network_id=network.id) }}"
+                                           class="btn btn-default">Results</a></li>
+                                {% endif %}
+                                {% if current_user.is_authenticated %}
+                                    {% if current_user.admin %}
+                                        <li><a class="btn btn-danger"
+                                               href="{{ url_for('drop_network', network_id=network.id) }}"
+                                               role="button">Drop</a></li>
+                                    {% endif %}
+                                    {% if current_user.has_role('scai') or current_user.admin %}
+                                        {% if network.report and not network.report[0].public %}
+                                            <li><a class="btn btn-success"
+                                                   href="{{ url_for('make_network_public', network_id=network.id) }}"
+                                                   role="button">Make Public</a></li>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if current_user.is_authenticated and network.report and network.report[0].user == current_user %}
+                                        <li><a class="btn btn-success"
+                                               href="{{ url_for('make_user_network_public', user_id=current_user.id, network_id=network.id) }}"
+                                               role="button">Make Public</a></li>
+                                    {% endif %}
                                 {% endif %}
                             </ul>
                         </div>
@@ -117,6 +159,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Network Seeding by Nodes</h3>
+                <a id="seedNodePanel"></a>
             </div>
             <div class="panel-body">
                 <p>This method of seeding will acquire the given nodes and expand around them using given seed
@@ -146,6 +189,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Network Seeding by Provenance</h3>
+                <a id="seedProvenancePanel"></a>
             </div>
             <div class="panel-body">
                 <p>This method of seeding will acquire nodes and edges asserted in the given citations and by the given
@@ -171,4 +215,6 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}

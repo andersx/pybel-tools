@@ -14,11 +14,12 @@ from sqlalchemy.exc import IntegrityError
 
 from pybel import from_lines
 from pybel.parser.parse_exceptions import InconsistientDefinitionError
-from .constants import integrity_message, reporting_log
+from .constants import integrity_message
+from .extension import get_manager
 from .forms import CompileForm
+from .models import add_network_reporting, log_graph
 from .utils import render_graph_summary
 from ..mutation.metadata import add_canonical_names
-from .models import add_network_reporting
 
 log = logging.getLogger(__name__)
 
@@ -29,15 +30,13 @@ def render_error(exception):
     return render_template('parse_error.html', error_text=str(exception), traceback_lines=traceback_lines)
 
 
-def build_synchronous_compiler_service(app, manager, enable_cache=True):
+def build_synchronous_compiler_service(app, enable_cache=True):
     """Adds the endpoints for a synchronous web validation web app
 
     :param flask.Flask app: A Flask application
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
-    :param enable_cache: Should the user be given the option to cache graphs?
-    :type enable_cache: bool
+    :param bool enable_cache: Should the user be given the option to cache graphs?
     """
+    manager = get_manager(app)
 
     @app.route('/compile', methods=['GET', 'POST'])
     @login_required
@@ -77,25 +76,37 @@ def build_synchronous_compiler_service(app, manager, enable_cache=True):
 
         if not enable_cache:
             flash('Sorry, graph storage is not currently enabled.', category='warning')
+            log_graph(graph, current_user, precompiled=False)
             return render_graph_summary(0, graph)
 
         if not form.save_network.data and not form.save_edge_store.data:
+            log_graph(graph, current_user, precompiled=False)
             return render_graph_summary(0, graph)
 
         try:
             network = manager.insert_graph(graph, store_parts=form.save_edge_store.data)
         except IntegrityError:
+            log_graph(graph, current_user, precompiled=False, failed=True)
             log.exception('integrity error')
             flash(integrity_message.format(graph.name, graph.version), category='error')
             manager.rollback()
             return redirect(url_for('view_compile'))
         except Exception as e:
+            log_graph(graph, current_user, precompiled=False, failed=True)
             log.exception('general storage error')
             flash("Error storing in database: {}".format(e), category='error')
             return redirect(url_for('view_compile'))
 
         log.info('done storing %s [%d]', form.file.data.filename, network.id)
-        add_network_reporting(manager, network, current_user.name, current_user.username, graph.number_of_nodes(), graph.number_of_edges(), len(graph.warnings), precompiled=False)
+
+        try:
+            add_network_reporting(manager, network, current_user, graph.number_of_nodes(),
+                                  graph.number_of_edges(), len(graph.warnings), precompiled=False,
+                                  public=form.public.data)
+        except IntegrityError:
+            log.exception('integrity error')
+            flash('problem with reporting service', category='warning')
+            manager.rollback()
 
         return redirect(url_for('view_summary', graph_id=network.id))
 

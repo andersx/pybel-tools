@@ -17,18 +17,15 @@
             <h1>BEL Web Uploader</h1>
         </div>
 
-        {{ util.flashed_messages(dismissible=True) }}
+        {{ util.flashed_messages(dismissible=True, container=False) }}
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
                     <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
                 </a>
                 <div class="pull-right">
-                    <span class="btn btn-default">Logged in as {{ current_user.name }}</span>
-                    <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">
-                        Log out
-                    </a>
+                    {% include "login_buttons.html" %}
                 </div>
             </div>
         </div>
@@ -39,10 +36,6 @@
                     gpickle format, created by running <code>python3 -m pybel convert -p my_document.bel --pickle
                         my_document.gpickle</code> in your favorite command line or programmatically in Python with
                     <a href="http://pybel.readthedocs.io/en/latest/io.html#pybel.to_pickle">pybel.to_pickle</a>.
-                </p>
-                <p>For more information on how this app works, see the <a href="http://pybel.readthedocs.io/">PyBEL</a>
-                    and
-                    <a href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> documentation.
                 </p>
             </div>
         </div>
@@ -55,6 +48,8 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}
 
 {% block head %}

@@ -18,18 +18,15 @@
             <h1>Analysis</h1>
         </div>
 
-        {{ util.flashed_messages(dismissible=True) }}
+        {{ util.flashed_messages(dismissible=True, container=False) }}
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
                     <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
                 </a>
                 <div class="pull-right">
-                    <span class="btn btn-default">Logged in as {{ current_user.name }}</span>
-                    <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">
-                        Log out
-                    </a>
+                    {% include "login_buttons.html" %}
                 </div>
             </div>
         </div>
@@ -56,6 +53,8 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}
 
 {% block head %}

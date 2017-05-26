@@ -42,35 +42,58 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
+def _update_node_helper(universe, graph):
+    for node in graph.nodes_iter():
+        graph.node[node].update(universe.node[node])
+
+
 @pipeline.uni_mutator
 def get_upstream_causal_subgraph(graph, nbunch):
     """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param nbunch: A BEL node or iterable of BEL nodes
     :type nbunch: tuple or list of tuples
     :return: A BEL Graph
     :rtype: pybel.BELGraph
     """
-    bg = BELGraph()
+    result = BELGraph()
 
     for u, v, k, d in graph.in_edges_iter(nbunch, keys=True, data=True):
         if d[RELATION] in CAUSAL_RELATIONS:
-            bg.add_edge(u, v, key=k, attr_dict=d)
+            result.add_edge(u, v, key=k, attr_dict=d)
 
-    for node in bg.nodes_iter():
-        bg.node[node].update(graph.node[node])
+    _update_node_helper(graph, result)
 
-    return bg
+    return result
+
+
+@pipeline.uni_mutator
+def get_downstream_causal_subgraph(graph, nbunch):
+    """Induces a subgraph from all of the downstream causal entities of the nodes in the nbunch
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param nbunch: A BEL node or iterable of BEL nodes
+    :type nbunch: tuple or list of tuples
+    :return: A BEL Graph
+    :rtype: pybel.BELGraph
+    """
+    result = BELGraph()
+
+    for u, v, k, d in graph.out_edges_iter(nbunch, keys=True, data=True):
+        if d[RELATION] in CAUSAL_RELATIONS:
+            result.add_edge(u, v, key=k, attr_dict=d)
+
+    _update_node_helper(graph, result)
+
+    return result
 
 
 def get_peripheral_successor_edges(graph, subgraph):
     """Gets the set of possible successor edges peripheral to the subgraph. The source nodes in this iterable are
     all inside the subgraph, while the targets are outside.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param subgraph: A set of nodes
     :return: An iterable of possible successor edges (4-tuples of node, node, key, data)
     :rtype: iter
@@ -85,8 +108,7 @@ def get_peripheral_predecessor_edges(graph, subgraph):
     """Gets the set of possible predecessor edges peripheral to the subgraph. The target nodes in this iterable
     are all inside the subgraph, while the sources are outside.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param subgraph: A set of nodes
     :return: An iterable on possible predecessor edges (4-tuples of node, node, key, data)
     :rtype: iter
@@ -124,8 +146,7 @@ def count_possible_predecessors(graph, subgraph):
 def get_subgraph_edges(graph, value, annotation='Subgraph', source_filter=None, target_filter=None):
     """Gets all edges from a given subgraph whose source and target nodes pass all of the given filters
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param value: The annotation value to search by
     :param annotation:  The annotation to search
     :param source_filter: Optional filter for source nodes (graph, node) -> bool
@@ -150,8 +171,7 @@ def get_subgraph_edges(graph, value, annotation='Subgraph', source_filter=None, 
 def get_subgraph_peripheral_nodes(graph, subgraph, node_filters=None, edge_filters=None):
     """Gets a summary dictionary of all peripheral nodes to a given subgraph
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
@@ -201,8 +221,7 @@ def expand_periphery(graph, subgraph, node_filters=None, edge_filters=None, thre
     Edges could be added if they go to nodes that are involved in relationships that occur with more than the
     threshold (default 2) number of nodes in the subgraph.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param subgraph: A set of nodes
     :type subgraph: iter
     :param node_filters: Optional. A list of node filter predicates with the interface (graph, node) -> bool. See
@@ -245,8 +264,7 @@ def infer_subgraph_expansion(graph, annotation='Subgraph'):
     1. Group subgraphs
     2. Build dictionary of {(u,v,k): {set of inferred subgraph names}}
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to infer
     :type annotation: str
     """
@@ -323,16 +341,15 @@ def enrich_variants_helper(universe, graph, function):
     :param str function: The function by which the subject of each triple is filtered
     """
     nodes = list(get_nodes_by_function(graph, function))
-    for v in nodes:
-        for u, _, d in universe.in_edges_iter(v, data=True):
-            if d[RELATION] != HAS_VARIANT:
-                continue
+    for u, v, d in universe.in_edges_iter(nodes, data=True):
+        if d[RELATION] != HAS_VARIANT:
+            continue
 
-            if u not in graph:
-                graph.add_node(u, attr_dict=universe.node[u])
+        if u not in graph:
+            graph.add_node(u, attr_dict=universe.node[u])
 
-            if v not in graph.edge[u] or unqualified_edge_code[HAS_VARIANT] not in graph.edge[u][v]:
-                graph.add_unqualified_edge(u, v, HAS_VARIANT)
+        if v not in graph.edge[u] or unqualified_edge_code[HAS_VARIANT] not in graph.edge[u][v]:
+            graph.add_unqualified_edge(u, v, HAS_VARIANT)
 
 
 @pipeline.uni_in_place_mutator
@@ -391,6 +408,7 @@ def enrich_unqualified(universe, graph):
     enrich_variants(universe, graph)
 
 
+# TODO should this bother checking multiple relationship types?
 @pipeline.uni_in_place_mutator
 def expand_internal(universe, graph, edge_filters=None):
     """Edges between entities in the subgraph that pass the given filters
@@ -403,7 +421,7 @@ def expand_internal(universe, graph, edge_filters=None):
     """
     edge_filter = concatenate_edge_filters(*edge_filters) if edge_filters else keep_edge_permissive
 
-    for u, v in itt.product(graph.nodes_iter(), 2):
+    for u, v in itt.product(graph.nodes_iter(), repeat=2):
         if graph.has_edge(u, v) or not universe.has_edge(u, v):
             continue
 
@@ -527,6 +545,16 @@ def expand_upstream_causal_subgraph(universe, graph):
     :param pybel.BELGraph universe: A BEL graph representing the universe of all knowledge
     :param pybel.BELGraph graph: The target BEL graph to enrich with upstream causal controllers of contained nodes
     """
-    for node in graph.nodes():
-        upstream = get_upstream_causal_subgraph(universe, node)
-        left_merge(graph, upstream)
+    upstream = get_upstream_causal_subgraph(universe, graph.nodes())
+    left_merge(graph, upstream)
+
+
+@pipeline.uni_in_place_mutator
+def expand_downstream_causal_subgraph(universe, graph):
+    """Adds the downstream causal relations to the given subgraph
+
+    :param pybel.BELGraph universe: A BEL graph representing the universe of all knowledge
+    :param pybel.BELGraph graph: The target BEL graph to enrich with downstream causal controllers of contained nodes
+    """
+    downstream = get_downstream_causal_subgraph(universe, graph.nodes())
+    left_merge(graph, downstream)

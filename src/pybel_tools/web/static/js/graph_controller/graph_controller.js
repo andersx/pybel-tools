@@ -1,3 +1,14 @@
+/**
+ * This JS file controls all network rendering as well as
+ *  annotation tree and other filter options and controls
+ *  URL for querying the PyBEL-tools API.
+ *
+ * @summary   Network controller of PyBEL explorer
+ *
+ * @requires jquery, d3, d3-context-menu, inspire-tree, blob
+ *
+ */
+
 function getSelectedNodesFromTree(tree) {
     var selectedNodes = tree.selected(true);
 
@@ -144,11 +155,8 @@ function getSeedMethodFromURL(args, url) {
             }
         }
         if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] ||
-            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
-            args["nodes"] = url["nodes"];
-        }
-        if ("induction" === url["seed_method"] || "shortest_paths" === url["seed_method"] ||
-            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"]) {
+            "neighbors" === url["seed_method"] || "dneighbors" === url["seed_method"] ||
+            "upstream" === url["seed_method"] || "downstream" === url["seed_method"]) {
             args["nodes"] = url["nodes"];
         }
     }
@@ -185,7 +193,7 @@ function renderNetwork(tree) {
         initD3Force(data, tree);
     });
 
-    window.history.pushState("BiNE", "BiNE", "/explore/?" + renderParameters);
+    window.history.pushState("BiNE", "BiNE", "/explore?" + renderParameters);
 }
 
 function doAjaxCall(url) {
@@ -222,8 +230,7 @@ $(document).ready(function () {
     // Set networkid as a global variable
     if ("graphid" in URLString) {
         window.networkID = URLString["graphid"];
-    }
-    else {
+    } else {
         window.networkID = "0";
     }
 
@@ -257,8 +264,7 @@ $(document).ready(function () {
     // Loads the network if autoload is an argument in the URL or render empty frame if not
     if (window.location.search.indexOf("autoload=yes") > -1) {
         renderNetwork(tree);
-    }
-    else {
+    } else {
         renderEmptyFrame();
     }
 
@@ -323,15 +329,14 @@ $(document).ready(function () {
         window.expandNodes = [];
         window.deleteNodes = [];
         var args = getDefaultAjaxParameters(tree);
-        window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
+        window.history.pushState("BiNE", "BiNE", "/explore?" + $.param(args, true));
     });
 
     // Comes back to the network id originally choosen
     $("#reset_all").on("click", function () {
-
         var args = {};
         args["graphid"] = window.networkID;
-        window.history.pushState("BiNE", "BiNE", "/explore/?" + $.param(args, true));
+        window.history.pushState("BiNE", "BiNE", "/explore?" + $.param(args, true));
     });
 });
 
@@ -357,6 +362,8 @@ function renderEmptyFrame() {
         .attr("fill", "#fcfbfb")
         .style("pointer-events", "all");
 
+
+    // Text
     svg.append("text")
         .attr("class", "title")
         .attr("x", w / 3.2)
@@ -366,14 +373,12 @@ function renderEmptyFrame() {
 
 function clearUsedDivs() {
     // Clean divs to repopulate them with the new network
-
     // Force div
     $("#graph-chart").empty();
     // Node search div
     $("#node-list").empty();
     // Edge search div
     $("#edge-list").empty();
-
 }
 
 ///////////////////////////////////////
@@ -479,8 +484,6 @@ function downloadText(response, name) {
 
 // Initialize d3.js force to plot the networks from neo4j json
 function initD3Force(graph, tree) {
-
-
     /////////////////////
     // d3-context-menu //
     /////////////////////
@@ -513,7 +516,7 @@ function initD3Force(graph, tree) {
 
                     initD3Force(data["json"], tree);
 
-                    window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
+                    window.history.pushState("BiNE", "BiNE", "/explore?" + node_param);
 
                 });
             },
@@ -542,7 +545,7 @@ function initD3Force(graph, tree) {
 
                     initD3Force(data["json"], tree);
 
-                    window.history.pushState("BiNE", "BiNE", "/explore/?" + node_param);
+                    window.history.pushState("BiNE", "BiNE", "/explore?" + node_param);
 
                 });
 
@@ -611,7 +614,7 @@ function initD3Force(graph, tree) {
         .range([8, 24]);
 
     // Simulation parameters
-    var linkDistance = 100, fCharge = -1000, linkStrength = 0.7, collideStrength = 1;
+    var linkDistance = 100, fCharge = -1700, linkStrength = 0.7, collideStrength = 1;
 
     // Simulation defined with variables
     var simulation = d3.forceSimulation()
@@ -668,7 +671,6 @@ function initD3Force(graph, tree) {
     var nominalStroke = 2.5;
     // Zoom variables
     var minZoom = 0.1, maxZoom = 10;
-    var border = 1, bordercolor = "black";
 
     var svg = d3.select("#graph-chart").append("svg")
         .attr("width", w)
@@ -716,12 +718,6 @@ function initD3Force(graph, tree) {
     function zoomed() {
         g.attr("transform", d3.event.transform);
     }
-
-    // Border
-    svg.append("rect")
-        .attr("height", h)
-        .attr("width", w)
-        .style("fill", "none");
 
     // g = svg object where the graph will be appended
     var g = svg.append("g");
@@ -838,8 +834,7 @@ function initD3Force(graph, tree) {
         .style("stroke", function (d) {
             if ('pybel_highlight' in d) {
                 return d['pybel_highlight']
-            }
-            else {
+            } else {
                 return circleColor
             }
         });
@@ -848,7 +843,7 @@ function initD3Force(graph, tree) {
         .attr("class", "node-name")
         // .attr("id", nodehashes[d])
         .attr("fill", "black")
-        .attr("dx", 12)
+        .attr("dx", 16)
         .attr("dy", ".35em")
         .text(function (d) {
             return d.cname
@@ -934,10 +929,10 @@ function initD3Force(graph, tree) {
         var nodeObject = {};
 
         if (node.cname) {
-            nodeObject["Node"] = node.name + " (ID: " + node.id + ")";
+            nodeObject["Node"] = node.cname + " (ID: " + node.id + ")";
         }
         if (node.name) {
-            nodeObject["Name"] = node.name;
+            nodeObject["Name"] = node.cname;
         }
         if (node.function) {
             nodeObject["Function"] = node.function;
@@ -1002,40 +997,26 @@ function initD3Force(graph, tree) {
         }
     }
 
-    // Search functionality to check if array exists in an array of arrays
-    function searchForArray(haystack, needle) {
-        var i, j, current;
-        for (i = 0; i < haystack.length; ++i) {
-            if (needle.length === haystack[i].length) {
-                current = haystack[i];
-                for (j = 0; j < needle.length && needle[j] === current[j]; ++j);
-                if (j === needle.length)
-                    return i;
-            }
-        }
-        return -1;
-    }
-
     // Filter nodes in list
-    function nodesNotInArray(nodeArray) {
+    function nodesNotInArray(nodeArray, property) {
         return svg.selectAll(".node").filter(function (el) {
-            return nodeArray.indexOf(el.id) < 0;
+            return nodeArray.indexOf(el[property]) < 0;
         });
     }
 
     // Filter nodes in list
-    function nodesInArray(nodeArray) {
+    function nodesInArray(nodeArray, property) {
         return svg.selectAll(".node").filter(function (el) {
-            return nodeArray.indexOf(el.id) >= 0;
+            return nodeArray.indexOf(el[property]) >= 0;
         });
 
     }
 
     // Filter nodes in list keeping the order of the nodeArray
-    function nodesInArrayKeepOrder(nodeArray) {
+    function nodesInArrayKeepOrder(nodeArray, property) {
         return nodeArray.map(function (el) {
             var nodeObject = svg.selectAll(".node").filter(function (node) {
-                return el === node.id;
+                return el === node[property]
             });
             return nodeObject._groups[0][0]
         });
@@ -1086,7 +1067,7 @@ function initD3Force(graph, tree) {
         });
     }
 
-    function hideNodesTextInPaths(data, visualization) {
+    function hideNodesTextInPaths(data, visualization, property) {
 
         // Array with all nodes in all paths
         var nodesInPaths = [];
@@ -1099,7 +1080,7 @@ function initD3Force(graph, tree) {
 
         // Filter the text whose innerHTML is not belonging to the list of nodeIDs
         var textNotInPaths = g.selectAll(".node-name").filter(function (d) {
-            return nodesInPaths.indexOf(d.id) < 0;
+            return nodesInPaths.indexOf(d[property]) < 0;
         });
 
         if (visualization !== true) {
@@ -1116,7 +1097,7 @@ function initD3Force(graph, tree) {
         });
     }
 
-    function highlightEdges(edgeArray) {
+    function highlightEdges(edgeArray, property) {
 
         // Array with names of the nodes in the selected edge
         var nodesInEdges = [];
@@ -1124,15 +1105,15 @@ function initD3Force(graph, tree) {
         // Filtered not selected links
         var edgesNotInArray = g.selectAll(".link").filter(function (edgeObject) {
 
-            if (edgeArray.indexOf(edgeObject.source.cname + " " + edgeObject.relation + " " + edgeObject.target.cname) >= 0) {
-                nodesInEdges.push(edgeObject.source.cname);
-                nodesInEdges.push(edgeObject.target.cname);
+            if (edgeArray.indexOf(edgeObject.source[property] + " " + edgeObject.relation + " " + edgeObject.target[property]) >= 0) {
+                nodesInEdges.push(edgeObject.source[property]);
+                nodesInEdges.push(edgeObject.target[property]);
             }
             else return edgeObject;
         });
 
         var nodesNotInEdges = node.filter(function (nodeObject) {
-            return nodesInEdges.indexOf(nodeObject.cname) < 0;
+            return nodesInEdges.indexOf(nodeObject[property]) < 0;
         });
 
         nodesNotInEdges.style("opacity", "0.1");
@@ -1140,18 +1121,18 @@ function initD3Force(graph, tree) {
 
     }
 
-    // Highlight nodes from array of ids and change the opacity of the rest of nodes
-    function highlightNodes(nodeArray) {
+    // Highlight nodes from array and property of filtering and change the opacity of the rest of nodes
+    function highlightNodes(nodeArray, property) {
 
         // Filter not mapped nodes to change opacity
         var nodesNotInArray = svg.selectAll(".node").filter(function (el) {
-            return searchForArray(nodeArray, el.cname) < 0;
+            return nodeArray.indexOf(el[property]) < 0;
         });
 
         // Not mapped links
         var notMappedEdges = g.selectAll(".link").filter(function (el) {
             // Source and target should be present in the edge
-            return !((searchForArray(nodeArray, el.source.cname) >= 0 || searchForArray(nodeArray, el.target.cname) >= 0));
+            return !(nodeArray.indexOf(el.source[property]) >= 0 || nodeArray.indexOf(el.target[property]) >= 0);
         });
 
         nodesNotInArray.style("opacity", "0.1");
@@ -1271,7 +1252,9 @@ function initD3Force(graph, tree) {
 
         nodeNames.push(value.cname);
 
-        $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'><div class='circle " + value.function + "'></div><span>" + value.cname + "</span></li>");
+        $("#node-list-ul").append("<li class='list-group-item'><input class='node-checkbox' type='checkbox'>" +
+            "<div class='circle " + value.function + "'>" +
+            "</div><span class='node-" + value.id + "'>" + value.cname + "</span></li>");
     });
 
     var duplicates = findDuplicates(nodeNames);
@@ -1295,11 +1278,12 @@ function initD3Force(graph, tree) {
         event.preventDefault();
         var checkedItems = [];
         $(".node-checkbox:checked").each(function (idx, li) {
-            checkedItems.push(li.parentElement.childNodes[2].innerHTML);
+            // Get the class of the span element (node-ID) Strips "node-" and evaluate the string to integer
+            checkedItems.push(parseInt(li.parentElement.childNodes[2].className.replace("node-", "")));
         });
 
         resetAttributes();
-        highlightNodes(checkedItems);
+        highlightNodes(checkedItems, 'id');
         resetAttributesDoubleClick();
 
     });
@@ -1330,7 +1314,7 @@ function initD3Force(graph, tree) {
 
         resetAttributes();
 
-        highlightEdges(checkedItems);
+        highlightEdges(checkedItems, 'cname');
 
         resetAttributesDoubleClick()
     });
@@ -1369,7 +1353,7 @@ function initD3Force(graph, tree) {
                         resetAttributes();
 
                         // Apply changes in style for select paths
-                        hideNodesTextInPaths(paths, checkbox);
+                        hideNodesTextInPaths(paths, checkbox, 'id');
                         colorPaths(paths, checkbox);
                         resetAttributesDoubleClick()
                     }
@@ -1378,7 +1362,7 @@ function initD3Force(graph, tree) {
                         // Change style in force
                         resetAttributes();
 
-                        var nodesNotInPath = nodesNotInArray(paths);
+                        var nodesNotInPath = nodesNotInArray(paths, 'id');
 
                         var edgesNotInPath = g.selectAll(".link").filter(function (el) {
                             // Source and target should be present in the edge and the distance in the array should be one
@@ -1488,9 +1472,9 @@ function initD3Force(graph, tree) {
                 data: $.param(args, true),
                 success: function (data) {
 
-                    var nodesToIncrease = nodesInArrayKeepOrder(data);
+                    var nodesToIncrease = nodesInArrayKeepOrder(data, 'id');
 
-                    var nodesToReduce = nodesNotInArray(data);
+                    var nodesToReduce = nodesNotInArray(data, 'id');
 
                     // Reduce to 7 radius the nodes not in top x
                     $.each(nodesToReduce._groups[0], function (index, value) {
@@ -1563,7 +1547,7 @@ function initD3Force(graph, tree) {
                     // Keys are stored as strings need conversation to JS numbers
                     var nodeIDStrings = Object.keys(normalizedData);
 
-                    var mappedNodes = nodesInArrayKeepOrder(nodeIDStrings.map(Number));
+                    var mappedNodes = nodesInArrayKeepOrder(nodeIDStrings.map(Number), 'id');
 
                     $.each(mappedNodes, function (index, value) {
                         // Order is maintain so it uses the index to get iterate over normalizedData applying (constant/midrange)

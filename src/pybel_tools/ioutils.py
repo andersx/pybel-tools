@@ -105,7 +105,13 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False, st
 
 
 def upload_recursive(directory, connection=None, store_parts=False):
-    """Recursively uploads all gpickles in a given directory and sub-directories"""
+    """Recursively uploads all gpickles in a given directory and sub-directories
+    
+    :param str directory: the directory to traverse
+    :param connection: A connection string or manager
+    :type connection: None or str or pybel.manage.CacheManager
+    :param bool store_parts: Should the edge store be used?
+    """
     manager = build_manager(connection)
     paths = list(get_paths_recursive(directory, extension='.gpickle'))
     log.info('Paths to upload: %s', paths)

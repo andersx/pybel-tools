@@ -24,8 +24,7 @@ __all__ = [
 def count_subgraph_sizes(graph, annotation='Subgraph'):
     """Counts the number of nodes in each subgraph induced by an anotation
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to group by and compare. Defaults to 'Subgraph'
     :type annotation: str
     :return: A dictionary from {annotation value: number of nodes}
@@ -42,8 +41,7 @@ def calculate_subgraph_edge_overlap(graph, annotation='Subgraph'):
     2. Percentage overlap (tanimoto similarity)
 
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to group by and compare. Defaults to 'Subgraph'
     :type annotation: str
     :return: {subgraph: set of edges}, {(subgraph 1, subgraph2): set of intersecting edges},
@@ -72,8 +70,7 @@ def calculate_subgraph_edge_overlap(graph, annotation='Subgraph'):
 def summarize_subgraph_edge_overlap(graph, annotation='Subgraph'):
     """Returns a similarity matrix between all subgraphs (or other given annotation)
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param annotation: The annotation to group by and compare. Defaults to :code:`"Subgraph"`
     :type annotation: str
     :return: A similarity matrix in a dict of dicts
@@ -86,8 +83,7 @@ def summarize_subgraph_edge_overlap(graph, annotation='Subgraph'):
 def rank_subgraph_by_node_filter(graph, node_filters, annotation='Subgraph', reverse=True):
     """Ranks subgraphs by which have the most nodes matching an given filter
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node_filters: A predicate or list of predicates (graph, node) -> bool
     :type node_filters: types.FunctionType or iter[types.FunctionType]
     :param annotation:

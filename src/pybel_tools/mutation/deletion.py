@@ -21,8 +21,7 @@ __all__ = [
 def remove_filtered_edges(graph, edge_filters):
     """Removes edges passing the given edge filters
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param edge_filters: An edge filter or list of edge filters (graph, node, node, key, data)-> bool
     :type edge_filters: types.FunctionType or iter[types.FunctionType]
     :return: 

@@ -26,8 +26,7 @@ def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=None
 
     To use successfully, make run as the last statement in a cell inside a Jupyter notebook.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param width: The width of the visualization window to render
     :type width: int
     :param height: The height of the visualization window to render
@@ -44,8 +43,7 @@ def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=None
 def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=None):
     """Returns the string to be javascript-ified by the Jupyter notebook function :class:`IPython.display.Javascript`
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param width: The width of the visualization window to render
     :type width: int
     :param height: The height of the visualization window to render

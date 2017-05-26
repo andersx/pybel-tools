@@ -19,7 +19,7 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
                     <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
                 </a>
             </div>
@@ -37,6 +37,7 @@
                     <thead>
                     <tr>
                         <th></th>
+                        <th></th>
                         <th>Network</th>
                         <th>Version</th>
                         <th>Nodes</th>
@@ -48,8 +49,9 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for report in reports %}
+                    {% for report in reports if report.network is not none %}
                         <tr>
+                            <td>{{ report.network.id }}</td>
                             <td>
                                 <a href="{{ url_for('view_summary', graph_id=report.network.id) }}"><span
                                         class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
@@ -60,7 +62,7 @@
                             <td>{{ report.number_nodes }}</td>
                             <td>{{ report.number_edges }}</td>
                             <td>{{ report.number_warnings }}</td>
-                            <td>{{ report.name }} ({{ report.username }})</td>
+                            <td>{{ report.user.name }}</td>
                             <td>{{ 'Pickle' if report.precompiled else 'BEL' }}</td>
                             <td>{{ report.created.strftime('%Y-%m-%d %H:%M') }}</td>
                         </tr>
@@ -70,6 +72,8 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}
 
 

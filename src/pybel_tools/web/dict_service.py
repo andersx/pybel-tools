@@ -3,31 +3,35 @@
 """This module runs the dictionary-backed PyBEL API"""
 
 import logging
+import time
 from operator import itemgetter
 
 import flask
 import networkx as nx
-from flask import Flask, request, jsonify, url_for, redirect, make_response
 from flask import render_template
-from flask_basicauth import BasicAuth
-from flask_login import current_user
+from flask import request, jsonify, url_for, redirect, make_response
+from flask_security import roles_required, roles_accepted, current_user, login_required
 from requests.compat import unquote
 from six import StringIO
 
 from pybel import from_bytes
 from pybel import from_url
 from pybel.constants import *
-from pybel.manager.models import Namespace, Annotation
+from pybel.manager.models import Namespace, Annotation, Network
 from .dict_service_utils import DictionaryService
+from .extension import get_manager, get_api
 from .forms import SeedProvenanceForm, SeedSubgraphForm
+from .models import Report
 from .send_utils import serve_network
 from .utils import render_graph_summary
 from .utils import try_insert_graph, sanitize_list_of_str
+from ..constants import BMS_BASE
 from ..definition_utils import write_namespace
+from ..ioutils import convert_recursive, upload_recursive, get_paths_recursive
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
-from ..summary.edge_summary import get_annotation_values_by_annotation
-from ..summary.error_summary import get_undefined_namespace_names
+from ..summary.edge_summary import get_tree_annotations
+from ..summary.error_summary import get_undefined_namespace_names, get_incorrect_names
 from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pmids
 
@@ -76,19 +80,6 @@ BLACK_LIST = {
 }
 
 
-def get_tree_annotations(graph):
-    """ Builds tree structure with annotation for a given graph
-    
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :return: The JSON structure necessary for building the tree box
-    :rtype: list[dict]
-    """
-    annotations = get_annotation_values_by_annotation(graph)
-    return [{'text': annotation, 'children': [{'text': value} for value in sorted(values)]} for annotation, values in
-            sorted(annotations.items())]
-
-
 def get_graph_from_request(api):
     """Process the GET request returning the filtered graph
     
@@ -129,7 +120,11 @@ def get_graph_from_request(api):
     expand_nodes = request.args.get(APPEND_PARAM)
     remove_nodes = request.args.get(REMOVE_PARAM)
     filters = request.args.getlist(FILTERS)
-    filter_pathologies = FILTER_PATHOLOGIES in request.args
+
+    filter_pathologies = request.args.get(FILTER_PATHOLOGIES)
+
+    if filter_pathologies and filter_pathologies in {'True', True}:
+        filter_pathologies = True
 
     if expand_nodes:
         expand_nodes = [api.decode_node(h) for h in expand_nodes.split(',')]
@@ -153,72 +148,175 @@ def get_graph_from_request(api):
     return graph
 
 
-def build_dictionary_service_admin(app, manager, api, basic_auth):
+def get_networks_with_permission(api):
+    """Gets all networks tagged as public or uploaded by the current user
+    
+    :param DictionaryService api: 
+    :return: A list of all networks tagged as public or uploaded by the current user
+    :rtype: list[Network]
+    """
+    if not current_user.is_authenticated:
+        return api.list_public_graphs()
+
+    if current_user.admin or current_user.has_role('scai'):
+        return api.list_graphs()
+
+    networks = api.list_public_graphs()
+
+    public_ids = {network.id for network in networks}
+
+    for report in current_user.reports:
+        if report.network_id in public_ids:
+            continue
+        networks.append(report.network)
+
+    return networks
+
+
+def build_dictionary_service_admin(app):
+    """Dictionary Service Admin Functions"""
+    manager = get_manager(app)
+    api = get_api(app)
+
     @app.route('/admin/reload')
-    @basic_auth.required
+    @roles_required('admin')
     def run_reload():
         """Reloads the networks and supernetwork"""
         api.load_networks(force_reload=True)
         return jsonify({'status': 200})
 
     @app.route('/admin/enrich')
-    @basic_auth.required
+    @roles_required('admin')
     def run_enrich_authors():
         """Enriches information in network. Be patient"""
         fix_pubmed_citations(api.universe)
         return jsonify({'status': 200})
 
     @app.route('/admin/ensure/small')
-    @basic_auth.required
+    @roles_required('admin')
     def ensure_small_corpus():
-        """Parses the small corpus"""
+        """Parses and stores the small corpus"""
         graph = from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/large')
-    @basic_auth.required
+    @roles_required('admin')
     def ensure_large_corpus():
         """Parses the large corpus"""
         graph = from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
     @app.route('/admin/ensure/abstract3')
-    @basic_auth.required
+    @roles_required('admin')
     def ensure_abstract3():
-        """Ensures Selventa Example 3"""
+        """Parses and stores Selventa Example 3"""
         url = 'http://resources.openbel.org/belframework/20150611/knowledge/full_abstract3.bel'
         graph = from_url(url, manager=manager, citation_clearing=False, allow_nested=True)
         return try_insert_graph(manager, graph, api)
 
+    @app.route('/admin/ensure/simple')
+    @roles_required('admin')
+    def ensure_simple():
+        """Parses and stores the PyBEL Test BEL Script"""
+        url = 'https://raw.githubusercontent.com/pybel/pybel/develop/tests/bel/test_bel.bel'
+        graph = from_url(url, manager=manager)
+        return try_insert_graph(manager, graph, api)
+
     @app.route('/admin/ensure/gfam')
-    @basic_auth.required
+    @roles_required('admin')
     def ensure_gfam():
+        """Parses and stores the HGNC Gene Family Definitions"""
         graph = from_url(FRAUNHOFER_RESOURCES + 'gfam_members.bel', manager=manager)
         return try_insert_graph(manager, graph, api)
 
+    @app.route('/admin/ensure/aetionomy')
+    @roles_required('admin')
+    def ensure_aetionomy():
+        """Parses and stores the AETIONOMY resources from the Biological Model Store repository"""
+        t = time.time()
+        convert_recursive(os.path.join(os.environ[BMS_BASE], 'aetionomy'), connection=manager, upload=True,
+                          enrich_citations=True)
+        return jsonify({'status': 200, 'time': time.time() - t})
+
+    @app.route('/admin/upload/aetionomy')
+    @roles_required('admin')
+    def upload_aetionomy():
+        """Uploads the gpickles in the AETIONOMY section of the Biological Model Store repository"""
+        t = time.time()
+        upload_recursive(os.path.join(os.environ[BMS_BASE], 'aetionomy'), connection=manager)
+        return jsonify({'status': 200, 'time': time.time() - t})
+
+    @app.route('/admin/upload/selventa')
+    @roles_required('admin')
+    def upload_selventa():
+        """Uploads the gpickles in the Selventa section of the Biological Model Store repository"""
+        t = time.time()
+        upload_recursive(os.path.join(os.environ[BMS_BASE], 'selventa'), connection=manager)
+        return jsonify({'status': 200, 'time': time.time() - t})
+
+    @app.route('/admin/list/bms/pickles')
+    @roles_required('admin')
+    def list_bms_pickles():
+        """Lists the precompiled gpickles in the Biological Model Store repository"""
+        return jsonify(list(get_paths_recursive(os.environ[BMS_BASE], extension='.gpickle')))
+
+    @app.route('/admin/list/reporting')
+    @roles_required('admin')
+    def list_reporting():
+        """Sends the reporting log as a text file"""
+        return flask.send_file(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
+
     @app.route('/admin/nuke/')
-    @basic_auth.required
+    @roles_required('admin')
     def nuke():
         """Destroys the database and recreates it"""
         log.info('nuking database')
         manager.drop_database()
-        manager.create_database()
+        manager.create_all()
         log.info('restarting dictionary service')
-        api.load_networks(force_reload=True)
+        api.clear()
         log.info('... the dust settles')
         return jsonify({'status': 200})
 
+    @app.route('/admin/network/make_public/<int:network_id>')
+    @roles_accepted('admin', 'scai')
+    def make_network_public(network_id):
+        report = manager.session.query(Report).filter(Report.network_id == network_id).one()
+        report.public = True
+        manager.commit()
 
-def build_api_admin(app, manager, basic_auth):
+        flask.flash('Made {} public'.format(report.network))
+        return redirect(url_for('view_networks'))
+
+    @app.route('/api/network/make_public/<int:user_id>/<int:network_id>')
+    @login_required
+    def make_user_network_public(user_id, network_id):
+        if current_user.id != user_id:
+            return flask.abort(402)
+
+        report = manager.session.query(Report).filter(Report.network_id == network_id, Report.user_id == user_id).one()
+        report.public = True
+        manager.commit()
+
+        flask.flash('Made {} public'.format(report.network))
+        return redirect(url_for('view_networks'))
+
+    log.info('added dict service admin functions')
+
+
+def build_api_admin(app):
+    """API Admin functions"""
+    manager = get_manager(app)
+
     @app.route('/admin/rollback')
-    @basic_auth.required
+    @roles_required('admin')
     def rollback():
         """Rolls back the transaction for when something bad happens"""
         manager.rollback()
         return jsonify({'status': 200})
 
-    @app.route('/admin/manage/graphs/drop/<network_id>')
-    @basic_auth.required
+    @app.route('/admin/manage/graphs/drop/<int:network_id>')
+    @roles_required('admin')
     def drop_graph(network_id):
         """Drops a specific graph"""
         log.info('dropping graphs %s', network_id)
@@ -226,50 +324,81 @@ def build_api_admin(app, manager, basic_auth):
         return jsonify({'status': 200})
 
     @app.route('/admin/manage/graphs/dropall')
-    @basic_auth.required
+    @roles_required('admin')
     def drop_graphs():
         """Drops all graphs"""
         log.info('dropping all graphs')
         manager.drop_graphs()
         return jsonify({'status': 200})
 
+    @app.route('/admin/manage/namespaces/drop/<int:namespace_id>')
+    @roles_required('admin')
+    def drop_namespace(namespace_id):
+        log.info('dropping namespace %s', namespace_id)
+        manager.session.query(Namespace).filter(Namespace.id == namespace_id).delete()
+        manager.session.commit()
+        return jsonify({'status': 200})
 
-def build_dictionary_service(app, manager, check_version=True, admin_password=None, analysis_enabled=False,
-                             eager=False):
-    """Builds the PyBEL Dictionary-Backed API Service. Adds a latent PyBEL Dictionary service that can be retrieved
-    with :func:`get_dict_service`
+    @app.route('/admin/manage/namespaces/dropall')
+    @roles_required('admin')
+    def drop_namespaces():
+        """Drops all namespaces"""
+        log.info('dropping all namespaces')
+        manager.session.query(Namespace).delete()
+        manager.session.commit()
+        return jsonify({'status': 200})
 
-    :param app: A Flask App
-    :type app: Flask
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.cache.CacheManager
-    :param preload: Should the networks be preloaded?
-    :type preload: bool
-    :param check_version: Should the versions of the networks be checked during loading?
-    :type check_version: bool
-    :param admin_password: The administrator password for accessing restricted web pages
-    :type admin_password: str
+    @app.route('/admin/manage/annotations/drop/<annotation_id>')
+    @roles_required('admin')
+    def drop_annotation(annotation_id):
+        log.info('dropping annotation %s', annotation_id)
+        manager.session.query(Annotation).filter(Annotation.id == annotation_id).delete()
+        manager.session.commit()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/manage/annotations/dropall')
+    @roles_required('admin')
+    def drop_annotations():
+        """Drops all annotations"""
+        log.info('dropping all annotations')
+        manager.session.query(Annotation).delete()
+        manager.session.commit()
+        return jsonify({'status': 200})
+
+    @app.route('/admin/config')
+    @roles_required('admin')
+    def view_config():
+        return jsonify({k: str(v) for k, v in app.config.items()})
+
+    log.info('added api admin functions')
+
+
+def build_dictionary_service(app):
+    """Builds the PyBEL Dictionary-Backed API Service.
+
+    :param flask.Flask app: A Flask App
+    :param bool check_version: Should the versions of the networks be checked during loading?
     """
-    api = DictionaryService(manager=manager)
+    manager = get_manager(app)
+    api = get_api(app)
 
-    log.info('loading networks')
-    api.load_networks(check_version=check_version, eager=eager)
-    log.info('pre-loaded the dict service')
+    if app.config.get('PYBEL_DS_PRELOAD', True):
+        log.info('preloading networks')
+        api.load_networks(check_version=app.config.get('PYBEL_DS_CHECK_VERSION', True),
+                          eager=app.config.get('PYBEL_DS_EAGER', False))
+        log.info('pre-loaded the dict service')
 
-    if admin_password is not None:
-        app.config['BASIC_AUTH_USERNAME'] = 'pybel'
-        app.config['BASIC_AUTH_PASSWORD'] = admin_password
-
-        basic_auth = BasicAuth(app)
-        build_dictionary_service_admin(app, manager, api, basic_auth)
-        build_api_admin(app, manager, basic_auth)
-
-        log.info('added admin functions to dict service')
+    build_dictionary_service_admin(app)
+    build_api_admin(app)
 
     # Web Pages
 
     @app.route('/', methods=['GET', 'POST'])
-    @app.route('/networks/', methods=['GET', 'POST'])
+    def home():
+        """Renders the home page"""
+        return render_template('index.html')
+
+    @app.route('/networks', methods=['GET', 'POST'])
     def view_networks():
         """Renders a page for the user to choose a network"""
         seed_subgraph_form = SeedSubgraphForm()
@@ -293,27 +422,31 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         elif seed_provenance_form.validate_on_submit() and seed_provenance_form.submit_provenance.data:
             authors = sanitize_list_of_str(seed_provenance_form.author_list.data.split(','))
             pmids = sanitize_list_of_str(seed_provenance_form.pubmed_list.data.split(','))
+            filter_pathologies = seed_provenance_form.filter_pathologies.data
             log.info('got prov: %s', dict(authors=authors, pmids=pmids))
             url = url_for('view_explorer', **{
                 GRAPH_ID: '0',
                 SEED_TYPE: SEED_TYPE_PROVENANCE,
                 SEED_DATA_PMIDS: pmids,
                 SEED_DATA_AUTHORS: authors,
+                FILTER_PATHOLOGIES: filter_pathologies,
                 AUTOLOAD: 'yes',
             })
             log.info('redirecting to %s', url)
             return redirect(url)
 
+        networks = get_networks_with_permission(api)
+
         return flask.render_template(
             'network_list.html',
-            data=manager.list_graphs(),
+            networks=networks,
             provenance_form=seed_provenance_form,
             subgraph_form=seed_subgraph_form,
-            analysis_enabled=analysis_enabled,
+            analysis_enabled=True,
             current_user=current_user,
         )
 
-    @app.route('/explore/', methods=['GET'])
+    @app.route('/explore', methods=['GET'])
     def view_explorer():
         """Renders a page for the user to explore a network"""
         return flask.render_template('explorer.html')
@@ -321,8 +454,13 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
     @app.route('/summary/<int:graph_id>')
     def view_summary(graph_id):
         """Renders a page with the parsing errors for a given BEL script"""
-        graph = manager.get_graph_by_id(graph_id)
-        graph = from_bytes(graph.blob, check_version=check_version)
+        try:
+            network = manager.get_network_by_id(graph_id)
+            graph = from_bytes(network.blob, check_version=app.config.get('PYBEL_DS_CHECK_VERSION'))
+        except:
+            flask.flash("Problem getting graph {}".format(graph_id), category='error')
+            return redirect(url_for('view_summary'))
+
         return render_graph_summary(graph_id, graph, api)
 
     @app.route('/definitions')
@@ -332,6 +470,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
             'definitions_list.html',
             namespaces=manager.session.query(Namespace).order_by(Namespace.keyword).all(),
             annotations=manager.session.query(Annotation).order_by(Annotation.keyword).all(),
+            current_user=current_user,
         )
 
     # Data Service
@@ -346,6 +485,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         return jsonify(info_json(api.get_network(network_id)))
 
     @app.route('/api/network/', methods=['GET'])
+    @login_required
     def get_network():
         """Builds a graph from the given network id and sends it in the given format"""
         graph = get_graph_from_request(api)
@@ -360,11 +500,22 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         graph = api.get_network(network_id)
         return jsonify(graph.name)
 
+    @app.route('/api/network/<int:network_id>/drop')
+    @login_required
+    def drop_network(network_id):
+        """Drops a given network"""
+        if not current_user.admin:
+            flask.abort(403)
+        manager.drop_graph(network_id)
+        flask.flash('Dropped network {}'.format(network_id))
+        return redirect(url_for('view_networks'))
+
     @app.route('/api/tree/')
+    @login_required
     def get_tree_api():
         """Builds the annotation tree data structure for a given graph"""
-        graph = get_graph_from_request(api)
-        return jsonify(get_tree_annotations(graph))
+        graph_id = request.args.get(GRAPH_ID)
+        return jsonify(get_tree_annotations(api.get_network(graph_id)))
 
     @app.route('/api/paths/')
     def get_paths_api():
@@ -489,12 +640,7 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         """Return list of blacklist constants"""
         return jsonify(sorted(BLACK_LIST))
 
-    @app.route('/api/nsbuilder/<int:graph_id>/<namespace>')
-    def download_undefined_namespace(graph_id, namespace):
-        """Outputs a namespace built for this undefined namespace"""
-        graph = api.get_network(graph_id)
-        names = get_undefined_namespace_names(graph, namespace)
-
+    def _build_namespace_helper(graph, namespace, names):
         si = StringIO()
 
         write_namespace(
@@ -514,6 +660,40 @@ def build_dictionary_service(app, manager, check_version=True, admin_password=No
         output.headers["Content-type"] = "text/plain"
         return output
 
-    log.info('Added dictionary service to %s', app)
+    @app.route('/api/namespace/builder/undefined/<int:graph_id>/<namespace>')
+    def download_undefined_namespace(graph_id, namespace):
+        """Outputs a namespace built for this undefined namespace"""
+        graph = api.get_network(graph_id)
+        names = get_undefined_namespace_names(graph, namespace)
+        return _build_namespace_helper(graph, namespace, names)
 
-    return api
+    @app.route('/api/namespace/builder/incorrect/<int:graph_id>/<namespace>')
+    def download_missing_namespace(graph_id, namespace):
+        """Outputs a namespace built from the missing names in the given namespace"""
+        graph = api.get_network(graph_id)
+        names = get_incorrect_names(graph, namespace)
+        return _build_namespace_helper(graph, namespace, names)
+
+    @app.route('/overlap')
+    def get_node_overlap_image():
+        import pyupset as pyu
+        import matplotlib.pyplot as plt
+        import pandas as pd
+        from six import BytesIO
+
+        network_ids = request.args.get('networks')
+        if not network_ids:
+            return flask.abort(500)
+
+        networks = [api.get_network(int(network_id.strip())) for network_id in network_ids.split(',')]
+
+        data_dict = {network.name.replace('_', ' '): pd.DataFrame(network.nodes()) for network in networks}
+        pyu.plot(data_dict)
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        output = make_response(buf.getvalue())
+        output.headers["Content-type"] = "image/png"
+        return output
+
+    log.info('Added dictionary service to %s', app)

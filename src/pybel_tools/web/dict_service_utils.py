@@ -9,6 +9,7 @@ import time
 from collections import Counter
 
 import networkx as nx
+from sqlalchemy import func
 
 from pybel import from_bytes, BELGraph
 from pybel.canonicalize import decanonicalize_node, calculate_canonical_name
@@ -16,6 +17,7 @@ from pybel.manager.models import Network
 from .base_service import BaseService
 from .utils import calc_betweenness_centality
 from ..constants import CNAME
+from ..mutation.expansion import expand_internal
 from ..mutation.inference import infer_central_dogma
 from ..mutation.merge import left_merge
 from ..mutation.metadata import parse_authors, add_canonical_names, fix_pubmed_citations
@@ -66,6 +68,9 @@ class DictionaryService(BaseService):
         self.node_degrees = {}
 
         log.info('initialized dictionary service')
+
+    def clear(self):
+        self.__init__(self.manager)
 
     def update_node_indexes(self, graph):
         """Updates identifiers for nodes based on addition order
@@ -134,7 +139,7 @@ class DictionaryService(BaseService):
             log.info('tried re-adding graph [%s] %s', network_id, graph.name)
             return
 
-        log.info('loading network [%s] %s', network_id, graph.name)
+        log.info('loading network [%s] %s v%s', network_id, graph.name, graph.version)
 
         log.debug('parsing authors')
         parse_authors(graph)
@@ -235,6 +240,9 @@ class DictionaryService(BaseService):
 
         return nid
 
+    def get_node_id(self, node):
+        return self.node_nid[node]
+
     def get_node_by_id(self, node_id):
         """Returns the node tuple based on the node id
 
@@ -304,6 +312,10 @@ class DictionaryService(BaseService):
             filter_pathologies=filter_pathologies,
             **annotations
         )
+
+        # Only expand on internal edges if we've done some adding
+        if seed_method or expand_nodes:
+            expand_internal(graph, result)
 
         result.graph['PYBEL_RELABELED'] = True
 
@@ -375,3 +387,20 @@ class DictionaryService(BaseService):
         graph = self.get_network(network_id)
         cm = count_diseases(graph)
         return {self.get_cname(node): v for node, v in cm.most_common(count)}
+
+    def list_graphs(self):
+        """Lists the most recently uploaded version of each network"""
+        return self.manager.session.query(Network).group_by(Network.name).having(func.max(Network.created)).order_by(
+            Network.created.desc()).all()
+
+    def list_public_graphs(self):
+        """Lists the graphs that have been made public"""
+        results = []
+
+        for network in self.list_graphs():
+            if not network.report:  # no report means uploaded automatically or by admin
+                results.append(network)
+            elif network.report[0].public:
+                results.append(network)
+
+        return results

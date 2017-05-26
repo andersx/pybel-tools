@@ -16,6 +16,9 @@
         <div class="page-header">
             <h1>Analyses</h1>
         </div>
+    
+        {{ util.flashed_messages(dismissible=True, container=False) }}
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Candidate Mechanism Perturbation Analyses</h3>
@@ -39,7 +42,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for experiment in experiments %}
+                {% for experiment in experiments if experiment.network is not none %}
                     <tr>
                         <td>{{ experiment.id }} </td>
                         <td><a href="{{ url_for('view_analysis_results', analysis_id=experiment.id) }}"><span
@@ -61,4 +64,6 @@
             </table>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}

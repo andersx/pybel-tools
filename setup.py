@@ -28,9 +28,8 @@ INSTALL_REQUIRES = [
     'flask',
     'flask-bootstrap',
     'flask-wtf',
-    'flask-basicauth',
-    'flask-github',
-    'flask-login',
+    'GitHub-Flask',
+    'flask-security',
     'networkx',
     'pybel',
     'click',
@@ -39,6 +38,7 @@ INSTALL_REQUIRES = [
     'ipython',
     'scipy',
     'numpy',
+    'celery',
 ]
 EXTRAS_REQUIRE = {
     'speed': ['python-Levenshtein', ]  # Activates c-based speed improvements for fuzzywuzzy

@@ -14,10 +14,8 @@ __all__ = [
 def ensure_node_from_universe(universe, graph, node, raise_for_missing=False):
     """Makes sure that the subgraph has the given node
     
-    :param universe: The universe of all knowledge
-    :type universe: pybel.BELGraph
-    :param graph: The target BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph universe: The universe of all knowledge
+    :param pybel.BELGraph graph: The target BEL graph
     :param node: A BEL node
     :param raise_for_missing: Should an error be thrown if the given node is not in the universe?
     :type raise_for_missing: bool

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import itertools as itt
 import logging
-from itertools import combinations
 
 from networkx import DiGraph, Graph
 
@@ -17,6 +17,11 @@ __all__ = [
     'get_separate_unstable_correlation_triples',
     'get_mutually_unstable_correlation_triples',
     'jens_transformation',
+    'get_jens_unstable_alpha',
+    'get_increase_mismatch_triplets',
+    'get_decrease_mismatch_triplets',
+    'get_chaotic_triplets',
+    'get_dampened_triplets'
 ]
 
 log = logging.getLogger(__name__)
@@ -121,7 +126,7 @@ def get_correlation_triangles(correlation_graph):
     results = set()
 
     for n in correlation_graph.nodes_iter():
-        for u, v in combinations(correlation_graph.edge[n], 2):
+        for u, v in itt.combinations(correlation_graph.edge[n], 2):
             if correlation_graph.has_edge(u, v):
                 results.add(tuple(sorted([n, u, v], key=str)))
 
@@ -203,20 +208,101 @@ def jens_transformation(graph):
 
 
 def find_3_cycles_digraph(graph):
-    """
+    """Gets a set of triples representing the 3-cycles from a directional graph. Each 3-cycle is returned once,
+    with nodes in sorted order.
     
-    :param networkx.DiGraph graph: 
-    :return: set[tuple]
+    :param networkx.DiGraph graph: A directional graph
+    :rtype: set[tuple]
     """
     results = set()
-    for a in graph.nodes_iter():
-        for b in graph.edge[a]:
-            for c in graph.edge[b]:
-                if graph.has_edge(c, a) and sorted([a, b, c], key=str) not in results:
-                    results.add((a, b, c))
+    for a, b in graph.edges_iter():
+        for c in graph.successors(b):
+            if graph.has_edge(c, a):
+                results.add(tuple(sorted([a, b, c], key=str)))
     return results
 
 
 def get_jens_unstable_alpha(graph):
+    """Iterates over triples of nodes where A increases B, A decreases C, and C positiveCorrelation A. Calculated
+    efficiently using the Jens (Type 1) Transformation
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :return: An iterable of triplets of nodes
+    :rtype iter[tuple]
+    """
     r = jens_transformation(graph)
     return find_3_cycles_digraph(r)
+
+
+def _get_mismatch_triplets_helper(graph, relation_set):
+    """Iterates over triples of nodes
+
+    :param pybel.BELGraph graph: 
+    :return: An iterable of mismatch triples
+    :rtype iter[tuple]
+    """
+    for node in graph.nodes_iter():
+        children = {v for _, v, d in graph.out_edges_iter(node, data=True) if d[RELATION] in relation_set}
+        for a, b in itt.combinations(children, 2):
+            if b not in graph.edge[a]:
+                continue
+            if any(d[RELATION] == NEGATIVE_CORRELATION for d in graph.edge[a][b].values()):
+                yield node, a, b
+
+
+def get_increase_mismatch_triplets(graph):
+    """Iterates over triples of nodes where A increases B, A increases C, and C negativeCorrelation A.
+    
+    :param pybel.BELGraph graph: 
+    :return: An iterable of triplets of nodes
+    :rtype: iter[tuple]
+    """
+    return _get_mismatch_triplets_helper(graph, CAUSAL_INCREASE_RELATIONS)
+
+
+def get_decrease_mismatch_triplets(graph):
+    """Iterates over triplets of nodes where A decreases B, A decreases C, and C negativeCorrelation A.
+
+    :param pybel.BELGraph graph: 
+    :return: An iterable of triplets of nodes
+    :rtype: iter[tuple]
+    """
+    return _get_mismatch_triplets_helper(graph, CAUSAL_DECREASE_RELATIONS)
+
+
+def _get_disregulated_triplets_helper(graph, relation_set):
+    """
+    
+    :param pybel.BELGraph graph: A BEL graph 
+    :param set[str] relation_set: A set of relations to keep 
+    :return: 
+    """
+    result = DiGraph()
+    for u, v, d in graph.edges_iter(data=True):
+        if d[RELATION] in relation_set:
+            result.add_edge(u, v)
+    for node in result.nodes_iter():
+        result.node[node].update(graph.node[node])
+    return find_3_cycles_digraph(result)
+
+
+def get_chaotic_triplets(graph):
+    """Iterates over triples of nodes that mutually increase each other, such as when A increases B, B increases C, 
+    and C increases A.
+
+    :param pybel.BELGraph graph: 
+    :return: An iterable of triplets of nodes
+    :rtype: iter[tuple]
+    """
+    return _get_disregulated_triplets_helper(graph, CAUSAL_INCREASE_RELATIONS)
+
+
+def get_dampened_triplets(graph):
+    """Iterates over triples of nodes that mutually decreases each other, such as when A decreases B, B decreases C, 
+    and C decreases A.
+
+    :param pybel.BELGraph graph: 
+    :return: An iterable of triplets of nodes
+    :rtype: iter[tuple]
+    """
+    return _get_disregulated_triplets_helper(graph, CAUSAL_DECREASE_RELATIONS)

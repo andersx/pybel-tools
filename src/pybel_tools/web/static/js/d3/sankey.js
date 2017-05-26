@@ -1,6 +1,12 @@
 /**
- * Created by danieldomingo on 1/11/17.
+ * This JS file controls Sankey diagram rendering
+ *
+ * @summary   Network controller of PyBEL explorer
+ *
+ * @requires d3
+ *
  */
+
 // Source https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
 
 d3.sankey = function() {

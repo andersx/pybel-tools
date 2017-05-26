@@ -4,6 +4,14 @@
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
 
+{% block head %}
+    {{ super() }}
+    {{ fixes.ie8() }}
+
+    {% include "google_analytics.html" %}
+{% endblock %}
+
+
 {% block styles %}
     {{ super() }}
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
@@ -17,18 +25,15 @@
             <h1>BEL Web Compiler</h1>
         </div>
 
-        {{ util.flashed_messages(dismissible=True) }}
+        {{ util.flashed_messages(dismissible=True, container=False) }}
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('view_networks') }}" role="button">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
                     <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
                 </a>
                 <div class="pull-right">
-                    <span class="btn btn-default">Logged in as {{ current_user.name }}</span>
-                    <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">
-                        Log out
-                    </a>
+                    {% include "login_buttons.html" %}
                 </div>
             </div>
         </div>
@@ -38,7 +43,8 @@
                 <p>This web application is built with PyBEL. It compiles BEL scripts and provides helpful output
                     for fixing errors. Parsing occurs at about 900 lines per second, so be patient!.
                 </p>
-                <p>For more information on how this app works, see the <a href="http://pybel.readthedocs.io/">PyBEL</a>
+                <p>By using our application, we hope you'll choose the option to make your knowledge assembly public.
+                    For more information on how this app works, see the <a href="http://pybel.readthedocs.io/">PyBEL</a>
                     and
                     <a href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> documentation. For more information
                     on parser warnings, see the <a href="http://pybel.readthedocs.io/en/latest/logging.html">Logging
@@ -55,9 +61,7 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}
 
-{% block head %}
-    {{ super() }}
-    {{ fixes.ie8() }}
-{% endblock %}

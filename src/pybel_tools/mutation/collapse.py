@@ -14,7 +14,12 @@ __all__ = [
     'build_central_dogma_collapse_gene_dict',
     'collapse_by_central_dogma',
     'collapse_by_central_dogma_to_genes',
-    'collapse_variants_to_genes',
+    'collapse_by_central_dogma_to_genes_out_place',
+    'rewire_variants_to_genes',
+    'collapse_all_variants',
+    'collapse_all_variants_out_place',
+    'collapse_gene_variants',
+    'collapse_protein_variants',
     'opening_on_central_dogma',
 ]
 
@@ -78,8 +83,7 @@ def collapse_nodes(graph, dict_of_sets_of_nodes):
 def build_central_dogma_collapse_dict(graph):
     """Builds a dictionary to direct the collapsing on the central dogma
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A dictionary of {node: set of nodes}
     :rtype: dict
     """
@@ -108,8 +112,7 @@ def build_central_dogma_collapse_dict(graph):
 def build_central_dogma_collapse_gene_dict(graph):
     """Builds a dictionary to direct the collapsing on the central dogma
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :return: A dictionary of {node: set of nodes}
     :rtype: dict
     """
@@ -140,8 +143,7 @@ def collapse_by_central_dogma(graph):
     """Collapses all nodes from the central dogma (GENE, RNA, PROTEIN) to PROTEIN, or most downstream possible entity,
     in place. This function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_dict`.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     
     Equivalent to:
     
@@ -157,8 +159,7 @@ def collapse_by_central_dogma_to_genes(graph):
     :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE`, in-place. This 
     function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     
     Equivalent to:
     
@@ -170,10 +171,59 @@ def collapse_by_central_dogma_to_genes(graph):
     collapse_nodes(graph, collapse_dict)
 
 
+@pipeline.mutator
+def collapse_by_central_dogma_to_genes_out_place(graph):
+    """Collapses all nodes from the central dogma (:data:`pybel.constants.GENE`, :data:`pybel.constants.RNA`, 
+    :data:`pybel.constants.MIRNA`, and :data:`pybel.constants.PROTEIN`) to :data:`pybel.constants.GENE`, in-place. This 
+    function wraps :func:`collapse_nodes` and :func:`build_central_dogma_collapse_gene_dict`.
+    
+    :param pybel.BELGraph graph: A BEL graph
+    :rtype: pybel.BELGraph
+    
+    Equivalent to:
+    
+    >>> infer_central_dogma(graph)
+    >>> collapse_nodes(graph, build_central_dogma_collapse_gene_dict(graph))
+    """
+    result = graph.copy()
+    collapse_by_central_dogma_to_genes(result)
+    return result
+
+
 @pipeline.in_place_mutator
-def collapse_variants_to_genes(graph):
+def _collapse_variants_by_function(graph, function):
+    """Collapses all of the given functions' variants' edges to their parents, in-place
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param str function: A BEL function
+    """
+    for parent_node, variant_node, d in graph.edges(data=True):
+        if d[RELATION] == HAS_VARIANT and graph.node[parent_node][FUNCTION] == function:
+            collapse_pair(graph, parent_node, variant_node)
+
+
+@pipeline.in_place_mutator
+def collapse_protein_variants(graph):
+    """Collapses all protein's variants' edges to their parents, in-place
+
+    :param pybel.BELGraph graph: A BEL graph
+    """
+    _collapse_variants_by_function(graph, PROTEIN)
+
+
+@pipeline.in_place_mutator
+def collapse_gene_variants(graph):
+    """Collapses all gene's variants' edges to their parents, in-place
+
+    :param pybel.BELGraph graph: A BEL graph
+    """
+    _collapse_variants_by_function(graph, GENE)
+
+
+@pipeline.in_place_mutator
+def rewire_variants_to_genes(graph):
     """Finds all protein variants that are pointing to a gene and not a protein and fixes them by changing their
-    function to be :data:`pybel.constants.GENE`
+    function to be :data:`pybel.constants.GENE`, in place
 
     :param pybel.BELGraph graph: A BEL graph
     
@@ -189,12 +239,34 @@ def collapse_variants_to_genes(graph):
 
 
 @pipeline.in_place_mutator
+def collapse_all_variants(graph):
+    """Collapses all ``hasVariant`` edges to the parent node, in place
+    
+    :param pybel.BELGraph graph: A BEL Graph
+    """
+    for u, v, d in graph.edges(data=True):
+        if d[RELATION] == HAS_VARIANT:
+            collapse_pair(graph, u, v)
+
+
+@pipeline.mutator
+def collapse_all_variants_out_place(graph):
+    """Collapses all ``hasVariant`` edges to the parent node, not in place
+
+    :param pybel.BELGraph graph: A BEL Graph
+    :rtype: pybel.BELGraph
+    """
+    result = graph.copy()
+    _collapse_variants_by_function(result)
+    return result
+
+
+@pipeline.in_place_mutator
 def opening_on_central_dogma(graph):
     """Infers central dogmatic relations with :func:`infer_central_dogma` then successively prunes gene leaves then
     RNA leaves with :func:`prune_central_dogma` to connect disparate elements in a knowledge assembly
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
 
     Equivalent to:
 
@@ -212,8 +284,7 @@ def collapse_by_opening_on_central_dogma(graph):
     gene node to its RNA/miRNA node, then possibly from RNA to protein if available. Wraps :func:`infer_central_dogma`
     and :func:`collapse_by_central_dogma`.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
 
     Equivalent to:
 
@@ -235,8 +306,7 @@ def collapse_by_opening_by_central_dogma_to_genes(graph):
     
     Wraps :func:`infer_central_dogma` and :func:`collapse_by_central_dogma_to_genes`.
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
 
     Equivalent to:
 
@@ -261,7 +331,7 @@ def collapse_namespace(graph, from_namespace, to_namespace):
     >>> collapse_namespace(graph, 'CHEBI', 'CHEBIID')
     >>> collapse_namespace(graph, 'CHEBIID', 'INCHI')
     """
-    for u, v, d in graph.edges_iter(data=True):
+    for u, v, d in graph.edges(data=True):
         if d[RELATION] != EQUIVALENT_TO:
             continue
 

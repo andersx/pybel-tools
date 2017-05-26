@@ -81,8 +81,7 @@ def concatenate_edge_filters(filters):
 def filter_edges(graph, filters):
     """Applies a set of filters to the edges iterator of a BEL graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param filters: A filter or list of filters
     :type filters: list or tuple or types.FunctionType
     :return: An iterable of edges that pass all filters
@@ -103,8 +102,7 @@ def filter_edges(graph, filters):
 def count_passed_edge_filter(graph, filters):
     """Returns the number of edges passing a given set of filters
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param filters: A filter or list of filters
     :type filters: iter[types.FunctionType]
     :return: The number of edges passing a given set of filters
@@ -116,8 +114,7 @@ def count_passed_edge_filter(graph, filters):
 def summarize_edge_filter(graph, filters):
     """Prints a summary of the number of edges passing a given set of filters
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param filters: A filter or list of filters
     :type filters: types.FunctionType or list[types.FunctionType]
     """
@@ -128,8 +125,7 @@ def summarize_edge_filter(graph, filters):
 def keep_edge_permissive(graph, u, v, k, d):
     """Passes for all edges
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param u: A BEL node
     :type u: tuple
     :param v: A BEL node
@@ -147,8 +143,7 @@ def keep_edge_permissive(graph, u, v, k, d):
 def edge_is_causal(graph, u, v, k, d):
     """Only passes on causal edges, belonging to the set :data:`pybel.constants.CAUSAL_RELATIONS`
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param u: A BEL node
     :type u: tuple
     :param v: A BEL node
@@ -166,8 +161,7 @@ def edge_is_causal(graph, u, v, k, d):
 def edge_has_author_annotation(graph, u, v, k, d):
     """Passes for edges that have citations with authors
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param u: A BEL node
     :type u: tuple
     :param v: A BEL node
@@ -185,8 +179,7 @@ def edge_has_author_annotation(graph, u, v, k, d):
 def edge_has_pubmed_citation(graph, u, v, k, d):
     """Passes for edges that have PubMed citations
     
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param u: A BEL node
     :type u: tuple
     :param v: A BEL node
@@ -518,8 +511,7 @@ def build_author_inclusion_filter(authors):
 def edge_has_modifier(graph, u, v, k, d, modifier):
     """Returns true if over any of the node's edges it has a molecular activity
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A BEL node
     :type node: tuple
     :return: If the node has a known molecular activity

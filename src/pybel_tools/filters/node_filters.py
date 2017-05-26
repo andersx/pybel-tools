@@ -41,8 +41,7 @@ __all__ = [
 def filter_nodes(graph, node_filters=None):
     """Applies a set of filters to the nodes iterator of a BEL graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node_filters: A node filter or list/tuple of node filters
     :type node_filters: types.FunctionType or iter[types.FunctionType]
     :return: An iterable of nodes that pass all filters
@@ -68,8 +67,7 @@ def get_nodes(graph, node_filters=None):
 def count_passed_node_filter(graph, node_filters):
     """Counts how many nodes pass a given set of filters
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node_filters: A node filter or list/tuple of node filters
     :type node_filters: types.FunctionType or iter[types.FunctionType]
     """
@@ -79,8 +77,7 @@ def count_passed_node_filter(graph, node_filters):
 def summarize_node_filter(graph, node_filters):
     """Prints a summary of the number of nodes passing a given set of filters
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node_filters: A node filter or list/tuple of node filters
     :type node_filters: types.FunctionType or iter[types.FunctionType]
     """
@@ -97,8 +94,7 @@ def keep_node_permissive(graph, node):
     as in :code:`filter(keep_node_permissive, graph.nodes_iter())` will result in the same iterable as
     :meth:`pybel.BELGraph.nodes_iter`
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: The node
     :type node: tuple
     :return: Always returns :data:`True`
@@ -400,8 +396,7 @@ def node_has_modifier(graph, node, modifier):
     """Returns true if over any of a nodes edges, it has a given modifier - :data:`pybel.constants.ACTIVITY`,
      :data:`pybel.constants.DEGRADATION`, or :data:`pybel.constants.TRANSLOCATION`.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A BEL node
     :type node: tuple
     :param str modifier: One of :data:`pybel.constants.ACTIVITY`, :data:`pybel.constants.DEGRADATION`, or 
@@ -423,8 +418,7 @@ def node_has_modifier(graph, node, modifier):
 def node_has_molecular_activity(graph, node):
     """Returns true if over any of the node's edges it has a molecular activity
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A BEL node
     :type node: tuple
     :return: If the node has a known molecular activity
@@ -436,8 +430,7 @@ def node_has_molecular_activity(graph, node):
 def node_is_degraded(graph, node):
     """Returns true if over any of the node's edges it is degraded
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A BEL node
     :type node: tuple
     :return: If the node has a known degradation
@@ -449,8 +442,7 @@ def node_is_degraded(graph, node):
 def node_is_translocated(graph, node):
     """Returns true if over any of the node's edges it is transloated
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A BEL node
     :type node: tuple
     :return: If the node has a known translocation
@@ -463,8 +455,7 @@ def node_is_upstream_leaf(graph, node):
     """Returns if the node is an upstream leaf. An upstream leaf is defined as a node that has no in-edges, and exactly
     1 out-edge.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param node: A BEL node
     :type node: tuple
     :return: If the node is an upstream leaf

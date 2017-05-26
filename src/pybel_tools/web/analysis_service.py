@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import csv
-import datetime
 import logging
 import pickle
 import time
@@ -10,62 +9,35 @@ from operator import itemgetter
 import flask
 import pandas
 from flask import render_template, redirect, url_for, jsonify, make_response
-from flask_login import login_required
+from flask_login import login_required, current_user
 from six import StringIO
-from sqlalchemy import Column, Integer, DateTime, Binary, Text, ForeignKey
-from sqlalchemy.orm import relationship
 
 import pybel
 from pybel.constants import GENE
-from pybel.manager.models import Base, Network, NETWORK_TABLE_NAME
+from pybel.manager.models import Network
 from .dict_service import get_graph_from_request
+from .extension import get_manager, get_api
 from .forms import DifferentialGeneExpressionForm
+from .models import Experiment
 from .. import generation
 from ..analysis import npa
 from ..analysis.npa import RESULT_LABELS
 from ..filters.node_deletion import remove_nodes_by_namespace
 from ..integration import overlay_type_data
-from ..mutation.collapse import collapse_variants_to_genes, collapse_by_central_dogma_to_genes
+from ..mutation.collapse import rewire_variants_to_genes, collapse_by_central_dogma_to_genes
 
 log = logging.getLogger(__name__)
-
-PYBEL_EXPERIMENT_TABLE_NAME = 'pybel_experiment'
-PYBEL_EXPERIMENT_ENTRY_TABLE_NAME = 'pybel_experiment_entry'
 
 LABEL = 'dgxa'
 
 
-class Experiment(Base):
-    """Represents a Candidate Mechanism Perturbation Amplitude experiment run in PyBEL Web"""
-    __tablename__ = PYBEL_EXPERIMENT_TABLE_NAME
-
-    id = Column(Integer, primary_key=True)
-
-    created = Column(DateTime, default=datetime.datetime.utcnow, doc='The date on which this analysis was run')
-    description = Column(Text, nullable=True, doc='A description of the purpose of the analysis')
-    permutations = Column(Integer, doc='Number of permutations performed')
-    source_name = Column(Text, doc='The name of the source file')
-    source = Column(Binary, doc='The source document holding the data')
-    result = Column(Binary, doc='The result python dictionary')
-
-    network_id = Column(Integer, ForeignKey('{}.id'.format(NETWORK_TABLE_NAME)))
-    network = relationship('Network', foreign_keys=[network_id])
-
-    @property
-    def data(self):
-        """Get unpickled data"""
-        return pickle.loads(self.result)
-
-
-def build_analysis_service(app, manager, api):
+def build_analysis_service(app):
     """Builds the analysis service
     
-    :param app: A Flask application
-    :type app: flask.Flask
-    :param manager: A PyBEL cache manager
-    :type manager: pybel.manager.CacheManager
-    :param DictionaryService api: The dictionary service API
+    :param flask.Flask app: A Flask application
     """
+    manager = get_manager(app)
+    api = get_api(app)
 
     @app.route('/analysis/')
     @app.route('/analysis/<network_id>')
@@ -77,18 +49,32 @@ def build_analysis_service(app, manager, api):
             experiment_query = experiment_query.filter(Experiment.network_id == network_id)
 
         experiments = experiment_query.all()
-        return render_template('analysis_list.html', experiments=experiments)
+        return render_template('analysis_list.html', experiments=experiments, current_user=current_user)
 
     @app.route('/analysis/results/<int:analysis_id>')
     def view_analysis_results(analysis_id):
         """View the results of a given analysis"""
         experiment = manager.session.query(Experiment).get(analysis_id)
+        experiment_data = pickle.loads(experiment.result)
         return render_template(
             'analysis_results.html',
             experiment=experiment,
             columns=npa.RESULT_LABELS,
-            data=sorted([(k, v) for k, v in experiment.data.items() if v[0]], key=itemgetter(1))
+            data=sorted([(k, v) for k, v in experiment_data.items() if v[0]], key=itemgetter(1)),
+            current_user=current_user
         )
+
+    @app.route('/analysis/results/<int:analysis_id>/drop')
+    @login_required
+    def delete_analysis_results(analysis_id):
+        """Drops an analysis"""
+        if not current_user.admin:
+            flask.abort(403)
+
+        manager.session.query(Experiment).get(analysis_id).delete()
+        manager.session.commit()
+        flask.flash('Dropped Experiment #{}'.format(analysis_id))
+        return redirect(url_for('view_analyses'))
 
     @app.route('/analysis/upload/<int:network_id>', methods=('GET', 'POST'))
     @login_required
@@ -120,12 +106,12 @@ def build_analysis_service(app, manager, api):
 
         data = {k: v for _, k, v in df.itertuples()}
 
-        network = manager.get_graph_by_id(network_id)
+        network = manager.get_network_by_id(network_id)
         graph = pybel.from_bytes(network.blob)
 
         remove_nodes_by_namespace(graph, {'MGI', 'RGD'})
         collapse_by_central_dogma_to_genes(graph)
-        collapse_variants_to_genes(graph)
+        rewire_variants_to_genes(graph)
 
         overlay_type_data(graph, data, LABEL, GENE, 'HGNC', overwrite=False, impute=0)
 
@@ -140,6 +126,7 @@ def build_analysis_service(app, manager, api):
             source=pickle.dumps(df),
             result=pickle.dumps(scores),
             permutations=form.permutations.data,
+            user=current_user,
         )
         experiment.network = network
 
@@ -148,15 +135,12 @@ def build_analysis_service(app, manager, api):
 
         return redirect(url_for('view_analysis_results', analysis_id=experiment.id))
 
-    log.info('Added analysis service to %s', app)
-
     @app.route('/api/analysis/<analysis_id>')
     def get_analysis(analysis_id):
         """Returns data from analysis"""
         graph = get_graph_from_request(api)
         experiment = manager.session.query(Experiment).get(analysis_id)
-        data = experiment.data
-
+        data = pickle.loads(experiment.result)
         results = [{'node': node, 'data': data[api.nid_node[node]]} for node in graph.nodes_iter() if
                    api.nid_node[node] in data]
 
@@ -167,7 +151,7 @@ def build_analysis_service(app, manager, api):
         """Returns data from analysis"""
         graph = get_graph_from_request(api)
         experiment = manager.session.query(Experiment).get(analysis_id)
-        data = experiment.data
+        data = pickle.loads(experiment.result)
         # position 3 is the 'median' score
         results = {node: data[api.nid_node[node]][3] for node in graph.nodes_iter() if api.nid_node[node] in data}
 
@@ -180,9 +164,12 @@ def build_analysis_service(app, manager, api):
         si = StringIO()
         cw = csv.writer(si)
         csv_list = [('Namespace', 'Name') + tuple(RESULT_LABELS)]
-        csv_list.extend((ns, n) + tuple(v) for (_, ns, n), v in experiment.data.items())
+        experiment_data = pickle.loads(experiment.result)
+        csv_list.extend((ns, n) + tuple(v) for (_, ns, n), v in experiment_data.items())
         cw.writerows(csv_list)
         output = make_response(si.getvalue())
         output.headers["Content-Disposition"] = "attachment; filename=cmpa_{}.csv".format(analysis_id)
         output.headers["Content-type"] = "text/csv"
         return output
+
+    log.info('Added analysis service to %s', app)

@@ -5,7 +5,8 @@ import logging
 from flask import send_file, Response, jsonify
 from six import BytesIO, StringIO
 
-from pybel import to_cx_json, to_bel_lines, to_graphml, to_bytes, to_csv
+from pybel import to_cx, to_bel_lines, to_graphml, to_bytes, to_csv
+from pybel.constants import GRAPH_ANNOTATION_LIST
 from ..mutation.metadata import serialize_authors
 
 log = logging.getLogger(__name__)
@@ -20,6 +21,10 @@ def to_json_custom(graph, _id='id', source='source', target='target', key='key')
         'multigraph': graph.is_multigraph(),
         'graph': graph.graph
     }
+
+    if GRAPH_ANNOTATION_LIST in result['graph']:
+        result['graph'][GRAPH_ANNOTATION_LIST] = {k: list(sorted(v)) for k, v in
+                                                  result['graph'][GRAPH_ANNOTATION_LIST].items()}
 
     mapping = {}
 
@@ -50,7 +55,7 @@ def serve_network(graph, serve_format=None):
         return jsonify(data)
 
     if serve_format == 'cx':
-        data = to_cx_json(graph)
+        data = to_cx(graph)
         return jsonify(data)
 
     if serve_format == 'bytes':

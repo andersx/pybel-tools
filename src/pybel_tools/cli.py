@@ -14,18 +14,17 @@ problems--the code will get executed twice:
 Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
-import logging
 import os
 import sys
 from getpass import getuser
 
 import click
+from flask_security import SQLAlchemyUserDatastore
 
-import pybel
-from pybel import from_pickle, to_database, from_lines
-from pybel.constants import PYBEL_LOG_DIR
-from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
+from pybel import from_pickle, to_database, from_lines, from_url
+from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection, PYBEL_CONNECTION
 from pybel.manager.cache import build_manager
+from pybel.manager.models import Base
 from pybel.utils import get_version as pybel_version
 from .constants import GENE_FAMILIES, NAMED_COMPLEXES
 from .definition_utils import write_namespace, export_namespaces
@@ -35,18 +34,18 @@ from .mutation.metadata import fix_pubmed_citations
 from .utils import get_version, enable_cool_mode
 from .web import receiver_service
 from .web.analysis_service import build_analysis_service
-from .web.boilerplate_service import build_boilerplate_service
+from .web.application import create_application
 from .web.compilation_service import build_synchronous_compiler_service
-from .web.constants import SECRET_KEY, reporting_log
+from .web.constants import *
+from .web.curation_service import build_curation_service
 from .web.database_service import build_database_service
 from .web.dict_service import build_dictionary_service
-from .web.login_service import build_login_service
 from .web.parser_endpoint import build_parser_service
-from .web.receiver_service import build_receiver_service, DEFAULT_SERVICE_URL
+from .web.receiver_service import build_receiver_service
 from .web.reporting_service import build_reporting_service
+from .web.security import build_security_service, User, Role
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
-from .web.utils import get_app
 
 log = logging.getLogger(__name__)
 
@@ -54,11 +53,10 @@ datefmt = '%H:%M:%S'
 fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 reporting_log.setLevel(logging.DEBUG)
-fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
-fh.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(message)s")
-fh.setFormatter(formatter)
-reporting_log.addHandler(fh)
+reporting_fh = logging.FileHandler(os.path.join(PYBEL_LOG_DIR, 'reporting.txt'))
+reporting_fh.setLevel(logging.DEBUG)
+reporting_fh.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+reporting_log.addHandler(reporting_fh)
 
 
 def set_debug(level):
@@ -83,69 +81,126 @@ def main():
     pass
 
 
+@main.command()
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+@click.option('--host', help='Flask host. Defaults to localhost')
+@click.option('--port', type=int, help='Flask port. Defaults to 5000')
+@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
+@click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
+@click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
+@click.option('-e', '--eager', is_flag=True, help="Eagerly preload all data and perform enrichments")
+@click.option('--run-database-service', is_flag=True, help='Enable the database service')
+@click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
+@click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
+@click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
+@click.option('--secret-key', help='Set the CSRF secret key')
+@click.option('--no-preload', is_flag=True, help='Do not preload cache')
+@click.option('--config', help='A config JSON file')
+def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
+        run_receiver_service, run_all, secret_key, no_preload, config):
+    """Runs PyBEL Web"""
+    set_debug_param(debug)
+    if debug < 3:
+        enable_cool_mode()
+
+    log.info('Running PyBEL v%s', pybel_version())
+    log.info('Running PyBEL Tools v%s', get_version())
+
+    if host is not None:
+        log.info('Running on host: %s', host)
+
+    if port is not None:
+        log.info('Running on port: %d', port)
+
+    config = {}
+
+    app = create_application()
+
+    build_security_service(app)
+    build_dictionary_service(app)
+    build_sitemap_endpoint(app)
+    build_synchronous_compiler_service(app)
+    build_pickle_uploader_service(app)
+    build_analysis_service(app)
+    build_curation_service(app)
+    build_reporting_service(app)
+
+    if run_database_service:
+        build_database_service(app)
+
+    if run_parser_service or run_all:
+        build_parser_service(app)
+
+    if run_receiver_service or run_all:
+        build_receiver_service(app)
+
+    log.info('Done building %s', app)
+
+    app.run(debug=flask_debug, host=host, port=port)
+
+
 @main.group()
-def ensure():
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+@click.pass_context
+def ensure(ctx, connection):
     """Utilities for ensuring data"""
+    ctx.obj = build_manager(connection)
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def small_corpus(connection, enrich_authors, use_edge_store, debug):
+@click.pass_context
+def small_corpus(ctx, enrich_authors, use_edge_store, debug):
     """Caches the Selventa Small Corpus"""
     set_debug_param(debug)
-    manager = build_manager(connection)
-    graph = pybel.from_url(SMALL_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    graph = from_url(SMALL_CORPUS_URL, manager=ctx.obj, citation_clearing=False, allow_nested=True)
     if enrich_authors:
         fix_pubmed_citations(graph)
-    manager.insert_graph(graph, store_parts=use_edge_store)
+    ctx.obj.insert_graph(graph, store_parts=use_edge_store)
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def large_corpus(connection, enrich_authors, use_edge_store, debug):
+@click.pass_context
+def large_corpus(ctx, enrich_authors, use_edge_store, debug):
     """Caches the Selventa Large Corpus"""
     set_debug_param(debug)
-    manager = build_manager(connection)
-    graph = pybel.from_url(LARGE_CORPUS_URL, manager=manager, citation_clearing=False, allow_nested=True)
+    graph = from_url(LARGE_CORPUS_URL, manager=ctx.obj, citation_clearing=False, allow_nested=True)
     if enrich_authors:
         fix_pubmed_citations(graph)
-    manager.insert_graph(graph, store_parts=use_edge_store)
+    ctx.obj.insert_graph(graph, store_parts=use_edge_store)
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def gene_families(connection, enrich_authors, use_edge_store, debug):
+@click.pass_context
+def gene_families(ctx, enrich_authors, use_edge_store, debug):
     """Caches the HGNC Gene Family memberships"""
     set_debug_param(debug)
-    manager = build_manager(connection)
-    graph = pybel.from_url(GENE_FAMILIES, manager=manager)
+    graph = from_url(GENE_FAMILIES, manager=ctx.obj)
     if enrich_authors:
         fix_pubmed_citations(graph)
-    manager.insert_graph(graph, store_parts=use_edge_store)
+    ctx.obj.insert_graph(graph, store_parts=use_edge_store)
 
 
 @ensure.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('--enrich-authors', is_flag=True)
 @click.option('--use-edge-store', is_flag=True)
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-def named_complexes(connection, enrich_authors, use_edge_store, debug):
+@click.pass_context
+def named_complexes(ctx, enrich_authors, use_edge_store, debug):
     """Caches GO Named Protein Complexes memberships"""
     set_debug_param(debug)
-    manager = build_manager(connection)
-    graph = pybel.from_url(NAMED_COMPLEXES, manager=manager)
+    graph = from_url(NAMED_COMPLEXES, manager=ctx.obj)
     if enrich_authors:
         fix_pubmed_citations(graph)
-    manager.insert_graph(graph, store_parts=use_edge_store)
+    ctx.obj.insert_graph(graph, store_parts=use_edge_store)
 
 
 @main.group()
@@ -204,78 +259,6 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, directory
 
     convert_recursive(directory, connection=connection, upload=(enable_upload or store_parts), pickle=True,
                       store_parts=store_parts, enrich_citations=(not no_enrich_authors))
-
-
-@main.command()
-@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
-@click.option('--host', help='Flask host. Defaults to localhost')
-@click.option('--port', type=int, help='Flask port. Defaults to 5000')
-@click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
-@click.option('--flask-debug', is_flag=True, help="Turn on werkzeug debug mode")
-@click.option('--skip-check-version', is_flag=True, help='Skip checking the PyBEL version of the gpickle')
-@click.option('-e', '--eager', is_flag=True, help="Eagerly preload all data and perform enrichments")
-@click.option('--run-database-service', is_flag=True, help='Enable the database service')
-@click.option('--run-parser-service', is_flag=True, help='Enable the single statement parser service')
-@click.option('--run-receiver-service', is_flag=True, help='Enable the JSON receiver service')
-@click.option('--run-boilerplate-service', is_flag=True, help='Enable the boilerplate generation service')
-@click.option('-a', '--run-all', is_flag=True, help="Enable *all* services")
-@click.option('--secret-key', help='Set the CSRF secret key')
-@click.option('--admin-password', help='Set admin password and enable admin services')
-@click.option('--echo-sql', is_flag=True)
-def web(connection, host, port, debug, flask_debug, skip_check_version, eager, run_database_service, run_parser_service,
-        run_receiver_service, run_boilerplate_service, run_all, secret_key,
-        admin_password, echo_sql):
-    """Runs PyBEL Web"""
-    set_debug_param(debug)
-    if debug < 3:
-        enable_cool_mode()
-
-    log.info('Running PyBEL v%s', pybel_version())
-    log.info('Running PyBEL Tools v%s', get_version())
-
-    if host is not None:
-        log.info('Running on host: %s', host)
-
-    if port is not None:
-        log.info('Running on port: %d', port)
-
-    app = get_app()
-    app.config[SECRET_KEY] = secret_key if secret_key else 'pybel_default_dev_key'
-
-    manager = build_manager(connection, echo=echo_sql)
-
-    build_login_service(app)
-
-    admin_password = admin_password or (('PYBEL_ADMIN_PASS' in os.environ) and os.environ['PYBEL_ADMIN_PASS'])
-
-    api = build_dictionary_service(
-        app,
-        manager=manager,
-        check_version=(not skip_check_version),
-        admin_password=admin_password,
-        analysis_enabled=True,
-        eager=eager,
-    )
-
-    build_sitemap_endpoint(app, show_admin=admin_password)
-    build_synchronous_compiler_service(app, manager=manager)
-    build_pickle_uploader_service(app, manager=manager)
-    build_analysis_service(app, manager=manager, api=api)
-    build_boilerplate_service(app)
-    build_reporting_service(app, manager=manager)
-
-    if run_database_service:
-        build_database_service(app, manager)
-
-    if run_parser_service or run_all:
-        build_parser_service(app)
-
-    if run_receiver_service or run_all:
-        build_receiver_service(app, manager=manager)
-
-    log.info('Done building %s', app)
-
-    app.run(debug=flask_debug, host=host, port=port)
 
 
 @main.group()
@@ -346,12 +329,153 @@ def boilerplate(document_name, contact, description, pmids, version, copyright, 
 
 @document.command()
 @click.argument('namespaces', nargs=-1)
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
 @click.option('-p', '--path', type=click.File('r'), default=sys.stdin, help='Input BEL file path. Defaults to stdin.')
 @click.option('-d', '--directory', help='Output directory. Defaults to current working directory')
-def serialize_namespaces(namespaces, path, directory):
+def serialize_namespaces(namespaces, connection, path, directory):
     """Parses a BEL document then serializes the given namespaces (errors and all) to the given directory"""
-    graph = from_lines(path)
+    graph = from_lines(path, manager=connection)
     export_namespaces(namespaces, graph, directory)
+
+
+@main.group()
+@click.option('-c', '--connection', help='Cache connection. Defaults to {}'.format(get_cache_connection()))
+@click.pass_context
+def manage(ctx, connection):
+    """Manage database"""
+    ctx.obj = build_manager(connection)
+    Base.metadata.bind = ctx.obj.engine
+    Base.query = ctx.obj.session.query_property()
+
+
+@manage.command()
+@click.option('-f', '--file', type=click.File('r'), default=sys.stdin, help='Input user/role file')
+@click.pass_context
+def load(ctx, file):
+    """Dump stuff for loading later (in lieu of having proper migrations)"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    for line in file:
+        email, first, last, roles, password = line.strip().split('\t')
+        u = ds.find_user(email=email)
+
+        if not u:
+            u = ds.create_user(email=email, first_name=first, last_name=last, password=password)
+            log.info('added %s', u)
+            ds.commit()
+        for role_name in roles.strip().split(','):
+            r = ds.find_role(role_name)
+            if not r:
+                r = ds.create_role(name=role_name)
+                ds.commit()
+            if not u.has_role(r):
+                ds.add_role_to_user(u, r)
+
+    ds.commit()
+
+
+@manage.group()
+def user():
+    """Manage users"""
+
+
+@user.command()
+@click.option('-p', '--with-passwords', is_flag=True)
+@click.pass_context
+def ls(ctx, with_passwords):
+    """Lists all users"""
+    for u in ctx.obj.session.query(User).all():
+        click.echo('{}\t{}\t{}\t{}{}'.format(u.email, u.first_name, u.last_name, ','.join(r.name for r in u.roles),
+                                             '\t{}'.format(u.password) if with_passwords else ''))
+
+
+@user.command()
+@click.argument('email')
+@click.argument('password')
+@click.pass_context
+def add(ctx, email, password):
+    """Creates a new user"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    try:
+        ds.create_user(email=email, password=password)
+        ds.commit()
+    except:
+        log.exception("Couldn't create user")
+
+
+@user.command()
+@click.argument('email')
+@click.pass_context
+def rm(ctx, email):
+    """Deletes a user"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    u = ds.find_user(email=email)
+    ds.delete_user(u)
+    ds.commit()
+
+
+@user.command()
+@click.argument('email')
+@click.pass_context
+def make_admin(ctx, email):
+    """Makes a given user an admin"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    try:
+        ds.add_role_to_user(email, 'admin')
+        ds.commit()
+    except:
+        log.exception("Couldn't make admin")
+
+
+@user.command()
+@click.argument('email')
+@click.argument('role')
+@click.pass_context
+def add_role(ctx, email, role):
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    try:
+        ds.add_role_to_user(email, role)
+        ds.commit()
+    except:
+        log.exception("Couldn't add role")
+
+
+@manage.group()
+def role():
+    """Manage roles"""
+
+
+@role.command()
+@click.argument('name')
+@click.option('-d', '--description')
+@click.pass_context
+def add(ctx, name, description):
+    """Creates a new role"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    try:
+        ds.create_role(name=name, description=description)
+        ds.commit()
+    except:
+        log.exception("Couldn't create role")
+
+
+@role.command()
+@click.argument('name')
+@click.pass_context
+def rm(ctx, name):
+    """Deletes a user"""
+    ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
+    u = ds.find_role(name)
+    if u:
+        ds.delete(u)
+        ds.commit()
+
+
+@role.command()
+@click.pass_context
+def ls(ctx):
+    """Lists roles"""
+    for r in ctx.obj.session.query(Role).all():
+        click.echo('{}\t{}'.format(r.name, r.description))
 
 
 if __name__ == '__main__':

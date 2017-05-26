@@ -38,24 +38,27 @@ DATE_VERSION_FMT = '%Y%m%d'
 DEFAULT_NS_DESCRIPTION = 'This namespace was serialized by PyBEL Tools'
 
 
+def get_date():
+    return time.strftime(DATE_VERSION_FMT)
+
+
 def make_namespace_header(name, keyword, domain, query_url=None, description=None, species=None, version=None,
                           created=None):
     """Makes the ``[Namespace]`` section of a BELNS file
 
-    :param name: The namespace name
-    :param keyword: Preferred BEL Keyword, maximum length of 8
-    :param domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
+    :param str name: The namespace name
+    :param str keyword: Preferred BEL Keyword, maximum length of 8
+    :param str domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
                     :data:`pybel.constants.NAMESPACE_DOMAIN_CHEMICAL`,
                     :data:`pybel.constants.NAMESPACE_DOMAIN_GENE`, or
                     :data:`pybel.constants.NAMESPACE_DOMAIN_OTHER`
-    :param query_url: HTTP URL to query for details on namespace values (must be valid URL)
-    :param description: Namespace description
-    :param species: Comma-separated list of species taxonomy id's
-    :param version: Namespace version. Defaults to current date in ``YYYYMMDD`` format.
-    :param created: Namespace public timestamp, ISO 8601 datetime
-    :type created: str
+    :param str query_url: HTTP URL to query for details on namespace values (must be valid URL)
+    :param str description: Namespace description
+    :param str species: Comma-separated list of species taxonomy id's
+    :param str version: Namespace version. Defaults to current date in ``YYYYMMDD`` format.
+    :param str created: Namespace public timestamp, ISO 8601 datetime
     :return: An iterator over the lines of the ``[Namespace]`` section of a BELNS file
-    :rtype: iter
+    :rtype: iter[str]
     """
     if domain not in NAMESPACE_DOMAIN_TYPES:
         raise ValueError('Invalid domain: {}. Should be one of: {}'.format(domain, NAMESPACE_DOMAIN_TYPES))
@@ -64,7 +67,7 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
     yield 'Keyword={}'.format(keyword)
     yield 'NameString={}'.format(name)
     yield 'DomainString={}'.format(domain)
-    yield 'VersionString={}'.format(version if version else time.strftime(DATE_VERSION_FMT))
+    yield 'VersionString={}'.format(version if version else get_date())
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
     yield 'DescriptionString={}'.format(
         DEFAULT_NS_DESCRIPTION if description is None else description.strip().replace('\n', ''))
@@ -79,11 +82,11 @@ def make_namespace_header(name, keyword, domain, query_url=None, description=Non
 def make_author_header(name=None, contact=None, copyright_str=None):
     """Makes the ``[Author]`` section of a BELNS file
 
-    :param name: Namespace's authors
-    :param contact: Namespace author's contact info/email address
-    :param copyright_str: Namespace's copyright/license information. Defaults to ``Other/Proprietary``
+    :param str name: Namespace's authors
+    :param str contact: Namespace author's contact info/email address
+    :param str copyright_str: Namespace's copyright/license information. Defaults to ``Other/Proprietary``
     :return: An iterable over the ``[Author]`` section of a BELNS file
-    :rtype: iter
+    :rtype: iter[str]
     """
     yield '[Author]'
     yield 'NameString={}'.format(name if name is not None else getpass.getuser())
@@ -96,14 +99,13 @@ def make_author_header(name=None, contact=None, copyright_str=None):
 def make_citation_header(name, description=None, url=None, version=None, date=None):
     """Makes the ``[Citation]`` section of a BEL config file.
 
-    :param name: Citation name
-    :type name: str
-    :param description: Citation description
-    :param url: URL to more citation information
-    :param version: Citation version
-    :param date: Citation publish timestamp, ISO 8601 Date
+    :param str name: Citation name
+    :param str description: Citation description
+    :param str url: URL to more citation information
+    :param str version: Citation version
+    :param str date: Citation publish timestamp, ISO 8601 Date
     :return: An iterable over the lines of the ``[Citation]`` section of a BEL config file
-    :rtype: iter
+    :rtype: iter[str]
     """
     yield '[Citation]'
     yield 'NameString={}'.format(name)
@@ -124,14 +126,11 @@ def make_citation_header(name, description=None, url=None, version=None, date=No
 def make_properties_header(case_sensitive=True, delimiter='|', cacheable=True):
     """Makes the ``[Processing]`` section of a BEL config file.
     
-    :param case_sensitive: Should this config file be interpreted as case-sensitive?
-    :type case_sensitive: bool
-    :param delimiter: The delimiter between names and labels in this config file
-    :type delimiter: str
-    :param cacheable: Should this config file be cached?
-    :type cacheable: bool
+    :param bool case_sensitive: Should this config file be interpreted as case-sensitive?
+    :param str delimiter: The delimiter between names and labels in this config file
+    :param bool cacheable: Should this config file be cached?
     :return: An iterable over the lines in the ``[Processing]`` section of a BEL config file
-    :rtype: iter
+    :rtype: iter[str]
     """
     yield '[Processing]'
     yield 'CaseSensitiveFlag={}'.format('yes' if case_sensitive else 'no')
@@ -147,55 +146,33 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
                     sort_key=None):
     """Writes a BEL namespace (BELNS) to a file
 
-    :param namespace_name: The namespace name
-    :type namespace_name: str
-    :param namespace_keyword: Preferred BEL Keyword, maximum length of 8
-    :type namespace_keyword: str
-    :param namespace_domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
+    :param str namespace_name: The namespace name
+    :param str namespace_keyword: Preferred BEL Keyword, maximum length of 8
+    :param str namespace_domain: One of: :data:`pybel.constants.NAMESPACE_DOMAIN_BIOPROCESS`, 
                             :data:`pybel.constants.NAMESPACE_DOMAIN_CHEMICAL`,
                             :data:`pybel.constants.NAMESPACE_DOMAIN_GENE`, or
                             :data:`pybel.constants.NAMESPACE_DOMAIN_OTHER`
-    :type namespace_domain: str
-    :param author_name: The namespace's authors
-    :type author_name: str
-    :param citation_name: The name of the citation
-    :type citation_name: str
-    :param values: An iterable of values (strings)
-    :type values: iter
-    :param namespace_query_url: HTTP URL to query for details on namespace values (must be valid URL)
-    :type namespace_query_url: str
-    :param namespace_description: Namespace description
-    :type namespace_description: str
-    :param namespace_species: Comma-separated list of species taxonomy id's
-    :type namespace_species: str
-    :param namespace_version: Namespace version
-    :type namespace_version: str
-    :param namespace_created: Namespace public timestamp, ISO 8601 datetime
-    :type namespace_created: str
-    :param author_contact: Namespace author's contact info/email address
-    :type author_contact: str
-    :param author_copyright: Namespace's copyright/license information
-    :type author_copyright: str
-    :param citation_description: Citation description
-    :type citation_description: str
-    :param citation_url: URL to more citation information
-    :type citation_url: str
-    :param citation_version: Citation version
-    :type citation_version: str
-    :param citation_date: Citation publish timestamp, ISO 8601 Date
-    :type citation_date: str
-    :param case_sensitive: Should this config file be interpreted as case-sensitive?
-    :type case_sensitive: bool
-    :param delimiter: The delimiter between names and labels in this config file
-    :type delimiter: str
-    :param cacheable: Should this config file be cached?
-    :type cacheable: bool
+    :param str author_name: The namespace's authors
+    :param str citation_name: The name of the citation
+    :param iter[str] values: An iterable of values (strings)
+    :param str namespace_query_url: HTTP URL to query for details on namespace values (must be valid URL)
+    :param str namespace_description: Namespace description
+    :param str namespace_species: Comma-separated list of species taxonomy id's
+    :param str namespace_version: Namespace version
+    :param str namespace_created: Namespace public timestamp, ISO 8601 datetime
+    :param str author_contact: Namespace author's contact info/email address
+    :param str author_copyright: Namespace's copyright/license information
+    :param str citation_description: Citation description
+    :param str citation_url: URL to more citation information
+    :param str citation_version: Citation version
+    :param str citation_date: Citation publish timestamp, ISO 8601 Date
+    :param bool case_sensitive: Should this config file be interpreted as case-sensitive?
+    :param str delimiter: The delimiter between names and labels in this config file
+    :param bool cacheable: Should this config file be cached?
     :param functions: The encoding for the elements in this namespace
     :type functions: iterable of characters
-    :param file: the stream to print to
-    :type file: file or file-like
-    :param value_prefix: a prefix for each name
-    :type value_prefix: str
+    :param file file: A writable file or file-like
+    :param str value_prefix: a prefix for each name
     :param sort_key: A function to sort the values with :func:`sorted`. Give ``False`` to not sort
     """
     file = sys.stdout if file is None else file
@@ -237,24 +214,19 @@ def write_namespace(namespace_name, namespace_keyword, namespace_domain, author_
 def make_annotation_header(keyword, description=None, usage=None, version=None, created=None):
     """Makes the ``[AnnotationDefinition]`` section of a BELANNO file
 
-    :param keyword: Preferred BEL Keyword, maximum length of 8
-    :type keyword: str
-    :param description: A description of this annotation
-    :type description: str
-    :param usage: How to use this annotation
-    :type usage: str
-    :param version: Namespace version. Defaults to date in ``YYYYMMDD`` format.
-    :type version: str
-    :param created: Namespace public timestamp, ISO 8601 datetime
-    :type created: str
+    :param str keyword: Preferred BEL Keyword, maximum length of 8
+    :param str description: A description of this annotation
+    :param str usage: How to use this annotation
+    :param str version: Namespace version. Defaults to date in ``YYYYMMDD`` format.
+    :param str created: Namespace public timestamp, ISO 8601 datetime
     :return: A iterator over the lines for the ``[AnnotationDefinition]`` section
-    :rtype: iter
+    :rtype: iter[str]
     """
 
     yield '[AnnotationDefinition]'
     yield 'Keyword={}'.format(keyword)
     yield 'TypeString={}'.format('list')
-    yield 'VersionString={}'.format(version if version else time.strftime(DATE_VERSION_FMT))
+    yield 'VersionString={}'.format(version if version else get_date())
     yield 'CreatedDateTime={}'.format(created if created else time.strftime(DATETIME_FMT))
 
     if description is not None:
@@ -269,36 +241,21 @@ def write_annotation(keyword, values, citation_name, description=None, usage=Non
                      cacheable=True, file=None, value_prefix=''):
     """Writes a BEL annotation (BELANNO) to a file
 
-    :param keyword: The annotation keyword
-    :type keyword: str
-    :param values: A dictionary of {name: label}
-    :type values: dict
-    :param citation_name: The citation name
-    :type citation_name: str
-    :param description: A description of this annotation
-    :type description: str
-    :param usage: How to use this annotation
-    :type usage: str
-    :param version: The version of this annotation. Defaults to date in ``YYYYMMDD`` format.
-    :type version: str
-    :param created: The annotation's public timestamp, ISO 8601 datetime
-    :type created: str
-    :param author_name: The author's name
-    :type author_name: str
-    :param author_copyright: The copyright information for this annotation. Defaults to ``Other/Proprietary``
-    :type author_copyright: str
-    :param author_contact: The contact information for the author of this annotation.
-    :type author_contact: str
-    :param case_sensitive: Should this config file be interpreted as case-sensitive?
-    :type case_sensitive: bool
-    :param delimiter: The delimiter between names and labels in this config file
-    :type delimiter: str
-    :param cacheable: Should this config file be cached?
-    :type cacheable: bool
-    :param file: A file or file-like
-    :type file: file
-    :param value_prefix: An optional prefix for all values
-    :type value_prefix: str
+    :param str keyword: The annotation keyword
+    :param dict[str, str] values: A dictionary of {name: label}
+    :param str citation_name: The citation name
+    :param str description: A description of this annotation
+    :param str usage: How to use this annotation
+    :param str version: The version of this annotation. Defaults to date in ``YYYYMMDD`` format.
+    :param str created: The annotation's public timestamp, ISO 8601 datetime
+    :param str author_name: The author's name
+    :param str author_copyright: The copyright information for this annotation. Defaults to ``Other/Proprietary``
+    :param str author_contact: The contact information for the author of this annotation.
+    :param bool case_sensitive: Should this config file be interpreted as case-sensitive?
+    :param str delimiter: The delimiter between names and labels in this config file
+    :param bool cacheable: Should this config file be cached?
+    :param file file: A writable file or file-like
+    :param str value_prefix: An optional prefix for all values
     """
     file = sys.stdout if file is None else file
 
@@ -331,17 +288,13 @@ def export_namespace(graph, namespace, directory=None, cacheable=False):
 
     Could be useful during quick and dirty curation, where planned namespace building is not a priority.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param namespace: The namespace to process
-    :type namespace: str
-    :param directory: The path to the directory where to output the namespace. Defaults to the current working
+    :param pybel.BELGraph graph: A BEL graph
+    :param str namespace: The namespace to process
+    :param str directory: The path to the directory where to output the namespace. Defaults to the current working
                       directory returned by :func:`os.getcwd`
-    :type directory: str
-    :param cacheable: Should the namespace be cacheable? Defaults to ``False`` because, in general, this operation 
+    :param bool cacheable: Should the namespace be cacheable? Defaults to ``False`` because, in general, this operation 
                         will probably be used for evil, and users won't want to reload their entire cache after each
                         iteration of curation.
-    :type cacheable: bool
     """
     directory = os.getcwd() if directory is None else directory
     path = os.path.join(directory, '{}.belns'.format(namespace))
@@ -376,17 +329,13 @@ def export_namespace(graph, namespace, directory=None, cacheable=False):
 def export_namespaces(graph, namespaces, directory=None, cacheable=False):
     """Thinly wraps :func:`export_namespace` for an iterable of namespaces.
     
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param namespaces: An iterable of strings for the namespaces to process
-    :type namespaces: iter
-    :param directory: The path to the directory where to output the namespaces. Defaults to the current working
+    :param pybel.BELGraph graph: A BEL graph
+    :param iter[str] namespaces: An iterable of strings for the namespaces to process
+    :param str directory: The path to the directory where to output the namespaces. Defaults to the current working
                       directory returned by :func:`os.getcwd`
-    :type directory: str
-    :param cacheable: Should the namespaces be cacheable? Defaults to ``False`` because, in general, this operation 
+    :param bool cacheable: Should the namespaces be cacheable? Defaults to ``False`` because, in general, this operation 
                         will probably be used for evil, and users won't want to reload their entire cache after each 
                         iteration of curation.
-    :type cacheable: bool
     """
     directory = os.getcwd() if directory is None else directory  # avoid making multiple calls to os.getcwd later
     for namespace in namespaces:
@@ -396,12 +345,10 @@ def export_namespaces(graph, namespaces, directory=None, cacheable=False):
 def get_merged_namespace_names(locations, check_keywords=True):
     """Loads many namespaces and combines their names.
     
-    :param locations: An iterable of URLs or file paths pointing to BEL namespaces.
-    :type locations: iter
-    :param check_keywords: Should all the keywords be the same? Defaults to ``True``
-    :type check_keywords: bool
+    :param iter[str] locations: An iterable of URLs or file paths pointing to BEL namespaces.
+    :param bool check_keywords: Should all the keywords be the same? Defaults to ``True``
     :return: A dictionary of {names: labels}
-    :rtype: dict
+    :rtype: dict[str, str]
     
     Example Usage
     
@@ -499,8 +446,7 @@ def check_cacheable(config):
 
     If cannot be determined, returns ``False``
 
-    :param config: A configuration dictionary representing a BEL resource
-    :type config: dict
+    :param dict config: A configuration dictionary representing a BEL resource
     :return: Should this resource be cached
     :rtype: bool
     """

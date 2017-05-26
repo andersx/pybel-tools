@@ -16,7 +16,20 @@
         <div class="page-header">
             <h1>BEL Document Generator</h1>
         </div>
-        {{ util.flashed_messages(dismissible=True) }}
+
+        {{ util.flashed_messages(dismissible=True, container=False) }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
+                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+                <div class="pull-right">
+                    {% include "login_buttons.html" %}
+                </div>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-body">
                 <p>This page can be used to make a BEL script that's pre-populated with the most common namespaces and
@@ -25,6 +38,7 @@
                 </p>
             </div>
         </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Input</h3>
@@ -34,6 +48,8 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}
 
 {% block head %}

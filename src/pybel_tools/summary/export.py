@@ -9,6 +9,8 @@ printing summary information, and exporting summarized graphs
 
 from __future__ import print_function
 
+import logging
+
 import networkx as nx
 import pandas as pd
 
@@ -23,6 +25,8 @@ __all__ = [
     'print_summary',
 ]
 
+log = logging.getLogger(__name__)
+
 
 def plot_summary_axes(graph, lax, rax):
     """Plots your graph summary statistics on the given axes.
@@ -33,8 +37,7 @@ def plot_summary_axes(graph, lax, rax):
     1. Count of nodes, grouped by function type
     2. Count of edges, grouped by relation type
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param lax: An axis object from matplotlib
     :param rax: An axis object from matplotlib
 
@@ -74,8 +77,7 @@ def plot_summary(graph, plt, **kwargs):
     1. Count of nodes, grouped by function type
     2. Count of edges, grouped by relation type
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param plt: Give :code:`matplotlib.pyplot` to this parameter
     :param kwargs: keyword arguments to give to :func:`plt.subplots`
 
@@ -101,26 +103,33 @@ def plot_summary(graph, plt, **kwargs):
 def info_list(graph):
     """Returns useful information about the graph as a list of tuples
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :rtype: list
     """
     number_nodes = graph.number_of_nodes()
-    return [
-        ('Number of nodes', number_nodes),
-        ('Number of edges', graph.number_of_edges()),
+    result = [
+        ('Nodes', number_nodes),
+        ('Edges', graph.number_of_edges()),
         ('Network density', nx.density(graph)),
-        ('Number weakly connected components', nx.number_weakly_connected_components(graph)),
-        ('Average in-degree', sum(graph.in_degree().values()) / float(number_nodes)),
-        ('Average out-degree', sum(graph.out_degree().values()) / float(number_nodes)),
+        ('Components', nx.number_weakly_connected_components(graph)),
+
     ]
+
+    try:
+        result.append(('Average degree', sum(graph.in_degree().values()) / float(number_nodes)))
+    except ZeroDivisionError:
+        log.info('Graph has no nodes')
+
+    if graph.warnings:
+        result.append(('Compilation warnings', len(graph.warnings)))
+
+    return result
 
 
 def info_json(graph):
     """Returns useful information about the graph as a dictionary
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :rtype: dict
     """
     return dict(info_list(graph))
@@ -129,8 +138,7 @@ def info_json(graph):
 def info_str(graph):
     """Puts useful information about the graph in a string
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :rtype: str
     """
     return '\n'.join('{}: {}'.format(k, v) for k, v in info_list(graph))
@@ -139,8 +147,7 @@ def info_str(graph):
 def print_summary(graph, file=None):
     """Prints useful information about the graph
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     :param file: A writeable file or file-like object. If None, defaults to :data:`sys.stdout`
     """
     print(info_str(graph), file=file)

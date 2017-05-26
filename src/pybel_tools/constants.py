@@ -35,7 +35,6 @@ default_namespace_names = {
     'MGI': 'mgi-mouse-genes.belns',
     'RGD': 'rgd-rat-genes.belns',
     'SCOMP': 'selventa-named-complexes.belns',
-    'SDIS': 'selventa-legacy-diseases.belns',
     'SFAM': 'selventa-protein-families.belns',
     'SP': 'swissprot.belns',
     'SPID': 'swissprot-ids.belns',
@@ -73,9 +72,14 @@ belief_demo_namespaces_2 = {
     'PMIPFAM': 'pmipfam.belns',
 }
 
+DBSNP_PATTERN = 'rs[0-9]+'
+EC_PATTERN = '(\d+|\-)\.((\d+)|(\-))\.(\d+|\-)(\.(n)?(\d+|\-))*'
+INCHI_PATTERN = '^((InChI=)?[^J][0-9BCOHNSOPrIFla+\-\(\)\\\/,pqbtmsih]{6,})$'
+
 default_namespace_patterns = {
-    'dbSNP': 'rs[0-9]+',
-    'InChI': '^((InChI=)?[^J][0-9BCOHNSOPrIFla+\-\(\)\\\/,pqbtmsih]{6,})$'
+    'dbSNP': DBSNP_PATTERN,
+    'EC': EC_PATTERN,
+    'InChI': INCHI_PATTERN
 }
 
 openbel_2013_prefix = 'http://resource.belframework.org/belframework/20131211/annotation/'
