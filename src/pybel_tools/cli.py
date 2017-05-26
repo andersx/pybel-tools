@@ -14,6 +14,7 @@ problems--the code will get executed twice:
 Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
+import datetime
 import os
 import sys
 from getpass import getuser
@@ -401,6 +402,8 @@ def add(ctx, email, password, admin):
 
         if admin:
             ds.add_role_to_user(u, 'admin')
+
+        u.confirmed_at = datetime.datetime.now()
 
         ds.commit()
     except:
