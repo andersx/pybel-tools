@@ -89,8 +89,7 @@ def get_mapped(graph, namespace, names):
 
     for u, v, d in graph.edges_iter(data=True):
 
-        if d[RELATION] in {HAS_MEMBER, HAS_COMPONENT} and NAMESPACE in graph.node[v] and graph.node[v][
-            NAMESPACE] == namespace and graph.node[v][NAME] in names:
+        if d[RELATION] in {HAS_MEMBER, HAS_COMPONENT} and NAMESPACE in graph.node[v] and graph.node[v][NAMESPACE] == namespace and graph.node[v][NAME] in names:
             mapped_nodes[v].add(u)
 
         elif d[RELATION] == HAS_VARIANT and NAMESPACE in graph.node[u] and graph.node[u][NAMESPACE] == namespace and \
