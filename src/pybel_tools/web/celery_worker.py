@@ -84,7 +84,7 @@ def async_parser(lines, connection, current_user_id, current_user_email, public,
         completion_msg = Message(
             subject='Parsing complete',
             recipients=[current_user_email],
-            body='{} is done parsing. See: {}'.format(graph, url_for('view_summary', graph_id=network.id)),
+            body='{} is done parsing.'.format(graph),
             sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
         )
 
