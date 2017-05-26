@@ -142,11 +142,19 @@
                                             <li><a class="btn btn-danger"
                                                    href="{{ url_for('make_network_public', network_id=network.id) }}"
                                                    role="button">Make Public</a></li>
+                                        {% elif network.report and network.report[0].public %}
+                                            <li><a class="btn btn-danger"
+                                                   href="{{ url_for('make_network_private', network_id=network.id) }}"
+                                                   role="button">Make Private</a></li>
                                         {% endif %}
-                                    {% elif network.report and network.report[0].user == current_user %}
+                                    {% elif network.report and network.report[0].user == current_user and not network.report[0].public %}
                                         <li><a class="btn btn-success"
                                                href="{{ url_for('make_user_network_public', user_id=current_user.id, network_id=network.id) }}"
                                                role="button">Make Public</a></li>
+                                    {% elif network.report and network.report[0].user == current_user and network.report[0].public %}
+                                        <li><a class="btn btn-success"
+                                               href="{{ url_for('make_user_network_private', user_id=current_user.id, network_id=network.id) }}"
+                                               role="button">Make Private</a></li>
                                     {% endif %}
                                 {% endif %}
                             </ul>

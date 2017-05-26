@@ -288,6 +288,16 @@ def build_dictionary_service_admin(app):
         flask.flash('Made {} public'.format(report.network))
         return redirect(url_for('view_networks'))
 
+    @app.route('/admin/network/make_private/<int:network_id>')
+    @roles_accepted('admin', 'scai')
+    def make_network_private(network_id):
+        report = manager.session.query(Report).filter(Report.network_id == network_id).one()
+        report.public = False
+        manager.commit()
+
+        flask.flash('Made {} private'.format(report.network))
+        return redirect(url_for('view_networks'))
+
     @app.route('/api/network/make_public/<int:user_id>/<int:network_id>')
     @login_required
     def make_user_network_public(user_id, network_id):
@@ -299,6 +309,19 @@ def build_dictionary_service_admin(app):
         manager.commit()
 
         flask.flash('Made {} public'.format(report.network))
+        return redirect(url_for('view_networks'))
+
+    @app.route('/api/network/make_private/<int:user_id>/<int:network_id>')
+    @login_required
+    def make_user_network_private(user_id, network_id):
+        if current_user.id != user_id:
+            return flask.abort(402)
+
+        report = manager.session.query(Report).filter(Report.network_id == network_id, Report.user_id == user_id).one()
+        report.public = False
+        manager.commit()
+
+        flask.flash('Made {} private'.format(report.network))
         return redirect(url_for('view_networks'))
 
     log.info('added dict service admin functions')
