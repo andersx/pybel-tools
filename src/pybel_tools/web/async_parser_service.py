@@ -31,7 +31,13 @@ def view_async_parser():
     lines = list(lines)
 
     celery = create_celery(current_app)
-    task = celery.send_task('pybelparser', args=(lines, current_app.config.get(PYBEL_CONNECTION), current_user))
+    task = celery.send_task('pybelparser', args=(
+        lines,
+        current_app.config.get(PYBEL_CONNECTION),
+        current_user.id,
+        current_user.email,
+        form.public.data,
+    ))
 
     flash('Queued parsing task {}.'.format(task))
 

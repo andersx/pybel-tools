@@ -13,7 +13,7 @@ from pybel_tools.mutation import add_canonical_names
 from .application import create_application
 from .celery import create_celery
 from .constants import integrity_message
-from .models import log_graph, add_network_reporting
+from .models import Report
 
 app, mail = create_application(get_mail=True)
 celery = create_celery(app)
@@ -24,7 +24,8 @@ log = get_task_logger(__name__)
 # TODO add email notification
 
 @celery.task(name='pybelparser')
-def async_parser(lines, connection, current_user, allow_nested=False, citation_clearing=False, store_parts=False):
+def async_parser(lines, connection, current_user_id, current_user_email, public, allow_nested=False,
+                 citation_clearing=False, store_parts=False):
     log.info('starting parsing')
     manager = build_manager(connection)
     try:
@@ -51,13 +52,11 @@ def async_parser(lines, connection, current_user, allow_nested=False, citation_c
     try:
         network = manager.insert_graph(graph, store_parts=store_parts)
     except IntegrityError:
-        log_graph(graph, current_user, preparsed=False, failed=True)
         message = integrity_message.format(graph.name, graph.version)
         log.exception(message)
         manager.rollback()
         return message
     except Exception as e:
-        log_graph(graph, current_user, preparsed=False, failed=True)
         message = "Error storing in database: {}".format(e)
         log.exception(message)
         return message
@@ -65,8 +64,16 @@ def async_parser(lines, connection, current_user, allow_nested=False, citation_c
     log.info('done storing [%d]', network.id)
 
     try:
-        add_network_reporting(manager, network, current_user, graph.number_of_nodes(), graph.number_of_edges(),
-                              len(graph.warnings), preparsed=False)
+        report = Report(
+            network=network,
+            user_id=current_user_id,
+            number_nodes=graph.number_of_nodes(),
+            number_edges=graph.number_of_edges(),
+            number_warnings=len(graph.warnings),
+            public=public,
+        )
+        manager.session.add(report)
+        manager.session.commit()
     except IntegrityError:
         message = 'Problem with reporting service.'
         log.exception(message)
@@ -75,7 +82,7 @@ def async_parser(lines, connection, current_user, allow_nested=False, citation_c
 
     completion_msg = Message(
         subject='Parsing complete',
-        recipients=[current_user.email],
+        recipients=[current_user_email],
         body='{} is done parsing. See: {}'.format(graph, url_for('view_summary', graph_id=network.id)),
         sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
 
