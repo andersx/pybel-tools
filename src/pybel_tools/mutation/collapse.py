@@ -197,7 +197,7 @@ def _collapse_variants_by_function(graph, function):
     :param pybel.BELGraph graph: A BEL graph
     :param str function: A BEL function
     """
-    for parent_node, variant_node, d in graph.edges_iter(data=True):
+    for parent_node, variant_node, d in graph.edges(data=True):
         if d[RELATION] == HAS_VARIANT and graph.node[parent_node][FUNCTION] == function:
             collapse_pair(graph, parent_node, variant_node)
 
@@ -244,7 +244,7 @@ def collapse_all_variants(graph):
     
     :param pybel.BELGraph graph: A BEL Graph
     """
-    for u, v, d in graph.edges_iter(data=True):
+    for u, v, d in graph.edges(data=True):
         if d[RELATION] == HAS_VARIANT:
             collapse_pair(graph, u, v)
 
@@ -331,7 +331,7 @@ def collapse_namespace(graph, from_namespace, to_namespace):
     >>> collapse_namespace(graph, 'CHEBI', 'CHEBIID')
     >>> collapse_namespace(graph, 'CHEBIID', 'INCHI')
     """
-    for u, v, d in graph.edges_iter(data=True):
+    for u, v, d in graph.edges(data=True):
         if d[RELATION] != EQUIVALENT_TO:
             continue
 
