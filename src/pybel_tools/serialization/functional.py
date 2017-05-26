@@ -98,21 +98,117 @@ def _ensure_members(tokens):
     return term(tokens[FUNCTION], *token_arguments)
 
 
+def identifier_parameter(tokens_identifier):
+    namespace = tokens_identifier[NAMESPACE]
+    name = tokens_identifier[NAME]
+
+    if namespace == BEL_DEFAULT_NAMESPACE:
+        name = rev_labels.get(name, name)
+
+    return parameter(namespace, name)
+
+
+def make_variant_term(tokens):
+    if tokens[KIND] == HGVS:
+        arguments = [{
+            'parameter': {
+                'name': IDENTIFIER,
+                'value': tokens[IDENTIFIER]
+            }
+        }]
+
+        return term('variant', *arguments)
+
+    elif tokens[KIND] == PMOD:
+        arguments = [{
+            'parameter': {
+                'name': IDENTIFIER,
+                'value': tokens[IDENTIFIER]
+            }
+        }]
+
+        return term(PMOD, *arguments)
+
+    elif tokens[KIND] == FRAGMENT:
+        arguments = []
+
+        if FRAGMENT_MISSING in tokens:
+            arguments.append({
+                'parameter': {
+                    'name': FRAGMENT_MISSING,
+                    'value': '?'
+                }
+            })
+        else:
+            arguments.extend([{
+                'parameter': {
+                    'name': FRAGMENT_START,
+                    'value': tokens[FRAGMENT_START]
+                }
+            }, {
+                'parameter': {
+                    'name': FRAGMENT_STOP,
+                    'value': tokens[FRAGMENT_STOP]
+                }
+            }])
+
+        if FRAGMENT_DESCRIPTION in tokens:
+            arguments.append({
+                'parameter': {
+                    'name': FRAGMENT_DESCRIPTION,
+                    'value': tokens[FRAGMENT_DESCRIPTION]
+                }
+            })
+
+        return term(FRAGMENT, *arguments)
+
+    elif tokens[KIND] == GMOD:
+        arguments = [{
+            'parameter': {
+                'name': IDENTIFIER,
+                'value': tokens[IDENTIFIER]
+            }
+        }]
+        return term(GMOD, *arguments)
+
+
 def _ensure_variants(tokens):
-    raise NotImplementedError
+    func = tokens[FUNCTION]
+    arguments = [
+        identifier_parameter(tokens[IDENTIFIER])
+    ]
+
+    for variant_tokens in tokens[VARIANTS]:
+        arguments.append(make_variant_term(variant_tokens))
+
+    if LOCATION in tokens:
+        arguments.append(term(LOCATION, identifier_parameter(tokens[LOCATION])))
+
+    return term(func, *arguments)
 
 
 def _ensure_fusion(tokens):
-    raise NotImplementedError
+    func = tokens[FUNCTION]
+    arguments = []
+
+    # TODO implement
+
+
+    if LOCATION in tokens:
+        arguments.append(term(LOCATION, identifier_parameter(tokens[LOCATION])))
+
+    return term(func, *arguments)
 
 
 def convert_simple(tokens, location=None):
     arguments = [
-        parameter(tokens[IDENTIFIER][NAMESPACE], tokens[IDENTIFIER][NAME])
+        identifier_parameter(tokens[IDENTIFIER])
     ]
 
     if location is not None:
-        raise NotImplementedError
+        arguments.append(term(LOCATION, identifier_parameter(location[IDENTIFIER])))
+    elif LOCATION in tokens:
+        arguments.append(term(LOCATION, identifier_parameter(tokens[LOCATION])))
 
     return term(tokens[FUNCTION], *arguments)
 
@@ -129,7 +225,7 @@ def convert_node(tokens):
         if TARGET in tokens:
             arguments.append(term(
                 'molecularActivity',
-                parameter(tokens[EFFECT][NAMESPACE], tokens[EFFECT][NAME])
+                identifier_parameter(tokens[EFFECT])
             ))
 
         return term(ACTIVITY, *arguments)
@@ -138,8 +234,8 @@ def convert_node(tokens):
         return term(
             TRANSLOCATION,
             parameter(tokens[EFFECT][NAMESPACE], tokens[EFFECT][NAME]),
-            term(TO_LOC, parameter(tokens[EFFECT][TO_LOC][NAMESPACE], tokens[EFFECT][TO_LOC][NAME])),
-            term(FROM_LOC, parameter(tokens[EFFECT][FROM_LOC][NAMESPACE], tokens[EFFECT][FROM_LOC][NAME]))
+            term(TO_LOC, identifier_parameter(tokens[EFFECT][TO_LOC])),
+            term(FROM_LOC, identifier_parameter(tokens[EFFECT][FROM_LOC]))
         )
 
     if REACTION == tokens[FUNCTION]:

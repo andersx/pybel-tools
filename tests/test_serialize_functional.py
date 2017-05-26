@@ -73,7 +73,7 @@ class TestFunctionalize(unittest.TestCase):
                                     {
                                         'parameter': {
                                             'ns': 'bel',
-                                            'value': 'cat'
+                                            'value': 'catalyticActivity'
                                         }
                                     }
                                 ]
@@ -145,7 +145,7 @@ class TestFunctionalize(unittest.TestCase):
                                     {
                                         'parameter': {
                                             'ns': 'bel',
-                                            'value': 'pep'
+                                            'value': 'peptidaseActivity'
                                         }
                                     }
                                 ]
