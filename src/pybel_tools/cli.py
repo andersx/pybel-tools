@@ -391,12 +391,17 @@ def ls(ctx, with_passwords):
 @user.command()
 @click.argument('email')
 @click.argument('password')
+@click.option('-a', '--admin', is_flag=True)
 @click.pass_context
-def add(ctx, email, password):
+def add(ctx, email, password, admin):
     """Creates a new user"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     try:
-        ds.create_user(email=email, password=password)
+        u = ds.create_user(email=email, password=password)
+
+        if admin:
+            ds.add_role_to_user(u, 'admin')
+
         ds.commit()
     except:
         log.exception("Couldn't create user")
