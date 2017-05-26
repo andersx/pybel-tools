@@ -74,13 +74,14 @@ def async_parser(lines, connection, email, allow_nested=False, citation_clearing
         manager.rollback()
         return message
 
-    with app.app_context():
-        completion_msg = Message(
-            subject='Parsing complete',
-            recipients=[email],
-            body='{} is done parsing. See: {}'.format(graph, url_for('view_summary', graph_id=network.id))
+    completion_msg = Message(
+        subject='Parsing complete',
+        recipients=[email],
+        body='{} is done parsing. See: {}'.format(graph, url_for('view_summary', graph_id=network.id)),
+        sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
 
-        )
+    )
+    with app.app_context():
         mail.send(completion_msg)
 
     return network.id
