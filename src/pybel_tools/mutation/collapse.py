@@ -246,7 +246,7 @@ def collapse_all_variants(graph):
     """
     for u, v, d in graph.edges_iter(data=True):
         if d[RELATION] == HAS_VARIANT:
-            collapse_pair(u, v)
+            collapse_pair(graph, u, v)
 
 
 @pipeline.mutator
