@@ -74,5 +74,5 @@ def create_application(get_mail=False, **kwargs):
 
     if not get_mail:
         return app
-    if get_mail:
-        return app, mail
+
+    return app, mail
