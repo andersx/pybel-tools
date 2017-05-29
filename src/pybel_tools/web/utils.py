@@ -4,12 +4,11 @@ import itertools as itt
 from collections import Counter
 
 import flask
-import networkx as nx
 from flask import render_template, jsonify
 from flask_login import current_user
+from pybel.canonicalize import decanonicalize_node
 from sqlalchemy.exc import IntegrityError
 
-from pybel.canonicalize import decanonicalize_node
 from .constants import *
 from ..analysis.stability import *
 from ..constants import CNAME
@@ -21,7 +20,7 @@ from ..summary.error_summary import get_undefined_namespaces, get_undefined_anno
 from ..summary.export import info_list
 from ..summary.node_properties import count_variants
 from ..summary.node_summary import get_unused_namespaces
-from ..utils import prepare_c3, count_dict_values
+from ..utils import prepare_c3, count_dict_values, calc_betweenness_centality
 
 log = logging.getLogger(__name__)
 
@@ -205,11 +204,3 @@ def render_graph_summary(graph_id, graph, api=None):
         current_user=current_user,
         namespaces_with_incorrect_names=namespaces_with_incorrect_names
     )
-
-
-def calc_betweenness_centality(graph):
-    try:
-        res = Counter(nx.betweenness_centrality(graph, k=200))
-        return res
-    except:
-        return Counter(nx.betweenness_centrality(graph))

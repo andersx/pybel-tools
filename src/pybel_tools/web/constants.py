@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import logging
 
 PYBEL_CACHE_CONNECTION = 'pybel_cache_connection'

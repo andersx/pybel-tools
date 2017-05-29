@@ -3,15 +3,15 @@
 import requests.exceptions
 from celery.utils.log import get_task_logger
 from flask_mail import Message
-from sqlalchemy.exc import IntegrityError
-
 from pybel import from_lines
 from pybel.manager import build_manager
 from pybel.parser.parse_exceptions import InconsistientDefinitionError
 from pybel_tools.mutation import add_canonical_names
+from sqlalchemy.exc import IntegrityError
+
 from .application import create_application
-from .celery import create_celery
 from .constants import integrity_message
+from .create_celery import create_celery
 from .models import Report
 
 app, mail = create_application(get_mail=True)

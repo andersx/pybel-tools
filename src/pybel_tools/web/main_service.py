@@ -2,7 +2,6 @@
 
 """This module runs the dictionary-backed PyBEL API"""
 
-import logging
 import time
 from operator import itemgetter
 
@@ -11,20 +10,19 @@ import networkx as nx
 from flask import render_template
 from flask import request, jsonify, url_for, redirect, make_response
 from flask_security import roles_required, roles_accepted, current_user, login_required
-from requests.compat import unquote
-from six import StringIO
-
 from pybel import from_bytes
 from pybel import from_url
 from pybel.constants import *
 from pybel.manager.models import Namespace, Annotation, Network
-from .dict_service_utils import DictionaryService
+from requests.compat import unquote
+from six import StringIO
+
 from .extension import get_manager, get_api
 from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .models import Report
 from .send_utils import serve_network
-from .utils import render_graph_summary
-from .utils import try_insert_graph, sanitize_list_of_str
+from .utils import render_graph_summary, try_insert_graph, sanitize_list_of_str
+from ..api import DictionaryService
 from ..constants import BMS_BASE
 from ..definition_utils import write_namespace
 from ..ioutils import convert_recursive, upload_recursive, get_paths_recursive
@@ -397,11 +395,10 @@ def build_api_admin(app):
     log.info('added api admin functions')
 
 
-def build_dictionary_service(app):
-    """Builds the PyBEL Dictionary-Backed API Service.
+def build_main_service(app):
+    """Builds the PyBEL main sergice
 
     :param flask.Flask app: A Flask App
-    :param bool check_version: Should the versions of the networks be checked during loading?
     """
     manager = get_manager(app)
     api = get_api(app)
@@ -542,7 +539,8 @@ def build_dictionary_service(app):
             flask.abort(403)
 
         try:
-            report = manager.session.query(Report).filter(Report.network_id == network_id, Report.user_id == user_id).one()
+            report = manager.session.query(Report).filter(Report.network_id == network_id,
+                                                          Report.user_id == user_id).one()
             manager.session.delete(report.network)
             manager.session.delete(report)
             manager.commit()
@@ -550,7 +548,7 @@ def build_dictionary_service(app):
         except:
             manager.rollback()
             flask.flash('Problem dropping network {}'.format(network_id), category='error')
-            
+
         return redirect(url_for('view_networks'))
 
     @app.route('/api/tree/')

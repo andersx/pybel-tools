@@ -9,12 +9,12 @@ from flask import render_template, request, make_response
 from flask_security import login_required, current_user
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
+from pybel.constants import NAMESPACE_DOMAIN_TYPES
+from pybel.utils import parse_bel_resource
 from six import StringIO
 from wtforms import fields
 from wtforms.validators import DataRequired
 
-from pybel.constants import NAMESPACE_DOMAIN_TYPES
-from pybel.utils import parse_bel_resource
 from ..definition_utils import write_namespace
 from ..document_utils import write_boilerplate
 from ..recuration.suggestions import get_ols_search, get_ols_suggestion

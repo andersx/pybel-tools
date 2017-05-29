@@ -8,16 +8,16 @@ from operator import itemgetter
 
 import flask
 import pandas
+import pybel
 from flask import render_template, redirect, url_for, jsonify, make_response
 from flask_login import login_required, current_user
-from six import StringIO
-
-import pybel
 from pybel.constants import GENE
 from pybel.manager.models import Network
-from .dict_service import get_graph_from_request
+from six import StringIO
+
 from .extension import get_manager, get_api
 from .forms import DifferentialGeneExpressionForm
+from .main_service import get_graph_from_request
 from .models import Experiment
 from .. import generation
 from ..analysis import npa

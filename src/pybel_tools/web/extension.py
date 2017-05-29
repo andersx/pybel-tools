@@ -3,7 +3,8 @@
 from pybel.constants import PYBEL_CONNECTION
 from pybel.manager import build_manager
 from pybel.manager.models import Base
-from .dict_service_utils import DictionaryService
+
+from ..api import DictionaryService
 
 
 class _FlaskPybelState:

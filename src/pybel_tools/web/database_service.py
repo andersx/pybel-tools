@@ -6,8 +6,8 @@ import flask
 from flask import Flask
 from flask import jsonify
 
-from .database_service_utils import DatabaseService
 from .extension import get_manager
+from ..api import DatabaseService
 
 DATABASE_SERVICE = 'database_service'
 

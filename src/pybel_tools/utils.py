@@ -10,11 +10,13 @@ from collections import Counter, defaultdict
 from operator import itemgetter
 
 import jinja2
+import networkx as nx
 import pandas as pd
 from pkg_resources import get_distribution
-
 from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
     CITATION_AUTHORS, CITATION_COMMENTS, RELATION
+
+CENTRALITY_SAMPLES = 200
 
 
 def graph_edge_data_iter(graph):
@@ -371,3 +373,11 @@ def build_template_renderer(file):
 
 def enable_cool_mode():
     logging.getLogger('pybel.parser').setLevel(50)
+
+
+def calc_betweenness_centality(graph):
+    try:
+        res = Counter(nx.betweenness_centrality(graph, k=CENTRALITY_SAMPLES))
+        return res
+    except:
+        return Counter(nx.betweenness_centrality(graph))

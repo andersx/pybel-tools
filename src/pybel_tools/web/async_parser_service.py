@@ -7,9 +7,9 @@ import logging
 
 from flask import render_template, current_app, Blueprint, flash
 from flask_login import current_user, login_required
-
 from pybel.constants import PYBEL_CONNECTION
-from .celery import create_celery
+
+from .create_celery import create_celery
 from .forms import ParserForm
 
 log = logging.getLogger(__name__)
