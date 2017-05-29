@@ -2,6 +2,8 @@
 
 """This module runs the dictionary-backed PyBEL API"""
 
+import logging
+import os
 import time
 from operator import itemgetter
 
@@ -12,7 +14,8 @@ from flask import request, jsonify, url_for, redirect, make_response
 from flask_security import roles_required, roles_accepted, current_user, login_required
 from pybel import from_bytes
 from pybel import from_url
-from pybel.constants import *
+from pybel.constants import METADATA_NAME, METADATA_AUTHORS, METADATA_CONTACT
+from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, FRAUNHOFER_RESOURCES, PYBEL_LOG_DIR
 from pybel.manager.models import Namespace, Annotation, Network
 from requests.compat import unquote
 from six import StringIO
