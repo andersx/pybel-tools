@@ -5,10 +5,9 @@ import logging
 from flask import redirect, url_for, request
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView as ModelViewBase
-from flask_admin import AdminIndexView
 from flask_security import current_user
-
 from pybel.manager.models import Network, Namespace, Annotation
+
 from .extension import get_manager
 from .models import Report, Experiment
 from .security import User, Role
@@ -28,6 +27,14 @@ class ModelView(ModelViewBase):
         return redirect(url_for('login', next=request.url))
 
 
+class NetworkView(ModelView):
+    column_exclude_list = ['blob', ]
+
+
+class UserView(ModelView):
+    column_exclude_list = ['password', ]
+
+
 def build_admin_service(app):
     """Adds Flask-Admin database front-end
     
@@ -35,11 +42,11 @@ def build_admin_service(app):
     """
     manager = get_manager(app)
     admin = Admin(app, template_mode='bootstrap3')
-    admin.add_view(ModelView(User, manager.session))
+    admin.add_view(UserView(User, manager.session))
     admin.add_view(ModelView(Role, manager.session))
     admin.add_view(ModelView(Namespace, manager.session))
     admin.add_view(ModelView(Annotation, manager.session))
-    admin.add_view(ModelView(Network, manager.session))
+    admin.add_view(NetworkView(Network, manager.session))
     admin.add_view(ModelView(Report, manager.session))
     admin.add_view(ModelView(Experiment, manager.session))
 

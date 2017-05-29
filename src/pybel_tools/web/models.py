@@ -2,11 +2,11 @@
 
 import datetime
 
+from pybel.manager import Base
+from pybel.manager.models import NETWORK_TABLE_NAME
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, Boolean, Text, Binary
 from sqlalchemy.orm import relationship
 
-from pybel.manager import Base
-from pybel.manager.models import NETWORK_TABLE_NAME
 from .constants import reporting_log
 from .security import PYBEL_WEB_USER_TABLE
 
@@ -51,6 +51,9 @@ class Report(Base):
     number_nodes = Column(Integer)
     number_edges = Column(Integer)
     number_warnings = Column(Integer)
+
+    def __str__(self):
+        return str(self.network)
 
 
 def log_graph(graph, current_user, preparsed=False, failed=False):
