@@ -15,8 +15,9 @@ from celery import Celery
 def create_celery(application):
     """Configures celery instance from application, using its config
     
-    :param application: Flask application instance
-    :return: Celery instance
+    :param flask.Flask application: Flask application instance
+    :return: A Celery instance
+    :rtype: celery.Celery
     """
     celery = Celery(application.import_name, broker=application.config['CELERY_BROKER_URL'])
     celery.conf.update(application.config)
