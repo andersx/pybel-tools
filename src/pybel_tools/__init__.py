@@ -55,6 +55,7 @@ documentation on Flask-Security.
 """
 
 from . import analysis
+from . import api
 from . import citation_utils
 from . import comparison
 from . import definition_utils

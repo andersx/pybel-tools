@@ -1,8 +1,16 @@
-Dictionary Service
-==================
+Web Service
+===========
 
-.. automodule:: pybel_tools.web.dict_service_utils
+Dictionary Service
+------------------
+
+.. autoclass:: pybel_tools.api.DictionaryService
     :members:
 
-.. automodule:: pybel_tools.web.dict_service
+
+
+Edge Store Service
+------------------
+
+.. autoclass:: pybel_tools.api.DatabaseService
     :members:

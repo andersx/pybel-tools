@@ -48,7 +48,6 @@ Links
    :name: services
 
    dictservice
-   dbservice
    web
 
 .. toctree::
