@@ -34,6 +34,7 @@ from .ioutils import convert_recursive, upload_recursive
 from .mutation.metadata import fix_pubmed_citations
 from .utils import get_version, enable_cool_mode
 from .web import receiver_service
+from .web.admin_service import build_admin_service
 from .web.analysis_service import build_analysis_service
 from .web.application import create_application
 from .web.constants import *
@@ -113,12 +114,11 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     if port is not None:
         log.info('Running on port: %d', port)
 
-    config = {}
-
     app = create_application()
 
     build_security_service(app)
     build_dictionary_service(app)
+    build_admin_service(app)
     build_sitemap_endpoint(app)
     build_synchronous_parser_service(app)
     build_pickle_uploader_service(app)
@@ -374,6 +374,15 @@ def load(ctx, file):
     ds.commit()
 
 
+@manage.command()
+@click.pass_context
+@click.option('-y', '--yes', is_flag=True)
+def drop(ctx, yes):
+    """Drops database"""
+    if yes or click.confirm('Drop database?'):
+        ctx.obj.drop_database()
+
+
 @manage.group()
 def user():
     """Manage users"""
@@ -392,17 +401,20 @@ def ls(ctx, with_passwords):
 @user.command()
 @click.argument('email')
 @click.argument('password')
-@click.option('-a', '--admin', is_flag=True)
+@click.option('-a', '--admin', is_flag=True, help="Add admin role")
+@click.option('-s', '--scai', is_flag=True, help="Add SCAI role")
 @click.pass_context
-def add(ctx, email, password, admin):
+def add(ctx, email, password, admin, scai):
     """Creates a new user"""
     ds = SQLAlchemyUserDatastore(ctx.obj, User, Role)
     try:
-        u = ds.create_user(email=email, password=password)
-        u.confirmed_at = datetime.datetime.now()
+        u = ds.create_user(email=email, password=password, confirmed_at=datetime.datetime.now())
 
         if admin:
             ds.add_role_to_user(u, 'admin')
+
+        if scai:
+            ds.add_role_to_user(u, 'scai')
 
         ds.commit()
     except:

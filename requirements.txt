@@ -4,6 +4,7 @@ flask
 flask-bootstrap
 flask-wtf
 flask-security
+flask-admin
 GitHub-Flask
 networkx
 pybel
