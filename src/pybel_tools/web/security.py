@@ -58,7 +58,7 @@ class User(Base, UserMixin):
 
     @property
     def name(self):
-        return '{} {}'.format(self.first_name, self.last_name)
+        return '{} {}'.format(self.first_name, self.last_name) if self.first_name else self.email
 
     def __str__(self):
         return repr(self)
