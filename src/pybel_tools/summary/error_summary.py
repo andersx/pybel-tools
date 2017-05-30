@@ -44,8 +44,11 @@ def count_naked_names(graph):
 
 def get_namespaces_with_incorrect_names(graph):
     """Returns the set of all namespaces with incorrect names in the graph"""
-    return {e.namespace for _, _, e, _ in graph.warnings if
-            isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning))}
+    return {
+        e.namespace
+        for _, _, e, _ in graph.warnings
+        if isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning))
+    }
 
 
 def get_incorrect_names(graph, namespace):
@@ -57,8 +60,11 @@ def get_incorrect_names(graph, namespace):
     :return: The set of all incorrect names from the given namespace in the graph
     :rtype: set[str]
     """
-    return {e.name for _, _, e, _ in graph.warnings if
-            isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning)) and e.namespace == namespace}
+    return {
+        e.name
+        for _, _, e, _ in graph.warnings
+        if isinstance(e, (MissingNamespaceNameWarning, MissingNamespaceRegexWarning)) and e.namespace == namespace
+    }
 
 
 def get_undefined_namespaces(graph):
@@ -68,7 +74,11 @@ def get_undefined_namespaces(graph):
     :return: The set of all undefined namespaces
     :rtype: set[str]
     """
-    return {e.namespace for _, _, e, _ in graph.warnings if isinstance(e, UndefinedNamespaceWarning)}
+    return {
+        e.namespace
+        for _, _, e, _ in graph.warnings
+        if isinstance(e, UndefinedNamespaceWarning)
+    }
 
 
 def get_undefined_namespace_names(graph, namespace):
@@ -79,8 +89,11 @@ def get_undefined_namespace_names(graph, namespace):
     :return: The set of all names from the undefined namespace
     :rtype: set[str]
     """
-    return {e.name for _, _, e, _ in graph.warnings if
-            isinstance(e, UndefinedNamespaceWarning) and e.namespace == namespace}
+    return {
+        e.name
+        for _, _, e, _ in graph.warnings
+        if isinstance(e, UndefinedNamespaceWarning) and e.namespace == namespace
+    }
 
 
 def get_undefined_annotations(graph):
@@ -90,7 +103,11 @@ def get_undefined_annotations(graph):
     :return: The set of all undefined annotations
     :rtype: set[str]
     """
-    return {e.annotation for _, _, e, _ in graph.warnings if isinstance(e, UndefinedAnnotationWarning)}
+    return {
+        e.annotation
+        for _, _, e, _ in graph.warnings
+        if isinstance(e, UndefinedAnnotationWarning)
+    }
 
 
 # FIXME need to change underlying definition and usage of this exception

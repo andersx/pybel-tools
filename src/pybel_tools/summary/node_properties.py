@@ -40,7 +40,11 @@ def get_causal_out_edges(graph, node):
     :return: A set of (source, target) pairs where the source is the given node
     :rtype: set
     """
-    return {(u, v) for u, v, d in graph.out_edges_iter(node, data=True) if is_causal_relation(graph, u, v, d)}
+    return {
+        (u, v)
+        for u, v, d in graph.out_edges_iter(node, data=True)
+        if is_causal_relation(graph, u, v, d)
+    }
 
 
 def get_causal_in_edges(graph, node):
@@ -52,7 +56,11 @@ def get_causal_in_edges(graph, node):
     :return: A set of (source, target) pairs where the target is the given node
     :rtype: set
     """
-    return {(u, v) for u, v, d in graph.in_edges_iter(node, data=True) if is_causal_relation(graph, u, v, d)}
+    return {
+        (u, v)
+        for u, v, d in graph.in_edges_iter(node, data=True)
+        if is_causal_relation(graph, u, v, d)
+    }
 
 
 def has_causal_out_edges(graph, node):
@@ -64,7 +72,10 @@ def has_causal_out_edges(graph, node):
     :return: If the node has causal out edges
     :rtype: bool
     """
-    return any(d[RELATION] in CAUSAL_RELATIONS for u, v, d in graph.out_edges_iter(node, data=True))
+    return any(
+        d[RELATION] in CAUSAL_RELATIONS
+        for u, v, d in graph.out_edges_iter(node, data=True)
+    )
 
 
 def has_causal_in_edges(graph, node):
@@ -76,7 +87,10 @@ def has_causal_in_edges(graph, node):
     :return: If the node has causal in edges
     :rtype: bool
     """
-    return any(d[RELATION] in CAUSAL_RELATIONS for _, _, d in graph.in_edges_iter(node, data=True))
+    return any(
+        d[RELATION] in CAUSAL_RELATIONS
+        for _, _, d in graph.in_edges_iter(node, data=True)
+    )
 
 
 def is_causal_source(graph, node):
@@ -103,7 +117,11 @@ def get_causal_source_nodes(graph, function):
     :return: A set of source nodes
     :rtype: set
     """
-    return {n for n, d in graph.nodes_iter(data=True) if d[FUNCTION] == function and is_causal_source(graph, n)}
+    return {
+        node
+        for node, data in graph.nodes_iter(data=True)
+        if data[FUNCTION] == function and is_causal_source(graph, node)
+    }
 
 
 def get_causal_central_nodes(graph, function):
@@ -116,7 +134,11 @@ def get_causal_central_nodes(graph, function):
     :return: A set of central ABUNDANCE nodes
     :rtype: set
     """
-    return {n for n, d in graph.nodes_iter(data=True) if d[FUNCTION] == function and is_causal_central(graph, n)}
+    return {
+        node
+        for node, data in graph.nodes_iter(data=True)
+        if data[FUNCTION] == function and is_causal_central(graph, node)
+    }
 
 
 def get_causal_sink_nodes(graph, function):
@@ -129,7 +151,11 @@ def get_causal_sink_nodes(graph, function):
     :return: A set of sink ABUNDANCE nodes
     :rtype: set
     """
-    return {n for n, d in graph.nodes_iter(data=True) if d[FUNCTION] == function and is_causal_sink(graph, n)}
+    return {
+        node
+        for node, data in graph.nodes_iter(data=True)
+        if data[FUNCTION] == function and is_causal_sink(graph, node)
+    }
 
 
 def get_degradations(graph):
@@ -167,16 +193,13 @@ def node_has_variant(graph, node):
 
 
 def count_variants(graph):
-    x = []
-
-    for node, data in graph.nodes_iter(data=True):
-        if not node_has_variant(graph, node):
-            continue
-
-        for vard in data[VARIANTS]:
-            x.append(vard[KIND])
-
-    return Counter(x)
+    """Counts how many of each type of variant a graph has"""
+    return Counter(
+        variant_data[KIND]
+        for node, data in graph.nodes_iter(data=True)
+        if node_has_variant(graph, node)
+        for variant_data in data[VARIANTS]
+    )
 
 
 def count_top_degrees(graph, number=30):

@@ -74,7 +74,12 @@ def count_annotations(graph):
     :return: A Counter from {annotation key: frequency}
     :rtype: collections.Counter
     """
-    return Counter(key for _, _, d in graph.edges_iter(data=True) if ANNOTATIONS in d for key in d[ANNOTATIONS])
+    return Counter(
+        key
+        for _, _, d in graph.edges_iter(data=True)
+        if ANNOTATIONS in d
+        for key in d[ANNOTATIONS]
+    )
 
 
 def get_annotations(graph):
@@ -153,7 +158,10 @@ def count_annotation_values(graph, annotation):
     :rtype: collections.Counter
     """
     return Counter(
-        d[ANNOTATIONS][annotation] for _, _, d in graph.edges_iter(data=True) if check_has_annotation(d, annotation))
+        d[ANNOTATIONS][annotation]
+        for _, _, d in graph.edges_iter(data=True)
+        if check_has_annotation(d, annotation)
+    )
 
 
 def get_annotation_values(graph, annotation):
@@ -184,8 +192,11 @@ def count_annotation_values_filtered(graph, annotation, source_filter=None, targ
     source_filter = keep_node_permissive if source_filter is None else source_filter
     target_filter = keep_node_permissive if target_filter is None else target_filter
 
-    return Counter(d[ANNOTATIONS][annotation] for u, v, d in graph.edges_iter(data=True) if
-                   check_has_annotation(d, annotation) and source_filter(graph, u) and target_filter(graph, v))
+    return Counter(
+        d[ANNOTATIONS][annotation]
+        for u, v, d in graph.edges_iter(data=True)
+        if check_has_annotation(d, annotation) and source_filter(graph, u) and target_filter(graph, v)
+    )
 
 
 def _iter_pairs(graph):
@@ -320,5 +331,7 @@ def get_tree_annotations(graph):
     :rtype: list[dict]
     """
     annotations = get_annotation_values_by_annotation(graph)
-    return [{'text': annotation, 'children': [{'text': value} for value in sorted(values)]} for annotation, values in
-            sorted(annotations.items())]
+    return [
+        {'text': annotation, 'children': [{'text': value} for value in sorted(values)]}
+        for annotation, values in sorted(annotations.items())
+    ]

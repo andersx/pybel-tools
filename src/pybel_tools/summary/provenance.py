@@ -3,7 +3,6 @@
 """This module contains functions to summarize the provenance (citations, evidences, and authors) in a BEL graph"""
 
 import itertools as itt
-import logging
 from collections import defaultdict, Counter
 
 from pybel.constants import *
@@ -48,8 +47,7 @@ def _generate_citation_dict(graph):
 def has_pubmed_citation(edge_data_dictionary):
     """Checks if the edge data dictionary has a PubMed citation
 
-    :param edge_data_dictionary: The edge data dictionary from a :class:`pybel.BELGraph`
-    :type edge_data_dictionary: dict
+    :param dict edge_data_dictionary: The edge data dictionary from a :class:`pybel.BELGraph`
     :return: Does the edge data dictionary has a PubMed citation?
     :rtype: bool
     """
@@ -57,7 +55,11 @@ def has_pubmed_citation(edge_data_dictionary):
 
 
 def iter_pmids(graph):
-    return (d[CITATION][CITATION_REFERENCE].strip() for d in graph_edge_data_iter(graph) if has_pubmed_citation(d))
+    return (
+        d[CITATION][CITATION_REFERENCE].strip()
+        for d in graph_edge_data_iter(graph)
+        if has_pubmed_citation(d)
+    )
 
 
 def get_pmids(graph):
@@ -74,10 +76,8 @@ def get_pmid_by_keyword(keyword, graph=None, pmids=None):
     """Gets the set of PubMed identifiers beginning with the given keyword string
     
     :param pybel.BELGraph graph: A BEL graph
-    :param keyword: The beginning of a PubMed identifier
-    :type keyword: str
-    :param pmids: A set of pre-cached PubMed identifiers
-    :type pmids: set[str]
+    :param str keyword: The beginning of a PubMed identifier
+    :param set[str] pmids: A set of pre-cached PubMed identifiers
     :return: A set of PMIDs starting with the given string
     :rtype: set[str]
     """
@@ -179,6 +179,7 @@ def count_author_publications(graph):
 
     return Counter(count_dict_values(count_defaultdict(authors)))
 
+
 # TODO switch to use node filters
 def get_authors(graph):
     """Gets the set of all authors in the given graph
@@ -201,8 +202,7 @@ def get_authors(graph):
 def get_authors_by_keyword(keyword, graph=None, authors=None):
     """Gets authors for whom the search term is a substring
     
-    :param graph: A BEL graph
-    :type graph:
+    :param pybel.BELGraph graph: A BEL graph
     :param keyword: The keyword to search the author strings for
     :type keyword: str
     :param authors: An optional set of pre-cached authors calculated from the graph
@@ -213,12 +213,20 @@ def get_authors_by_keyword(keyword, graph=None, authors=None):
     keyword_lower = keyword.lower()
 
     if authors is not None:
-        return {author for author in authors if keyword_lower in author.lower()}
+        return {
+            author
+            for author in authors
+            if keyword_lower in author.lower()
+        }
 
     if graph is None:
         raise ValueError('Graph not supplied')
 
-    return {author for author in get_authors(graph) if keyword_lower in author.lower()}
+    return {
+        author
+        for author in get_authors(graph)
+        if keyword_lower in author.lower()
+    }
 
 
 def count_authors_by_annotation(graph, annotation='Subgraph'):

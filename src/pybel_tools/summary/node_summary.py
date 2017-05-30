@@ -27,7 +27,10 @@ def count_functions(graph):
     :return: A Counter from {function: frequency}
     :rtype: collections.Counter
     """
-    return Counter(data[FUNCTION] for _, data in graph.nodes_iter(data=True))
+    return Counter(
+        data[FUNCTION]
+        for _, data in graph.nodes_iter(data=True)
+    )
 
 
 def get_functions(graph):
@@ -47,7 +50,11 @@ def count_namespaces(graph):
     :return: A Counter from {namespace: frequency}
     :rtype: collections.Counter
     """
-    return Counter(data[NAMESPACE] for _, data in graph.nodes_iter(data=True) if NAMESPACE in data)
+    return Counter(
+        data[NAMESPACE]
+        for _, data in graph.nodes_iter(data=True)
+        if NAMESPACE in data
+    )
 
 
 def get_namespaces(graph):
@@ -80,7 +87,11 @@ def count_names(graph):
     :return: A Counter from {names: frequency}
     :rtype: collections.Counter
     """
-    return Counter(data[NAME] for _, data in graph.nodes_iter(data=True) if NAME in data)
+    return Counter(
+        data[NAME]
+        for _, data in graph.nodes_iter(data=True)
+        if NAME in data
+    )
 
 
 def get_names(graph, namespace):
@@ -92,8 +103,11 @@ def get_names(graph, namespace):
     :return: A set of names belonging to the given namespace that are in the given graph
     :rtype: set[str]
     """
-
-    return {data[NAME] for _, data in graph.nodes_iter(data=True) if NAMESPACE in data and data[NAMESPACE] == namespace}
+    return {
+        data[NAME]
+        for _, data in graph.nodes_iter(data=True)
+        if NAMESPACE in data and data[NAMESPACE] == namespace
+    }
 
 
 def get_names_by_namespace(graph):
@@ -115,7 +129,6 @@ def get_names_by_namespace(graph):
         elif FUSION in data:
             result[data[FUSION][PARTNER_3P][NAMESPACE]].add(data[FUSION][PARTNER_3P][NAME])
             result[data[FUSION][PARTNER_5P][NAMESPACE]].add(data[FUSION][PARTNER_5P][NAME])
-
 
     return dict(result)
 
