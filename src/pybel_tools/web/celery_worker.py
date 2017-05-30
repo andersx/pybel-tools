@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+
 import requests.exceptions
+from celery.schedules import schedule
 from celery.utils.log import get_task_logger
 from flask_mail import Message
-from pybel import from_lines
-from pybel.manager import build_manager
-from pybel.parser.parse_exceptions import InconsistientDefinitionError
-from pybel_tools.mutation import add_canonical_names
 from sqlalchemy.exc import IntegrityError
 
+from pybel import from_lines
+from pybel.constants import PYBEL_CONNECTION
+from pybel.manager import build_manager
+from pybel.parser.parse_exceptions import InconsistientDefinitionError
 from .application import create_application
 from .constants import integrity_message
 from .create_celery import create_celery
 from .models import Report
+from .models import get_recent_reports
+from ..mutation import add_canonical_names
 
 app, mail = create_application(get_mail=True)
 celery = create_celery(app)
@@ -23,6 +28,7 @@ log = get_task_logger(__name__)
 @celery.task(name='pybelparser')
 def async_parser(lines, connection, current_user_id, current_user_email, public, allow_nested=False,
                  citation_clearing=False, store_parts=False):
+    """Asynchronously parses a BEL script and sends email feedback"""
     log.info('starting parsing')
     manager = build_manager(connection)
     try:
@@ -121,3 +127,32 @@ def async_parser(lines, connection, current_user_id, current_user_email, public,
         ))
 
     return network.id
+
+
+@celery.task(name='reportuploads')
+def report_activity(connection, recipient):
+    """Sends a report of recent activity"""
+    manager = build_manager(connection)
+
+    with app.app_context():
+        mail.send(Message(
+            subject='PyBEL Web Activty Report',
+            recipients=[recipient],
+            body='\n'.join(get_recent_reports(manager)),
+            sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
+        ))
+
+
+@celery.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    """Sets up the periodic tasks to be run asynchronously by Celery"""
+    recipient = app.config.get('PYBEL_WEB_REPORT_RECIPIENT')
+
+    if recipient:
+        report_schedule = schedule(run_every=datetime.timedelta(weeks=2))
+
+        sender.add_periodic_task(
+            report_schedule,
+            report_activity.s(app.config.get(PYBEL_CONNECTION), recipient),
+            name='Send report on upload activity'
+        )
