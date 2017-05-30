@@ -9,6 +9,12 @@
  *
  */
 
+
+/**
+ * Returns object with selected nodes in tree
+ * @param {InspireTree} tree
+ * @returns {object} selected nodes in the tree
+ */
 function getSelectedNodesFromTree(tree) {
     var selectedNodes = tree.selected(true);
 
@@ -27,6 +33,12 @@ function getSelectedNodesFromTree(tree) {
     return selectionHashMap;
 }
 
+/**
+ * Automatically select nodes in the tree given an URL
+ * @param {InspireTree} tree
+ * @param {string} url
+ * @param {array} blackList parameters in the URL not belonging to the tree
+ */
 function selectNodesInTreeFromURL(tree, url, blackList) {
     // Select in the tree the tree-nodes in the URL
     var selectedNodes = {};
@@ -77,6 +89,11 @@ function getAnnotationForTree(URLString) {
     }
 }
 
+
+/**
+ * Initializes global variables (remove, append)
+ * @param {string} url
+ */
 function initiliazeGlobals(url) {
     // Initialize arrays with selected nodes to expand/delete
     if ("remove" in url) {
@@ -94,8 +111,12 @@ function initiliazeGlobals(url) {
 
 }
 
+
+/**
+ *  Returns the current URL
+ *  (Search for for the int after /explore/ representing the network_id)
+ */
 function getCurrentURL() {
-    // Get the URL parameters (except for the int after /explore/ representing the network_id)
 
     var query_string = {};
     var query = window.location.search.substring(1);
@@ -117,6 +138,11 @@ function getCurrentURL() {
     return query_string;
 }
 
+/**
+ * Creates an object with all default parameters necessary for PyBELWEB API query
+ * @param {InspireTree} tree
+ * @returns {object}
+ */
 function getFilterParameters(tree) {
     var args = getSelectedNodesFromTree(tree);
 
@@ -133,14 +159,28 @@ function getFilterParameters(tree) {
     return args
 }
 
+
+/**
+ * Checks if parameter is in the URL (represented as object) and sticks to object if is in URL
+ * @param {object} args
+ * @param {string} arg (parameter to be checked in url)
+ * @param {object} url (object representation of url parameters)
+ * @returns {object}
+ */
 function argumentsInURL(args, arg, url) {
-    // Checking if argument in url and adds it to arguments if exists
     if (arg in url) {
         args[arg] = url[arg];
     }
     return args
 }
 
+
+/**
+ * Adding seedMethod parameter to arguments
+ * @param {object} args, default parameters
+ * @param {object} url (object representation of url parameters)
+ * @returns {object}
+ */
 function getSeedMethodFromURL(args, url) {
     // Checking if seed_methods are present in the URL and adding it to the parameters
     if ("seed_method" in url) {
@@ -173,12 +213,19 @@ function getSeedMethodFromURL(args, url) {
     return args
 }
 
+/**
+ *  Returns an object with all arguments used to generated the current network
+ * @param {InspireTree} tree
+ */
 function getDefaultAjaxParameters(tree) {
-    // Returns an objects with all arguments used to generated the current network
     return getSeedMethodFromURL(getFilterParameters(tree), getCurrentURL())
 }
 
 
+/**
+ * Renders the network given default parameters
+ * @param {InspireTree} tree
+ */
 function renderNetwork(tree) {
     // Store filtering parameters from tree and global variables (network_id, expand/delete nodes) and
     // store seed methods/ pipeline arguments from URL
@@ -196,6 +243,11 @@ function renderNetwork(tree) {
     window.history.pushState("BiNE", "BiNE", "/explore?" + renderParameters);
 }
 
+
+/**
+ * Performs an AJAX call given an URL
+ * @param {string} url
+ */
 function doAjaxCall(url) {
 
     var result = null;
@@ -213,6 +265,10 @@ function doAjaxCall(url) {
     return result
 }
 
+
+/**
+ * Creates a new row in Node/Edge info table
+ */
 function insertRow(table, row, column1, column2) {
 
     var row = table.insertRow(row);
@@ -340,6 +396,10 @@ $(document).ready(function () {
     });
 });
 
+
+/**
+ * Renders empty frame
+ */
 function renderEmptyFrame() {
     // Render empty rectangle
 
@@ -371,13 +431,14 @@ function renderEmptyFrame() {
         .text("Select your desired filters press refresh.");
 }
 
+
+/**
+ * Clears used node/edge list and network
+ * @example: Used to repopulate the html with a new network
+ */
 function clearUsedDivs() {
-    // Clean divs to repopulate them with the new network
-    // Force div
     $("#graph-chart").empty();
-    // Node search div
     $("#node-list").empty();
-    // Edge search div
     $("#edge-list").empty();
 }
 
@@ -385,6 +446,11 @@ function clearUsedDivs() {
 /// Functions for updating the graph //
 ///////////////////////////////////////
 
+
+/**
+ * Save previous positions of the nodes in the graph
+ * @returns {object} Object with key to previous position
+ */
 function savePreviousPositions() {
     // Save current positions into prevLoc "object;
     var prevPos = {};
@@ -401,6 +467,13 @@ function savePreviousPositions() {
     return prevPos
 }
 
+
+/**
+ * Update previous node position given new data (if nodes were previously there)
+ * @param {object} jsonData: new node data
+ * @param {object} prevPos object created by savePreviousPositions
+ * @returns {object}
+ */
 function updateNodePosition(jsonData, prevPos) {
 
     var newNodesArray = [];
@@ -429,6 +502,13 @@ function updateNodePosition(jsonData, prevPos) {
     return {json: jsonData, new_nodes: newNodesArray}
 }
 
+
+/**
+ * Find duplicate ID nodes
+ * @param {object} data
+ * @returns {array} array of duplicates
+ * @example: Necessary to node represent the nodes together with their function if they have the same cname
+ */
 function findDuplicates(data) {
 
     var hashMap = {};
@@ -482,13 +562,17 @@ function downloadText(response, name) {
 }
 
 
-// Initialize d3.js force to plot the networks from neo4j json
+/**
+ * Initialize d3 Force to plot network from json
+ * @param {object} graph json data
+ * @param {InspireTree} tree
+ */
 function initD3Force(graph, tree) {
-    /////////////////////
-    // d3-context-menu //
-    /////////////////////
 
-    // Definition of context menu for nodes
+    /**
+     * Defines d3-context menu on right click
+     */
+
     var nodeMenu = [
         {
             title: "Expand node",
@@ -916,8 +1000,10 @@ function initD3Force(graph, tree) {
         link.style("stroke", defaultLinkColor);
     });
 
-    // Box info in table
-
+    /**
+     * Renders node info table
+     * @param {object} node object
+     */
     function displayNodeInfo(node) {
 
         var dynamicTable = document.getElementById('info-table');
@@ -948,7 +1034,10 @@ function initD3Force(graph, tree) {
         });
     }
 
-
+    /**
+     * Renders edge info table
+     * @param {object} edge object
+     */
     function displayEdgeInfo(edge) {
 
         var edgeObject = {};
@@ -989,22 +1078,34 @@ function initD3Force(graph, tree) {
     }
 
 
-    // Freeze the graph when space is pressed
+    /**
+     * Freeze the graph when space is pressed
+     */
     function freezeGraph() {
-        // Space button Triggers STOP
         if (d3.event.keyCode === 32) {
             simulation.stop();
         }
     }
 
-    // Filter nodes in list
-    function nodesNotInArray(nodeArray, property) {
+    /**
+     * Returns nodes that not pass the filter given a node array/property
+     * @param {array} nodeArray
+     * @param {string} property
+     * @example: nodesNotInArray(['AKT1','APP'], 'cname')
+     * @example: nodesNotInArray([1,2], 'id')
+     */    function nodesNotInArray(nodeArray, property) {
         return svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el[property]) < 0;
         });
     }
 
-    // Filter nodes in list
+    /**
+     * Returns nodes that pass the filter given a node array/property
+     * @param {array} nodeArray
+     * @param {string} property
+     * @example: nodesNotInArray(['AKT1','APP'], 'cname')
+     * @example: nodesNotInArray([1,2], 'id')
+     */
     function nodesInArray(nodeArray, property) {
         return svg.selectAll(".node").filter(function (el) {
             return nodeArray.indexOf(el[property]) >= 0;
@@ -1012,7 +1113,13 @@ function initD3Force(graph, tree) {
 
     }
 
-    // Filter nodes in list keeping the order of the nodeArray
+    /**
+     * Returns nodes that pass the filter given a node array/property (keeps the order of the nodeArray)
+     * @param {array} nodeArray
+     * @param {string} property
+     * @example: nodesNotInArray(['AKT1','APP'], 'cname')
+     * @example: nodesNotInArray([1,2], 'id')
+     */
     function nodesInArrayKeepOrder(nodeArray, property) {
         return nodeArray.map(function (el) {
             var nodeObject = svg.selectAll(".node").filter(function (node) {
@@ -1022,6 +1129,9 @@ function initD3Force(graph, tree) {
         });
     }
 
+    /**
+     * Reset default styles for nodes/edges/text on double click
+     */
     function resetAttributesDoubleClick() {
 
         // On double click reset attributes (Important disabling the zoom behavior of dbl click because it interferes with this)
@@ -1037,6 +1147,9 @@ function initD3Force(graph, tree) {
 
     }
 
+    /**
+     * Reset default styles for nodes/edges/text
+     */
     function resetAttributes() {
         // Reset visibility and opacity
         svg.selectAll(".link, .node").style("visibility", "visible").style("opacity", "1");
