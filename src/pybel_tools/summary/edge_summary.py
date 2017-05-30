@@ -129,7 +129,7 @@ def _get_annotation_values_by_annotation_helper(graph):
             continue
 
         for key, value in data[ANNOTATIONS].items():
-            result[key].append(value)
+            result[key].add(value)
 
     return result
 
