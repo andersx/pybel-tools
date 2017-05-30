@@ -60,16 +60,11 @@ def concatenate_edge_filters(filters):
     def concatenated_edge_filter(graph, u, v, k, d):
         """Passes only for an edge that pass all enclosed filters
 
-        :param graph: A BEL Graph
-        :type graph: pybel.BELGraph
-        :param u: A BEL node
-        :type u: tuple
-        :param v: A BEL node
-        :type v: tuple
-        :param k: The edge key between the given nodes
-        :type k: int
-        :param d: The edge data dictionary
-        :type d: dict
+        :param pybel.BELGraph graph: A BEL Graph
+        :param tuple u: A BEL node
+        :param tuple v: A BEL node
+        :param int k: The edge key between the given nodes
+        :param dict d: The edge data dictionary
         :return: If the edge passes all enclosed filters
         :rtype: bool
         """
@@ -125,15 +120,11 @@ def summarize_edge_filter(graph, filters):
 def keep_edge_permissive(graph, u, v, k, d):
     """Passes for all edges
 
-    :param pybel.BELGraph graph: A BEL graph
-    :param u: A BEL node
-    :type u: tuple
-    :param v: A BEL node
-    :type v: tuple
-    :param k: The edge key between the given nodes
-    :type k: int
-    :param d: The edge data dictionary
-    :type d: dict
+    :param pybel.BELGraph graph: A BEL Graph
+        :param tuple u: A BEL node
+        :param tuple v: A BEL node
+        :param int k: The edge key between the given nodes
+        :param dict d: The edge data dictionary
     :return: Always returns :code:`True`
     :rtype: bool
     """
@@ -143,16 +134,12 @@ def keep_edge_permissive(graph, u, v, k, d):
 def edge_is_causal(graph, u, v, k, d):
     """Only passes on causal edges, belonging to the set :data:`pybel.constants.CAUSAL_RELATIONS`
 
-    :param pybel.BELGraph graph: A BEL graph
-    :param u: A BEL node
-    :type u: tuple
-    :param v: A BEL node
-    :type v: tuple
-    :param k: The edge key between the given nodes
-    :type k: int
-    :param d: The edge data dictionary
-    :type d: dict
-    :return: True if the edge is a causal edge
+    :param pybel.BELGraph graph: A BEL Graph
+        :param tuple u: A BEL node
+        :param tuple v: A BEL node
+        :param int k: The edge key between the given nodes
+        :param dict d: The edge data dictionary
+    :return: If the edge is a causal edge
     :rtype: bool
     """
     return graph.edge[u][v][k][RELATION] in CAUSAL_RELATIONS
@@ -161,15 +148,11 @@ def edge_is_causal(graph, u, v, k, d):
 def edge_has_author_annotation(graph, u, v, k, d):
     """Passes for edges that have citations with authors
 
-    :param pybel.BELGraph graph: A BEL graph
-    :param u: A BEL node
-    :type u: tuple
-    :param v: A BEL node
-    :type v: tuple
-    :param k: The edge key between the given nodes
-    :type k: int
-    :param d: The edge data dictionary
-    :type d: dict
+    :param pybel.BELGraph graph: A BEL Graph
+        :param tuple u: A BEL node
+        :param tuple v: A BEL node
+        :param int k: The edge key between the given nodes
+        :param dict d: The edge data dictionary
     :return: Does the edge's citation data dictionary have authors included?
     :rtype: bool
     """
@@ -179,15 +162,11 @@ def edge_has_author_annotation(graph, u, v, k, d):
 def edge_has_pubmed_citation(graph, u, v, k, d):
     """Passes for edges that have PubMed citations
     
-    :param pybel.BELGraph graph: A BEL graph
-    :param u: A BEL node
-    :type u: tuple
-    :param v: A BEL node
-    :type v: tuple
-    :param k: The edge key between the given nodes
-    :type k: int
-    :param d: The edge data dictionary
-    :type d: dict
+    :param pybel.BELGraph graph: A BEL Graph
+        :param tuple u: A BEL node
+        :param tuple v: A BEL node
+        :param int k: The edge key between the given nodes
+        :param dict d: The edge data dictionary
     :return: Is the edge's citation from :data:`PUBMED`?
     :rtype: bool
     """
@@ -224,17 +203,12 @@ def build_annotation_value_filter(annotation, value):
         def annotation_value_filter(graph, u, v, k, d):
             """Only passes for edges that contain the given annotation and have the given value
     
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has the contained annotation with the contained value
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has the contained annotation with the contained value
             :rtype: bool
             """
             if not check_has_annotation(graph.edge[u][v][k], annotation):
@@ -248,17 +222,12 @@ def build_annotation_value_filter(annotation, value):
         def annotation_values_filter(graph, u, v, k, d):
             """Only passes for edges that contain the given annotation and have one of the given values
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has the contained annotation and one of the contained values
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has the contained annotation and one of the contained values
             :rtype: bool
             """
             if not check_has_annotation(graph.edge[u][v][k], annotation):
@@ -291,17 +260,12 @@ def build_relation_filter(relations):
         def relation_filter(graph, u, v, k, d):
             """Only passes for edges with the contained relation
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has the contained relation
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has the contained relation
             :rtype: bool
             """
             return graph.edge[u][v][k][RELATION] == relations
@@ -313,17 +277,12 @@ def build_relation_filter(relations):
         def relation_filter(graph, u, v, k, d):
             """Only passes for edges with one of the contained relations
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has one of the contained relations
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has one of the contained relations
             :rtype: bool
             """
             return graph.edge[u][v][k][RELATION] in relation_set
@@ -346,17 +305,12 @@ def build_pmid_inclusion_filter(pmids):
         def pmid_inclusion_filter(graph, u, v, k, d):
             """Only passes for edges with PubMed citations matching the contained PubMed identifier
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has a PubMed citation with the contained PubMed identifier
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has a PubMed citation with the contained PubMed identifier
             :rtype: bool
             """
             if not edge_has_pubmed_citation(graph, u, v, k, d):
@@ -372,17 +326,12 @@ def build_pmid_inclusion_filter(pmids):
         def pmid_inclusion_filter(graph, u, v, k, d):
             """Only passes for edges with PubMed citations matching one of the contained PubMed identifiers
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has a PubMed citation with one of the contained PubMed identifiers
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has a PubMed citation with one of the contained PubMed identifiers
             :rtype: bool
             """
             if not edge_has_pubmed_citation(graph, u, v, k, d):
@@ -406,17 +355,12 @@ def build_pmid_exclusion_filter(pmids):
         def pmid_exclusion_filter(graph, u, v, k, d):
             """Fails for edges with PubMed citations matching the contained PubMed identifier
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has a PubMed citation with the contained PubMed identifier
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has a PubMed citation with the contained PubMed identifier
             :rtype: bool
             """
             if not edge_has_pubmed_citation(graph, u, v, k, d):
@@ -431,17 +375,12 @@ def build_pmid_exclusion_filter(pmids):
         def pmid_exclusion_filter(graph, u, v, k, d):
             """Only passes for edges with PubMed citations matching one of the contained PubMed identifiers
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has a PubMed citation with one of the contained PubMed identifiers
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has a PubMed citation with one of the contained PubMed identifiers
             :rtype: bool
             """
             if not edge_has_pubmed_citation(graph, u, v, k, d):
@@ -463,17 +402,12 @@ def build_author_inclusion_filter(authors):
         def author_filter(graph, u, v, k, d):
             """Only passes for edges with citations with an author that matches the contained author
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has a citation with an author that matches the the contained author
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has a citation with an author that matches the the contained author
             :rtype: bool
             """
             if not edge_has_author_annotation(graph, u, v, k, d):
@@ -488,17 +422,12 @@ def build_author_inclusion_filter(authors):
         def author_filter(graph, u, v, k, d):
             """Only passes for edges with citations with an author that matches one or more of the contained authors
 
-            :param graph: A BEL Graph
-            :type graph: pybel.BELGraph
-            :param u: A BEL node
-            :type u: tuple
-            :param v: A BEL node
-            :type v: tuple
-            :param k: The edge key between the given nodes
-            :type k: int
-            :param d: The edge data dictionary
-            :type d: dict
-            :return: True if the edge has a citation with an author that matches one or more of the contained authors
+            :param pybel.BELGraph graph: A BEL Graph
+            :param tuple u: A BEL node
+            :param tuple v: A BEL node
+            :param int k: The edge key between the given nodes
+            :param dict d: The edge data dictionary
+            :return: If the edge has a citation with an author that matches the the contained author
             :rtype: bool
             """
             if not edge_has_author_annotation(graph, u, v, k, d):
@@ -508,13 +437,17 @@ def build_author_inclusion_filter(authors):
         return author_filter
 
 
-def edge_has_modifier(graph, u, v, k, d, modifier):
-    """Returns true if over any of the node's edges it has a molecular activity
+def _edge_has_modifier(graph, u, v, k, d, modifier):
+    """Checks if the edge has the given modifier
 
-    :param pybel.BELGraph graph: A BEL graph
-    :param node: A BEL node
-    :type node: tuple
-    :return: If the node has a known molecular activity
+    :param pybel.BELGraph graph: A BEL Graph
+    :param tuple u: A BEL node
+    :param tuple v: A BEL node
+    :param int k: The edge key between the given nodes
+    :param dict d: The edge data dictionary
+    :param str modifier: The modifier to check. One of :data:`pybel.constants.ACTIVITY`,
+                        :data:`pybel.constants.DEGRADATION`, or :data:`pybel.constants.TRANSLOCATION`.
+    :return: Does either the subject or object have the given modifier
     :rtype: bool
     """
     if SUBJECT in d:
@@ -525,19 +458,57 @@ def edge_has_modifier(graph, u, v, k, d, modifier):
 
 
 def edge_has_activity(graph, u, v, k, d):
-    return edge_has_modifier(graph, u, v, k, d, ACTIVITY)
+    """Checks if the edge contains an activity in either the subject or object
+
+    :param pybel.BELGraph graph: A BEL Graph
+    :param tuple u: A BEL node
+    :param tuple v: A BEL node
+    :param int k: The edge key between the given nodes
+    :param dict d: The edge data dictionary
+    :return: If the edge contains an activity in either the subject or object
+    :rtype: bool
+    """
+    return _edge_has_modifier(graph, u, v, k, d, ACTIVITY)
 
 
 def edge_has_translocation(graph, u, v, k, d):
-    return edge_has_modifier(graph, u, v, k, d, TRANSLOCATION)
+    """Checks if the edge has a translocation in either the subject or object
+
+    :param pybel.BELGraph graph: A BEL Graph
+    :param tuple u: A BEL node
+    :param tuple v: A BEL node
+    :param int k: The edge key between the given nodes
+    :param dict d: The edge data dictionary
+    :return: If the edge has a translocation in either the subject or object
+    :rtype: bool
+    """
+    return _edge_has_modifier(graph, u, v, k, d, TRANSLOCATION)
 
 
 def edge_has_degradation(graph, u, v, k, d):
-    return edge_has_modifier(graph, u, v, k, d, DEGRADATION)
+    """Checks if the edge contains a degradation in either the subject or object
+
+    :param pybel.BELGraph graph: A BEL Graph
+    :param tuple u: A BEL node
+    :param tuple v: A BEL node
+    :param int k: The edge key between the given nodes
+    :param dict d: The edge data dictionary
+    :return: If the edge contains a degradation in either the subject or object
+    :rtype: bool
+    """
+    return _edge_has_modifier(graph, u, v, k, d, DEGRADATION)
 
 
 def edge_has_pathology_causal(graph, u, v, k, d):
     """Returns if the subject of this edge is a pathology and participates in a causal relation. This
     is usually nonsense, in most cases.
+
+    :param pybel.BELGraph graph: A BEL Graph
+    :param tuple u: A BEL node
+    :param tuple v: A BEL node
+    :param int k: The edge key between the given nodes
+    :param dict d: The edge data dictionary
+    :return: If the subject of this edge is a pathology and it participates in a causal reaction.
+    :rtype: bool
     """
     return graph.node[u][FUNCTION] == PATHOLOGY and d[RELATION] in CAUSAL_RELATIONS

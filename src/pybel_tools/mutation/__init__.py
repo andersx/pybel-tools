@@ -17,4 +17,12 @@ from .inference import *
 from .merge import *
 from .metadata import *
 
-__all__ = collapse.__all__ + deletion.__all__ + expansion.__all__ + inference.__all__ + merge.__all__ + metadata.__all__ + highlight.__all__
+__all__ = (
+    collapse.__all__ +
+    deletion.__all__ +
+    expansion.__all__ +
+    highlight.__all__ +
+    inference.__all__ +
+    merge.__all__ +
+    metadata.__all__
+)

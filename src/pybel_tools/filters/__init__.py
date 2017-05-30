@@ -17,4 +17,9 @@ from .node_deletion import *
 from .node_filters import *
 from .node_selection import *
 
-__all__ = node_filters.__all__ + edge_filters.__all__
+__all__ = (
+    edge_filters.__all__ +
+    node_deletion.__all__ +
+    node_filters.__all__ +
+    node_selection.__all__
+)
