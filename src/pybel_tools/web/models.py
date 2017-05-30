@@ -2,11 +2,12 @@
 
 import datetime
 
-from pybel.manager import Base
-from pybel.manager.models import NETWORK_TABLE_NAME
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, Boolean, Text, Binary
+from sqlalchemy import func
 from sqlalchemy.orm import relationship
 
+from pybel.manager import Base
+from pybel.manager.models import NETWORK_TABLE_NAME, Network
 from .constants import reporting_log
 from .security import PYBEL_WEB_USER_TABLE
 
@@ -52,8 +53,11 @@ class Report(Base):
     number_edges = Column(Integer)
     number_warnings = Column(Integer)
 
+    def __repr__(self):
+        return '<Report on {}>'.format(self.network)
+
     def __str__(self):
-        return str(self.network)
+        return repr(self)
 
 
 def log_graph(graph, current_user, preparsed=False, failed=False):
@@ -86,3 +90,38 @@ def add_network_reporting(manager, network, current_user, number_nodes, number_e
     )
     manager.session.add(report)
     manager.session.commit()
+
+
+def get_recent_reports(manager, weeks=2):
+    """Gets reports from the last two weeks
+
+    :param pybel.manager.CacheManager manager: A cache manager
+    :param int weeks: The number of weeks to look backwards
+    :return: An iterable of the string that should be reported
+    :rtype: iter[str]
+    """
+    now = datetime.datetime.utcnow()
+    delta = datetime.timedelta(weeks=weeks)
+    q = manager.session.query(Report).filter(Report.created - now < delta).join(Network).group_by(Network.name)
+    q1 = q.having(func.min(Report.created)).order_by(Network.name.asc()).all()
+    q2 = q.having(func.max(Report.created)).order_by(Network.name.asc()).all()
+
+    q3 = manager.session.query(Report, func.count(Report.network)). \
+        filter(Report.created - now < delta). \
+        join(Network).group_by(Network.name). \
+        order_by(Network.name.asc()).all()
+
+    for a, b, (_, count) in zip(q1, q2, q3):
+        if a.network.version == b.network.version:
+            yield '{} was only uploaded once'.format(a.network.name)
+            yield 'Nodes: {}'.format(a.number_nodes)
+            yield 'Edges: {}'.format(a.number_edges)
+            yield 'Warnings: {}'.format(a.number_warnings)
+        else:
+            yield a.network.name
+            yield '\tVersion: {} -> {}'.format(a.network.version, b.network.version)
+            yield '\tUploads: {}'.format(count)
+            yield '\tNodes: {} {:+d} {}'.format(a.number_nodes, b.number_nodes - a.number_nodes, b.number_nodes)
+            yield '\tEdges: {} {:+d} {}'.format(a.number_edges, b.number_edges - a.number_edges, b.number_edges)
+            yield '\tWarnings: {} {:+d} {}'.format(a.number_warnings, b.number_warnings - a.number_warnings,
+                                                 b.number_warnings)
