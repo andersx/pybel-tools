@@ -61,7 +61,10 @@ class User(Base, UserMixin):
         return '{} {}'.format(self.first_name, self.last_name)
 
     def __str__(self):
-        return self.email
+        return repr(self)
+
+    def __repr__(self):
+        return '<User {}>'.format(self.email)
 
 
 class ExtendedRegisterForm(RegisterForm):
