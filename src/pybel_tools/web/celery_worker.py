@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import logging
 
 import requests.exceptions
 from celery.schedules import schedule
@@ -160,3 +161,8 @@ def setup_periodic_tasks(sender, **kwargs):
             report_activity.s(app.config.get(PYBEL_CONNECTION), recipient),
             name='Send report on upload activity'
         )
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=20)
+    log.setLevel(20)
