@@ -4,6 +4,7 @@ import datetime
 import logging
 
 import requests.exceptions
+from celery.schedules import crontab
 from celery.schedules import schedule
 from celery.utils.log import get_task_logger
 from flask_mail import Message
@@ -139,7 +140,7 @@ def report_activity(connection, recipient):
         mail.send(Message(
             subject='PyBEL Web Activty Report',
             recipients=[recipient],
-            body='\n'.join(get_recent_reports(manager)),
+            body='\n'.join(get_recent_reports(manager, weeks=1)),
             sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
         ))
 
@@ -150,16 +151,11 @@ def report_activity(connection, recipient):
 def setup_periodic_tasks(sender, **kwargs):
     """Sets up the periodic tasks to be run asynchronously by Celery"""
     recipient = app.config.get('PYBEL_WEB_REPORT_RECIPIENT')
-
     log.warning('Recipeint value: %s', recipient)
 
     if recipient:
-        delta = datetime.timedelta(seconds=30)
-        log.info('Scheduling report every %s', delta)
-        report_schedule = schedule(run_every=delta)
-
         sender.add_periodic_task(
-            report_schedule,
+            crontab(day_of_week=1),
             report_activity.s(app.config.get(PYBEL_CONNECTION), recipient),
             name='Send report on upload activity'
         )
