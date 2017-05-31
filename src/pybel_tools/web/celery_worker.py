@@ -151,6 +151,8 @@ def setup_periodic_tasks(sender, **kwargs):
     """Sets up the periodic tasks to be run asynchronously by Celery"""
     recipient = app.config.get('PYBEL_WEB_REPORT_RECIPIENT')
 
+    log.warning('Recipeint value: %s', recipient)
+
     if recipient:
         delta = datetime.timedelta(seconds=30)
         log.info('Scheduling report every %s', delta)
