@@ -75,8 +75,10 @@ def get_nodes_in_all_shortest_paths(graph, nodes, weight=None):
 
     .. note:: This can be trivially parallelized using :func:`networkx.single_source_shortest_path`
     """
-    return {node for u, v in product(nodes, repeat=2) for path in all_shortest_paths(graph, u, v, weight=weight) for
-            node in path}
+    return {node
+            for u, v in product(nodes, repeat=2)
+            for path in all_shortest_paths(graph, u, v, weight=weight)
+            for node in path}
 
 
 # TODO consider all shortest paths?
