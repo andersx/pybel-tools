@@ -9,7 +9,13 @@
 
 $(document).ready(function () {
 
-    // returns joined string with the properties of the selected elements in select2Element. Property can be the text or id
+
+    /**
+     * Returns joined string with the properties of selection in a select2Element.
+     * @param {select2} select2Element
+     * @param {string} selectionProperty - text or id
+     * @param {string} joinBy
+     */
     function getSelection(select2Element, selectionProperty, joinBy) {
 
         var selectedElements = [];
@@ -22,6 +28,9 @@ $(document).ready(function () {
 
     }
 
+    /**
+     * Populates hidden inputs in form (pubmed_list, author_list) with the selection from the select2Element.
+     */
     $("#provenance_form").submit(function () {
 
         $("#pubmed_list").val(getSelection($("#pubmed_selection").select2("data"), "text", ","));
@@ -30,6 +39,10 @@ $(document).ready(function () {
 
     });
 
+
+    /**
+     * Populates hidden form (subgraph_form) with the selection from the select2Element.
+     */
     $("#subgraph_form").submit(function () {
 
         $("#node_list").val(getSelection($("#node_selection").select2("data"), "id", ","));
