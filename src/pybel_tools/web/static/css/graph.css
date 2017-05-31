@@ -1,3 +1,5 @@
+/* CSS for PyBEL-web explorer */
+
 .button-padding {
     margin: 10px;
 }
@@ -64,12 +66,6 @@ svg {
 #bel-logo {
     height: 20px;
     width: 20px;
-    vertical-align: middle;
-}
-
-#json-logo {
-    height: 17px;
-    width: 17px;
     vertical-align: middle;
 }
 
