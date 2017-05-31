@@ -1,9 +1,7 @@
 /**
- * This JS file controls all network rendering as well as
- *  annotation tree and other filter options and controls
- *  URL for querying the PyBEL-tools API.
+ * This JS file controls and connect the network to the PyBEL-web API.
  *
- * @summary   Network controller of PyBEL explorer
+ * @summary   Network controller of PyBEL-web explorer
  *
  * @requires jquery, d3, d3-context-menu, inspire-tree, blob
  *
@@ -80,8 +78,12 @@ function selectNodesInTreeFromURL(tree, url, blackList) {
     });
 }
 
+/**
+ * Get all annotations needed to build the tree
+ * @param {string} URLString
+ * @returns {object} JSON object coming from the API ready to render the tree
+ */
 function getAnnotationForTree(URLString) {
-    // get all annotations for building the tree using the graphid parameter in the URL if exists or the whole supernetwork if none
     if ("graphid" in URLString) {
         return doAjaxCall("/api/tree/?graphid=" + URLString["graphid"]);
     } else {
@@ -95,7 +97,6 @@ function getAnnotationForTree(URLString) {
  * @param {string} url
  */
 function initiliazeGlobals(url) {
-    // Initialize arrays with selected nodes to expand/delete
     if ("remove" in url) {
         window.deleteNodes = url["remove"].split(',');
     }
@@ -227,9 +228,9 @@ function getDefaultAjaxParameters(tree) {
  * @param {InspireTree} tree
  */
 function renderNetwork(tree) {
-    // Store filtering parameters from tree and global variables (network_id, expand/delete nodes) and
-    // store seed methods/ pipeline arguments from URL
 
+    // Next two lines store filtering parameters from tree and global variables (network_id, expand/delete nodes) and
+    // store seed methods/ pipeline arguments from URL
     initiliazeGlobals(getCurrentURL());
 
     var args = getDefaultAjaxParameters(tree);
@@ -240,6 +241,7 @@ function renderNetwork(tree) {
         initD3Force(data, tree);
     });
 
+    // Update the URL
     window.history.pushState("BiNE", "BiNE", "/explore?" + renderParameters);
 }
 
@@ -683,14 +685,11 @@ function initD3Force(graph, tree) {
 
     // Highlight color variables
 
-    // Highlight color of the node boundering
-    var highlightNodeBoundering = "#4EB2D4";
+    var highlightNodeBoundering = "#4EB2D4"; // Highlight color of the node boundering
 
-    // Highlight color of the edge
-    var highlightedLinkColor = "#4EB2D4";
+    var highlightedLinkColor = "#4EB2D4"; // Highlight color of the edge
 
-    // Text highlight color
-    var highlightText = "#4EB2D4";
+    var highlightText = "#4EB2D4"; // Text highlight color
 
     // Size when zooming scale
     var size = d3.scalePow().exponent(1)
@@ -750,11 +749,10 @@ function initD3Force(graph, tree) {
     var circleColor = "black";
     var defaultLinkColor = "#888";
 
-    const nominalBaseNodeSize = 10;
+    const nominalBaseNodeSize = 10; // Default node radius
 
-    var nominalStroke = 2.5;
-    // Zoom variables
-    var minZoom = 0.1, maxZoom = 10;
+    var nominalStroke = 2.5;  // Edge width
+    var minZoom = 0.1, maxZoom = 10; // Zoom variables
 
     var svg = d3.select("#graph-chart").append("svg")
         .attr("width", w)
@@ -803,8 +801,7 @@ function initD3Force(graph, tree) {
         g.attr("transform", d3.event.transform);
     }
 
-    // g = svg object where the graph will be appended
-    var g = svg.append("g");
+    var g = svg.append("g");  // g = svg object where the graph will be appended
 
     var linkedByIndex = {};
     graph.links.forEach(function (d) {
@@ -1130,7 +1127,7 @@ function initD3Force(graph, tree) {
     }
 
     /**
-     * Reset default styles for nodes/edges/text on double click
+     * Resets default styles for nodes/edges/text on double click
      */
     function resetAttributesDoubleClick() {
 
@@ -1148,7 +1145,7 @@ function initD3Force(graph, tree) {
     }
 
     /**
-     * Reset default styles for nodes/edges/text
+     * Resets default styles for nodes/edges/text
      */
     function resetAttributes() {
         // Reset visibility and opacity
@@ -1159,6 +1156,13 @@ function initD3Force(graph, tree) {
 
     }
 
+    /**
+     * Hides the text of an array of Nodes
+     * @param {array} nodeList
+     * @param {boolean} visualization. If true: opacity to 0.1, false: 0.0 (hidden)
+     * @param {string} property
+     * @example hideNodesText([1,34,5,56], false, 'id')
+     */
     function hideNodesText(nodeList, visualization) {
         // Filter the text to those not belonging to the list of node names
 
@@ -1180,6 +1184,13 @@ function initD3Force(graph, tree) {
         });
     }
 
+    /**
+     * Hides the text of an array of node paths
+     * @param {array} data
+     * @param {boolean} visualization. If true: opacity to 0.1, false: 0.0 (hidden)
+     * @param {string} property
+     * @example hideNodesTextInPaths([[1,34,5,56],[123,234,3,4]], false, 'id')
+     */
     function hideNodesTextInPaths(data, visualization, property) {
 
         // Array with all nodes in all paths
@@ -1210,6 +1221,11 @@ function initD3Force(graph, tree) {
         });
     }
 
+    /**
+     * Changes the opacity to 0.1 of edges that are not in array
+     * @param {array} edgeArray
+     * @param {string} property of the edge to filter
+     */
     function highlightEdges(edgeArray, property) {
 
         // Array with names of the nodes in the selected edge
@@ -1234,7 +1250,11 @@ function initD3Force(graph, tree) {
 
     }
 
-    // Highlight nodes from array and property of filtering and change the opacity of the rest of nodes
+    /**
+     * Highlights nodes from array using property as filter and changes the opacity of the rest of nodes
+     * @param {array} nodeArray
+     * @param {string} property of the edge to filter
+     */
     function highlightNodes(nodeArray, property) {
 
         // Filter not mapped nodes to change opacity
@@ -1252,6 +1272,12 @@ function initD3Force(graph, tree) {
         notMappedEdges.style("opacity", "0.1");
     }
 
+    /**
+     * Colors an array of node paths
+     * @param {array} data array of arrays
+     * @param {boolean} visualization. If true: opacity to 0.1, false: 0.0 (hidden)
+     * @example colorPaths([[1,34,5,56],[123,234,3,4]], false)
+     */
     function colorPaths(data, visualization) {
 
         /**
