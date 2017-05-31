@@ -160,6 +160,12 @@ def setup_periodic_tasks(sender, **kwargs):
             name='Send report on upload activity'
         )
 
+        sender.add_periodic_task(
+            60.0,
+            report_activity.s(app.config.get(PYBEL_CONNECTION), recipient),
+            name='Send fast report on upload activity'
+        )
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=20)
