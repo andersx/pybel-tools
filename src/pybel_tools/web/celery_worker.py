@@ -154,16 +154,14 @@ def setup_periodic_tasks(sender, **kwargs):
     log.warning('Recipeint value: %s', recipient)
 
     if recipient:
-        sender.add_periodic_task(
-            crontab(day_of_week=1),
-            report_activity.s(app.config.get(PYBEL_CONNECTION), recipient),
-            name='Send report on upload activity'
-        )
+        #sender.add_periodic_task(
+        #    crontab(day_of_week=1),
+        #    report_activity.s(app.config.get(PYBEL_CONNECTION), recipient),
+        #)
 
         sender.add_periodic_task(
             60.0,
             report_activity.s(app.config.get(PYBEL_CONNECTION), recipient),
-            name='Send fast report on upload activity'
         )
 
 
