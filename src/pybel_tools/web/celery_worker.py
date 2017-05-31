@@ -142,6 +142,8 @@ def report_activity(connection, recipient):
             sender=("PyBEL Web", 'pybel@scai.fraunhofer.de'),
         ))
 
+    log.info('Sent report to %s', recipient)
+
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
@@ -149,7 +151,9 @@ def setup_periodic_tasks(sender, **kwargs):
     recipient = app.config.get('PYBEL_WEB_REPORT_RECIPIENT')
 
     if recipient:
-        report_schedule = schedule(run_every=datetime.timedelta(weeks=2))
+        delta = datetime.timedelta(seconds=30)
+        log.info('Scheduling report every %s', delta)
+        report_schedule = schedule(run_every=delta)
 
         sender.add_periodic_task(
             report_schedule,
