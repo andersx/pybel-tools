@@ -351,14 +351,14 @@ $(document).ready(function () {
     $("#graphml-button").click(function () {
         var args = getDefaultAjaxParameters(tree);
         args["format"] = "graphml";
-        window.location.href = "/api/network/" + $.param(args, true);
+        window.location.href = "/api/network/?" + $.param(args, true);
     });
 
     // Export to bytes
     $("#bytes-button").click(function () {
         var args = getDefaultAjaxParameters(tree);
         args["format"] = "bytes";
-        window.location.href = "/api/network/" + $.param(args, true);
+        window.location.href = "/api/network/?" + $.param(args, true);
 
     });
 
@@ -366,20 +366,20 @@ $(document).ready(function () {
     $("#cx-button").click(function () {
         var args = getDefaultAjaxParameters(tree);
         args["format"] = "cx";
-        window.location.href = "/api/network/" + $.param(args, true);
+        window.location.href = "/api/network/?" + $.param(args, true);
     });
 
     // Export to CSV
     $("#csv-button").click(function () {
         var args = getDefaultAjaxParameters(tree);
         args["format"] = "csv";
-        window.location.href = "/api/network/" + $.param(args, true);
+        window.location.href = "/api/network/?" + $.param(args, true);
     });
 
     $("#nodelink-button").click(function () {
         var args = getDefaultAjaxParameters(tree);
         args["format"] = "json";
-        window.location.href = "/api/network/" + $.param(args, true);
+        window.location.href = "/api/network/?" + $.param(args, true);
     });
 
     // Reset expand/node window globals

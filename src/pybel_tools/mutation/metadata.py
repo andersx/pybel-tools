@@ -24,13 +24,13 @@ log = logging.getLogger(__name__)
 
 
 @pipeline.in_place_mutator
-def parse_authors(graph):
+def parse_authors(graph, force_parse=False):
     """Parses all of the citation author strings to lists by splitting on the pipe character "|"
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
+    :param bool force_parse: Forces serialization without checking the tag
     """
-    if 'PYBEL_PARSED_AUTHORS' in graph.graph:
+    if not force_parse and 'PYBEL_PARSED_AUTHORS' in graph.graph:
         log.debug('Authors have already been parsed in %s', graph.name)
         return
 
@@ -46,13 +46,13 @@ def parse_authors(graph):
 
 
 @pipeline.in_place_mutator
-def serialize_authors(graph):
+def serialize_authors(graph, force_serialize=False):
     """Recombines all authors with the pipe character "|"
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
+    :param bool force_serialize: Forces serialization without checking the tag
     """
-    if 'PYBEL_PARSED_AUTHORS' not in graph.graph:
+    if not force_serialize and 'PYBEL_PARSED_AUTHORS' not in graph.graph:
         log.warning('Authors have not yet been parsed in %s', graph.name)
         return
 
@@ -64,7 +64,8 @@ def serialize_authors(graph):
 
         graph.edge[u][v][k][CITATION][CITATION_AUTHORS] = '|'.join(authors)
 
-    del graph.graph['PYBEL_PARSED_AUTHORS']
+    if 'PYBEL_PARSED_AUTHORS' in graph.graph:
+        del graph.graph['PYBEL_PARSED_AUTHORS']
 
 
 @pipeline.in_place_mutator
