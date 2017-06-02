@@ -115,7 +115,7 @@ def get_recent_reports(manager, weeks=2):
         yield a.network.name
 
         if a.network.version == b.network.version:
-            yield '\tUploaded only once'
+            yield '\tUploaded only {}'.format(a.network.version)
             yield '\tNodes: {}'.format(a.number_nodes)
             yield '\tEdges: {}'.format(a.number_edges)
             yield '\tWarnings: {}'.format(a.number_warnings)
