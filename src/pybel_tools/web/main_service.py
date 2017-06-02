@@ -12,17 +12,17 @@ import networkx as nx
 from flask import render_template
 from flask import request, jsonify, url_for, redirect, make_response
 from flask_security import roles_required, roles_accepted, current_user, login_required
+from requests.compat import unquote
+from six import StringIO
+
 from pybel import from_bytes
 from pybel import from_url
 from pybel.constants import METADATA_NAME, METADATA_AUTHORS, METADATA_CONTACT
 from pybel.constants import SMALL_CORPUS_URL, LARGE_CORPUS_URL, FRAUNHOFER_RESOURCES, PYBEL_LOG_DIR
 from pybel.manager.models import Namespace, Annotation, Network
-from requests.compat import unquote
-from six import StringIO
-
 from .extension import get_manager, get_api
 from .forms import SeedProvenanceForm, SeedSubgraphForm
-from .models import Report
+from .models import Report, get_recent_reports
 from .send_utils import serve_network
 from .utils import render_graph_summary, try_insert_graph, sanitize_list_of_str
 from ..api import DictionaryService
@@ -738,6 +738,16 @@ def build_main_service(app):
         buf.seek(0)
         output = make_response(buf.getvalue())
         output.headers["Content-type"] = "image/png"
+        return output
+
+    @app.route('/api/text/report')
+    def get_recent_report():
+        """Gets the recent reports"""
+        lines = get_recent_reports(
+            manager,
+        )
+        output = make_response('\n'.join(lines))
+        output.headers["Content-type"] = "text/plain"
         return output
 
     log.info('Added dictionary service to %s', app)

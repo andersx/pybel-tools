@@ -96,7 +96,7 @@ def get_recent_reports(manager, weeks=2):
     """Gets reports from the last two weeks
 
     :param pybel.manager.CacheManager manager: A cache manager
-    :param int weeks: The number of weeks to look backwards
+    :param int weeks: The number of weeks to look backwards (builds :class:`datetime.timedelta`)
     :return: An iterable of the string that should be reported
     :rtype: iter[str]
     """
@@ -112,16 +112,18 @@ def get_recent_reports(manager, weeks=2):
         order_by(Network.name.asc()).all()
 
     for a, b, (_, count) in zip(q1, q2, q3):
+        yield a.network.name
+
         if a.network.version == b.network.version:
-            yield '{} was only uploaded once'.format(a.network.name)
-            yield 'Nodes: {}'.format(a.number_nodes)
-            yield 'Edges: {}'.format(a.number_edges)
-            yield 'Warnings: {}'.format(a.number_warnings)
+            yield '\tUploaded only once'
+            yield '\tNodes: {}'.format(a.number_nodes)
+            yield '\tEdges: {}'.format(a.number_edges)
+            yield '\tWarnings: {}'.format(a.number_warnings)
         else:
-            yield a.network.name
-            yield '\tVersion: {} -> {}'.format(a.network.version, b.network.version)
             yield '\tUploads: {}'.format(count)
+            yield '\tVersion: {} -> {}'.format(a.network.version, b.network.version)
             yield '\tNodes: {} {:+d} {}'.format(a.number_nodes, b.number_nodes - a.number_nodes, b.number_nodes)
             yield '\tEdges: {} {:+d} {}'.format(a.number_edges, b.number_edges - a.number_edges, b.number_edges)
             yield '\tWarnings: {} {:+d} {}'.format(a.number_warnings, b.number_warnings - a.number_warnings,
-                                                 b.number_warnings)
+                                                   b.number_warnings)
+        yield ''
