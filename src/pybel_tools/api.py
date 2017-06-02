@@ -237,8 +237,7 @@ class DictionaryService(BaseService):
             self.add_network(network_id, from_bytes(network.blob))
 
         result = self.networks[network_id]
-        log.debug('got network [%s] (%s nodes/%s edges)', network_id, result.number_of_nodes(),
-                  result.number_of_edges())
+        log.debug('got network [%s] (%s nodes/%s edges)', result, result.number_of_nodes(), result.number_of_edges())
         return result
 
     def decode_node(self, node_id):
