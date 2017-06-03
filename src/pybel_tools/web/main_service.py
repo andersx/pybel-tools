@@ -9,12 +9,13 @@ from operator import itemgetter
 
 import flask
 import networkx as nx
+import pandas as pd
 from flask import render_template
 from flask import request, jsonify, url_for, redirect, make_response
+from flask import send_file
 from flask_security import roles_required, roles_accepted, current_user, login_required
 from requests.compat import unquote
-from six import StringIO
-from flask import send_file
+from six import BytesIO, StringIO
 
 from pybel import from_bytes
 from pybel import from_url
@@ -283,6 +284,7 @@ def build_dictionary_service_admin(app):
     @app.route('/admin/network/make_public/<int:network_id>')
     @roles_accepted('admin', 'scai')
     def make_network_public(network_id):
+        """Makes a given network public using admin powers"""
         report = manager.session.query(Report).filter(Report.network_id == network_id).one()
         report.public = True
         manager.commit()
@@ -293,6 +295,7 @@ def build_dictionary_service_admin(app):
     @app.route('/admin/network/make_private/<int:network_id>')
     @roles_accepted('admin', 'scai')
     def make_network_private(network_id):
+        """Makes a given network private using admin powers"""
         report = manager.session.query(Report).filter(Report.network_id == network_id).one()
         report.public = False
         manager.commit()
@@ -303,6 +306,7 @@ def build_dictionary_service_admin(app):
     @app.route('/api/network/make_public/<int:user_id>/<int:network_id>')
     @login_required
     def make_user_network_public(user_id, network_id):
+        """Makes a given network public after authenticating that the given user is the owner."""
         if current_user.id != user_id:
             return flask.abort(402)
 
@@ -316,6 +320,7 @@ def build_dictionary_service_admin(app):
     @app.route('/api/network/make_private/<int:user_id>/<int:network_id>')
     @login_required
     def make_user_network_private(user_id, network_id):
+        """Makes a given network private after authenticating that the given user is the owner."""
         if current_user.id != user_id:
             return flask.abort(402)
 
@@ -359,6 +364,7 @@ def build_api_admin(app):
     @app.route('/admin/manage/namespaces/drop/<int:namespace_id>')
     @roles_required('admin')
     def drop_namespace(namespace_id):
+        """Drops a namespace given its identifier"""
         log.info('dropping namespace %s', namespace_id)
         manager.session.query(Namespace).filter(Namespace.id == namespace_id).delete()
         manager.session.commit()
@@ -376,6 +382,7 @@ def build_api_admin(app):
     @app.route('/admin/manage/annotations/drop/<annotation_id>')
     @roles_required('admin')
     def drop_annotation(annotation_id):
+        """Drops an annotation given its identifier"""
         log.info('dropping annotation %s', annotation_id)
         manager.session.query(Annotation).filter(Annotation.id == annotation_id).delete()
         manager.session.commit()
@@ -482,7 +489,7 @@ def build_main_service(app):
         try:
             network = manager.get_network_by_id(graph_id)
             graph = from_bytes(network.blob, check_version=app.config.get('PYBEL_DS_CHECK_VERSION'))
-        except:
+        except Exception:
             flask.flash("Problem getting graph {}".format(graph_id), category='error')
             return redirect(url_for('view_networks'))
 
@@ -502,6 +509,7 @@ def build_main_service(app):
 
     @app.route('/api/network/list', methods=['GET'])
     def get_network_list():
+        """Gets a list of networks"""
         return jsonify(manager.list_graphs())
 
     @app.route('/api/summary/<int:network_id>')
@@ -721,10 +729,9 @@ def build_main_service(app):
 
     @app.route('/overlap')
     def get_node_overlap_image():
+        """Produces an image assessing the overlaps between networks using PyUpset"""
         import pyupset as pyu
         import matplotlib.pyplot as plt
-        import pandas as pd
-        from six import BytesIO
 
         network_ids = request.args.get('networks')
         if not network_ids:
