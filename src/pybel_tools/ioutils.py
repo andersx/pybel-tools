@@ -11,6 +11,7 @@ from pybel import from_path, BELGraph, to_pickle, from_pickle
 from pybel.io.line_utils import build_metadata_parser
 from pybel.manager.cache import build_manager
 from .integration import HGNCAnnotator
+from .mutation import opening_on_central_dogma
 from .mutation.merge import left_merge
 from .mutation.metadata import fix_pubmed_citations
 from .selection import get_subgraph_by_annotation_value
@@ -77,7 +78,7 @@ def safe_upload(manager, graph, store_parts=False):
 
 
 def convert_recursive(directory, connection=None, upload=False, pickle=False, store_parts=False,
-                      enrich_citations=False, enrich_genes=False):
+                      infer_central_dogma=True, enrich_citations=False, enrich_genes=False):
     """Recursively parses and either uploads/pickles graphs in a given directory and sub-directories"""
     metadata_parser = build_metadata_parser(connection)
     hgnc_annotator = HGNCAnnotator(preload_map=enrich_genes)
@@ -91,6 +92,9 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False, st
         except:
             log.exception('Problem parsing %s', path)
             continue
+
+        if infer_central_dogma:
+            opening_on_central_dogma(graph)
 
         if enrich_citations:
             fix_pubmed_citations(graph)
