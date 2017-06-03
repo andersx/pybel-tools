@@ -194,18 +194,19 @@ def get_subgraph_by_data(graph, annotations):
     return get_subgraph_by_edge_filter(graph, build_annotation_dict_filter(annotations))
 
 
-# TODO this is currently O(M^2) and can be easily done in O(M)
+# FIXME this is currently O(M^2) and can be easily done in O(M)
 def get_subgraphs_by_annotation(graph, annotation='Subgraph'):
     """Builds a new subgraph induced over all edges for each value in the given annotation.
 
     :param pybel.BELGraph graph: A BEL graph
-    :param annotation: The annotation to group by
-    :type annotation: str
+    :param str annotation: The annotation to group by
     :return: A dictionary of {str value: BELGraph subgraph}
-    :rtype: dict
+    :rtype: dict[str, pybel.BELGraph]
     """
-    values = get_annotation_values(graph, annotation)
-    return {value: get_subgraph_by_annotation_value(graph, value, annotation=annotation) for value in values}
+    return {
+        value: get_subgraph_by_annotation_value(graph, value, annotation=annotation)
+        for value in get_annotation_values(graph, annotation)
+    }
 
 
 @pipeline.mutator
