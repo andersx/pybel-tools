@@ -14,6 +14,7 @@ from flask import request, jsonify, url_for, redirect, make_response
 from flask_security import roles_required, roles_accepted, current_user, login_required
 from requests.compat import unquote
 from six import StringIO
+from flask import send_file
 
 from pybel import from_bytes
 from pybel import from_url
@@ -749,5 +750,10 @@ def build_main_service(app):
         output = make_response('\n'.join(lines))
         output.headers["Content-type"] = "text/plain"
         return output
+
+    @app.route('/swagger.json')
+    def get_swagger():
+        """Gets the Swagger definition of this API"""
+        return send_file('static/json/swagger.json')
 
     log.info('Added dictionary service to %s', app)
