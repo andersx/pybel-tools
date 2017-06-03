@@ -1023,6 +1023,12 @@ function initD3Force(graph, tree) {
         if (node.namespace) {
             nodeObject["Namespace"] = node.namespace;
         }
+        if (node.label) {
+            nodeObject["Label"] = node.label
+        }
+        if (node.description) {
+            nodeObject["Description"] = node.description
+        }
 
         var row = 0;
         $.each(nodeObject, function (key, value) {

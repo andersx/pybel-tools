@@ -46,7 +46,8 @@ class HGNCAnnotator(NodeAnnotator):
 
         :param pybel.BELGraph graph: A BEL graph
         """
-        self.populate_constrained(hgnc_symbols=get_names(graph, self.namespace))
+        hgnc_symbols = list(get_names(graph, self.namespace))
+        self.populate_constrained(hgnc_symbols)
 
     # OVERRIDES
     def get_description(self, name):
@@ -78,7 +79,7 @@ class HGNCAnnotator(NodeAnnotator):
     def get_unpopulated_entrez(self, entrez_ids):
         """Gets the Entrez Gene Identifiers from this list that aren't already cached"""
         hgnc_symbols = self.map_entrez_ids(entrez_ids)
-        missing_hgnc_symbols = set(self.descriptions) - set(hgnc_symbols)
+        missing_hgnc_symbols = set(hgnc_symbols) - set(self.descriptions)
         return self.map_hgnc(missing_hgnc_symbols)
 
     def populate(self, entrez_ids, group_size=200, sleep_time=1):
