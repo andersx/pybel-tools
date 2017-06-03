@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-"""This module contains functions that help add more data to the network"""
+"""This module contains functions that help overlay tabular data to nodes in a graph"""
 
 import logging
 
 from pybel.constants import NAME
-from . import pipeline
-from .filters.node_filters import filter_nodes, function_namespace_inclusion_builder
+from .. import pipeline
+from ..filters.node_filters import filter_nodes, function_namespace_inclusion_builder
 
 __all__ = [
     'overlay_data',
