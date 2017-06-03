@@ -8,7 +8,7 @@ from .. import pipeline
 from ..citation_utils import get_citations_by_pmids
 from ..constants import CNAME
 from ..filters.edge_filters import edge_has_author_annotation, filter_edges, edge_has_pubmed_citation
-from ..filters.node_filters import node_is_missing_cname, filter_nodes
+from ..filters.node_filters import node_missing_cname, filter_nodes
 from ..summary.edge_summary import get_annotations
 from ..summary.node_summary import get_namespaces
 from ..summary.provenance import get_pubmed_identifiers
@@ -72,10 +72,9 @@ def serialize_authors(graph, force_serialize=False):
 def add_canonical_names(graph):
     """Adds a canonical name to each node's data dictionary if they are missing, in place. 
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
+    :param pybel.BELGraph graph: A BEL graph
     """
-    for node in filter_nodes(graph, node_is_missing_cname):
+    for node in filter_nodes(graph, node_missing_cname):
         graph.node[node][CNAME] = calculate_canonical_name(graph, node)
 
 
@@ -86,11 +85,9 @@ def fix_pubmed_citations(graph, stringify_authors=False):
     Sets authors as list, so probably a good idea to run :func:`pybel_tools.mutation.serialize_authors` before
     exporting.
 
-    :param graph: A BEL graph
-    :type graph: pybel.BELGraph
-    :param stringify_authors: Converts all author lists to author strings using
-                              :func:`pybel_tools.mutation.serialize_authors`. Defaults to ``False``.
-    :type stringify_authors: bool
+    :param pybel.BELGraph graph: A BEL graph
+    :param bool stringify_authors: Converts all author lists to author strings using
+                                  :func:`pybel_tools.mutation.serialize_authors`. Defaults to ``False``.
     :return: A set of PMIDs for which the eUtils service crashed
     :rtype: set
     """

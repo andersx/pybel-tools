@@ -5,10 +5,11 @@ from collections import Counter
 
 import flask
 from flask import render_template, jsonify
+from flask import current_app
 from flask_login import current_user
-from pybel.canonicalize import decanonicalize_node
 from sqlalchemy.exc import IntegrityError
 
+from pybel.canonicalize import decanonicalize_node
 from .constants import *
 from ..analysis.stability import *
 from ..constants import CNAME
@@ -21,9 +22,18 @@ from ..summary.export import info_list
 from ..summary.node_properties import count_variants
 from ..summary.node_summary import get_unused_namespaces
 from ..utils import prepare_c3, count_dict_values, calc_betweenness_centality
+from .extension import get_manager, get_api
 
 log = logging.getLogger(__name__)
 
+
+def get_current_manager():
+    """Gets the manager from the current app"""
+    return get_manager(current_app)
+
+def get_current_api():
+    """Gets the api from the current app"""
+    return get_api(current_app)
 
 def render_upload_error(exc):
     """Builds a flask Response for an exception.
@@ -76,10 +86,18 @@ def render_graph_summary_no_api(graph):
     :param pybel.BELGraph graph: A BEL graph
     :return: A Flask Resposne object
     """
-    hub_data = {graph.node[node][CNAME]: count for node, count in Counter(graph.degree()).most_common(25)}
-    centrality_data = {graph.node[node][CNAME]: count for node, count in
-                       calc_betweenness_centality(graph).most_common(25)}
-    disease_data = {graph.node[node][CNAME]: count for node, count in count_diseases(graph).most_common(25)}
+    hub_data = {
+        graph.node[node][CNAME]: count
+        for node, count in Counter(graph.degree()).most_common(25)
+    }
+    centrality_data = {
+        graph.node[node][CNAME]: count
+        for node, count in calc_betweenness_centality(graph).most_common(25)
+    }
+    disease_data = {
+        graph.node[node][CNAME]: count
+        for node, count in count_diseases(graph).most_common(25)
+    }
 
     undefined_namespaces = get_undefined_namespaces(graph)
     undefined_annotations = get_undefined_annotations(graph)
@@ -140,10 +158,15 @@ def render_graph_summary(graph_id, graph, api=None):
         ((u, v, 'Chaotic') for u, v, in get_chaotic_pairs(graph)),
         ((u, v, 'Dampened') for u, v, in get_dampened_pairs(graph)),
     ])
-    unstable_pairs = [(dcn(u), api.get_node_id(u), dcn(v), api.get_node_id(v), label) for u, v, label in unstable_pairs]
+    unstable_pairs = [
+        (dcn(u), api.get_node_id(u), dcn(v), api.get_node_id(v), label)
+        for u, v, label in unstable_pairs
+    ]
 
-    contradictory_pairs = [(dcn(u), api.get_node_id(u), dcn(v), api.get_node_id(v), relation) for u, v, relation in
-                           get_contradiction_summary(graph)]
+    contradictory_pairs = [
+        (dcn(u), api.get_node_id(u), dcn(v), api.get_node_id(v), relation)
+        for u, v, relation in get_contradiction_summary(graph)
+    ]
 
     contradictory_triplets = itt.chain.from_iterable([
         ((a, b, c, 'Separate') for a, b, c in get_separate_unstable_correlation_triples(graph)),
@@ -154,15 +177,19 @@ def render_graph_summary(graph_id, graph, api=None):
 
     ])
 
-    contradictory_triplets = [(dcn(a), api.get_node_id(a), dcn(b), api.get_node_id(b), dcn(c), api.get_node_id(c), d)
-                              for a, b, c, d in contradictory_triplets]
+    contradictory_triplets = [
+        (dcn(a), api.get_node_id(a), dcn(b), api.get_node_id(b), dcn(c), api.get_node_id(c), d)
+        for a, b, c, d in contradictory_triplets
+    ]
 
     unstable_triplets = itt.chain.from_iterable([
         ((a, b, c, 'Chaotic') for a, b, c in get_chaotic_triplets(graph)),
         ((a, b, c, 'Dampened') for a, b, c in get_dampened_triplets(graph)),
     ])
-    unstable_triplets = [(dcn(a), api.get_node_id(a), dcn(b), api.get_node_id(b), dcn(c), api.get_node_id(c), d) for
-                         a, b, c, d in unstable_triplets]
+    unstable_triplets = [
+        (dcn(a), api.get_node_id(a), dcn(b), api.get_node_id(b), dcn(c), api.get_node_id(c), d)
+        for a, b, c, d in unstable_triplets
+    ]
 
     undefined_namespaces = get_undefined_namespaces(graph)
     undefined_annotations = get_undefined_annotations(graph)

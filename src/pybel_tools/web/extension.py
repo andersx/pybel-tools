@@ -41,7 +41,7 @@ class FlaskPybel:
 
 def get_state(app):
     """
-    :param flask.Flask app: 
+    :param flask.Flask app: A Flask app
     :rtype: _FlaskPybelState
     """
     if 'pybel' not in app.extensions:
@@ -51,16 +51,18 @@ def get_state(app):
 
 
 def get_manager(app):
-    """
-    :param flask.Flask app: 
+    """Gets the cache manger from a Flask app
+
+    :param flask.Flask app: A Flask app
     :rtype: pybel.manager.cache.CacheManager
     """
     return get_state(app).manager
 
 
 def get_api(app):
-    """
-    :param flask.Flask app: 
+    """Gets the dictionary service from a Flask app
+
+    :param flask.Flask app: A Flask app
     :rtype: DictionaryService
     """
     return get_state(app).api

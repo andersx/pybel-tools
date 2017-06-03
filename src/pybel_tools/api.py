@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 CENTRALITY_SAMPLES = 200
 
 
-class BaseService:
+class BaseService(object):
     """The base service class provides a functional interface that all PyBEL services must implement"""
 
     def __init__(self, manager):
@@ -47,10 +47,9 @@ class DictionaryService(BaseService):
 
     def __init__(self, manager):
         """
-        :param manager: A cache manager
-        :type manager: pybel.manager.cache.CacheManager
+        :param pybel.manager.cache.CacheManager manager: A cache manager
         """
-        BaseService.__init__(self, manager)
+        super(DictionaryService, self).__init__(manager)
 
         #: dictionary of {int id: BELGraph graph}
         self.networks = {}
@@ -221,8 +220,7 @@ class DictionaryService(BaseService):
     def get_network(self, network_id=None):
         """Gets a network by its ID or super network if identifier is not specified
 
-        :param network_id: The internal ID of the network to get
-        :type network_id: int
+        :param int network_id: The internal ID of the network to get
         :return: A BEL Graph
         :rtype: pybel.BELGraph
         """

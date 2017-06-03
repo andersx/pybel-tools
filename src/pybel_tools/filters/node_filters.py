@@ -16,7 +16,7 @@ A general use for a node filter function is to use the built-in :func:`filter` i
 from __future__ import print_function
 
 from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY, NAMESPACE, NAME, DEGRADATION, \
-    TRANSLOCATION
+    TRANSLOCATION, LABEL
 from ..constants import CNAME
 
 __all__ = [
@@ -284,8 +284,7 @@ def namespace_inclusion_builder(namespace):
 def data_contains_key_builder(key):
     """Builds a filter that passes only on nodes that have the given key in their data dictionary
 
-        :param key: A key for the node's data dictionary
-        :type key: str
+        :param str key: A key for the node's data dictionary
         :return: A node filter (graph, node) -> bool
         :rtype: types.FunctionType
         """
@@ -293,10 +292,8 @@ def data_contains_key_builder(key):
     def data_contains_key(graph, node):
         """Passes only for a node that contains the enclosed key in its data dictionary
 
-        :param graph: A BEL Graph
-        :type graph: pybel.BELGraph
-        :param node: A BEL node
-        :type node: tuple
+        :param pybel.BELGraph graph: A BEL Graph
+        :param tuple node: A BEL node
         :return: If the node contains the enclosed key in its data dictionary
         :rtype: bool
         """
@@ -308,8 +305,7 @@ def data_contains_key_builder(key):
 def data_missing_key_builder(key):
     """Builds a filter that passes only on nodes that don't have the given key in their data dictionary
 
-    :param key: A key for the node's data dictionary
-    :type key: str
+    :param str key: A key for the node's data dictionary
     :return: A node filter (graph, node) -> bool
     :rtype: types.FunctionType
     """
@@ -317,10 +313,8 @@ def data_missing_key_builder(key):
     def data_does_not_contain_key(graph, node):
         """Passes only for a node that doesn't contain the enclosed key in its data dictionary
 
-        :param graph: A BEL Graph
-        :type graph: pybel.BELGraph
-        :param node: A BEL node
-        :type node: tuple
+        :param pybel.BELGraph graph: A BEL Graph
+        :param tuple node: A BEL node
         :return: If the node doesn't contain the enclosed key in its data dictionary
         :rtype: bool
         """
@@ -333,7 +327,14 @@ def data_missing_key_builder(key):
 node_has_cname = data_contains_key_builder(CNAME)
 
 #: Fails for nodes that have been annotated with a canonical name
-node_is_missing_cname = data_missing_key_builder(CNAME)
+node_missing_cname = data_missing_key_builder(CNAME)
+
+
+#: Passes for nodes that have been annotated with a label
+node_has_label = data_contains_key_builder(LABEL)
+
+#: Fails for nodes that have been annotated with a label
+node_missing_label = data_missing_key_builder(LABEL)
 
 
 # Filter Builders
@@ -371,10 +372,8 @@ def concatenate_node_filters(filters=None):
     def concatenated_node_filter(graph, node):
         """Passes only for a nodes that pass all enclosed filters
 
-        :param graph: A BEL Graph
-        :type graph: pybel.BELGraph
-        :param node: A BEL node
-        :type node: tuple
+        :param pybel.BELGraph graph: A BEL Graph
+        :param tuple node: A BEL node
         :return: If the node passes all enclosed filters
         :rtype: bool
         """
@@ -397,8 +396,7 @@ def node_has_modifier(graph, node, modifier):
      :data:`pybel.constants.DEGRADATION`, or :data:`pybel.constants.TRANSLOCATION`.
 
     :param pybel.BELGraph graph: A BEL graph
-    :param node: A BEL node
-    :type node: tuple
+    :param tuple node: A BEL node
     :param str modifier: One of :data:`pybel.constants.ACTIVITY`, :data:`pybel.constants.DEGRADATION`, or 
                         :data:`pybel.constants.TRANSLOCATION`
     :return: If the node has a known modifier
@@ -419,8 +417,7 @@ def node_has_molecular_activity(graph, node):
     """Returns true if over any of the node's edges it has a molecular activity
 
     :param pybel.BELGraph graph: A BEL graph
-    :param node: A BEL node
-    :type node: tuple
+    :param tuple node: A BEL node
     :return: If the node has a known molecular activity
     :rtype: bool
     """
@@ -431,8 +428,7 @@ def node_is_degraded(graph, node):
     """Returns true if over any of the node's edges it is degraded
 
     :param pybel.BELGraph graph: A BEL graph
-    :param node: A BEL node
-    :type node: tuple
+    :param tuple node: A BEL node
     :return: If the node has a known degradation
     :rtype: bool
     """
@@ -443,8 +439,7 @@ def node_is_translocated(graph, node):
     """Returns true if over any of the node's edges it is transloated
 
     :param pybel.BELGraph graph: A BEL graph
-    :param node: A BEL node
-    :type node: tuple
+    :param tuple node: A BEL node
     :return: If the node has a known translocation
     :rtype: bool
     """
@@ -456,8 +451,7 @@ def node_is_upstream_leaf(graph, node):
     1 out-edge.
 
     :param pybel.BELGraph graph: A BEL graph
-    :param node: A BEL node
-    :type node: tuple
+    :param tuple node: A BEL node
     :return: If the node is an upstream leaf
     :rtype: bool
     """
@@ -470,20 +464,17 @@ def build_node_data_search(key, data_filter):
     """Passes for nodes who have the given key in their data dictionaries and whose associated values pass the given
     filter function
 
-    :param key: The node data dictionary key to check
-    :type key: str
-    :param data_filter: 
-    :type data_filter: types.FunctionType
-    :return: 
+    :param str key: The node data dictionary key to check
+    :param types.FunctionType data_filter: The filter to apply to the node data dictionary
+    :return: A node predicate (graph, node) -> bool
+    :rtype: types.FunctionType
     """
 
     def node_data_filter(graph, node):
         """Passes if the given node has a given data annotated and passes the contained filter
         
-        :param graph: A BEL Graph
-        :type graph: pybel.BELGraph
-        :param node: A BEL node
-        :type node: tuple
+        :param pybel.BELGraph graph: A BEL Graph
+        :param tuple node: A BEL node
         :return: If the node has the contained key in its data dictionary and passes the contained filter
         :rtype: bool
         """
@@ -498,8 +489,7 @@ def build_node_key_search(query, key):
     
     :param query: The query string or strings to check if they're in the node name
     :type query: str or iter[str]
-    :param key: The key for the node data dictionary. Should refer only to entries that have str values
-    :type key: str
+    :param str key: The key for the node data dictionary. Should refer only to entries that have str values
     """
     if isinstance(query, str):
         return build_node_data_search(key, lambda s: query.lower() in s.lower())
