@@ -9,19 +9,11 @@ The following algorithms are taken from the NeuroMMSigDB, published by Daniel Do
 import itertools as itt
 from collections import Counter
 
-import networkx as nx
-
 from pybel.constants import GENE
-from filters.node_selection import get_nodes_by_function
-from mutation.inference import infer_central_dogma
-
-
-def calc_betweenness_centality(graph):
-    try:
-        res = Counter(nx.betweenness_centrality(graph, k=200))
-        return res
-    except:
-        return Counter(nx.betweenness_centrality(graph))
+from ...filters.node_selection import get_nodes_by_function
+from ...mutation.inference import infer_central_dogma
+from ...selection import get_subgraphs_by_annotation
+from ...utils import calc_betweenness_centality
 
 
 def neurommsig_gene_ora(graph, target_genes):
@@ -31,7 +23,6 @@ def neurommsig_gene_ora(graph, target_genes):
     
     :param pybel.BELGraph graph: A BEL graph
     :param iter[tuple] target_genes: A list of nodes
-    :return: 
     :rtype: float
     """
     infer_central_dogma(graph)
@@ -66,16 +57,12 @@ def neurommsig_topology(graph, nodes):
     -  Doesn't consider self loops
     
     :param pybel.BELGraph graph: A BEL graph
-    :param iter[tuple] nodes: A list of nodes
+    :param list[tuple] nodes: A list of nodes
     :rtype: float
     
     .. math::
         
          \frac{\sum_i^n N_G[i]}{n*(n-1)}
-    
-    :param pybel.BELGraph graph: A BEL graph
-    :param iter[tuple] nodes: A list of nodes
-    :rtype: float
     """
     nodes = list(nodes)
     n = len(nodes)
@@ -86,13 +73,15 @@ def weighted_neurommsig_score(graph, target_genes, ora_weight=1, hub_weight=1, t
     """Calculates the composite NeuroMMSig Score for a given list of genes
     
     :param pybel.BELGraph graph: A BEL graph
-    :param iter[tuple] nodes: A list of gene nodes 
-    :param ora_weight: 
-    :param hub_weight: 
-    :param topology_weight: 
+    :param list[tuple] target_genes: A list of gene nodes
+    :param float ora_weight: The relative weight of the overenrichment analysis score from :py:func:`neurommsig_gene_ora`
+    :param float hub_weight: The relative weight of the hub analysis score from :py:func:`neurommsig_hubs`
+    :param float topology_weight: The relative weight of the topolgical analysis core from :py:func:`neurommsig_topology`
     :return: The NeuroMMSig composite score
     :rtype: float
     """
+    target_genes = list(target_genes)
+
     ora_score = neurommsig_gene_ora(graph, target_genes)
     hub_score = neurommsig_hubs(graph, target_genes)
     topology_score = neurommsig_topology(graph, target_genes)
@@ -100,3 +89,21 @@ def weighted_neurommsig_score(graph, target_genes, ora_weight=1, hub_weight=1, t
     weighted_sum = ora_weight * ora_score + hub_weight * hub_score + topology_weight * topology_score
     total_weight = ora_weight + hub_weight + topology_weight
     return weighted_sum / total_weight
+
+
+def run_neurommsig_stratified(graph, genes, annotation='Subgraph', ora_weight=1, hub_weight=1, topology_weight=1):
+    """Runs the NeuroMMSig algorithm, strativied by a given annotation
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param list[tuple] genes: A list of gene nodes
+    :param str annotation: The annotation to use to stratify the graph to subgraphs
+    :param float ora_weight: The relative weight of the overenrichment analysis score from :py:func:`neurommsig_gene_ora`
+    :param float hub_weight: The relative weight of the hub analysis score from :py:func:`neurommsig_hubs`
+    :param float topology_weight: The relative weight of the topolgical analysis core from :py:func:`neurommsig_topology`
+    :return: A dictionary from {annotation value: NeuroMMSig composite score}
+    :rtype: dict[str, float]
+    """
+    return {
+        annotation_value: weighted_neurommsig_score(subgraph, genes, ora_weight, hub_weight, topology_weight)
+        for annotation_value, subgraph in get_subgraphs_by_annotation(graph, annotation=annotation).items()
+    }
