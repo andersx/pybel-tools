@@ -21,12 +21,12 @@ from getpass import getuser
 
 import click
 from flask_security import SQLAlchemyUserDatastore
+
 from pybel import from_pickle, to_database, from_lines, from_url
 from pybel.constants import PYBEL_LOG_DIR, SMALL_CORPUS_URL, LARGE_CORPUS_URL, get_cache_connection
 from pybel.manager.cache import build_manager
 from pybel.manager.models import Base
 from pybel.utils import get_version as pybel_version
-
 from .constants import GENE_FAMILIES, NAMED_COMPLEXES
 from .definition_utils import write_namespace, export_namespaces
 from .document_utils import write_boilerplate
@@ -247,19 +247,27 @@ def post(path, url, skip_check_version):
 @click.option('-u', '--enable-upload', is_flag=True, help='Enable automatic database uploading')
 @click.option('--store-parts', is_flag=True, help='Automatically upload to database and edge store')
 @click.option('--no-enrich-authors', is_flag=True, help="Don't enrich authors. Makes faster.")
+@click.option('--no-enrich-genes', is_flag=True, help="Don't enrich HGNC genes")
 @click.option('-d', '--directory', default=os.getcwd(),
               help='The directory to search. Defaults to current working directory')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 @click.option('-x', '--cool', is_flag=True, help='enable cool mode')
-def convert(connection, enable_upload, store_parts, no_enrich_authors, directory, debug, cool):
+def convert(connection, enable_upload, store_parts, no_enrich_authors, no_enrich_genes, directory, debug, cool):
     """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
     set_debug_param(debug)
 
     if cool:
         enable_cool_mode()
 
-    convert_recursive(directory, connection=connection, upload=(enable_upload or store_parts), pickle=True,
-                      store_parts=store_parts, enrich_citations=(not no_enrich_authors))
+    convert_recursive(
+        directory=directory,
+        connection=connection,
+        upload=(enable_upload or store_parts),
+        pickle=True,
+        store_parts=store_parts,
+        enrich_citations=(not no_enrich_authors),
+        no_enrich_genes=(not no_enrich_genes),
+    )
 
 
 @main.group()

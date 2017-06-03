@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from pybel import from_path, BELGraph, to_pickle, from_pickle
 from pybel.io.line_utils import build_metadata_parser
 from pybel.manager.cache import build_manager
+from .integration import HGNCAnnotator
 from .mutation.merge import left_merge
 from .mutation.metadata import fix_pubmed_citations
 from .selection import get_subgraph_by_annotation_value
@@ -30,10 +31,8 @@ def load_paths(paths, connection=None):
     Internally, this function uses a shared :class:`pybel.parser.MetadataParser` to cache the definitions more
     efficiently.
 
-    :param paths: An iterable over paths to BEL scripts
-    :param paths: iter
-    :param connection: A custom database connection string
-    :type connection: str
+    :param iter[str] paths: An iterable over paths to BEL scripts
+    :param str connection: A custom database connection string
     :return: A BEL graph comprised of the union of all BEL graphs produced by each BEL script
     :rtype: pybel.BELGraph
     """
@@ -50,10 +49,8 @@ def load_paths(paths, connection=None):
 def load_directory(directory, connection=None):
     """Compiles all BEL scripts in the given directory and returns as a merged BEL graph using :func:`load_paths`
 
-    :param directory: A path to a directory
-    :type directory: str
-    :param connection: A custom database connection string
-    :type connection: str
+    :param str directory: A path to a directory
+    :param str connection: A custom database connection string
     :return: A BEL graph comprised of the union of all BEL graphs produced by each BEL script
     :rtype: pybel.BELGraph
     """
@@ -80,9 +77,11 @@ def safe_upload(manager, graph, store_parts=False):
 
 
 def convert_recursive(directory, connection=None, upload=False, pickle=False, store_parts=False,
-                      enrich_citations=False):
+                      enrich_citations=False, enrich_genes=False):
     """Recursively parses and either uploads/pickles graphs in a given directory and sub-directories"""
     metadata_parser = build_metadata_parser(connection)
+    hgnc_annotator = HGNCAnnotator(preload_map=enrich_genes)
+
     paths = list(get_paths_recursive(directory))
     log.info('Paths to parse: %s', paths)
 
@@ -95,6 +94,9 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False, st
 
         if enrich_citations:
             fix_pubmed_citations(graph)
+
+        if enrich_genes:
+            hgnc_annotator.annotate(graph)
 
         if upload:
             safe_upload(metadata_parser.manager, graph, store_parts=store_parts)
@@ -125,12 +127,9 @@ def subgraphs_to_pickles(graph, directory=None, annotation='Subgraph'):
     """Groups the given graph into subgraphs by the given annotation with :func:`get_subgraph_by_annotation` and
     outputs them as gpickle files to the given directory with :func:`pybel.to_pickle`
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param directory: A directory to output the pickles
-    :type directory: str
-    :param annotation: An annotation to split by. Suggestion: ``Subgraph``
-    :type annotation: str
+    :param pybel.BELGraph graph: A BEL Graph
+    :param str directory: A directory to output the pickles
+    :param str annotation: An annotation to split by. Suggestion: ``Subgraph``
     """
     directory = os.getcwd() if directory is None else directory
     for value in get_annotation_values(graph, annotation=annotation):
