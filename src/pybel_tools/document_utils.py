@@ -23,6 +23,7 @@ __all__ = [
     'make_document_namespaces',
     'make_document_annotations',
     'make_pubmed_abstract_group',
+    'get_entrez_gene_data',
     'make_pubmed_gene_group',
     'write_boilerplate',
 ]
@@ -74,7 +75,7 @@ def merge(output_path, input_paths, merged_name=None, merged_contact=None, merge
 
     for input_path in input_paths:
         with open(os.path.expanduser(input_path)) as file:
-            a, b, c = split_document([line.strip() for line in file])
+            a, b, c = split_document(line.strip() for line in file)
             metadata.append(a)
             defs.append(set(b))
             statements.append(c)
@@ -211,6 +212,26 @@ def make_pubmed_abstract_group(pmids):
 
         yield evidence_format.format(abstract)
         yield '\nUNSET Evidence\nUNSET Citation'
+
+
+def sanitize(s):
+    if s is None:
+        return None
+    return s.strip().replace('\n', '')
+
+def get_entrez_gene_data(entrez_ids):
+    """Gets gene info from Entrez"""
+    url = PUBMED_GENE_QUERY_URL.format(','.join(str(x).strip() for x in entrez_ids))
+    response = requests.get(url)
+    tree = ElementTree.fromstring(response.content)
+
+    return {
+        x.attrib['uid']: {
+            'summary': sanitize(x.find('Summary').text),
+            'description': x.find('Description').text
+        }
+        for x in tree.findall('./DocumentSummarySet/DocumentSummary')
+    }
 
 
 def make_pubmed_gene_group(entrez_ids):
