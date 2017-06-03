@@ -10,7 +10,10 @@ from pybel.io import to_jsons
 from .utils import render_template, default_color_map
 from ..mutation import add_canonical_names
 
-__all__ = ['to_jupyter', 'to_jupyter_str']
+__all__ = [
+    'to_jupyter',
+    'to_jupyter_str'
+]
 
 DEFAULT_WIDTH = 1000
 DEFAULT_HEIGHT = 650
@@ -27,13 +30,10 @@ def to_jupyter(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=None
     To use successfully, make run as the last statement in a cell inside a Jupyter notebook.
 
     :param pybel.BELGraph graph: A BEL graph
-    :param width: The width of the visualization window to render
-    :type width: int
-    :param height: The height of the visualization window to render
-    :type height: int
-    :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
+    :param int width: The width of the visualization window to render
+    :param int height: The height of the visualization window to render
+    :param dict color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
                     to :data:`default_color_map`
-    :type color_map: dict
     :return: An IPython notebook Javascript object
     :rtype: :class:`IPython.display.Javascript`
     """
@@ -44,13 +44,10 @@ def to_jupyter_str(graph, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, color_map=
     """Returns the string to be javascript-ified by the Jupyter notebook function :class:`IPython.display.Javascript`
 
     :param pybel.BELGraph graph: A BEL graph
-    :param width: The width of the visualization window to render
-    :type width: int
-    :param height: The height of the visualization window to render
-    :type height: int
-    :param color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
+    :param int width: The width of the visualization window to render
+    :param int height: The height of the visualization window to render
+    :param dict color_map: A dictionary from PyBEL internal node functions to CSS color strings like #FFEE00. Defaults
                     to :data:`default_color_map`
-    :type color_map: dict
     :return: The javascript string to turn into magic
     :rtype: str
     """

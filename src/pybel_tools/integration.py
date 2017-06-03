@@ -20,14 +20,10 @@ log = logging.getLogger(__name__)
 def overlay_data(graph, data, label, overwrite=False):
     """Overlays tabular data on the network
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param data: A dictionary of {pybel node: data for that node}
-    :type data: dict
-    :param label: The annotation label to put in the node dictionary
-    :type label: str
-    :param overwrite: Should old annotations be overwritten?
-    :type overwrite: bool
+    :param pybel.BELGraph graph: A BEL Graph
+    :param dict data: A dictionary of {pybel node: data for that node}
+    :param str label: The annotation label to put in the node dictionary
+    :param bool overwrite: Should old annotations be overwritten?
     """
     for node, annotation in data.items():
         if node not in graph:
@@ -49,23 +45,17 @@ def overlay_type_data(graph, data, label, function, namespace, overwrite=False, 
     probably has HGNC identifiers, but no specific annotations that they are in the HGNC namespace or
     that the entities to which they refer are RNA.
 
-    :param graph: A BEL Graph
-    :type graph: pybel.BELGraph
-    :param data: A dictionary of {name: data}
-    :type data: dict
-    :param label: The annotation label to put in the node dictionary
-    :type label: str
-    :param function: The function of the keys in the data dictionary
-    :type function: str
-    :param namespace: The namespace of the keys in the data dictionary
-    :type namespace: str
-    :param overwrite: Should old annotations be overwritten?
-    :type overwrite: bool
+    :param pybel.BELGraph graph: A BEL Graph
+    :param dict data: A dictionary of {name: data}
+    :param str label: The annotation label to put in the node dictionary
+    :param str function: The function of the keys in the data dictionary
+    :param str namespace: The namespace of the keys in the data dictionary
+    :param bool overwrite: Should old annotations be overwritten?
     :param impute: The value to use for missing data
     """
-    new_data = {}
-
-    for node in filter_nodes(graph, function_namespace_inclusion_builder(function, namespace)):
-        new_data[node] = data.get(graph.node[node][NAME], impute)
+    new_data = {
+        node: data.get(graph.node[node][NAME], impute)
+        for node in filter_nodes(graph, function_namespace_inclusion_builder(function, namespace))
+    }
 
     overlay_data(graph, new_data, label, overwrite=overwrite)

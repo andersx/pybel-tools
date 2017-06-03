@@ -18,14 +18,10 @@ EUTILS_URL_FMT = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=
 def get_citations_by_pmids(pmids, group_size=200, sleep_time=1, return_errors=False):
     """Gets the citation information for the given list of PubMed identifiers using the NCBI's eutils service
 
-    :param pmids: an iterable of PubMed identifiers
-    :type pmids: iter
-    :param group_size: The number of PubMed identifiers to query at a time
-    :type group_size: int
-    :param sleep_time: Number of seconds to sleep between queries
-    :type sleep_time: int
-    :param return_errors: Should a set of erroneous PubMed identifiers be returned?
-    :type return_errors: bool
+    :param iter[str] or iter[int] pmids: an iterable of PubMed identifiers
+    :param int group_size: The number of PubMed identifiers to query at a time
+    :param int sleep_time: Number of seconds to sleep between queries
+    :param bool return_errors: Should a set of erroneous PubMed identifiers be returned?
     :return: A dictionary of {pmid: pmid data dictionary} or a pair of this dictionary and a set ot erroneous
             pmids if return_errors is :data:`True`
     :rtype: dict
