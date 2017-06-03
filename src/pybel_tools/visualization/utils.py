@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from pybel.constants import *
-from ..utils import build_template_environment, render_template_by_env
+from ..utils import build_template_renderer
 
 __all__ = [
     'render_template',
     'default_color_map'
 ]
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_ENVIRONMENT = build_template_environment(HERE)
-
-
-def render_template(template_filename, context=None):
-    return render_template_by_env(TEMPLATE_ENVIRONMENT, template_filename, context=context)
-
+#: Renders templates from pybel_tools.visualization.templates folder
+render_template = build_template_renderer(__file__)
 
 #: The color map defining the node colors in visualization
 default_color_map = {
