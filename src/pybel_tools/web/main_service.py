@@ -35,7 +35,7 @@ from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
 from ..summary.edge_summary import get_tree_annotations
 from ..summary.error_summary import get_undefined_namespace_names, get_incorrect_names
 from ..summary.export import info_json
-from ..summary.provenance import get_authors, get_pmids
+from ..summary.provenance import get_authors, get_pubmed_identifiers
 
 log = logging.getLogger(__name__)
 
@@ -637,7 +637,7 @@ def build_main_service(app):
     def get_all_pmids():
         """Gets a list of all pubmed citation identifiers in the graph produced by the given URL parameters"""
         graph = get_graph_from_request(api)
-        return jsonify(sorted(get_pmids(graph)))
+        return jsonify(sorted(get_pubmed_identifiers(graph)))
 
     @app.route('/api/nodes/')
     def get_node_hashes():

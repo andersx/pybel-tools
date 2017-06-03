@@ -3,6 +3,7 @@
 """This module contains functions to summarize the provenance (citations, evidences, and authors) in a BEL graph"""
 
 import itertools as itt
+import logging
 from collections import defaultdict, Counter
 
 from pybel.constants import *
@@ -12,12 +13,13 @@ from ..utils import graph_edge_data_iter, count_defaultdict, check_has_annotatio
 
 __all__ = [
     'count_pmids',
-    'get_pmids',
+    'get_pubmed_identifiers',
     'get_pmid_by_keyword',
     'count_citations',
     'count_citations_by_annotation',
     'count_authors',
     'count_author_publications',
+    'count_unique_citations',
     'get_authors',
     'get_authors_by_keyword',
     'count_authors_by_annotation',
@@ -54,7 +56,13 @@ def has_pubmed_citation(edge_data_dictionary):
     return CITATION in edge_data_dictionary and PUBMED == edge_data_dictionary[CITATION][CITATION_TYPE]
 
 
-def iter_pmids(graph):
+def iterate_pubmed_identifiers(graph):
+    """Iterates over all PubMed identifiers in a graph
+
+    :param pybel.BELGraph graph: A BEL graph
+    :return: An iterator over the PubMed identifiers in the graph
+    :rtype: iter[str]
+    """
     return (
         d[CITATION][CITATION_REFERENCE].strip()
         for d in graph_edge_data_iter(graph)
@@ -62,32 +70,40 @@ def iter_pmids(graph):
     )
 
 
-def get_pmids(graph):
+def get_pubmed_identifiers(graph):
     """Gets the set of all PubMed identifiers cited in the construction of a graph
 
     :param pybel.BELGraph graph: A BEL graph
     :return: A set of all PubMed identifiers cited in the construction of this graph
     :rtype: set[str]
     """
-    return set(iter_pmids(graph))
+    return set(iterate_pubmed_identifiers(graph))
 
 
-def get_pmid_by_keyword(keyword, graph=None, pmids=None):
+def get_pmid_by_keyword(keyword, graph=None, pubmed_identifiers=None):
     """Gets the set of PubMed identifiers beginning with the given keyword string
     
     :param pybel.BELGraph graph: A BEL graph
     :param str keyword: The beginning of a PubMed identifier
-    :param set[str] pmids: A set of pre-cached PubMed identifiers
-    :return: A set of PMIDs starting with the given string
+    :param set[str] pubmed_identifiers: A set of pre-cached PubMed identifiers
+    :return: A set of PubMed identifiers starting with the given string
     :rtype: set[str]
     """
-    if pmids is not None:
-        return {pmid for pmid in pmids if pmid.startswith(keyword)}
+    if pubmed_identifiers is not None:
+        return {
+            pubmed_identifier
+            for pubmed_identifier in pubmed_identifiers
+            if pubmed_identifier.startswith(keyword)
+        }
 
     if graph is None:
         raise ValueError('Graph not supplied')
 
-    return {pmid for pmid in iter_pmids(graph) if pmid.startswith(keyword)}
+    return {
+        pubmed_identifier
+        for pubmed_identifier in iterate_pubmed_identifiers(graph)
+        if pubmed_identifier.startswith(keyword)
+    }
 
 
 def count_pmids(graph):
@@ -97,7 +113,20 @@ def count_pmids(graph):
     :return: A Counter from {(pmid, name): frequency}
     :rtype: collections.Counter
     """
-    return Counter(iter_pmids(graph))
+    return Counter(iterate_pubmed_identifiers(graph))
+
+
+def count_unique_citations(graph):
+    """Returns the number of unique citations
+
+    :param pybel.BELGraph graph: A BEL graph
+    :return: The number of unique citations in the graph.
+    :rtype: int
+    """
+    return len({
+        (data[CITATION][CITATION_TYPE], data[CITATION][CITATION_REFERENCE])
+        for data in graph_edge_data_iter(graph)
+    })
 
 
 def count_citations(graph, **annotations):
@@ -150,12 +179,12 @@ def count_authors(graph):
     :rtype: collections.Counter
     """
     authors = []
-    for d in graph_edge_data_iter(graph):
-        if CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
+    for data in graph_edge_data_iter(graph):
+        if CITATION not in data or CITATION_AUTHORS not in data[CITATION]:
             continue
-        if isinstance(d[CITATION][CITATION_AUTHORS], str):
+        if isinstance(data[CITATION][CITATION_AUTHORS], str):
             raise ValueError('Graph should be converted with pbt.mutation.parse_authors first')
-        for author in d[CITATION][CITATION_AUTHORS]:
+        for author in data[CITATION][CITATION_AUTHORS]:
             authors.append(author)
 
     return Counter(authors)
@@ -169,13 +198,13 @@ def count_author_publications(graph):
     :rtype: collections.Counter
     """
     authors = defaultdict(list)
-    for d in graph_edge_data_iter(graph):
-        if CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
+    for data in graph_edge_data_iter(graph):
+        if CITATION not in data or CITATION_AUTHORS not in data[CITATION]:
             continue
-        if isinstance(d[CITATION][CITATION_AUTHORS], str):
+        if isinstance(data[CITATION][CITATION_AUTHORS], str):
             raise ValueError('Graph should be converted with pbt.mutation.parse_authors first')
-        for author in d[CITATION][CITATION_AUTHORS]:
-            authors[author].append(d[CITATION][CITATION_REFERENCE].strip())
+        for author in data[CITATION][CITATION_AUTHORS]:
+            authors[author].append(data[CITATION][CITATION_REFERENCE].strip())
 
     return Counter(count_dict_values(count_defaultdict(authors)))
 
@@ -189,12 +218,12 @@ def get_authors(graph):
     :rtype: set[str]
     """
     authors = set()
-    for d in graph_edge_data_iter(graph):
-        if CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
+    for data in graph_edge_data_iter(graph):
+        if CITATION not in data or CITATION_AUTHORS not in data[CITATION]:
             continue
-        if isinstance(d[CITATION][CITATION_AUTHORS], str):
+        if isinstance(data[CITATION][CITATION_AUTHORS], str):
             raise ValueError('Graph should be converted with ``pbt.mutation.parse_authors`` first')
-        for author in d[CITATION][CITATION_AUTHORS]:
+        for author in data[CITATION][CITATION_AUTHORS]:
             authors.add(author)
     return authors
 
@@ -239,13 +268,13 @@ def count_authors_by_annotation(graph, annotation='Subgraph'):
     :rtype: dict
     """
     authors = defaultdict(list)
-    for d in graph_edge_data_iter(graph):
-        if not check_has_annotation(d, annotation) or CITATION not in d or CITATION_AUTHORS not in d[CITATION]:
+    for data in graph_edge_data_iter(graph):
+        if not check_has_annotation(data, annotation) or CITATION not in data or CITATION_AUTHORS not in data[CITATION]:
             continue
-        if isinstance(d[CITATION][CITATION_AUTHORS], str):
+        if isinstance(data[CITATION][CITATION_AUTHORS], str):
             raise ValueError('Graph should be converted with pybel.mutation.parse_authors first')
-        for author in d[CITATION][CITATION_AUTHORS]:
-            authors[d[ANNOTATIONS][annotation]].append(author)
+        for author in data[CITATION][CITATION_AUTHORS]:
+            authors[data[ANNOTATIONS][annotation]].append(author)
     return count_defaultdict(authors)
 
 
@@ -261,7 +290,7 @@ def get_evidences_by_pmid(graph, pmids):
     """
     result = defaultdict(set)
 
-    for _, _, _, d in filter_edges(graph, build_pmid_inclusion_filter(pmids)):
-        result[d[CITATION][CITATION_REFERENCE]].add(d[EVIDENCE])
+    for _, _, _, data in filter_edges(graph, build_pmid_inclusion_filter(pmids)):
+        result[data[CITATION][CITATION_REFERENCE]].add(data[EVIDENCE])
 
     return dict(result)

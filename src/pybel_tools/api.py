@@ -21,7 +21,7 @@ from .mutation.merge import left_merge
 from .mutation.metadata import parse_authors, add_canonical_names, fix_pubmed_citations
 from .selection.induce_subgraph import get_subgraph
 from .summary.edge_summary import count_diseases
-from .summary.provenance import get_authors, get_pmid_by_keyword, get_authors_by_keyword, get_pmids
+from .summary.provenance import get_authors, get_pmid_by_keyword, get_authors_by_keyword, get_pubmed_identifiers
 from .utils import calc_betweenness_centality
 
 log = logging.getLogger(__name__)
@@ -170,7 +170,7 @@ class DictionaryService(BaseService):
         self.node_degrees[network_id] = Counter(graph.degree())
 
         log.debug('caching PubMed identifiers')
-        self.universe_pmids |= get_pmids(graph)
+        self.universe_pmids |= get_pubmed_identifiers(graph)
 
         if eager:
             log.debug('calculating centralities (be patient)')
@@ -359,7 +359,7 @@ class DictionaryService(BaseService):
         
         :rtype: list[str]
         """
-        return list(get_pmid_by_keyword(keyword, pmids=self.universe_pmids))
+        return list(get_pmid_by_keyword(keyword, pubmed_identifiers=self.universe_pmids))
 
     def get_authors_containing_keyword(self, keyword):
         """Gets a list with authors that contain a certain keyword

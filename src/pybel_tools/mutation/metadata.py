@@ -11,7 +11,7 @@ from ..filters.edge_filters import edge_has_author_annotation, filter_edges, edg
 from ..filters.node_filters import node_is_missing_cname, filter_nodes
 from ..summary.edge_summary import get_annotations
 from ..summary.node_summary import get_namespaces
-from ..summary.provenance import get_pmids
+from ..summary.provenance import get_pubmed_identifiers
 
 __all__ = [
     'parse_authors',
@@ -98,7 +98,7 @@ def fix_pubmed_citations(graph, stringify_authors=False):
         log.debug('citations have already been enriched in %s', graph.name)
         return
 
-    pmids = get_pmids(graph)
+    pmids = get_pubmed_identifiers(graph)
     pmid_data, errors = get_citations_by_pmids(pmids, return_errors=True)
 
     for u, v, k, d in filter_edges(graph, edge_has_pubmed_citation):
