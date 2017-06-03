@@ -25,13 +25,39 @@ class HGNCAnnotator(NodeAnnotator):
     and then the Entrez Gene Service.
     """
 
-    def __init__(self, autopopulate=False, group_size=200, sleep_time=1):
+    def __init__(self, preload_map=True):
         """
         :param int group_size: The number of entrez gene id's to send per query
         :param int sleep_time: The number of seconds to sleep between queries
         """
         super(HGNCAnnotator, self).__init__('HGNC')
 
+        #: A dictionary of {str hgnc gene symbol: str description}
+        self.descriptions = {}
+        #: A dictionary of {str hgnc gene symbol: str label}
+        self.labels = {}
+
+        if preload_map:
+            self.load_hgnc_entrez_map()
+
+    # OVERRIDES
+    def populate_by_graph(self, graph):
+        """Downloads the gene information only for genes in the given graph
+
+        :param pybel.BELGraph graph: A BEL graph
+        """
+        self.populate_constrained(hgnc_symbols=get_names(graph, self.namespace))
+
+    # OVERRIDES
+    def get_description(self, name):
+        return self.descriptions.get(name)
+
+    # OVERRIDES
+    def get_label(self, name):
+        return self.labels.get(name)
+
+    def load_hgnc_entrez_map(self):
+        log.info('Downloading HGNC-Entrez map from %s', HGNC_ENTREZ_URL)
         df = pd.read_csv(HGNC_ENTREZ_URL, sep='\t')
 
         self.hgnc_entrez = {
@@ -40,14 +66,6 @@ class HGNCAnnotator(NodeAnnotator):
         }
 
         self.entrez_hgnc = {v: k for k, v in self.hgnc_entrez.items()}
-
-        #: A dictionary of {str hgnc gene symbol: str description}
-        self.descriptions = {}
-        #: A dictionary of {str hgnc gene symbol: str label}
-        self.labels = {}
-
-        if autopopulate:
-            self.populate_unconstrained(group_size, sleep_time)
 
     def map_entrez_ids(self, entrez_ids):
         """Maps a list of Entrez Gene Identifiers to HGNC Gene Symbols"""
@@ -105,16 +123,3 @@ class HGNCAnnotator(NodeAnnotator):
             group_size=group_size,
             sleep_time=sleep_time,
         )
-
-    def populate_by_graph(self, graph):
-        """Downloads the gene information only for genes in the given graph
-
-        :param pybel.BELGraph graph: A BEL graph
-        """
-        self.populate_constrained(hgnc_symbols=get_names(graph, self.namespace))
-
-    def get_description(self, name):
-        return self.descriptions.get(name)
-
-    def get_label(self, name):
-        return self.labels.get(name)
