@@ -7,16 +7,32 @@ import json
 import logging
 import os
 from collections import Counter, defaultdict
+from itertools import zip_longest
 from operator import itemgetter
 
 import jinja2
 import networkx as nx
 import pandas as pd
 from pkg_resources import get_distribution
+
 from pybel.constants import ANNOTATIONS, CITATION_TYPE, CITATION_NAME, CITATION_REFERENCE, CITATION_DATE, \
     CITATION_AUTHORS, CITATION_COMMENTS, RELATION
 
 CENTRALITY_SAMPLES = 200
+
+
+def multidict_list(it):
+    result = defaultdict(list)
+    for k, v in it:
+        result[k].append(v)
+    return dict(result)
+
+
+def multidict_set(it):
+    result = defaultdict(set)
+    for k, v in it:
+        result[k].add(v)
+    return dict(result)
 
 
 def graph_edge_data_iter(graph):
@@ -381,3 +397,9 @@ def calc_betweenness_centality(graph):
         return res
     except:
         return Counter(nx.betweenness_centrality(graph))
+
+
+def grouper(n, iterable, fillvalue=None):
+    "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
