@@ -25,6 +25,7 @@
 {% block title %}Summary{% endblock %}
 
 {% block content %}
+    <a id="top"></a>
     <div class="container">
         <div class="page-header">
             <h1>Summary of {{ graph.name }}
@@ -53,14 +54,68 @@
                    role="button"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CX JSON</a>
 
                 {% if current_user.admin %}
-                    <a class="btn btn-danger" href="{{ url_for('drop_network', network_id=graph_id) }}" role="button">Drop</a>
+                    <a class="btn btn-danger" href="{{ url_for('drop_network', network_id=graph_id) }}"
+                       role="button">Drop</a>
                 {% endif %}
             </div>
         </div>
 
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Provenance</h3>
+                <h3 class="panel-title">Table of Contents</h3>
+            </div>
+            <div class="panel-body">
+                <ol>
+                    <li><a href="#provenance-anchor">Provenance</a></li>
+                    <li><a href="#network-statistics-anchor">Network Statistics</a></li>
+                    <li><a href="#content-statistics-anchor">Content Statistics</a></li>
+                    {% if unused_namespaces is defined and unused_namespaces|length > 0 %}
+                        <li><a href="#unused-namespaces-anchor">Unused Namespaces</a></li>
+                    {% endif %}
+                    {% if unused_annotations is defined and unused_annotations|length > 0 %}
+                        <li><a href="#unused-annotations-anchor">Unused Annotations</a></li>
+                    {% endif %}
+                    {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
+                        <li><a href="#unused-list-annotations-anchor">Unused List Annotations</a></li>
+                    {% endif %}
+                    {% if graph.warnings|length > 0 %}
+                        <li><a href="#graph-warnings-anchor">Graph Warnings</a></li>
+                    {% endif %}
+                    {% if error_groups is defined and error_groups|length > 0 %}
+                        <li><a href="#error-groups-anchor">Top Warnings</a></li>
+                    {% endif %}
+                    {% if undefined_namespaces is defined and undefined_namespaces|length > 0 %}
+                        <li><a href="#undefined-namespaces-anchor">Undefined Namespaces</a></li>
+                    {% endif %}
+                    {% if undefined_annotation is defined and undefined_annotations|length > 0 %}
+                        <li><a href="#undefined-annotations-anchor">Undefined Annotations</a></li>
+                    {% endif %}
+                    {% if namespaces_with_incorrect_names is defined and namespaces_with_incorrect_names|length > 0 %}
+                        <li><a href="#incorrect-namespaces-anchor">Namespaces with Incorrect Names</a></li>
+                    {% endif %}
+                    {% if contradictions is defined and contradictions|length > 0 %}
+                        <li><a href="#contradictory-pairs-anchor">Contradictory Pairs</a></li>
+                    {% endif %}
+                    {% if unstable_pairs is defined and unstable_pairs|length > 0 %}
+                        <li><a href="#unstable-pairs-anchor">Unstable Pairs</a></li>
+                    {% endif %}
+                    {% if contradictory_triplets is defined and contradictory_triplets|length > 0 %}
+                        <li><a href="#contradictory-triplets-anchor">Contradictory Triplets</a></li>
+                    {% endif %}
+                    {% if unstable_triplets is defined and unstable_triplets|length > 0 %}
+                        <li><a href="#unstable-triplets-anchor">Unstable Triplets</a></li>
+                    {% endif %}
+                </ol>
+            </div>
+        </div>
+
+        <a id="provenance-anchor"></a>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Provenance
+                    <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                            aria-hidden="true"></span></a>
+                </h3>
             </div>
             <div class="panel-body">
                 <dl class="dl-horizontal">
@@ -78,9 +133,12 @@
             </div>
         </div>
 
+        <a id="network-statistics-anchor"></a>
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Network Statistics</h3>
+                <h3 class="panel-title">Network Statistics
+                    <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                            aria-hidden="true"></span></a></h3>
             </div>
             <div class="panel-body">
                 <dl class="dl-horizontal">
@@ -92,9 +150,13 @@
             </div>
         </div>
 
+        <a id="content-statistics-anchor"></a>
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Content Statistics</h3>
+                <h3 class="panel-title">Content Statistics
+                    <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                            aria-hidden="true"></span></a>
+                </h3>
             </div>
             <div class="panel-body">
                 {% if time is not none %}
@@ -139,9 +201,14 @@
         <!-- Warnings -->
 
         {% if unused_namespaces is defined and unused_namespaces|length > 0 %}
+            <a id="unused-namespaces-anchor"></a>
             <div class="panel panel-warning">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Unused Namespaces</h3>
+                    <h3 class="panel-title">Unused Namespaces
+                        <span class="badge">{{ unused_namespaces|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <p>The source BEL script contained references to the following namespaces, but they were never
@@ -157,9 +224,14 @@
         {% endif %}
 
         {% if unused_annotations is defined and unused_annotations|length > 0 %}
+            <a id="unused-annotations-anchor"></a>
             <div class="panel panel-warning">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Unused Annotations</h3>
+                    <h3 class="panel-title">Unused Annotations
+                        <span class="badge">{{ unused_annotations|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <p>The source BEL script contained references to the following annotations, but they were never
@@ -177,9 +249,14 @@
         {% endif %}
 
         {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
+            <a id="unused-list-annotations-anchor"></a>
             <div class="panel panel-warning">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Unused List Annotation Values</h3>
+                    <h3 class="panel-title">Unused List Annotation Values
+                        <span class="badge">{{ unused_list_annotation_values|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <p>The source BEL script contained the following list annotations, but no references to the
@@ -211,9 +288,14 @@
         <!-- BEL Parser Errors -->
 
         {% if graph.warnings|length > 0 %}
+            <a id="graph-warnings-anchor"></a>
             <div class="panel panel-danger panel-table">
                 <div class="panel-heading">
-                    <h3 class="panel-title">All Warnings</h3>
+                    <h3 class="panel-title">All Warnings
+                        <span class="badge">{{ graph.warnings|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <div class="table-responsive">
@@ -244,9 +326,13 @@
         {% endif %}
 
         {% if error_groups is defined and error_groups|length > 0 %}
+            <a id="error-groups-anchor"></a>
             <div class="panel panel-danger panel-table">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Top Warnings</h3>
+                    <h3 class="panel-title">Top Warnings
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <div class="table-responsive">
@@ -272,9 +358,14 @@
         {% endif %}
 
         {% if undefined_namespaces is defined and undefined_namespaces|length > 0 %}
+            <a id="undefined-namespaces-anchor"></a>
             <div class="panel panel-danger">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Undefined Namespaces</h3>
+                    <h3 class="panel-title">Undefined Namespaces
+                        <span class="badge">{{ undefined_namespaces|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <p>The source BEL script contained references to the following namespaces, but they were never
@@ -292,9 +383,14 @@
         {% endif %}
 
         {% if undefined_annotation is defined and undefined_annotations|length > 0 %}
+            <a id="undefined-annotations-anchor"></a>
             <div class="panel panel-danger">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Undefined Annotations</h3>
+                    <h3 class="panel-title">Undefined Annotations
+                        <span class="badge">{{ undefined_annotations|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <p>The source BEL script contained references to the following annotations, but they were never
@@ -310,9 +406,14 @@
         {% endif %}
 
         {% if namespaces_with_incorrect_names is defined and namespaces_with_incorrect_names|length > 0 %}
+            <a id="incorrect-namespaces-anchor"></a>
             <div class="panel panel-danger">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Namespaces with Incorrect Names</h3>
+                    <h3 class="panel-title">Namespaces with Incorrect Names
+                        <span class="badge">{{ namespaces_with_incorrect_names|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <ul>
@@ -329,9 +430,14 @@
         <!-- Biogrammar -->
 
         {% if contradictions is defined and contradictions|length > 0 %}
+            <a id="contradictory-pairs-anchor"></a>
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Contradictory Edges</h3>
+                    <h3 class="panel-title">Contradictory Edges
+                        <span class="badge">{{ contradictions|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <p>These pairs of nodes have a contradiction in their causal relationships, meaning they have more
@@ -368,9 +474,14 @@
         {% endif %}
 
         {% if unstable_pairs is defined and unstable_pairs|length > 0 %}
+            <a id="unstable-pairs-anchor"></a>
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Unstable Pairs</h3>
+                    <h3 class="panel-title">Unstable Pairs
+                        <span class="badge">{{ unstable_pairs|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <dl>
@@ -416,9 +527,14 @@
         {% endif %}
 
         {% if contradictory_triplets is defined and contradictory_triplets|length > 0 %}
+            <a id="contradictory-triplets-anchor"></a>
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Contradictory Triplets</h3>
+                    <h3 class="panel-title">Contradictory Triplets
+                        <span class="badge">{{ contradictory_triplets|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <p>Analysis of triple stability comes from a deep graph theoretic background. It identifies
@@ -476,9 +592,14 @@
         {% endif %}
 
         {% if unstable_triplets is defined and unstable_triplets|length > 0 %}
+            <a id="unstable-triplets-anchor"></a>
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Unstable Triplets</h3>
+                    <h3 class="panel-title">Unstable Triplets
+                        <span class="badge">{{ unstable_triplets|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <p>Like unstable pairs, unstable triplets require additional context to understand their
