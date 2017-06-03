@@ -266,7 +266,7 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, no_enrich
         pickle=True,
         store_parts=store_parts,
         enrich_citations=(not no_enrich_authors),
-        no_enrich_genes=(not no_enrich_genes),
+        enrich_genes=(not no_enrich_genes),
     )
 
 
