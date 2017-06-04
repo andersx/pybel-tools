@@ -40,6 +40,7 @@ INSTALL_REQUIRES = [
     'scipy',
     'numpy',
     'celery',
+    'obonet',
 ]
 EXTRAS_REQUIRE = {
     'speed': ['python-Levenshtein', ]  # Activates c-based speed improvements for fuzzywuzzy

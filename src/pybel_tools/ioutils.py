@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from pybel import from_path, BELGraph, to_pickle, from_pickle
 from pybel.io.line_utils import build_metadata_parser
 from pybel.manager.cache import build_manager
-from .integration import HGNCAnnotator
+from .integration import HGNCAnnotator, GOAnnotator
 from .mutation import opening_on_central_dogma
 from .mutation.merge import left_merge
 from .mutation.metadata import fix_pubmed_citations
@@ -78,10 +78,11 @@ def safe_upload(manager, graph, store_parts=False):
 
 
 def convert_recursive(directory, connection=None, upload=False, pickle=False, store_parts=False,
-                      infer_central_dogma=True, enrich_citations=False, enrich_genes=False):
+                      infer_central_dogma=True, enrich_citations=False, enrich_genes=False, enrich_go=False):
     """Recursively parses and either uploads/pickles graphs in a given directory and sub-directories"""
     metadata_parser = build_metadata_parser(connection)
-    hgnc_annotator = HGNCAnnotator(preload_map=enrich_genes)
+    hgnc_annotator = HGNCAnnotator(preload=enrich_genes)
+    go_annotator = GOAnnotator(preload=enrich_go)
 
     paths = list(get_paths_recursive(directory))
     log.info('Paths to parse: %s', paths)
@@ -101,6 +102,9 @@ def convert_recursive(directory, connection=None, upload=False, pickle=False, st
 
         if enrich_genes:
             hgnc_annotator.annotate(graph)
+
+        if enrich_go:
+            go_annotator.annotate(graph)
 
         if upload:
             safe_upload(metadata_parser.manager, graph, store_parts=store_parts)

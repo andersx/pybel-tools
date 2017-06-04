@@ -16,3 +16,4 @@ ipython
 scipy
 numpy
 celery
+obonet

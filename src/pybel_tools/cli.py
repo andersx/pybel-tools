@@ -248,11 +248,13 @@ def post(path, url, skip_check_version):
 @click.option('--store-parts', is_flag=True, help='Automatically upload to database and edge store')
 @click.option('--no-enrich-authors', is_flag=True, help="Don't enrich authors. Makes faster.")
 @click.option('--no-enrich-genes', is_flag=True, help="Don't enrich HGNC genes")
+@click.option('--no-enrich-go', is_flag=True, help="Don't enrich GO entries")
 @click.option('-d', '--directory', default=os.getcwd(),
               help='The directory to search. Defaults to current working directory')
 @click.option('-v', '--debug', count=True, help="Turn on debugging. More v's, more debugging")
 @click.option('-x', '--cool', is_flag=True, help='enable cool mode')
-def convert(connection, enable_upload, store_parts, no_enrich_authors, no_enrich_genes, directory, debug, cool):
+def convert(connection, enable_upload, store_parts, no_enrich_authors, no_enrich_genes, no_enrich_go, directory, debug,
+            cool):
     """Recursively walks the file tree and converts BEL scripts to gpickles. Optional uploader"""
     set_debug_param(debug)
 
@@ -267,6 +269,7 @@ def convert(connection, enable_upload, store_parts, no_enrich_authors, no_enrich
         store_parts=store_parts,
         enrich_citations=(not no_enrich_authors),
         enrich_genes=(not no_enrich_genes),
+        enrich_go=(not no_enrich_go),
     )
 
 

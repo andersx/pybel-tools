@@ -25,9 +25,9 @@ class HGNCAnnotator(NodeAnnotator):
     and then the Entrez Gene Service.
     """
 
-    def __init__(self, preload_map=True):
+    def __init__(self, preload=True):
         """
-        :param bool preload_map: Should the data be pre-downloaded?
+        :param bool preload: Should the data be pre-downloaded?
         """
         super(HGNCAnnotator, self).__init__('HGNC')
 
@@ -36,7 +36,7 @@ class HGNCAnnotator(NodeAnnotator):
         #: A dictionary of {str hgnc gene symbol: str label}
         self.labels = {}
 
-        if preload_map:
+        if preload:
             self.load_hgnc_entrez_map()
 
     # OVERRIDES
