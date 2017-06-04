@@ -264,6 +264,12 @@ def function_namespace_inclusion_builder(function, namespace):
 
 
 def namespace_inclusion_builder(namespace):
+    """Builds a predicate for namespace inclusion
+
+    :param str or list[str] or tuple[str] or set[str] namespace: A namespace or iter of namespaces
+    :return: A node filter (graph, node) -> bool
+    :rtype: types.FunctionType
+    """
     if isinstance(namespace, str):
 
         def namespace_filter(graph, node):

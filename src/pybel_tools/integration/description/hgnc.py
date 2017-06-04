@@ -27,8 +27,7 @@ class HGNCAnnotator(NodeAnnotator):
 
     def __init__(self, preload_map=True):
         """
-        :param int group_size: The number of entrez gene id's to send per query
-        :param int sleep_time: The number of seconds to sleep between queries
+        :param bool preload_map: Should the data be pre-downloaded?
         """
         super(HGNCAnnotator, self).__init__('HGNC')
 

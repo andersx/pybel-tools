@@ -17,7 +17,7 @@ class NodeAnnotator(object):
 
     def __init__(self, namespace):
         """
-        :param str namespace: The name of the namespace that this node annotator services
+        :param str or list[str] namespace: The name of the namespace or namespaces that this node annotator services
         """
         self.namespace = namespace
 

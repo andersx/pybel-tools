@@ -28,8 +28,8 @@ def get_nodes_by_namespace(graph, namespace):
     """Returns an iterator over nodes with the given namespace
 
     :param pybel.BELGraph graph: A BEL graph
-    :param str namespace: The namespace to filter
-    :return: An iterable over BEL nodes with the given function and namspace
+    :param str or list[str] namespace: The namespace or list of namespaces to filter
+    :return: An iterable over BEL nodes with the given function and namespace
     :rtype: iter[tuple]
     """
     return filter_nodes(graph, namespace_inclusion_builder(namespace))
