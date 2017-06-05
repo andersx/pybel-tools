@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
 import logging
 import os
 import socket
@@ -12,6 +11,7 @@ from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_mail import Mail, Message
 
+from pybel.constants import config as pybel_config
 from .async_parser_service import async_blueprint
 from .extension import FlaskPybel
 
@@ -20,9 +20,6 @@ log = logging.getLogger(__name__)
 bootstrap_extension = Bootstrap()
 pybel_extension = FlaskPybel()
 mail = Mail()
-
-pybel_config_directory = os.path.join(os.path.expanduser('~'), '.config', 'pybel')
-json_conf_path = os.path.join(pybel_config_directory, 'config.json')
 
 
 def create_application(get_mail=False, **kwargs):
@@ -46,10 +43,7 @@ def create_application(get_mail=False, **kwargs):
             log.info('importing config from %s', os.environ['PYBEL_WEB_CONFIG'])
             app.config.from_json(os.path.expanduser(os.environ['PYBEL_WEB_CONFIG']))
 
-    if os.path.exists(json_conf_path):
-        with open(json_conf_path) as f:
-            app.config.update(json.load(f))
-
+    app.config.update(pybel_config)
     app.config.update(kwargs)
 
     # Initialize extensions
