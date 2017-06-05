@@ -17,8 +17,57 @@
     {{ super() }}
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
     <style>
-        .home-link {
+
+        /* from charlie */
+        nav div.container-fluid {
+            padding-left: 30px;
+            padding-right: 30px;
         }
+
+        /* from https://codepen.io/bootstrapped/pen/KwYGwq */
+
+        .navbar-brand {
+            padding: 0;
+        }
+
+        .navbar-brand {
+            height: 50px;
+        }
+
+        .navbar-brand > img {
+            height: 100%;
+            padding: 10px;
+            width: auto;
+        }
+
+        .navbar {
+            border-bottom: rgba(0, 150, 127, 0.11) solid 1px;
+        }
+
+        .nav > li > a {
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
+
+        .navbar-toggle {
+            padding: 10px;
+            margin: 25px 15px 25px 0;
+        }
+
+        #nav-scai-logo {
+            padding-left: 5px;
+            /*border-left: 1px solid rgba(0, 150, 127, 0.11);*/
+            margin-left: 5px;
+        }
+
+        .btn-primary {
+            background-color: #00967f;
+        }
+
+        .btn-primary:hover {
+            background-color: #006e57;
+        }
+
     </style>
 {% endblock %}
 
@@ -35,7 +84,7 @@
 {% endblock %}
 
 {% block navbar %}
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-static-top" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
                 <button aria-controls="navbar" aria-expanded="false" class="navbar-toggle collapsed"
@@ -45,35 +94,55 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <span class="navbar-brand">PyBEL Web</span>
-                <!--<img alt="PyBEL Web" src="{{ url_for('static', filename='img/PyBEL-logotype-100.png') }}">-->
+                <a class="navbar-brand" href="{{ url_for('home') }}">
+                    <img alt="PyBEL Web" src="{{ url_for('static', filename='img/PyBEL-logotype-100.png') }}"></a>
             </div>
             <div class="navbar-collapse collapse" id="485848c5cd0b7dabdf24f858e4f3abbf21fdb984">
                 <ul class="nav navbar-nav">
-                    <li class="active">
-                        <a href="{{ url_for('home') }}" title="Home"><span class="glyphicon glyphicon-home"
-                                                                           aria-hidden="true"></span></a>
+                    <li class="dropdown">
+                        <a class="dropdown-toggle nav-header" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">Getting Started <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a class="nav-header" href="http://belief.scai.fraunhofer.de/BeliefDashboard/home/bel">Introduction
+                                to BEL</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a class="dropdown-toggle nav-header" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">SCAI Net <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a class="nav-header"
+                                   href="http://belief.scai.fraunhofer.de/BeliefDashboard">BELIEF</a></li>
+                            <li><a class="nav-header" href="http://neurommsig.scai.fraunhofer.de/">NeuroMMSigDB</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('home') }}" title="Contact">About</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('home') }}" title="Imprint">Imprint</a>
                     </li>
                 </ul>
+                <a class="navbar-brand navbar-right" id="nav-scai-logo"
+                   href="https://www.scai.fraunhofer.de/en/business-research-areas/bioinformatics.html">
+                    <!--<img alt="Fraunhofer SCAI" src="{{ url_for('static', filename='img/scai_logo.svg') }}">-->
+                    <img alt="Fraunhofer SCAI" src="https://www.scai.fraunhofer.de/content/dam/scai/scai_logo.svg">
+                </a>
                 <ul class="nav navbar-nav navbar-right">
                     {% if current_user.is_authenticated %}
+                        <li><a href="#">Signed in as {{ current_user.name }}</a></li>
                         <li><a href="{{ url_for('logout') }}">Log Out</a></li>
                     {% else %}
                         <li><a href="{{ url_for('login') }}">Log In</a></li>
                     {% endif %}
                 </ul>
-                {% if current_user.is_authenticated %}
-                    <p class="navbar-text navbar-right">
-                        Signed in as <a href="#" class="navbar-link">{{ current_user.name }}</a>
-                    </p>
-                {% endif %}
             </div>
         </div>
     </nav>
 {% endblock %}
 
 {% block content %}
-    <div class="container">
+    <div class="container" style="margin-top: 50px">
         {{ util.flashed_messages(dismissible=True, container=False) }}
 
         {% if current_user.admin %}
@@ -150,10 +219,6 @@
                             </div>
                         </div>
                     </div>
-
-                </div>
-
-                <div class="row">
                     <div class="col-sm-6 col-md-4">
                         <div class="thumbnail home-link">
                             <!--<img src="http://placehold.it/350x150" alt="...">-->
