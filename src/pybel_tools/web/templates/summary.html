@@ -60,6 +60,35 @@
             </div>
         </div>
 
+        {% if network_versions is defined and network_versions|length > 1 %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Versions
+                        <span class="badge">{{ network_versions|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <ul class="list-inline">
+                        {% for graph_version in network_versions %}
+                            {% if graph_version.id == graph_id %}
+                                <li>
+                                    <a class="btn btn-info" role="button"
+                                       href="{{ url_for('view_summary', graph_id=graph_version.id) }}">{{ graph_version.version }}</a>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <a class="btn btn-default" role="button"
+                                       href="{{ url_for('view_summary', graph_id=graph_version.id) }}">{{ graph_version.version }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Table of Contents</h3>

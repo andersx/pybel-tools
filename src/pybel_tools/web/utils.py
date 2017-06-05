@@ -4,13 +4,14 @@ import itertools as itt
 from collections import Counter
 
 import flask
-from flask import render_template, jsonify
 from flask import current_app
+from flask import render_template, jsonify
 from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
 
 from pybel.canonicalize import decanonicalize_node
 from .constants import *
+from .extension import get_manager, get_api
 from ..analysis.stability import *
 from ..constants import CNAME
 from ..summary import get_contradiction_summary, count_functions, count_relations, count_error_types, get_translocated, \
@@ -22,7 +23,6 @@ from ..summary.export import info_list
 from ..summary.node_properties import count_variants
 from ..summary.node_summary import get_unused_namespaces
 from ..utils import prepare_c3, count_dict_values, calc_betweenness_centality
-from .extension import get_manager, get_api
 
 log = logging.getLogger(__name__)
 
@@ -31,9 +31,11 @@ def get_current_manager():
     """Gets the manager from the current app"""
     return get_manager(current_app)
 
+
 def get_current_api():
     """Gets the api from the current app"""
     return get_api(current_app)
+
 
 def render_upload_error(exc):
     """Builds a flask Response for an exception.
@@ -199,6 +201,8 @@ def render_graph_summary(graph_id, graph, api=None):
     unused_annotations = get_unused_annotations(graph)
     unused_list_annotation_values = get_unused_list_annotation_values(graph)
 
+    versions = api.manager.get_networks(name=graph.name)
+
     return render_template(
         'summary.html',
         chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
@@ -229,5 +233,6 @@ def render_graph_summary(graph_id, graph, api=None):
         unused_annotations=sorted(unused_annotations),
         unused_list_annotation_values=sorted(unused_list_annotation_values.items()),
         current_user=current_user,
-        namespaces_with_incorrect_names=namespaces_with_incorrect_names
+        namespaces_with_incorrect_names=namespaces_with_incorrect_names,
+        network_versions=versions,
     )
