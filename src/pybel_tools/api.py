@@ -9,11 +9,11 @@ import time
 from collections import Counter
 
 import networkx as nx
+from sqlalchemy import func
+
 from pybel import from_bytes, BELGraph
 from pybel.canonicalize import decanonicalize_node, calculate_canonical_name
 from pybel.manager.models import Network
-from sqlalchemy import func
-
 from .constants import CNAME
 from .mutation.expansion import expand_internal
 from .mutation.inference import infer_central_dogma
@@ -416,15 +416,6 @@ class DictionaryService(BaseService):
 class DatabaseService(BaseService):
     """Provides queries to access data stored in the PyBEL edge store"""
 
-    def get_networks(self):
-        """Provides a list of all networks stored in the PyBEL database.
-
-        :return: A list of all networks in the PyBEL database.
-        :rtype: list
-        """
-        network_ls = self.manager.get_network(as_dict_list=True)
-        return [(n['id'], n['name'], n['version']) for n in network_ls]
-
     def get_namespaces(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
         """Provides a list of namespaces filtered by the given parameters.
 
@@ -445,7 +436,7 @@ class DatabaseService(BaseService):
         result = []
 
         if network_id:
-            network = self.manager.get_network(network_id=network_id)[0]
+            network = self.manager.get_network_by_id(network_id)
             result = [namespace.data for namespace in network.namespaces[offset_start:offset_end]]
 
         if name_list and keyword:
@@ -484,7 +475,7 @@ class DatabaseService(BaseService):
         result = []
 
         if network_id:
-            network = self.manager.get_network(network_id=network_id)[0]
+            network = self.manager.get_network_by_id(network_id)
             result = [annotation.data for annotation in network.annotations[offset_start:offset_end]]
 
         if name_list:
@@ -521,7 +512,7 @@ class DatabaseService(BaseService):
         result = []
 
         if network_id:
-            network = self.manager.get_network(network_id=network_id)[0]
+            network = self.manager.get_network_by_id(network_id)
             result = [citation.data for citation in network.citations[offset_start:offset_end]]
 
         if author:
@@ -563,7 +554,7 @@ class DatabaseService(BaseService):
         :rtype:
         """
         if network_id:
-            network = self.manager.get_network(network_id=network_id)[0]
+            network = self.manager.get_network_by_id(network_id)
 
             result = {
                 'network': network.data,
@@ -622,7 +613,7 @@ class DatabaseService(BaseService):
         if node_id:
             result = self.manager.get_node(node_id=node_id)
         elif network_id:
-            network = self.manager.get_network(network_id=network_id)[0]
+            network = self.manager.get_network_by_id(network_id)
             result = [node.data for node in network.nodes[offset_start:offset_end]]
         else:
             result = self.manager.get_node(bel=bel, namespace=namespace, name=name, as_dict_list=True)
