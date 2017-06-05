@@ -47,7 +47,7 @@ Links
    :caption: Services
    :name: services
 
-   dictservice
+   databaseservice
    web
 
 .. toctree::

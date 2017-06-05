@@ -4,7 +4,7 @@ from pybel.constants import PYBEL_CONNECTION
 from pybel.manager import build_manager
 from pybel.manager.models import Base
 
-from ..api import DictionaryService
+from ..api import DatabaseService
 
 
 class _FlaskPybelState:
@@ -14,7 +14,7 @@ class _FlaskPybelState:
         :param pybel.manager.cache.CacheManager manager: A cache manager
         """
         self.manager = manager
-        self.api = DictionaryService(manager=self.manager)
+        self.api = DatabaseService(manager=self.manager)
 
 
 class FlaskPybel:
@@ -63,6 +63,6 @@ def get_api(app):
     """Gets the dictionary service from a Flask app
 
     :param flask.Flask app: A Flask app
-    :rtype: DictionaryService
+    :rtype: DatabaseService
     """
     return get_state(app).api

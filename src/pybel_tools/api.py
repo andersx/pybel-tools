@@ -7,6 +7,7 @@ This module contains all of the services necessary through the PyBEL API Definit
 import logging
 import time
 from collections import Counter
+from functools import lru_cache
 
 import networkx as nx
 from sqlalchemy import func
@@ -20,7 +21,7 @@ from .mutation.inference import infer_central_dogma
 from .mutation.merge import left_merge
 from .mutation.metadata import parse_authors, add_canonical_names, fix_pubmed_citations
 from .selection.induce_subgraph import get_subgraph
-from .summary.edge_summary import count_diseases
+from .summary.edge_summary import count_diseases, get_tree_annotations
 from .summary.provenance import get_authors, get_pmid_by_keyword, get_authors_by_keyword, get_pubmed_identifiers
 from .utils import calc_betweenness_centality
 
@@ -29,7 +30,7 @@ log = logging.getLogger(__name__)
 CENTRALITY_SAMPLES = 200
 
 
-class DictionaryService:
+class DatabaseService:
     """The dictionary service contains functions that implement the PyBEL API with a in-memory backend using 
     dictionaries.
     """
@@ -604,3 +605,10 @@ class DictionaryService:
             result = self.manager.get_node(bel=bel, namespace=namespace, name=name, as_dict_list=True)
 
         return result
+
+    @lru_cache
+    def get_tree_annotations(self, graph_id):
+        """Gets tree annotations for the given graph"""
+        graph = self.get_network(graph_id)
+        tree = get_tree_annotations(graph)
+        return tree

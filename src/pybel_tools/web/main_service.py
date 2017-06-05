@@ -27,7 +27,7 @@ from .forms import SeedProvenanceForm, SeedSubgraphForm
 from .models import Report, get_recent_reports
 from .send_utils import serve_network
 from .utils import render_graph_summary, try_insert_graph, sanitize_list_of_str
-from ..api import DictionaryService
+from ..api import DatabaseService
 from ..constants import BMS_BASE
 from ..definition_utils import write_namespace
 from ..ioutils import convert_recursive, upload_recursive, get_paths_recursive
@@ -86,7 +86,7 @@ BLACK_LIST = {
 def get_graph_from_request(api):
     """Process the GET request returning the filtered graph
     
-    :param DictionaryService api: The dictionary service
+    :param DatabaseService api: The database service
     :return: graph: A BEL graph
     :rtype: pybel.BELGraph
     """
@@ -154,7 +154,7 @@ def get_graph_from_request(api):
 def get_networks_with_permission(api):
     """Gets all networks tagged as public or uploaded by the current user
     
-    :param DictionaryService api: 
+    :param DatabaseService api: The database service
     :return: A list of all networks tagged as public or uploaded by the current user
     :rtype: list[Network]
     """
@@ -568,7 +568,7 @@ def build_main_service(app):
     def get_tree_api():
         """Builds the annotation tree data structure for a given graph"""
         graph_id = request.args.get(GRAPH_ID)
-        return jsonify(get_tree_annotations(api.get_network(graph_id)))
+        return jsonify(api.get_tree_annotations(graph_id))
 
     @app.route('/api/paths/')
     def get_paths_api():
