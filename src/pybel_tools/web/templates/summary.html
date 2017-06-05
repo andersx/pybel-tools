@@ -1,4 +1,4 @@
-{% extends "bootstrap/base.html" %}
+{% extends "base.html" %}
 
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "bootstrap/fixes.html" as fixes %}
@@ -7,19 +7,16 @@
 {% block styles %}
     {{ super() }}
     <link href="{{ url_for('static', filename='css/c3.min.css') }}" rel="stylesheet" type="text/css"/>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
 {% endblock %}
 
 {% block head %}
     {{ super() }}
-    {{ fixes.ie8() }}
 
     <script src="{{ url_for('static', filename='js/d3.3.5.17.min.js') }}" charset="utf-8"></script>
     <script src="{{ url_for('static', filename='js/c3.min.js') }}"></script>
     <script src="//code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.13/js/dataTables.bootstrap.min.js"></script>
-
 {% endblock %}
 
 {% block title %}Summary{% endblock %}
@@ -37,9 +34,6 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
-                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
-                </a>
                 <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
                    role="button">Explore</a>
                 <a class="btn btn-default" href="{{ url_for('view_analysis_uploader', network_id=graph_id) }}"

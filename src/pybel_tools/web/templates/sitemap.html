@@ -1,13 +1,8 @@
-{% extends "bootstrap/base.html" %}
+{% extends "base.html" %}
 
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
-
-{% block styles %}
-    {{ super() }}
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
-{% endblock %}
 
 {% block title %}Site Map{% endblock %}
 

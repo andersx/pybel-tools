@@ -1,6 +1,0 @@
-{% if current_user.is_authenticated %}
-    <span class="btn btn-default">Logged in as {{ current_user.name }}</span>
-    <a class="btn btn-default" href="{{ url_for('logout') }}" role="button">Log Out</a>
-{% else %}
-    <a class="btn btn-default" href="{{ url_for('login') }}" role="button">Log In</a>
-{% endif %}

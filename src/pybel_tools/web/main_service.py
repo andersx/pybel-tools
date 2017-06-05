@@ -769,4 +769,8 @@ def build_main_service(app):
         """Gets the Swagger definition of this API"""
         return send_file('static/json/swagger.json')
 
+    @app.route('/imprint')
+    def view_imprint():
+        return render_template('imprint.html')
+
     log.info('Added dictionary service to %s', app)

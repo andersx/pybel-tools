@@ -1,13 +1,8 @@
-{% extends "bootstrap/base.html" %}
+{% extends "base.html" %}
 
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
-
-{% block styles %}
-    {{ super() }}
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/PyBEL-square-100.png') }}">
-{% endblock %}
 
 {% block title %}Definitions{% endblock %}
 
@@ -18,14 +13,6 @@
         </div>
 
         {{ util.flashed_messages(dismissible=True, container=False) }}
-
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <a class="btn btn-default" href="{{ url_for('home') }}" role="button">
-                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
-                </a>
-            </div>
-        </div>
 
         {% if current_user.admin %}
             <div class="panel panel-info" id="admin-panel">
@@ -126,6 +113,8 @@
             </div>
         </div>
     </div>
+
+    {% include "footer.html" %}
 {% endblock %}
 
 
