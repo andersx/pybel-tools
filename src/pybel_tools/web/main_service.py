@@ -33,7 +33,6 @@ from ..definition_utils import write_namespace
 from ..ioutils import convert_recursive, upload_recursive, get_paths_recursive
 from ..mutation.metadata import fix_pubmed_citations
 from ..selection.induce_subgraph import SEED_TYPES, SEED_TYPE_PROVENANCE
-from ..summary.edge_summary import get_tree_annotations
 from ..summary.error_summary import get_undefined_namespace_names, get_incorrect_names
 from ..summary.export import info_json
 from ..summary.provenance import get_authors, get_pubmed_identifiers
@@ -440,8 +439,11 @@ def build_main_service(app):
             seed_data_nodes = seed_subgraph_form.node_list.data.split(',')
             seed_method = seed_subgraph_form.seed_method.data
             filter_pathologies = seed_subgraph_form.filter_pathologies.data
-            log.info('got subgraph seed: %s',
-                     dict(nodes=seed_data_nodes, method=seed_method, filter_path=filter_pathologies))
+            log.info('got subgraph seed: %s', dict(
+                nodes=seed_data_nodes,
+                method=seed_method,
+                filter_path=filter_pathologies
+            ))
             url = url_for('view_explorer', **{
                 GRAPH_ID: '0',
                 SEED_TYPE: seed_method,

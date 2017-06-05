@@ -35,6 +35,8 @@ __all__ = [
     'get_causal_subgraph',
     'get_subgraph',
     'get_subgraphs_by_annotation',
+    'get_multi_causal_upstream',
+    'get_multi_causal_downstream',
 ]
 
 SEED_TYPE_INDUCTION = 'induction'
@@ -117,8 +119,7 @@ def get_subgraph_by_second_neighbors(graph, nodes, filter_pathologies=False):
     """Gets a BEL graph around the neighborhoods of the given nodes, and expands to the neighborhood of those nodes
 
     :param pybel.BELGraph graph: A BEL graph
-    :param nodes: An iterable of BEL nodes
-    :type nodes: iter
+    :param iter[tuple] nodes: An iterable of BEL nodes
     :param bool filter_pathologies: Should expansion take place around pathologies?
     :return: A BEL graph induced around the neighborhoods of the given nodes
     :rtype: pybel.BELGraph
@@ -133,12 +134,9 @@ def get_subgraph_by_all_shortest_paths(graph, nodes, cutoff=None, weight=None):
     """Induces a subgraph over the nodes in the pairwise shortest paths between all of the nodes in the given list
 
     :param pybel.BELGraph graph: A BEL graph
-    :param nodes: A set of nodes over which to calculate shortest paths
-    :type nodes: set
-    :param cutoff:  Depth to stop the shortest path search. Only paths of length <= cutoff are returned.
-    :type cutoff: int
-    :param weight: Edge data key corresponding to the edge weight. If None, performs unweighted search
-    :type weight: str
+    :param set[tuple] nodes: A set of nodes over which to calculate shortest paths
+    :param int cutoff:  Depth to stop the shortest path search. Only paths of length <= cutoff are returned.
+    :param str weight: Edge data key corresponding to the edge weight. If None, performs unweighted search
     :return: A BEL graph induced over the nodes appearing in the shortest paths between the given nodes
     :rtype: pybel.BELGraph
     """
@@ -171,10 +169,8 @@ def get_subgraph_by_annotation_value(graph, value, annotation='Subgraph'):
     """Builds a new subgraph induced over all edges whose annotations match the given key and value
 
     :param pybel.BELGraph graph: A BEL graph
-    :param value: The value for the annotation
-    :type value: str
-    :param annotation: The annotation to group by
-    :type annotation: str
+    :param str value: The value for the annotation
+    :param str annotation: The annotation to group by
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
@@ -221,15 +217,15 @@ def get_causal_subgraph(graph):
 
 
 @pipeline.mutator
-def get_multi_causal_upstream(graph, nodes):
-    """Gets all the causal uptream subgraphs from the nodes
+def get_multi_causal_upstream(graph, nbunch):
+    """Gets all the causal uptsream subgraphs from the nodes
     
     :param pybel.BELGraph graph: A BEL graph
-    :param nodes: The nodes to expand above
+    :param tuple or list[tuple] nbunch: The nbunch to expand above
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    result = get_upstream_causal_subgraph(graph, nodes)
+    result = get_upstream_causal_subgraph(graph, nbunch)
     expand_upstream_causal_subgraph(graph, result)
     return result
 

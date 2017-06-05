@@ -52,8 +52,7 @@ def get_upstream_causal_subgraph(graph, nbunch):
     """Induces a subgraph from all of the upstream causal entities of the nodes in the nbunch
 
     :param pybel.BELGraph graph: A BEL graph
-    :param nbunch: A BEL node or iterable of BEL nodes
-    :type nbunch: tuple or list of tuples
+    :param tuple or list[tuple] nbunch: A BEL node or iterable of BEL nodes
     :return: A BEL Graph
     :rtype: pybel.BELGraph
     """

@@ -42,6 +42,7 @@ class Role(Base, RoleMixin):
 class User(Base, UserMixin):
     """Stores users"""
     __tablename__ = PYBEL_WEB_USER_TABLE
+
     id = Column(Integer, primary_key=True)
     email = Column(String(255), unique=True)
     password = Column(String(255))
@@ -58,6 +59,7 @@ class User(Base, UserMixin):
 
     @property
     def name(self):
+        """Shows the full name of the user"""
         return '{} {}'.format(self.first_name, self.last_name) if self.first_name else self.email
 
     def __str__(self):
