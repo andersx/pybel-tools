@@ -51,7 +51,8 @@
             <div class="navbar-collapse collapse" id="485848c5cd0b7dabdf24f858e4f3abbf21fdb984">
                 <ul class="nav navbar-nav">
                     <li class="active">
-                        <a href="{{ url_for('home') }}" title="Home"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
+                        <a href="{{ url_for('home') }}" title="Home"><span class="glyphicon glyphicon-home"
+                                                                           aria-hidden="true"></span></a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
@@ -93,23 +94,14 @@
             </div>
         {% endif %}
 
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Introduction</h3>
-            </div>
-            <div class="panel-body">
-                <p>This web application provides an environment for exploring knowledge
-                    assemblies encoded in Biological Expression Language (BEL) to elucidate disease-specific,
-                    mechanistic knowledge. It is built on top of the Python software libraries, <a
-                            href="http://pybel.readthedocs.io/">PyBEL</a> and <a
-                            href="http://pybel-tools.readthedocs.io/">PyBEL Tools</a> to take advantage of their
-                    parsing, validation, data interchange, and analytical functions.
-                    From this page, you can begin to explore the networks stored in the knowledge base stratified by
-                    the source BEL script, by nodes and other biological entities of interest, or by certain
-                    authors and publications of interest.
-                </p>
-            </div>
+        <div class="jumbotron">
+            <h1>PyBEL Web</h1>
+            <p>An environment for <strong>curating</strong>, <strong>validating</strong>, and
+                <strong>exploring</strong> knowledge assemblies encoded in Biological Expression Language (BEL) to
+                support <strong>elucidating</strong> disease-specific, mechanistic insight.
+            </p>
         </div>
+
         <div class="panel panel-default">
             <div class="panel-body">
                 <div class="row">
