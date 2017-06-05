@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+
 class Config:
-    """This is the default configuration to be used in a development envirionment. It assumes you have:
+    """This is the default configuration to be used in a development environment. It assumes you have:
     
     - SQLite for the PyBEL Cache
-    - RabbitMQ or another mesage broker supporting the AMQP protocol
+    - RabbitMQ or another message broker supporting the AMQP protocol
     """
     DEBUG = False
     TESTING = False
@@ -21,4 +22,4 @@ class Config:
     PYBEL_CONNECTION = None
     PYBEL_DS_CHECK_VERSION = True
     PYBEL_DS_EAGER = False
-    PYBEL_DS_PRELOAD = True
+    PYBEL_DS_PRELOAD = False

@@ -6,8 +6,8 @@ from flask import redirect, url_for, request
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView as ModelViewBase
 from flask_security import current_user
-from pybel.manager.models import Network, Namespace, Annotation
 
+from pybel.manager.models import Network, Namespace, Annotation
 from .extension import get_manager
 from .models import Report, Experiment
 from .security import User, Role
@@ -28,17 +28,20 @@ class ModelView(ModelViewBase):
 
 
 class NetworkView(ModelView):
+    """Special view for PyBEL Web Networks"""
     column_exclude_list = ['blob', ]
 
 
 class UserView(ModelView):
+    """Special view for PyBEL Web Users"""
     column_exclude_list = ['password', ]
 
 
 def build_admin_service(app):
     """Adds Flask-Admin database front-end
     
-    :param flask.Flask app: A PyBEL web app 
+    :param flask.Flask app: A PyBEL web app
+    :rtype flask_admin.Admin
     """
     manager = get_manager(app)
     admin = Admin(app, template_mode='bootstrap3')
@@ -50,4 +53,6 @@ def build_admin_service(app):
     admin.add_view(ModelView(Report, manager.session))
     admin.add_view(ModelView(Experiment, manager.session))
 
-    log.info('done building admin service for %s', app)
+    log.info('Added admin service for %s', app)
+
+    return admin

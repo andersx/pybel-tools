@@ -190,4 +190,4 @@ def build_curation_service(app):
             namespace_name=resource['Namespace']['NameString']
         )
 
-    log.info('added curation service to %s', app)
+    log.info('Added curation service to %s', app)

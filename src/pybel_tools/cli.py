@@ -18,6 +18,7 @@ import datetime
 import os
 import sys
 from getpass import getuser
+import time
 
 import click
 from flask_security import SQLAlchemyUserDatastore
@@ -114,6 +115,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     if port is not None:
         log.info('Running on port: %d', port)
 
+    t = time.time()
+
     app = create_application()
 
     build_security_service(app)
@@ -134,7 +137,7 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     if run_receiver_service or run_all:
         build_receiver_service(app)
 
-    log.info('Done building %s', app)
+    log.info('Done building %s in %.2f seconds', app, time.time() - t)
 
     app.run(debug=flask_debug, host=host, port=port)
 
