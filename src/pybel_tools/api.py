@@ -34,8 +34,7 @@ class BaseService(object):
 
     def __init__(self, manager):
         """
-        :param manager: A cache manager
-        :type manager: pybel.manager.cache.CacheManager
+        :param pybel.manager.cache.CacheManager manager: A cache manager
         """
         self.manager = manager
 
