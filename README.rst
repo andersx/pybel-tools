@@ -1,5 +1,5 @@
-PyBEL Tools |develop_build| |develop_coverage| |develop_documentation| |pypi_license|
-=====================================================================================
+PyBEL Tools |develop_build| |develop_coverage| |develop_documentation| |zenodo|
+===============================================================================
 `PyBEL Tools <http://pybel-tools.readthedocs.io/>`_ is a suite of tools built on top of
 `PyBEL <http://pybel.readthedocs.io>`_ to facilitate data management, integration, and analysis.
 
@@ -7,8 +7,8 @@ This package was developed at `Fraunhofer SCAI <https://www.scai.fraunhofer.de/>
 with support from the `IMI <https://www.imi.europa.eu/>`_ projects: `AETIONOMY <http://www.aetionomy.eu/>`_ and
 `PHAGO <http://www.phago.eu/>`_.
 
-Installation |pypi_version| |python_versions|
----------------------------------------------
+Installation |pypi_version| |python_versions| |pypi_license|
+------------------------------------------------------------
 PyBEL Tools can be installed easily from `PyPI <https://pypi.python.org/pypi/pybel_tools>`_ with the following code in
 your favorite terminal:
 
@@ -102,3 +102,6 @@ Links
 
 .. |pypi_license| image:: https://img.shields.io/pypi/l/pybel-tools.svg
     :alt: Apache 2.0 License
+
+.. |zenodo| image:: https://zenodo.org/badge/70473008.svg
+    :target: https://zenodo.org/badge/latestdoi/70473008
