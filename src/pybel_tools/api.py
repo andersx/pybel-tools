@@ -606,7 +606,7 @@ class DatabaseService:
 
         return result
 
-    @lru_cache
+    @lru_cache(maxsize=32)
     def get_tree_annotations(self, graph_id):
         """Gets tree annotations for the given graph"""
         graph = self.get_network(graph_id)
