@@ -186,14 +186,16 @@ class DatabaseService:
     def load_networks(self, check_version=True, force_reload=False, eager=False):
         """This function needs to get all networks from the graph cache manager and make a dictionary
 
-        :param check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
-        :type check_version: bool
-        :param force_reload: Should all graphs be reloaded even if they have already been cached?
-        :type force_reload: bool
+        :param bool check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
+        :param bool force_reload: Should all graphs be reloaded even if they have already been cached?
+        :param bool eager: Should difficult to preload features be calculated?
         """
         query = self.manager.session.query(Network.id, Network.blob)
 
-        for network_id, network_blob in query.filter(Network.id not in self.networks).all():
+        if not force_reload:
+            query = query.filter(Network.id not in self.networks)
+
+        for network_id, network_blob in query.all():
             try:
                 log.debug('getting bytes from [%s]', network_id)
                 graph = from_bytes(network_blob, check_version=check_version)

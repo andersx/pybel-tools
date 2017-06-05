@@ -184,6 +184,7 @@ def build_dictionary_service_admin(app):
     @roles_required('admin')
     def run_reload():
         """Reloads the networks and supernetwork"""
+        api.clear()
         api.load_networks(force_reload=True)
         return jsonify({'status': 200})
 
@@ -413,10 +414,13 @@ def build_main_service(app):
     manager = get_manager(app)
     api = get_api(app)
 
-    if app.config.get('PYBEL_DS_PRELOAD', True):
+    if app.config.get('PYBEL_DS_PRELOAD', False):
         log.info('preloading networks')
-        api.load_networks(check_version=app.config.get('PYBEL_DS_CHECK_VERSION', True),
-                          eager=app.config.get('PYBEL_DS_EAGER', False))
+        api.load_networks(
+            check_version=app.config.get('PYBEL_DS_CHECK_VERSION', True),
+            force_reload=app.config.get('PYBEL_WEB_FORCE_RELOAD', False),
+            eager=app.config.get('PYBEL_DS_EAGER', False)
+        )
         log.info('pre-loaded the dict service')
 
     build_dictionary_service_admin(app)
