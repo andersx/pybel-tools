@@ -2,30 +2,27 @@
 
 import logging
 
-from flask import render_template
+from flask import render_template, Blueprint
+from werkzeug.local import LocalProxy
 
-from .extension import get_manager
 from .models import Report
+from .utils import get_current_manager
 
 log = logging.getLogger(__name__)
 
+reporting_blueprint = Blueprint('reporting', __name__)
+manager = LocalProxy(get_current_manager)
 
-def build_reporting_service(app):
-    """Adds the endpoints for uploading pickle files
 
-    :param flask.Flask app: A Flask application
-    """
-    manager = get_manager(app)
+@reporting_blueprint.route('/reporting', methods=['GET'])
+def view_reports():
+    """Shows the uploading reporting"""
+    reports = manager.session.query(Report).order_by(Report.created).all()
+    return render_template('reporting.html', reports=reports)
 
-    @app.route('/reporting', methods=['GET'])
-    def view_reports(network_name=None):
-        """Shows the uploading reporting"""
-        reports = manager.session.query(Report).order_by(Report.created).all()
-        return render_template('reporting.html', reports=reports)
 
-    @app.route('/reporting/user/<username>', methods=['GET'])
-    def view_individual_report(username):
-        reports = manager.session.query(Report).filter_by(Report.username == username).order_by(Report.created).all()
-        return render_template('reporting.html', reports=reports)
-
-    log.info('Added reporting service to %s', app)
+@reporting_blueprint.route('/reporting/user/<username>', methods=['GET'])
+def view_individual_report(username):
+    """Shows the reports for a given user"""
+    reports = manager.session.query(Report).filter_by(Report.username == username).order_by(Report.created).all()
+    return render_template('reporting.html', reports=reports)

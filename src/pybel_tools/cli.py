@@ -44,7 +44,7 @@ from .web.main_service import build_main_service
 from .web.parser_endpoint import build_parser_service
 from .web.parser_service import build_synchronous_parser_service
 from .web.receiver_service import build_receiver_service
-from .web.reporting_service import build_reporting_service
+from .web.reporting_service import reporting_blueprint
 from .web.security import build_security_service, User, Role
 from .web.sitemap_endpoint import build_sitemap_endpoint
 from .web.upload_service import build_pickle_uploader_service
@@ -124,7 +124,8 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     build_pickle_uploader_service(app)
     build_analysis_service(app)
     build_curation_service(app)
-    build_reporting_service(app)
+
+    app.register_blueprint(reporting_blueprint)
 
     if run_database_service:
         build_database_service(app)
