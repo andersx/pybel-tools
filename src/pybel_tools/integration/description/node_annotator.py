@@ -49,4 +49,5 @@ class NodeAnnotator(object):
             graph.set_node_description(node, description)
 
             label = self.get_label(name)
-            graph.set_node_label(node, label if label else name)
+            if label:
+                graph.set_node_label(node, label)
