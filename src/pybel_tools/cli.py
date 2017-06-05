@@ -39,7 +39,7 @@ from .web.analysis_service import build_analysis_service
 from .web.application import create_application
 from .web.constants import *
 from .web.curation_service import build_curation_service
-from .web.database_service import build_database_service
+from .web.database_service import api_blueprint
 from .web.main_service import build_main_service
 from .web.parser_endpoint import build_parser_service
 from .web.parser_service import build_synchronous_parser_service
@@ -47,7 +47,7 @@ from .web.receiver_service import build_receiver_service
 from .web.reporting_service import reporting_blueprint
 from .web.security import build_security_service, User, Role
 from .web.sitemap_endpoint import build_sitemap_endpoint
-from .web.upload_service import build_pickle_uploader_service
+from .web.upload_service import upload_blueprint
 
 log = logging.getLogger(__name__)
 
@@ -121,14 +121,12 @@ def web(connection, host, port, debug, flask_debug, skip_check_version, eager, r
     build_admin_service(app)
     build_sitemap_endpoint(app)
     build_synchronous_parser_service(app)
-    build_pickle_uploader_service(app)
     build_analysis_service(app)
     build_curation_service(app)
 
+    app.register_blueprint(upload_blueprint)
     app.register_blueprint(reporting_blueprint)
-
-    if run_database_service:
-        build_database_service(app)
+    app.register_blueprint(api_blueprint)
 
     if run_parser_service or run_all:
         build_parser_service(app)

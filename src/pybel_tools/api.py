@@ -29,17 +29,7 @@ log = logging.getLogger(__name__)
 CENTRALITY_SAMPLES = 200
 
 
-class BaseService(object):
-    """The base service class provides a functional interface that all PyBEL services must implement"""
-
-    def __init__(self, manager):
-        """
-        :param pybel.manager.cache.CacheManager manager: A cache manager
-        """
-        self.manager = manager
-
-
-class DictionaryService(BaseService):
+class DictionaryService:
     """The dictionary service contains functions that implement the PyBEL API with a in-memory backend using 
     dictionaries.
     """
@@ -48,7 +38,7 @@ class DictionaryService(BaseService):
         """
         :param pybel.manager.cache.CacheManager manager: A cache manager
         """
-        super(DictionaryService, self).__init__(manager)
+        self.manager = manager
 
         #: dictionary of {int id: BELGraph graph}
         self.networks = {}
@@ -411,11 +401,7 @@ class DictionaryService(BaseService):
 
         return results
 
-
-class DatabaseService(BaseService):
-    """Provides queries to access data stored in the PyBEL edge store"""
-
-    def get_namespaces(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
+    def query_namespaces(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
         """Provides a list of namespaces filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
@@ -454,7 +440,7 @@ class DatabaseService(BaseService):
 
         return result
 
-    def get_annotations(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
+    def query_annotations(self, network_id=None, offset_start=0, offset_end=500, name_list=False, keyword=None):
         """Provides a list of annotations filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
@@ -494,7 +480,7 @@ class DatabaseService(BaseService):
 
         return result
 
-    def get_citations(self, network_id=None, author=None, offset_start=0, offset_end=500):
+    def query_citations(self, network_id=None, author=None, offset_start=0, offset_end=500):
         """
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
@@ -522,8 +508,8 @@ class DatabaseService(BaseService):
 
         return result
 
-    def get_edges(self, network_id=None, pmid=None, statement=None, source=None, target=None, relation=None,
-                  author=None, citation=None, annotations=None, offset_start=0, offset_end=500):
+    def query_edges(self, network_id=None, pmid=None, statement=None, source=None, target=None, relation=None,
+                    author=None, citation=None, annotations=None, offset_start=0, offset_end=500):
         """Provides a list of edges (nanopubs) filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the
@@ -587,8 +573,8 @@ class DatabaseService(BaseService):
 
         return result
 
-    def get_nodes(self, network_id=None, node_id=None, bel=None, namespace=None, name=None, offset_start=0,
-                  offset_end=500):
+    def query_nodes(self, network_id=None, node_id=None, bel=None, namespace=None, name=None, offset_start=0,
+                    offset_end=500):
         """Provides a list of nodes filtered by the given parameters.
 
         :param network_id: Primary identifier of the network in the PyBEL database. This can be obtained with the

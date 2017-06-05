@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 import codecs
 import logging
 import time
-import traceback
 
 import requests
 from flask import render_template, flash, redirect, url_for
@@ -24,17 +23,10 @@ from ..mutation.metadata import add_canonical_names
 log = logging.getLogger(__name__)
 
 
-def render_error(exception):
-    """Displays an error in parsing/uploading"""
-    traceback_lines = traceback.format_exc().split('\n')
-    return render_template('parse_error.html', error_text=str(exception), traceback_lines=traceback_lines)
-
-
-def build_synchronous_parser_service(app, enable_cache=True):
+def build_synchronous_parser_service(app):
     """Adds the endpoints for a synchronous web validation web app
 
     :param flask.Flask app: A Flask application
-    :param bool enable_cache: Should the user be given the option to cache graphs?
     """
     manager = get_manager(app)
 
@@ -63,8 +55,9 @@ def build_synchronous_parser_service(app, enable_cache=True):
             )
             add_canonical_names(graph)
         except requests.exceptions.ConnectionError as e:
-            flash("Resource doesn't exist.", category='error')
-            return render_error(e)
+            message = "Resource doesn't exist."
+            flash(message, category='error')
+            return redirect(url_for('view_parser'))
         except InconsistientDefinitionError as e:
             log.error('%s was defined multiple times', e.definition)
             flash('{} was defined multiple times.'.format(e.definition), category='error')
@@ -74,7 +67,7 @@ def build_synchronous_parser_service(app, enable_cache=True):
             flash('Compilation error: {}'.format(e))
             return redirect(url_for('view_parser'))
 
-        if not enable_cache:
+        if app.config.get('PYBEL_WEB_DISABLE_CACHE'):
             flash('Sorry, graph storage is not currently enabled.', category='warning')
             log_graph(graph, current_user, preparsed=False)
             return render_graph_summary(0, graph)
@@ -100,9 +93,16 @@ def build_synchronous_parser_service(app, enable_cache=True):
         log.info('done storing %s [%d]', form.file.data.filename, network.id)
 
         try:
-            add_network_reporting(manager, network, current_user, graph.number_of_nodes(),
-                                  graph.number_of_edges(), len(graph.warnings), preparsed=False,
-                                  public=form.public.data)
+            add_network_reporting(
+                manager,
+                network,
+                current_user,
+                graph.number_of_nodes(),
+                graph.number_of_edges(),
+                len(graph.warnings),
+                preparsed=False,
+                public=form.public.data
+            )
         except IntegrityError:
             log.exception('integrity error')
             flash('problem with reporting service', category='warning')
