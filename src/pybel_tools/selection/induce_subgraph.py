@@ -89,8 +89,7 @@ def get_subgraph_by_neighborhood(graph, nodes):
     """Gets a BEL graph around the neighborhoods of the given nodes
 
     :param pybel.BELGraph graph: A BEL graph
-    :param nodes: An iterable of BEL nodes
-    :type nodes: iter
+    :param iter[tuple] nodes: An iterable of BEL nodes
     :return: A BEL graph induced around the neighborhoods of the given nodes
     :rtype: pybel.BELGraph
     """
@@ -182,8 +181,7 @@ def get_subgraph_by_data(graph, annotations):
     """
     
     :param pybel.BELGraph graph: A BEL graph
-    :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
-    :type annotations: dict
+    :param dict annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
@@ -218,10 +216,10 @@ def get_causal_subgraph(graph):
 
 @pipeline.mutator
 def get_multi_causal_upstream(graph, nbunch):
-    """Gets all the causal uptsream subgraphs from the nodes
+    """Gets the union of all the 2-level deep causal upstream subgraphs from the nbunch
     
     :param pybel.BELGraph graph: A BEL graph
-    :param tuple or list[tuple] nbunch: The nbunch to expand above
+    :param tuple or list[tuple] nbunch: A BEL node or list of BEL nodes
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
@@ -231,15 +229,15 @@ def get_multi_causal_upstream(graph, nbunch):
 
 
 @pipeline.mutator
-def get_multi_causal_downstream(graph, nodes):
-    """Gets all the causal uptream subgraphs from the nodes
+def get_multi_causal_downstream(graph, nbunch):
+    """Gets the union of all of the 2-level deep causal downstream subgraphs from the nbunch
 
     :param pybel.BELGraph graph: A BEL graph
-    :param nodes: The nodes to expand above
+    :param tuple or list[tuple] nbunch: A BEL node or list of BEL nodes
     :return: A subgraph of the original BEL graph
     :rtype: pybel.BELGraph
     """
-    result = get_downstream_causal_subgraph(graph, nodes)
+    result = get_downstream_causal_subgraph(graph, nbunch)
     expand_downstream_causal_subgraph(graph, result)
     return result
 
@@ -261,13 +259,10 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
     :param seed_method: The name of the get_subgraph_by_* function to use
     :type seed_method: str or None
     :param seed_data: The argument to pass to the get_subgraph function
-    :param expand_nodes: Add the neighborhoods around all of these nodes
-    :type expand_nodes: list
-    :param remove_nodes: Remove these nodes and all of their in/out edges
-    :type remove_nodes: list
+    :param list[tuple] expand_nodes: Add the neighborhoods around all of these nodes
+    :param list[tuple] remove_nodes: Remove these nodes and all of their in/out edges
     :param bool filter_pathologies: Should pathology nodes be removed?
-    :param annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
-    :type annotations: dict
+    :param dict annotations: Annotation filters (match all with :func:`pybel.utils.subdict_matches`)
     :return: A BEL Graph
     :rtype: pybel.BELGraph
     """
@@ -325,7 +320,9 @@ def get_subgraph(graph, seed_method=None, seed_data=None, expand_nodes=None, rem
 @pipeline.mutator
 def get_subgraph_by_pubmed(graph, pmids):
     """Induces a subgraph over the edges retrieved from the given PubMed identifier(s)
-    
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param str or list[str] pmids: A PubMed identifier or list of PubMed identifiers
     :rtype: pybel.BELGraph
     """
     return get_subgraph_by_edge_filter(graph, build_pmid_inclusion_filter(pmids))
@@ -334,7 +331,9 @@ def get_subgraph_by_pubmed(graph, pmids):
 @pipeline.mutator
 def get_subgraph_by_authors(graph, authors):
     """Induces a subgraph over the edges retrieved publications by the given author(s)
-    
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param str or list[str] authors: An author or list of authors
     :rtype: pybel.BELGraph
     """
     return get_subgraph_by_edge_filter(graph, build_author_inclusion_filter(authors))
@@ -343,7 +342,9 @@ def get_subgraph_by_authors(graph, authors):
 @pipeline.mutator
 def get_subgraph_by_provenance(graph, kwargs):
     """Thin wrapper around :func:`get_subgraph_by_provenance_helper` by splatting keyword arguments
-    
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param dict kwargs: Keyord arguments to pass to :func:`get_subgraph_by_provenance_helper`
     :rtype: pybel.BELGraph
     """
     # TODO get rid of this function
@@ -356,12 +357,9 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
     """Gets all edges of given provenance and expands around their nodes' neighborhoods
     
     :param pybel.BELGraph graph: A BEL graph
-    :param pmids: A PubMed identifier or list of PubMed identifiers
-    :type pmids: str or list[str]
-    :param authors: An author or list of authors
-    :type authors: str or list[str]
-    :param expand_neighborhoods: Should the neighborhoods around all nodes be expanded? Defaults to ``True``
-    :type expand_neighborhoods: bool
+    :param str or list[str] pmids: A PubMed identifier or list of PubMed identifiers
+    :param str or list[str] authors: An author or list of authors
+    :param bool expand_neighborhoods: Should the neighborhoods around all nodes be expanded? Defaults to ``True``
     :param bool filter_pathologies: Should expansion take place around pathologies?
     :return: An induced graph
     :rtype: pybel.BELGraph
