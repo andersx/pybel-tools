@@ -16,6 +16,7 @@ from .extension import get_manager, get_api
 from ..analysis.stability import *
 from ..constants import CNAME
 from ..filters.edge_filters import edge_has_pathology_causal, filter_edges
+from ..filters.node_filters import iter_undefined_families
 from ..summary import get_contradiction_summary, count_functions, count_relations, count_error_types, get_translocated, \
     get_degradations, get_activities, count_namespaces, group_errors
 from ..summary.edge_summary import count_diseases, get_unused_annotations, get_unused_list_annotation_values
@@ -216,6 +217,11 @@ def render_graph_summary(graph_id, graph, api=None):
         for u, v, _, d in filter_edges(graph, edge_has_pathology_causal)
     })
 
+    undefined_sfam = [
+        (dcn(node), api.get_node_id(node))
+        for node in iter_undefined_families(graph, ['SFAM', 'GFAM'])
+    ]
+
     return render_template(
         'summary.html',
         chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
@@ -249,4 +255,5 @@ def render_graph_summary(graph_id, graph, api=None):
         namespaces_with_incorrect_names=namespaces_with_incorrect_names,
         network_versions=versions,
         causal_pathologies=causal_pathologies,
+        undefined_families=undefined_sfam,
     )

@@ -90,53 +90,56 @@
             </div>
             <div class="panel-body">
                 <ol>
-                    <li><a href="#provenance-anchor">Provenance</a></li>
-                    <li><a href="#network-statistics-anchor">Network Statistics</a></li>
-                    <li><a href="#content-statistics-anchor">Content Statistics</a></li>
+                    <li><a href="#provenance">Provenance</a></li>
+                    <li><a href="#network-statistics">Network Statistics</a></li>
+                    <li><a href="#content-statistics">Content Statistics</a></li>
                     {% if unused_namespaces is defined and unused_namespaces|length > 0 %}
-                        <li><a href="#unused-namespaces-anchor">Unused Namespaces</a></li>
+                        <li><a href="#unused-namespaces">Unused Namespaces</a></li>
                     {% endif %}
                     {% if unused_annotations is defined and unused_annotations|length > 0 %}
-                        <li><a href="#unused-annotations-anchor">Unused Annotations</a></li>
+                        <li><a href="#unused-annotations">Unused Annotations</a></li>
                     {% endif %}
                     {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
-                        <li><a href="#unused-list-annotations-anchor">Unused List Annotations</a></li>
+                        <li><a href="#unused-list-annotations">Unused List Annotations</a></li>
                     {% endif %}
                     {% if graph.warnings|length > 0 %}
-                        <li><a href="#graph-warnings-anchor">Graph Warnings</a></li>
+                        <li><a href="#graph-warnings">Graph Warnings</a></li>
                     {% endif %}
                     {% if error_groups is defined and error_groups|length > 0 %}
-                        <li><a href="#error-groups-anchor">Top Warnings</a></li>
+                        <li><a href="#error-groups">Top Warnings</a></li>
                     {% endif %}
                     {% if undefined_namespaces is defined and undefined_namespaces|length > 0 %}
-                        <li><a href="#undefined-namespaces-anchor">Undefined Namespaces</a></li>
+                        <li><a href="#undefined-namespaces">Undefined Namespaces</a></li>
                     {% endif %}
                     {% if undefined_annotation is defined and undefined_annotations|length > 0 %}
-                        <li><a href="#undefined-annotations-anchor">Undefined Annotations</a></li>
+                        <li><a href="#undefined-annotations">Undefined Annotations</a></li>
                     {% endif %}
                     {% if namespaces_with_incorrect_names is defined and namespaces_with_incorrect_names|length > 0 %}
-                        <li><a href="#incorrect-namespaces-anchor">Namespaces with Incorrect Names</a></li>
+                        <li><a href="#incorrect-namespaces">Namespaces with Incorrect Names</a></li>
                     {% endif %}
                     {% if contradictions is defined and contradictions|length > 0 %}
-                        <li><a href="#contradictory-pairs-anchor">Contradictory Pairs</a></li>
+                        <li><a href="#contradictory-pairs">Contradictory Pairs</a></li>
                     {% endif %}
                     {% if unstable_pairs is defined and unstable_pairs|length > 0 %}
-                        <li><a href="#unstable-pairs-anchor">Unstable Pairs</a></li>
+                        <li><a href="#unstable-pairs">Unstable Pairs</a></li>
                     {% endif %}
                     {% if contradictory_triplets is defined and contradictory_triplets|length > 0 %}
-                        <li><a href="#contradictory-triplets-anchor">Contradictory Triplets</a></li>
+                        <li><a href="#contradictory-triplets">Contradictory Triplets</a></li>
                     {% endif %}
                     {% if unstable_triplets is defined and unstable_triplets|length > 0 %}
-                        <li><a href="#unstable-triplets-anchor">Unstable Triplets</a></li>
+                        <li><a href="#unstable-triplets">Unstable Triplets</a></li>
                     {% endif %}
                     {% if causal_pathologies is defined and causal_pathologies|length > 0 %}
-                         <li><a href="#causal-pathologies-anchor">Causal Pathologies</a></li>
+                        <li><a href="#causal-pathologies">Causal Pathologies</a></li>
+                    {% endif %}
+                    {% if undefined_families is defined and undefined_families|length > 0 %}
+                        <li><a href="#undefined-families">Undefined Families</a></li>
                     {% endif %}
                 </ol>
             </div>
         </div>
 
-        <a id="provenance-anchor"></a>
+        <a id="provenance"></a>
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Provenance
@@ -160,7 +163,7 @@
             </div>
         </div>
 
-        <a id="network-statistics-anchor"></a>
+        <a id="network-statistics"></a>
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Network Statistics
@@ -177,7 +180,7 @@
             </div>
         </div>
 
-        <a id="content-statistics-anchor"></a>
+        <a id="content-statistics"></a>
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Content Statistics
@@ -228,7 +231,7 @@
         <!-- Warnings -->
 
         {% if unused_namespaces is defined and unused_namespaces|length > 0 %}
-            <a id="unused-namespaces-anchor"></a>
+            <a id="unused-namespaces"></a>
             <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title">Unused Namespaces
@@ -251,7 +254,7 @@
         {% endif %}
 
         {% if unused_annotations is defined and unused_annotations|length > 0 %}
-            <a id="unused-annotations-anchor"></a>
+            <a id="unused-annotations"></a>
             <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title">Unused Annotations
@@ -276,7 +279,7 @@
         {% endif %}
 
         {% if unused_list_annotation_values is defined and unused_list_annotation_values|length > 0 %}
-            <a id="unused-list-annotations-anchor"></a>
+            <a id="unused-list-annotations"></a>
             <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title">Unused List Annotation Values
@@ -315,7 +318,7 @@
         <!-- BEL Parser Errors -->
 
         {% if graph.warnings|length > 0 %}
-            <a id="graph-warnings-anchor"></a>
+            <a id="graph-warnings"></a>
             <div class="panel panel-danger panel-table">
                 <div class="panel-heading">
                     <h3 class="panel-title">All Warnings
@@ -353,7 +356,7 @@
         {% endif %}
 
         {% if error_groups is defined and error_groups|length > 0 %}
-            <a id="error-groups-anchor"></a>
+            <a id="error-groups"></a>
             <div class="panel panel-danger panel-table">
                 <div class="panel-heading">
                     <h3 class="panel-title">Top Warnings
@@ -385,7 +388,7 @@
         {% endif %}
 
         {% if undefined_namespaces is defined and undefined_namespaces|length > 0 %}
-            <a id="undefined-namespaces-anchor"></a>
+            <a id="undefined-namespaces"></a>
             <div class="panel panel-danger">
                 <div class="panel-heading">
                     <h3 class="panel-title">Undefined Namespaces
@@ -410,7 +413,7 @@
         {% endif %}
 
         {% if undefined_annotation is defined and undefined_annotations|length > 0 %}
-            <a id="undefined-annotations-anchor"></a>
+            <a id="undefined-annotations"></a>
             <div class="panel panel-danger">
                 <div class="panel-heading">
                     <h3 class="panel-title">Undefined Annotations
@@ -433,7 +436,7 @@
         {% endif %}
 
         {% if namespaces_with_incorrect_names is defined and namespaces_with_incorrect_names|length > 0 %}
-            <a id="incorrect-namespaces-anchor"></a>
+            <a id="incorrect-namespaces"></a>
             <div class="panel panel-danger">
                 <div class="panel-heading">
                     <h3 class="panel-title">Namespaces with Incorrect Names
@@ -457,7 +460,7 @@
         <!-- Biogrammar -->
 
         {% if contradictions is defined and contradictions|length > 0 %}
-            <a id="contradictory-pairs-anchor"></a>
+            <a id="contradictory-pairs"></a>
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Contradictory Edges
@@ -472,36 +475,34 @@
                         This may be due to different experimental conditions, so these edges need to be carefully
                         considered in analyses.
                     </p>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th></th>
-                                <th>Source</th>
-                                <th>Relations</th>
-                                <th>Target</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for source, aid, target, bid, relations in contradictions %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid], autoload='yes') }}"><span
-                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
-                                    <td>{{ source }}</td>
-                                    <td>{{ ', '.join(relations) }}</td>
-                                    <td>{{ target }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
+                <table class="table table-hover table-responsive">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Source</th>
+                        <th>Relations</th>
+                        <th>Target</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for source, aid, target, bid, relations in contradictions %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid], autoload='yes') }}"><span
+                                        class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                            <td>{{ source }}</td>
+                            <td>{{ ', '.join(relations) }}</td>
+                            <td>{{ target }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         {% endif %}
 
         {% if unstable_pairs is defined and unstable_pairs|length > 0 %}
-            <a id="unstable-pairs-anchor"></a>
+            <a id="unstable-pairs"></a>
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Unstable Pairs
@@ -525,36 +526,34 @@
                     </dl>
                     <p>While neither chaotic nor dampened pairs are biologically invalid, they require additional
                         context to understand their regulation.</p>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th></th>
-                                <th>Type</th>
-                                <th>Node A</th>
-                                <th>Node B</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for a, aid, b, bid, label in unstable_pairs %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid], autoload='yes') }}"><span
-                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
-                                    <td>{{ label }}</td>
-                                    <td>{{ a }}</td>
-                                    <td>{{ b }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
+                <table class="table table-hover table-responsive">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Type</th>
+                        <th>Node A</th>
+                        <th>Node B</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for a, aid, b, bid, label in unstable_pairs %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid], autoload='yes') }}"><span
+                                        class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                            <td>{{ label }}</td>
+                            <td>{{ a }}</td>
+                            <td>{{ b }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         {% endif %}
 
         {% if contradictory_triplets is defined and contradictory_triplets|length > 0 %}
-            <a id="contradictory-triplets-anchor"></a>
+            <a id="contradictory-triplets"></a>
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Contradictory Triplets
@@ -588,38 +587,36 @@
                             A</code>.
                         </dd>
                     </dl>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th></th>
-                                <th>Type</th>
-                                <th>Node A</th>
-                                <th>Node B</th>
-                                <th>Node C</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for a, aid, b, bid, c, cid, label in contradictory_triplets %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid, cid], autoload='yes') }}"><span
-                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
-                                    <td>{{ label }}</td>
-                                    <td>{{ a }}</td>
-                                    <td>{{ b }}</td>
-                                    <td>{{ c }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
+                <table class="table table-hover table-responsive">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Type</th>
+                        <th>Node A</th>
+                        <th>Node B</th>
+                        <th>Node C</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for a, aid, b, bid, c, cid, label in contradictory_triplets %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid, cid], autoload='yes') }}"><span
+                                        class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                            <td>{{ label }}</td>
+                            <td>{{ a }}</td>
+                            <td>{{ b }}</td>
+                            <td>{{ c }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         {% endif %}
 
         {% if unstable_triplets is defined and unstable_triplets|length > 0 %}
-            <a id="unstable-triplets-anchor"></a>
+            <a id="unstable-triplets"></a>
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Unstable Triplets
@@ -643,38 +640,36 @@
                             <code>B decreases C</code>, and <code>C decreases A</code>.
                         </dd>
                     </dl>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th></th>
-                                <th>Type</th>
-                                <th>Node A</th>
-                                <th>Node B</th>
-                                <th>Node C</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for a, aid, b, bid, c, cid, label in unstable_triplets %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid, cid], autoload='yes') }}"><span
-                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
-                                    <td>{{ label }}</td>
-                                    <td>{{ a }}</td>
-                                    <td>{{ b }}</td>
-                                    <td>{{ c }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
+                <table class="table table-hover table-responsive">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Type</th>
+                        <th>Node A</th>
+                        <th>Node B</th>
+                        <th>Node C</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for a, aid, b, bid, c, cid, label in unstable_triplets %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[aid, bid, cid], autoload='yes') }}"><span
+                                        class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                            <td>{{ label }}</td>
+                            <td>{{ a }}</td>
+                            <td>{{ b }}</td>
+                            <td>{{ c }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         {% endif %}
 
         {% if causal_pathologies is defined and causal_pathologies|length > 0 %}
-            <a id="causal-pathologies-anchor"></a>
+            <a id="causal-pathologies"></a>
             <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title">Causal Pathologies
@@ -687,31 +682,65 @@
                     <p>Pathologies are the result of molecular and physical processes, and do not make sense as
                         the subject of causal statements.
                     </p>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th></th>
-                                <th>Source</th>
-                                <th>Relation</th>
-                                <th>Target</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for source, source_id, relation, target, target_id in causal_pathologies %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[source_id, target_id], autoload='yes') }}"><span
-                                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
-                                    <td><code>{{ source }}</code></td>
-                                    <td>{{ relation }}</td>
-                                    <td><code>{{ target }}</code></td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
+                <table class="table table-hover table-responsive">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Source</th>
+                        <th>Relation</th>
+                        <th>Target</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for source, source_id, relation, target, target_id in causal_pathologies %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='induction', nodes=[source_id, target_id], autoload='yes') }}"><span
+                                        class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                            <td>{{ source }}</td>
+                            <td>{{ relation }}</td>
+                            <td>{{ target }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if undefined_families is defined and undefined_families|length > 0 %}
+            <a id="undefined-families"></a>
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Undefined Families
+                        <span class="badge">{{ undefined_families|length }}</span>
+                        <a class="pull-right" href="#top"><span class="glyphicon glyphicon-arrow-up"
+                                                                aria-hidden="true"></span></a>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <p>Families that are referenced without definition are problematic for analysis. Consider
+                        additional steps during compilation for integrating information, or more thoughtful curation.
+                    </p>
+                </div>
+                <table class="table table-hover table-responsive">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Node</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for source, source_id in undefined_families %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('view_explorer', graphid=graph_id, seed_method='neighbors', nodes=[source_id], autoload='yes') }}"><span
+                                        class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+                            <td><code>{{ source }}</code></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         {% endif %}
 

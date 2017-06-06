@@ -15,8 +15,7 @@ A general use for a node filter function is to use the built-in :func:`filter` i
 
 from __future__ import print_function
 
-from pybel.constants import FUNCTION, PATHOLOGY, OBJECT, SUBJECT, MODIFIER, ACTIVITY, NAMESPACE, NAME, DEGRADATION, \
-    TRANSLOCATION, LABEL
+from pybel.constants import *
 from ..constants import CNAME
 
 __all__ = [
@@ -335,7 +334,6 @@ node_has_cname = data_contains_key_builder(CNAME)
 #: Fails for nodes that have been annotated with a canonical name
 node_missing_cname = data_missing_key_builder(CNAME)
 
-
 #: Passes for nodes that have been annotated with a label
 node_has_label = data_contains_key_builder(LABEL)
 
@@ -513,3 +511,31 @@ def build_node_name_search(query):
 def build_node_cname_search(query):
     """Searches nodes' canonical names. Is a thin wrapper around :func:`build_node_key_search`"""
     return build_node_key_search(query, CNAME)
+
+
+def iter_undefined_families(graph, namespace):
+    """Finds protein families from a given namespace (Such as SFAM) that aren't qualified by members
+
+    :param pybel.BELGraph graph: A BEL graph
+    :param str or list[str] namespace: The namespace to filter by
+    :return: An iterator over nodes that don't
+    :rtype: iter[tuple]
+    """
+    filters = [
+        function_inclusion_filter_builder(PROTEIN),
+        namespace_inclusion_builder(namespace)
+    ]
+
+    for node in filter_nodes(graph, filters):
+        if VARIANTS or FUSION in graph.node[node]:
+            continue
+
+        relations = {
+            d[RELATION]
+            for _, v, d in graph.out_edges_iter(node, data=True)
+        }
+
+        if HAS_MEMBER in relations:
+            continue
+
+        yield node
