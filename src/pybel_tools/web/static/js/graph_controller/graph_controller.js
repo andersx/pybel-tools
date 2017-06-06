@@ -326,8 +326,12 @@ $(document).ready(function () {
         renderEmptyFrame();
     }
 
-    $("#submit-button").on("click", function () {
+    $("#refresh-network").on("click", function () {
         renderNetwork(tree);
+    });
+
+    $("#collapse-tree").on("click", function () {
+        tree.collapseDeep();
     });
 
     // Export network as an image

@@ -39,6 +39,11 @@ svg {
     width: 100%;
 }
 
+.not-rounded-50 {
+    border-radius: 0 !important;
+    width: 50%;
+}
+
 .node-checkbox {
     margin-right: 10px;
     display: inline-block;
