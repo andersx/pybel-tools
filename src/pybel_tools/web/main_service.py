@@ -161,7 +161,7 @@ def get_networks_with_permission(api):
         return api.list_public_graphs()
 
     if current_user.admin or current_user.has_role('scai'):
-        return api.list_graphs()
+        return api.list_recent_graphs()
 
     networks = api.list_public_graphs()
 
@@ -185,7 +185,7 @@ def build_dictionary_service_admin(app):
     def run_reload():
         """Reloads the networks and supernetwork"""
         api.clear()
-        api.load_networks(force_reload=True)
+        api.cache_networks(force_reload=True)
         return jsonify({'status': 200})
 
     @app.route('/admin/enrich')
@@ -416,7 +416,7 @@ def build_main_service(app):
 
     if app.config.get('PYBEL_DS_PRELOAD', False):
         log.info('preloading networks')
-        api.load_networks(
+        api.cache_networks(
             check_version=app.config.get('PYBEL_DS_CHECK_VERSION', True),
             force_reload=app.config.get('PYBEL_WEB_FORCE_RELOAD', False),
             eager=app.config.get('PYBEL_DS_EAGER', False)

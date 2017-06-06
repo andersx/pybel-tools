@@ -126,7 +126,7 @@ class DatabaseService:
 
         del graph.graph['PYBEL_RELABELED']
 
-    def add_network(self, network_id, graph, force_reload=False, eager=False):
+    def add_network(self, network_id, graph, force_reload=False, eager=False, maintain_universe=True):
         """Adds a network to the module-level cache from the underlying database
 
         :param int network_id: The identifier for the graph
@@ -138,7 +138,12 @@ class DatabaseService:
             log.info('tried re-adding graph [%s] %s', network_id, graph.name)
             return
 
-        log.info('loading network [%s] %s v%s', network_id, graph.name, graph.version)
+        log.info(
+            'loading network [%s] %s v%s',
+            network_id,
+            graph.name,
+            graph.version,
+        )
 
         log.debug('parsing authors')
         parse_authors(graph)
@@ -166,7 +171,7 @@ class DatabaseService:
             t = time.time()
             bc = calc_betweenness_centality(graph)
             self.node_centralities[network_id] = Counter(bc)
-            log.debug('done with betweenness centrality in %.2f seconds', time.time() - t)
+            log.debug('done with betweeness centrality in %.2f seconds', time.time() - t)
 
             log.debug('enriching citations')
             t = time.time()
@@ -176,36 +181,48 @@ class DatabaseService:
         log.debug('caching authors')
         self.universe_authors |= get_authors(graph)
 
-        log.debug('adding to the universe')
-        left_full_merge(self.universe, graph)
+        if maintain_universe:
+            log.debug('adding to the universe')
+            left_full_merge(self.universe, graph)
 
         self.networks[network_id] = graph
 
-        log.info('loaded network')
+        log.info('loaded (%d nodes, %d edges)', graph.number_of_nodes(), graph.number_of_edges())
 
-    def load_networks(self, check_version=True, force_reload=False, eager=False):
+    def cache_networks(self, check_version=True, force_reload=False, eager=False, maintain_universe=True):
         """This function needs to get all networks from the graph cache manager and make a dictionary
 
         :param bool check_version: Should the version of the BELGraphs be checked from the database? Defaults to :code`True`.
         :param bool force_reload: Should all graphs be reloaded even if they have already been cached?
         :param bool eager: Should difficult to preload features be calculated?
         """
-        query = self.manager.session.query(Network.id, Network.blob)
+        query = self.manager.session.query(Network).group_by(Network.name)
 
         if not force_reload:
             query = query.filter(Network.id not in self.networks)
 
-        for network_id, network_blob in query.all():
+        for network in query.having(func.max(Network.created)).order_by(Network.created.desc()).all():
             try:
-                log.debug('getting bytes from [%s]', network_id)
-                graph = from_bytes(network_blob, check_version=check_version)
+                log.debug('getting bytes from [%s]', network.id)
+                graph = from_bytes(network.blob, check_version=check_version)
             except:
-                log.exception("couldn't load from bytes [%s]", network_id)
+                log.exception("couldn't load from bytes [%s]", network.id)
                 continue
 
-            self.add_network(network_id, graph, force_reload=force_reload, eager=eager)
+            self.add_network(
+                network.id,
+                graph,
+                force_reload=force_reload,
+                eager=eager,
+                maintain_universe=maintain_universe
+            )
 
-        log.info('universe has (%s nodes/%s edges)', self.universe.number_of_nodes(), self.universe.number_of_edges())
+        if maintain_universe:
+            log.info(
+                'universe has (%s nodes, %s edges)',
+                self.universe.number_of_nodes(),
+                self.universe.number_of_edges()
+            )
 
     # Graph selection functions
 
@@ -217,7 +234,7 @@ class DatabaseService:
         :rtype: pybel.BELGraph
         """
         if network_id is None:
-            log.debug('got universe (%s nodes/%s edges)', self.universe.number_of_nodes(),
+            log.debug('got universe (%s nodes, %s edges)', self.universe.number_of_nodes(),
                       self.universe.number_of_edges())
             return self.universe
 
@@ -227,7 +244,7 @@ class DatabaseService:
             self.add_network(network_id, from_bytes(network.blob))
 
         result = self.networks[network_id]
-        log.debug('got network [%s] (%s nodes/%s edges)', result, result.number_of_nodes(), result.number_of_edges())
+        log.debug('got network [%s] (%s nodes, %s edges)', result, result.number_of_nodes(), result.number_of_edges())
         return result
 
     def decode_node(self, node_id):
@@ -245,8 +262,7 @@ class DatabaseService:
     def get_node_by_id(self, node_id):
         """Returns the node tuple based on the node id
 
-        :param node_id: The node's id
-        :type node_id: int or str
+        :param int or str node_id: The node's id
         :return: the node tuple
         :rtype: tuple
         """
@@ -318,7 +334,7 @@ class DatabaseService:
 
         result.graph['PYBEL_RELABELED'] = True
 
-        log.debug('query returned (%s nodes/%s edges)', result.number_of_nodes(), result.number_of_edges())
+        log.debug('query returned (%s nodes, %s edges)', result.number_of_nodes(), result.number_of_edges())
 
         return result
 
@@ -387,7 +403,7 @@ class DatabaseService:
         cm = count_diseases(graph)
         return {self.get_cname(node): v for node, v in cm.most_common(count)}
 
-    def list_graphs(self):
+    def list_recent_graphs(self):
         """Lists the most recently uploaded version of each network"""
         return self.manager.session.query(Network).group_by(Network.name).having(func.max(Network.created)).order_by(
             Network.created.desc()).all()
@@ -396,7 +412,7 @@ class DatabaseService:
         """Lists the graphs that have been made public"""
         results = []
 
-        for network in self.list_graphs():
+        for network in self.list_recent_graphs():
             if not network.report:  # no report means uploaded automatically or by admin
                 results.append(network)
             elif network.report[0].public:
