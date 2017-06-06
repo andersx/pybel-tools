@@ -773,4 +773,9 @@ def build_main_service(app):
     def view_imprint():
         return render_template('imprint.html')
 
+    @app.route('/about')
+    def view_about():
+        """Sends the about page"""
+        return render_template('about.html')
+
     log.info('Added dictionary service to %s', app)
