@@ -46,9 +46,11 @@
                         <td>
                             <ul>
                                 {% for report in user.reports %}
-                                    <li>
-                                        <a href="{{ url_for('view_summary', graph_id=report.network.id) }}">{{ report.network }}</a>
-                                    </li>
+                                    {% if report.network is not none %}
+                                        <li>
+                                            <a href="{{ url_for('view_summary', graph_id=report.network.id) }}">{{ report.network }}</a>
+                                        </li>
+                                    {% endif %}
                                 {% endfor %}
                             </ul>
                         </td>
