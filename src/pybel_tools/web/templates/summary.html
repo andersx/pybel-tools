@@ -34,6 +34,7 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
+                <a class="btn btn-primary" href="{{ url_for('view_networks') }}" role="button">List Networks</a>
                 <a class="btn btn-default" href="{{ url_for('view_explorer', graphid=graph_id) }}"
                    role="button">Explore</a>
                 <a class="btn btn-default" href="{{ url_for('view_analysis_uploader', network_id=graph_id) }}"
