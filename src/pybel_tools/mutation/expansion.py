@@ -6,7 +6,7 @@ from collections import Counter, defaultdict
 
 from pybel import BELGraph
 from pybel.constants import *
-from .merge import left_merge
+from .merge import left_full_merge
 from .utils import ensure_node_from_universe
 from .. import pipeline
 from ..filters.edge_filters import keep_edge_permissive, concatenate_edge_filters, edge_is_causal
@@ -545,7 +545,7 @@ def expand_upstream_causal_subgraph(universe, graph):
     :param pybel.BELGraph graph: The target BEL graph to enrich with upstream causal controllers of contained nodes
     """
     upstream = get_upstream_causal_subgraph(universe, graph.nodes())
-    left_merge(graph, upstream)
+    left_full_merge(graph, upstream)
 
 
 @pipeline.uni_in_place_mutator
@@ -556,4 +556,4 @@ def expand_downstream_causal_subgraph(universe, graph):
     :param pybel.BELGraph graph: The target BEL graph to enrich with downstream causal controllers of contained nodes
     """
     downstream = get_downstream_causal_subgraph(universe, graph.nodes())
-    left_merge(graph, downstream)
+    left_full_merge(graph, downstream)

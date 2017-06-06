@@ -18,7 +18,7 @@ from pybel.manager.models import Network
 from .constants import CNAME
 from .mutation.expansion import expand_internal
 from .mutation.inference import infer_central_dogma
-from .mutation.merge import left_merge
+from .mutation.merge import left_full_merge
 from .mutation.metadata import parse_authors, add_canonical_names, fix_pubmed_citations
 from .selection.induce_subgraph import get_subgraph
 from .summary.edge_summary import count_diseases, get_tree_annotations
@@ -177,7 +177,7 @@ class DatabaseService:
         self.universe_authors |= get_authors(graph)
 
         log.debug('adding to the universe')
-        left_merge(self.universe, graph)
+        left_full_merge(self.universe, graph)
 
         self.networks[network_id] = graph
 

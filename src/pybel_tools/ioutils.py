@@ -12,7 +12,7 @@ from pybel.io.line_utils import build_metadata_parser
 from pybel.manager.cache import build_manager
 from .integration import HGNCAnnotator, GOAnnotator
 from .mutation import opening_on_central_dogma
-from .mutation.merge import left_merge
+from .mutation.merge import left_full_merge
 from .mutation.metadata import fix_pubmed_citations
 from .selection import get_subgraph_by_annotation_value
 from .summary import get_annotation_values
@@ -42,7 +42,7 @@ def load_paths(paths, connection=None):
 
     for path in paths:
         subgraph = from_path(path, manager=metadata_parser)
-        left_merge(result, subgraph)
+        left_full_merge(result, subgraph)
 
     return result
 

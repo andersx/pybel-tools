@@ -6,7 +6,7 @@ import unittest
 from pybel import BELGraph
 from pybel.constants import *
 from pybel_tools.integration import overlay_type_data
-from pybel_tools.mutation import left_merge
+from pybel_tools.mutation import left_full_merge
 
 HGNC = 'HGNC'
 
@@ -113,7 +113,7 @@ class TestIntegrate(unittest.TestCase):
         self.assertEqual(3, h.number_of_nodes())
         self.assertEqual(3, h.number_of_edges())
 
-        left_merge(g, h)
+        left_full_merge(g, h)
 
         self.assertNotIn('EXTRANEOUS', g.node[p1])
         self.assertIn('EXTRANEOUS', g.node[p3])

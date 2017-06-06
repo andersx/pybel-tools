@@ -8,14 +8,14 @@ from ..summary.edge_summary import get_consistent_edges
 from ..utils import all_edges_iter
 
 __all__ = [
-    'left_merge',
-    'right_merge',
+    'left_full_merge',
+    'right_full_merge',
     'collapse_consistent_edges',
 ]
 
 
-def left_merge(g, h):
-    """Adds nodes and edges from H to G, in-place for G
+def left_full_merge(g, h):
+    """Adds all nodes and edges from H to G, in-place for G
 
     :param pybel.BELGraph g: A BEL Graph
     :param pybel.BELGraph h: A BEL Graph
@@ -36,13 +36,13 @@ def left_merge(g, h):
             g.add_edge(u, v, attr_dict=d)
 
 
-def right_merge(g, h):
-    """Performs :func:`left_merge` on the arguments in the opposite order.
+def right_full_merge(g, h):
+    """Performs :func:`left_full_merge` on the arguments in the opposite order.
 
     :param pybel.BELGraph g: A BEL Graph
     :param pybel.BELGraph h: A BEL Graph
     """
-    left_merge(h, g)
+    left_full_merge(h, g)
 
 
 @pipeline.in_place_mutator

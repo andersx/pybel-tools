@@ -13,7 +13,7 @@ from ..filters.node_filters import filter_nodes
 from ..mutation.expansion import expand_node_neighborhood, expand_all_node_neighborhoods, get_upstream_causal_subgraph, \
     expand_upstream_causal_subgraph, get_downstream_causal_subgraph, expand_downstream_causal_subgraph
 from ..mutation.highlight import highlight_nodes, highlight_edges
-from ..mutation.merge import left_merge
+from ..mutation.merge import left_full_merge
 from ..mutation.utils import remove_isolated_nodes
 from ..summary.edge_summary import get_annotation_values
 
@@ -370,10 +370,10 @@ def get_subgraph_by_provenance_helper(graph, pmids=None, authors=None, expand_ne
     result = BELGraph()
 
     if pmids:
-        left_merge(result, get_subgraph_by_pubmed(graph, pmids))
+        left_full_merge(result, get_subgraph_by_pubmed(graph, pmids))
 
     if authors:
-        left_merge(result, get_subgraph_by_authors(graph, authors))
+        left_full_merge(result, get_subgraph_by_authors(graph, authors))
 
     highlight_nodes(result)
     highlight_edges(result)
