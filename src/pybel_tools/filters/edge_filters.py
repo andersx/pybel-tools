@@ -500,8 +500,8 @@ def edge_has_degradation(graph, u, v, k, d):
 
 
 def edge_has_pathology_causal(graph, u, v, k, d):
-    """Returns if the subject of this edge is a pathology and participates in a causal relation. This
-    is usually nonsense, in most cases.
+    """Returns if the subject of this edge is a pathology and participates in a causal relation where the object is
+    not a pathology. These relations are generally nonsense.
 
     :param pybel.BELGraph graph: A BEL Graph
     :param tuple u: A BEL node
@@ -511,4 +511,8 @@ def edge_has_pathology_causal(graph, u, v, k, d):
     :return: If the subject of this edge is a pathology and it participates in a causal reaction.
     :rtype: bool
     """
-    return graph.node[u][FUNCTION] == PATHOLOGY and d[RELATION] in CAUSAL_RELATIONS
+    return (
+        graph.node[u][FUNCTION] == PATHOLOGY and
+        d[RELATION] in CAUSAL_RELATIONS and
+        graph.node[v][FUNCTION] not in {PATHOLOGY, BIOPROCESS}
+    )

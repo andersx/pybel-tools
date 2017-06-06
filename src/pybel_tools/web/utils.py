@@ -10,10 +10,12 @@ from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
 
 from pybel.canonicalize import decanonicalize_node
+from pybel.constants import RELATION
 from .constants import *
 from .extension import get_manager, get_api
 from ..analysis.stability import *
 from ..constants import CNAME
+from ..filters.edge_filters import edge_has_pathology_causal, filter_edges
 from ..summary import get_contradiction_summary, count_functions, count_relations, count_error_types, get_translocated, \
     get_degradations, get_activities, count_namespaces, group_errors
 from ..summary.edge_summary import count_diseases, get_unused_annotations, get_unused_list_annotation_values
@@ -153,8 +155,14 @@ def render_graph_summary(graph_id, graph, api=None):
     centrality_data = api.get_top_centrality(graph_id)
     disease_data = api.get_top_comorbidities(graph_id)
 
+    node_bel_cache = {}
+
     def dcn(node):
-        return decanonicalize_node(graph, node)
+        if node in node_bel_cache:
+            return node_bel_cache[node]
+
+        node_bel_cache[node] = decanonicalize_node(graph, node)
+        return node_bel_cache[node]
 
     unstable_pairs = itt.chain.from_iterable([
         ((u, v, 'Chaotic') for u, v, in get_chaotic_pairs(graph)),
@@ -203,6 +211,11 @@ def render_graph_summary(graph_id, graph, api=None):
 
     versions = api.manager.get_networks(name=graph.name)
 
+    causal_pathologies = sorted({
+        (dcn(u), api.get_node_id(u), d[RELATION], dcn(v), api.get_node_id(v))
+        for u, v, _, d in filter_edges(graph, edge_has_pathology_causal)
+    })
+
     return render_template(
         'summary.html',
         chart_1_data=prepare_c3(count_functions(graph), 'Entity Type'),
@@ -235,4 +248,5 @@ def render_graph_summary(graph_id, graph, api=None):
         current_user=current_user,
         namespaces_with_incorrect_names=namespaces_with_incorrect_names,
         network_versions=versions,
+        causal_pathologies=causal_pathologies,
     )
