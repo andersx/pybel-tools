@@ -82,6 +82,9 @@
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#controls">
                     Controls
                 </button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#network-tools">
+                    Tools
+                </button>
             </div>
         </div>
         <div class="panel panel-default">
@@ -604,7 +607,7 @@
         </div><!-- /.Modal dialog -->
     </div><!-- /.export-graph Modal -->
 
-    <div id="controls" class="modal fade"><!-- /.info-graph Modal -->
+    <div id="controls" class="modal fade"><!-- /.controls-graph Modal -->
         <div class="modal-dialog"><!-- /.Modal dialog -->
             <div class="modal-content"><!-- /.Modal content -->
                 <div class="modal-header">
@@ -675,7 +678,50 @@
                 </div>
             </div><!-- /.Modal content -->
         </div><!-- /.Modal dialog -->
-    </div><!-- /.info-graph Modal -->
+    </div><!-- /.controls-graph Modal -->
+
+
+    <div id="network-tools" class="modal fade"><!-- /.tools-graph Modal -->
+        <div class="modal-dialog"><!-- /.Modal dialog -->
+            <div class="modal-content"><!-- /.Modal content -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Tools</h4>
+                </div>
+                <div class="modal-body text-left"><!-- /.Modal body -->
+                    <div class="center-table">
+                        <div class="table-wrapper">
+                            <table class="table table-responsive">
+                                <thead>
+                                <tr>
+                                    <th><b>Button</b></th>
+                                    <th><b>Function</b></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>
+                                        <button type="button" id="central-dogma-to-genes" class="btn btn-info">Central
+                                            Dogma To Genes
+                                        </button>
+                                    </td>
+                                    <td>Collapse Protein/RNA/Gene nodes to genes</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- /.Modal body -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div><!-- /.Modal content -->
+        </div><!-- /.Modal dialog -->
+    </div><!-- /.Network-tools Modal -->
 
     {% include "footer.html" %}
 {% endblock %}
