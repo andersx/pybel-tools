@@ -417,6 +417,7 @@ function renderEmptyFrame() {
     var w = graphDiv.width(), h = graphDiv.height();
 
     var svg = d3.select("#graph-chart").append("svg")
+        .attr("class", "svg-border")
         .attr("width", w)
         .attr("height", h);
 
@@ -759,6 +760,7 @@ function initD3Force(graph, tree) {
     var minZoom = 0.1, maxZoom = 10; // Zoom variables
 
     var svg = d3.select("#graph-chart").append("svg")
+        .attr("class", "svg-border")
         .attr("width", w)
         .attr("height", h);
 
