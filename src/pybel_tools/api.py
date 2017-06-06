@@ -138,8 +138,10 @@ class DatabaseService:
             log.info('tried re-adding graph [%s] %s', network_id, graph.name)
             return
 
+        t = time.time()
+
         log.info(
-            'loading network [%s] %s v%s',
+            'caching network [%s] %s v%s',
             network_id,
             graph.name,
             graph.version,
@@ -187,7 +189,12 @@ class DatabaseService:
 
         self.networks[network_id] = graph
 
-        log.info('loaded (%d nodes, %d edges)', graph.number_of_nodes(), graph.number_of_edges())
+        log.info(
+            'cached (%d nodes, %d edges) in %.2f seconds',
+            graph.number_of_nodes(),
+            graph.number_of_edges(),
+            time.time() - t
+        )
 
     def cache_networks(self, check_version=True, force_reload=False, eager=False, maintain_universe=True):
         """This function needs to get all networks from the graph cache manager and make a dictionary
